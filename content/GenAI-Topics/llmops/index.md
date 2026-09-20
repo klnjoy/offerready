@@ -111,3 +111,109 @@ flowchart TB
 | Model routing? | Cheap model for easy queries, strong for hard |
 | Safe model upgrade? | Pin, eval, canary, monitor, roll back |
 | Quantization? | Lower-bit weights → less memory, faster, small quality loss |
+
+---
+
+## Production AI CI/CD pipeline
+
+Shipping AI safely means the pipeline gates on **quality and safety**, not just
+"the code compiles." A functional test suite passing is *not* enough for an AI
+system, an unchanged codebase can still regress because a prompt or model changed.
+
+!!! note "Kiro and Jenkins — how they fit together"
+    In this workflow, **Kiro is used for AI-assisted development and automation**
+    (writing code, scaffolding, refactors, docs). **Jenkins remains the production
+    CI/CD system** that builds, tests, evaluates, scans, and deploys. Kiro speeds
+    up authoring; **Jenkins is still the gate to production**. Kiro does not
+    replace Jenkins.
+
+```mermaid
+flowchart TB
+    DEV[Developer] --> KIRO[Kiro-assisted development<br/>author / refactor / automate]
+    KIRO --> GIT[Git commit / PR]
+    GIT --> JENK[Jenkins pipeline]
+    JENK --> UT[Unit + integration tests]
+    UT --> EVAL[AI evaluation<br/>golden + regression sets]
+    EVAL --> SEC[Security scanning<br/>deps, secrets, prompt-injection suite]
+    SEC --> DEP[Deploy<br/>canary / blue-green]
+    DEP --> OBS[Observability<br/>quality, cost, latency, safety]
+    OBS --> RB{Regression / SLO breach?}
+    RB -- yes --> ROLL[Rollback]
+    RB -- no --> DONE[Promote]
+```
+
+**What each AI-specific gate does:**
+
+- **Golden-dataset evaluation** — a curated set of representative inputs with
+  known-good outputs/rubrics. The change must meet a quality bar (correctness,
+  faithfulness, format validity) before it proceeds.
+- **Regression evaluation** — compares the new prompt/model against the current
+  production version on the same set; blocks a *drop* even if absolute scores look
+  fine.
+- **Security scanning** — dependency/secret scans **plus an AI layer**: run a
+  prompt-injection / jailbreak test suite and check output guardrails still hold.
+- **Canary + rollback** — ship to a traffic slice, watch quality/cost/latency/
+  safety, auto-roll-back on regression. Deploy is decoupled from release via flags.
+
+**What's versioned and gated (treat all as code):**
+
+| Artifact | Versioned | Gated by |
+|----------|-----------|----------|
+| Application code | Git | Unit/integration tests |
+| **Prompts** | Prompt registry / Git | Golden + regression eval |
+| **Model version** | Pinned config | Eval before upgrade (models drift) |
+| **Datasets / eval sets** | Dataset versioning | Reviewed; drives the gates |
+| Retrieval index config | Config as code | Retrieval eval (recall@k) |
+
+---
+
+## AgentOps — operating agents in production
+
+Agents add operational surface beyond a single model call: multi-step loops,
+tools, memory, and non-determinism. AgentOps extends LLMOps with agent-specific
+lifecycle and telemetry.
+
+**Beyond LLMOps, you also manage:**
+
+- **Tool registry + versioning** — tools (and MCP servers) are dependencies; pin,
+  review on change, and eval routing accuracy after changes.
+- **Trajectory evaluation** — score not just the final answer but the *path*
+  (were the steps/tool calls sensible and efficient?). See
+  [Observability & Eval](../observability/index.md).
+- **Loop / cost guards as first-class ops** — step caps, token/cost budgets, and
+  repeated-action detection are runtime controls you monitor and alert on.
+- **Human-in-the-loop queues** — approvals for gated actions become an operational
+  workflow (latency, backlog, audit).
+- **Replay + tracing** — durable, checkpointed state lets you replay a bad run to
+  find which step failed (see [Agent Principles](../agent-principles/index.md)).
+
+**Agent-specific signals to monitor:** steps-per-task, tool-failure rate, retry
+count, loop-detection hits, cost-per-task, approval latency, and task-success
+rate over time (drift).
+
+??? question "How is deploying an agent different from deploying a single-call LLM feature?"
+    An agent has a **loop, tools, and memory**, so more can go wrong and it's
+    non-deterministic. You add: tool/MCP versioning + review, **trajectory** eval
+    (not just final-answer), runtime **loop/cost guards** you monitor, HITL
+    approval queues, and step-level tracing for replay. CI must eval the whole
+    trajectory and the routing, not just one prompt.
+
+??? question "A prompt change passes all unit tests but the AI answers got worse. How does CI catch this?"
+    Unit tests can't see quality regressions. The pipeline needs a **golden-dataset
+    eval** (meet a quality bar) plus a **regression eval** (compare against the
+    current prod version and block a drop). That's the AI-specific gate between
+    "tests pass" and "deploy."
+
+??? question "Where does Kiro fit vs Jenkins in your delivery pipeline?"
+    Kiro is for **AI-assisted development** — authoring, refactoring, automating
+    work in the editor. **Jenkins is the production CI/CD** that runs tests, AI
+    evaluation, security scanning, and controls the deploy. Kiro accelerates how
+    code gets written; Jenkins is still the gate that decides what reaches prod.
+
+!!! note "Related"
+    [Observability & Eval](../observability/index.md) ·
+    [Cost Optimization](../cost-optimization/index.md) ·
+    [Agent Principles](../agent-principles/index.md) ·
+    [AI Security](../../AI-Security/index.md) ·
+    Practice: [DevOps Interview Q&A](../../Personal-SourceCode/DevOps_Interview_QA.md) ·
+    [AI Engineer Interview Q&A](../../Personal-SourceCode/AI_Engineer_Interview_QA.md)

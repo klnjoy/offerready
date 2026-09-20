@@ -130,6 +130,8 @@ nav:
       - LLMOps / Deployment: GenAI-Topics/llmops/index.md
       - Cost Optimization: GenAI-Topics/cost-optimization/index.md
       - "Trends & Market (2026)": GenAI-Topics/trends/index.md
+  - AI Security:
+      - AI-Security/index.md
   - Setup Guides:
       - Overview: Setup-Guides/index.md
       - Local Environment: Setup-Guides/local-environment/index.md
@@ -190,6 +192,8 @@ nav:
       - "AWS Interview Q&A": Personal-SourceCode/AWS_Interview_QA.md
       - "DevOps Interview Q&A": Personal-SourceCode/DevOps_Interview_QA.md
       - "Behavioral / STAR Interview Q&A": Personal-SourceCode/Behavioral_STAR_Interview_QA.md
+      - "Requirements → Production": Personal-SourceCode/Interview_Requirements_to_Production.md
+      - "The Interviewer Keeps Asking Why": Personal-SourceCode/Interview_Why_Chains.md
   - Practice Labs:
       - Personal-SourceCode/Lab_Scenario_Drills.md
       - "Live-Coding Drills": Personal-SourceCode/Lab_LiveCoding_Drills.md

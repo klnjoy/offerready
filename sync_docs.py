@@ -139,6 +139,9 @@ NAV_LABEL_OVERRIDES: dict[str, tuple[int, str]] = {
     "AWS_Interview_QA.md": (18, "AWS Interview Q&A"),
     "DevOps_Interview_QA.md": (19, "DevOps Interview Q&A"),
     "Behavioral_STAR_Interview_QA.md": (20, "Behavioral / STAR Interview Q&A"),
+    # Flagship interview-training exercises.
+    "Interview_Requirements_to_Production.md": (21, "Requirements → Production"),
+    "Interview_Why_Chains.md": (22, "The Interviewer Keeps Asking Why"),
 }
 
 
@@ -1026,6 +1029,11 @@ def write_nav(md_catalog, modules) -> None:
     nav.append("      - Overview: GenAI-Topics/index.md")
     for slug, display, _icon, _desc in TOPICS:
         nav.append(f"      - {nav_label(display)}: GenAI-Topics/{slug}/index.md")
+
+    # AI Security — standalone top-level section (bare index → section icon).
+    if (DOCS_DIR / "AI-Security" / "index.md").exists():
+        nav.append("  - AI Security:")
+        nav.append("      - AI-Security/index.md")
 
     # Setup Guides
     nav.append("  - Setup Guides:")
