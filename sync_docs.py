@@ -141,7 +141,8 @@ NAV_LABEL_OVERRIDES: dict[str, tuple[int, str]] = {
     "Behavioral_STAR_Interview_QA.md": (20, "Behavioral / STAR Interview Q&A"),
     # Flagship interview-training exercises.
     "Interview_Requirements_to_Production.md": (21, "Requirements → Production"),
-    "Interview_Why_Chains.md": (22, "The Interviewer Keeps Asking Why"),
+    "Interview_Production_Incidents.md": (22, "Production Incident Interviews"),
+    "Interview_Why_Chains.md": (23, "The Interviewer Keeps Asking Why"),
 }
 
 
@@ -208,6 +209,8 @@ TOPICS: list[tuple[str, str, str, str]] = [
      "AWS managed foundation models, knowledge bases, guardrails."),
     ("observability", "Observability & Eval", ":material-chart-line:",
      "Tracing, LLM-as-judge, metrics, guardrails, monitoring."),
+    ("reliability", "Reliability & Distributed Systems", ":material-shield-refresh:",
+     "Retries, circuit breakers, idempotency, and AI failure modes."),
     ("llmops", "LLMOps / Deployment", ":material-cog-sync:",
      "Serving, scaling, caching, cost, and lifecycle."),
     ("cost-optimization", "Cost Optimization", ":material-cash-multiple:",
@@ -1034,6 +1037,11 @@ def write_nav(md_catalog, modules) -> None:
     if (DOCS_DIR / "AI-Security" / "index.md").exists():
         nav.append("  - AI Security:")
         nav.append("      - AI-Security/index.md")
+
+    # Case Studies — standalone top-level section (bare index → section icon).
+    if (DOCS_DIR / "Case-Studies" / "index.md").exists():
+        nav.append("  - Case Studies:")
+        nav.append("      - Case-Studies/index.md")
 
     # Setup Guides
     nav.append("  - Setup Guides:")
