@@ -789,16 +789,19 @@ def write_index(md_catalog, modules) -> None:
     lines = [
         "# OfferReady",
         "",
-        '<p class="home-hero"><strong>Prep smarter. Land the offer.</strong> '
-        "OfferReady is a hands-on prep hub for <strong>data &amp; GenAI</strong> "
-        "interviews — advanced question banks with model answers, worked "
-        "scenarios, an interactive practice mode, and deep-dive study notes on the "
-        "whole GenAI &amp; data/cloud stack.</p>",
+        '<p class="home-hero"><strong>AI Engineering interview preparation.</strong> '
+        "Prep smarter and land the offer. OfferReady is a hands-on hub that takes "
+        "you <strong>Learn &rarr; Build &rarr; Interview</strong>: learn the "
+        "technology, build the system, then defend the architecture, handle the "
+        "production incident, and answer the follow-up &ldquo;why?&rdquo; the way a "
+        "senior interview demands.</p>",
         "",
         '<p class="home-cta" markdown>'
-        '[:material-briefcase-check: Interview Guide](Personal-SourceCode/Interview_Guide_Overview.md){ .md-button .md-button--primary }'
+        '[:material-school: Start Learning](Start-Here/index.md){ .md-button .md-button--primary }'
         "&nbsp;"
-        "[:material-dumbbell: Practice mode](Personal-SourceCode/Interview_Practice.md){ .md-button }"
+        "[:material-briefcase-check: Interview Prep](Personal-SourceCode/Interview_Guide_Overview.md){ .md-button }"
+        "&nbsp;"
+        "[:material-dumbbell: Practice Mock](Personal-SourceCode/Interview_Practice.md){ .md-button }"
         "</p>",
         "",
         '<p class="home-stats">'
@@ -807,6 +810,60 @@ def write_index(md_catalog, modules) -> None:
         f"<span>🧭 <strong>{len(TECHNOLOGIES)}</strong> tech areas</span>"
         f"<span>🤖 <strong>{len(TOPICS)}</strong> GenAI topics</span>"
         "</p>",
+        "",
+        "## Choose your target role",
+        "",
+        "Each role page routes you through the right depth, in the right order.",
+        "",
+        '<div class="grid cards" markdown>',
+        "",
+        "-   :material-account-tie:{ .lg .middle } __AI / GenAI Engineer__",
+        "",
+        "    ---",
+        "",
+        "    Build and ship LLM apps. Start with the "
+        "[Interview Guide](Personal-SourceCode/Interview_Guide_Overview.md) and the "
+        "[AI Engineer Q&A](Personal-SourceCode/AI_Engineer_Interview_QA.md).",
+        "",
+        "-   :material-stairs-up:{ .lg .middle } __Staff / Principal AI Architect__",
+        "",
+        "    ---",
+        "",
+        "    Own the design and the trade-offs. See "
+        "[Senior/Staff/Principal/FDE](Personal-SourceCode/Interview_Level_Comparison.md), "
+        "[Requirements &rarr; Production](Personal-SourceCode/Interview_Requirements_to_Production.md), "
+        "and the [Why-chains](Personal-SourceCode/Interview_Why_Chains.md).",
+        "",
+        "-   :material-airplane-takeoff:{ .lg .middle } __Forward Deployed Engineer__",
+        "",
+        "    ---",
+        "",
+        "    Customer-facing build + delivery. See the "
+        "[FDE Q&A](Personal-SourceCode/Forward_Deployed_Engineer_Interview_QA.md), "
+        "[FDE Coding](Personal-SourceCode/FDE_Coding_Interview_Prep.md), and "
+        "[Live-Coding & Scenarios](Personal-SourceCode/FDE_LiveCoding_Scenarios_Prep.md).",
+        "",
+        "-   :material-database-cog:{ .lg .middle } __Data & AI / Platform Engineer__",
+        "",
+        "    ---",
+        "",
+        "    The data/cloud side. See "
+        "[Snowflake Cortex](Snowflake-Cortex/index.md), "
+        "[Data Engineering Q&A](Personal-SourceCode/DataEngineering_Interview_QA.md), and "
+        "[SQL Q&A](Personal-SourceCode/SQL_Interview_QA.md).",
+        "",
+        "</div>",
+        "",
+        "## What makes OfferReady different",
+        "",
+        "Most prep sites stop at *what is X?*. OfferReady trains the full arc an "
+        "interviewer actually probes:",
+        "",
+        "- **Learn the technology** — every topic page ends with an *Interview deep dive*.",
+        "- **Build the system** — setup guides, projects, and hands-on labs.",
+        "- **Defend the architecture** — [Requirements &rarr; Production](Personal-SourceCode/Interview_Requirements_to_Production.md) and system-design walkthroughs.",
+        "- **Handle the production incident** — [Production Incident Interviews](Personal-SourceCode/Interview_Production_Incidents.md).",
+        "- **Answer the follow-up \u201cwhy?\u201d** — [The Interviewer Keeps Asking Why](Personal-SourceCode/Interview_Why_Chains.md).",
         "",
         "## Architecture at a glance",
         "",
@@ -874,16 +931,20 @@ def write_index(md_catalog, modules) -> None:
         "",
         "</div>",
         "",
-        "## What's inside",
+        "## What's inside — the four tabs",
         "",
-        "| Area | You'll find | Best for |",
+        "The top navigation follows the study journey. Pick the tab that matches "
+        "what you're doing right now.",
+        "",
+        "| Tab | You'll find | Best for |",
         "| --- | --- | --- |",
-        "| **Technologies** | Snowflake, Databricks, dbt, FastAPI, AWS | Platform depth + interview prep |",
-        "| **GenAI Topics** | LLM fundamentals → RAG → agents → LLMOps | Learning the GenAI stack end to end |",
-        "| **Study Guide** | Consolidated book + 11 course modules | Structured, module-by-module study |",
-        "| **Projects & POCs** | Real architectures (e.g. data migration) | Applied, end-to-end examples |",
-        "| **Interview Guide** | Question banks + model answers | Focused interview practice |",
-        "| **Retrieval Agent** | Local, cited answers over this KB | Quiz yourself / quick lookup |",
+        "| **Learn** | GenAI foundations, data & cloud tech, Snowflake Cortex, reference docs, security | Understanding concepts end to end |",
+        "| **Build** | Setup guides, projects & POCs, case studies, hands-on labs | Doing the work |",
+        "| **Interview Prep** | Q&A banks, mock simulators, cheat sheets, 30-day plan | Getting interview-ready |",
+        "| **Study Guide** | Consolidated book + course modules | Structured, module-by-module study |",
+        "",
+        "Plus a local **retrieval agent** for cited answers over this knowledge "
+        "base (`python ask.py \"...\"`).",
         "",
         "## Sample questions to explore",
         "",
@@ -1122,24 +1183,86 @@ def write_nav(md_catalog, modules) -> None:
             nav.append(f"          - {nav_label(title)}: {rel}")
 
     # ----- INTERVIEW PREP -----------------------------------------------------
+    # Organized as a career-level experience rather than a flat Q&A list:
+    #   Start Here (bare index) · By Level · Technical Deep Dive ·
+    #   System Design & Scenarios · Coding · Behavioral · Simulators & Plans
+    # Grouping is by filename so it stays robust if titles change. Any interview
+    # page not explicitly placed falls into "More Q&A" so nothing is dropped.
     interview_entries = buckets.get("Interview Guide", [])
     if interview_entries:
-        nav.append("  - Interview Prep:")
+        P = "Personal-SourceCode/"
+        # base filename -> display label (label overrides NAV_LABEL_OVERRIDES here)
+        groups: list[tuple[str, list[tuple[str, str]]]] = [
+            ("By Level & Role", [
+                ("Interview_Level_Comparison.md", "Senior / Staff / Principal / FDE"),
+                ("AI_Engineer_Interview_QA.md", "AI Engineer"),
+                ("Forward_Deployed_Engineer_Interview_QA.md", "Forward Deployed Engineer (FDE)"),
+                ("Interview_Prep_Google_Cloud_Delivery_Lead.md", "Cloud Delivery Lead"),
+            ]),
+            ("Technical Deep Dive", [
+                ("GenAI_Interview_QA.md", "GenAI"),
+                ("Agents_Interview_QA.md", "Agentic AI / Agents"),
+                ("LangChain_LangGraph_Interview_QA.md", "LangChain / LangGraph"),
+                ("MCP_Interview_QA.md", "MCP"),
+                ("SQL_Interview_QA.md", "SQL"),
+                ("DataEngineering_Interview_QA.md", "Data Engineering"),
+                ("Snowflake_Interview_QA.md", "Snowflake"),
+                ("Databricks_Interview_QA.md", "Databricks"),
+                ("dbt_Interview_QA.md", "dbt"),
+                ("Python_Interview_QA.md", "Python"),
+                ("AWS_Interview_QA.md", "AWS"),
+                ("DevOps_Interview_QA.md", "DevOps"),
+            ]),
+            ("System Design & Scenarios", [
+                ("Interview_Requirements_to_Production.md", "Requirements → Production"),
+                ("Interview_Production_Incidents.md", "Production Incident Interviews"),
+                ("Interview_Why_Chains.md", "The Interviewer Keeps Asking Why"),
+            ]),
+            ("Coding", [
+                ("FDE_Coding_Interview_Prep.md", "FDE Coding Prep"),
+                ("FDE_LiveCoding_Scenarios_Prep.md", "Live-Coding & Scenarios"),
+            ]),
+            ("Behavioral", [
+                ("Behavioral_STAR_Interview_QA.md", "Behavioral / STAR"),
+            ]),
+            ("Practice & Plans", [
+                ("Interview_Practice.md", "Practice (Mock Session)"),
+                ("Interview_Master_Simulator.md", "Master Interview Simulator"),
+                ("Interview_Progress.md", "Progress Dashboard"),
+                ("Interview_Cheat_Sheets.md", "Master Cheat Sheets"),
+                ("Interview_30_Day_Plan.md", "30-Day Prep Plan"),
+            ]),
+        ]
 
-        def _entry_key(e):
-            base = Path(e[0]).name
-            ov = NAV_LABEL_OVERRIDES.get(base)
-            return (0, ov[0], "") if ov else (1, 0, e[1].lower())
-
+        # Map available interview pages by base filename.
+        available = {Path(rel).name: rel for rel, _t in interview_entries}
         index_base = "Interview_Guide_Overview.md"
-        for rel_dest, title in sorted(interview_entries, key=_entry_key):
-            base = Path(rel_dest).name
-            if base == index_base:
-                nav.append(f"      - {rel_dest}")  # bare = section index (icon)
+        placed_bases = {index_base}
+
+        nav.append("  - Interview Prep:")
+        # Overview page as the bare section index (icon + landing).
+        if index_base in available:
+            nav.append(f"      - {available[index_base]}")
+
+        for group_label, pages in groups:
+            present = [(b, lbl) for b, lbl in pages if b in available]
+            if not present:
                 continue
-            ov = NAV_LABEL_OVERRIDES.get(base)
-            label = nav_label(ov[1]) if ov else nav_label(title)
-            nav.append(f"      - {label}: {rel_dest}")
+            nav.append(f"      - {group_label}:")
+            for base, lbl in present:
+                nav.append(f"          - {nav_label(lbl)}: {available[base]}")
+                placed_bases.add(base)
+
+        # Safety net: any interview page not explicitly grouped.
+        leftovers = [(rel, t) for rel, t in interview_entries
+                     if Path(rel).name not in placed_bases]
+        if leftovers:
+            nav.append("      - More Q&A:")
+            for rel_dest, title in sorted(leftovers, key=lambda e: e[1].lower()):
+                base = Path(rel_dest).name
+                ov = NAV_LABEL_OVERRIDES.get(base)
+                label = nav_label(ov[1]) if ov else nav_label(title)
+                nav.append(f"          - {label}: {rel_dest}")
 
     # ----- STUDY GUIDE --------------------------------------------------------
     # The long-form study book + course modules (external source; may be absent

@@ -184,33 +184,39 @@ nav:
           - Hackathon Build Challenges: Personal-SourceCode/Lab_Hackathon_Builds.md
   - Interview Prep:
       - Personal-SourceCode/Interview_Guide_Overview.md
-      - Practice (Mock Session): Personal-SourceCode/Interview_Practice.md
-      - Progress Dashboard: Personal-SourceCode/Interview_Progress.md
-      - "GenAI Interview Q&A": Personal-SourceCode/GenAI_Interview_QA.md
-      - "FDE Interview Q&A": Personal-SourceCode/Forward_Deployed_Engineer_Interview_QA.md
-      - FDE Coding Prep: Personal-SourceCode/FDE_Coding_Interview_Prep.md
-      - "FDE Live-Coding & Scenarios": Personal-SourceCode/FDE_LiveCoding_Scenarios_Prep.md
-      - Cloud Delivery Lead Prep: Personal-SourceCode/Interview_Prep_Google_Cloud_Delivery_Lead.md
-      - "AI Engineer Interview Q&A": Personal-SourceCode/AI_Engineer_Interview_QA.md
-      - "Agentic AI / Agents Interview Q&A": Personal-SourceCode/Agents_Interview_QA.md
-      - "LangChain / LangGraph Interview Q&A": Personal-SourceCode/LangChain_LangGraph_Interview_QA.md
-      - "MCP Interview Q&A": Personal-SourceCode/MCP_Interview_QA.md
-      - "SQL Interview Q&A": Personal-SourceCode/SQL_Interview_QA.md
-      - "Data Engineering Interview Q&A": Personal-SourceCode/DataEngineering_Interview_QA.md
-      - "Snowflake Interview Q&A": Personal-SourceCode/Snowflake_Interview_QA.md
-      - "Databricks Interview Q&A": Personal-SourceCode/Databricks_Interview_QA.md
-      - "dbt Interview Q&A": Personal-SourceCode/dbt_Interview_QA.md
-      - "Python Interview Q&A": Personal-SourceCode/Python_Interview_QA.md
-      - "AWS Interview Q&A": Personal-SourceCode/AWS_Interview_QA.md
-      - "DevOps Interview Q&A": Personal-SourceCode/DevOps_Interview_QA.md
-      - "Behavioral / STAR Interview Q&A": Personal-SourceCode/Behavioral_STAR_Interview_QA.md
-      - Requirements → Production: Personal-SourceCode/Interview_Requirements_to_Production.md
-      - Production Incident Interviews: Personal-SourceCode/Interview_Production_Incidents.md
-      - The Interviewer Keeps Asking Why: Personal-SourceCode/Interview_Why_Chains.md
-      - Senior / Staff / Principal / FDE: Personal-SourceCode/Interview_Level_Comparison.md
-      - Master Interview Simulator: Personal-SourceCode/Interview_Master_Simulator.md
-      - Master Cheat Sheets: Personal-SourceCode/Interview_Cheat_Sheets.md
-      - 30-Day Prep Plan: Personal-SourceCode/Interview_30_Day_Plan.md
+      - By Level & Role:
+          - Senior / Staff / Principal / FDE: Personal-SourceCode/Interview_Level_Comparison.md
+          - AI Engineer: Personal-SourceCode/AI_Engineer_Interview_QA.md
+          - Forward Deployed Engineer (FDE): Personal-SourceCode/Forward_Deployed_Engineer_Interview_QA.md
+          - Cloud Delivery Lead: Personal-SourceCode/Interview_Prep_Google_Cloud_Delivery_Lead.md
+      - Technical Deep Dive:
+          - GenAI: Personal-SourceCode/GenAI_Interview_QA.md
+          - Agentic AI / Agents: Personal-SourceCode/Agents_Interview_QA.md
+          - LangChain / LangGraph: Personal-SourceCode/LangChain_LangGraph_Interview_QA.md
+          - MCP: Personal-SourceCode/MCP_Interview_QA.md
+          - SQL: Personal-SourceCode/SQL_Interview_QA.md
+          - Data Engineering: Personal-SourceCode/DataEngineering_Interview_QA.md
+          - Snowflake: Personal-SourceCode/Snowflake_Interview_QA.md
+          - Databricks: Personal-SourceCode/Databricks_Interview_QA.md
+          - dbt: Personal-SourceCode/dbt_Interview_QA.md
+          - Python: Personal-SourceCode/Python_Interview_QA.md
+          - AWS: Personal-SourceCode/AWS_Interview_QA.md
+          - DevOps: Personal-SourceCode/DevOps_Interview_QA.md
+      - System Design & Scenarios:
+          - Requirements → Production: Personal-SourceCode/Interview_Requirements_to_Production.md
+          - Production Incident Interviews: Personal-SourceCode/Interview_Production_Incidents.md
+          - The Interviewer Keeps Asking Why: Personal-SourceCode/Interview_Why_Chains.md
+      - Coding:
+          - FDE Coding Prep: Personal-SourceCode/FDE_Coding_Interview_Prep.md
+          - "Live-Coding & Scenarios": Personal-SourceCode/FDE_LiveCoding_Scenarios_Prep.md
+      - Behavioral:
+          - Behavioral / STAR: Personal-SourceCode/Behavioral_STAR_Interview_QA.md
+      - Practice & Plans:
+          - Practice (Mock Session): Personal-SourceCode/Interview_Practice.md
+          - Master Interview Simulator: Personal-SourceCode/Interview_Master_Simulator.md
+          - Progress Dashboard: Personal-SourceCode/Interview_Progress.md
+          - Master Cheat Sheets: Personal-SourceCode/Interview_Cheat_Sheets.md
+          - 30-Day Prep Plan: Personal-SourceCode/Interview_30_Day_Plan.md
   - Study Guide:
       - Personal-SourceCode/GenAI-AgenticAI-Complete-Study-Book.md
       - MODULE1-GENAI: Course-Modules/module1-genai.md
