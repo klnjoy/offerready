@@ -108,7 +108,6 @@ nav:
       - Databricks: Technologies/databricks/index.md
       - dbt: Technologies/dbt/index.md
       - FastAPI: Technologies/fastapi/index.md
-      - AWS: Technologies/aws/index.md
   - GenAI Topics:
       - Overview: GenAI-Topics/index.md
       - LLM Fundamentals: GenAI-Topics/llm-fundamentals/index.md

@@ -309,8 +309,6 @@ TECHNOLOGIES: list[tuple[str, str, str, str]] = [
      "Models, tests, sources, macros — analytics engineering."),
     ("fastapi", "FastAPI", ":material-lightning-bolt:",
      "Python APIs: async, Pydantic, serving GenAI endpoints."),
-    ("aws", "AWS", ":material-aws:",
-     "Lambda, S3, Bedrock, IAM, and deployment patterns."),
 ]
 
 

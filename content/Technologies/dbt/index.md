@@ -175,3 +175,155 @@ discipline to the transformation layer.
 | SCD Type 2 in dbt? | Snapshots |
 | Generic vs singular test? | Generic = reusable (unique/not_null); singular = custom SQL |
 | What does `dbt build` do? | Runs models + tests + snapshots + seeds in DAG order |
+
+---
+
+## Deep dive: how dbt actually builds
+
+The mental model behind `ref()` that senior interviews probe.
+
+```mermaid
+flowchart LR
+    PARSE[Parse project: compile Jinja] --> GRAPH[Build DAG from ref/source]
+    GRAPH --> COMPILE[Compile each model to raw SQL]
+    COMPILE --> RUN[Execute in dependency order]
+    RUN --> TEST[Run tests]
+    RUN --> ARTIFACTS[manifest.json + run_results.json]
+```
+
+- **Compile then run** — dbt renders Jinja into plain SQL (`target/compiled/…`)
+  *before* executing. When debugging, read the compiled SQL, not the template.
+- **`ref()` does three jobs** — builds the DAG (order), resolves the correct
+  schema/database per **target** (dev vs prod), and enables lineage. Never
+  hardcode a table name.
+- **Artifacts** — `manifest.json` (the full graph + metadata) and
+  `run_results.json` (what ran, timings, pass/fail) power docs, **slim CI**, and
+  observability tooling.
+
+### Materialization decision tree
+
+| If the model is… | Use | Why |
+|------------------|-----|-----|
+| Small, cheap, must be fresh | `view` | No storage, always current |
+| Reused a lot, moderate size | `table` | Fast reads, rebuilt each run |
+| Large, append-mostly | `incremental` | Process only new/changed rows |
+| Just reusable logic | `ephemeral` | Inlined as a CTE, no object |
+
+Incremental **strategies** matter: `append` (facts, no updates), `merge`
+(upsert on `unique_key`), `delete+insert`, and `insert_overwrite` (partition
+swap). Wrong strategy = duplicates or full rewrites.
+
+---
+
+## Testing, contracts & data quality
+
+Beyond `unique`/`not_null`:
+
+- **Generic tests** — `unique`, `not_null`, `relationships`, `accepted_values`,
+  plus `dbt_utils`/`dbt_expectations` (row counts, ranges, freshness, expression
+  checks).
+- **Singular tests** — a `.sql` file that returns failing rows; use for
+  business rules ("revenue is never negative").
+- **Unit tests** — assert a model's SQL logic against mock inputs, so you catch
+  transformation bugs without full data.
+- **Model contracts** — enforce column names, types, and `not_null`/`unique`
+  constraints at build time; a downstream consumer's schema can't silently break.
+- **Test at the grain** — the highest-value test is "one row per key"; it catches
+  fan-out from a bad join, the #1 silent data bug.
+
+```yaml
+models:
+  - name: fct_orders
+    config:
+      contract: {enforced: true}
+    columns:
+      - name: order_id
+        data_type: number
+        constraints: [{type: not_null}, {type: unique}]
+```
+
+---
+
+## Environments, CI/CD & performance
+
+- **Targets/profiles** isolate dev vs prod (separate schemas/databases); the
+  same `ref()` resolves correctly per environment.
+- **Slim CI** — `dbt build --select state:modified+` builds only changed models
+  and their children against a deferred prod manifest, so PR checks are fast.
+- **Deploy on green** — run `dbt build` (models + tests + snapshots + seeds) in
+  CI; merge/deploy only when tests pass. This is [DevOps for AI/data](../../GenAI-Topics/devops-ai/index.md)
+  discipline applied to the transformation layer — Kiro-assisted authoring,
+  Jenkins/GitHub Actions running the build.
+- **Performance** — prefer `incremental` for big facts; push heavy logic into
+  the warehouse (dbt is just SQL); avoid unnecessary `table` rebuilds; use
+  warehouse-native clustering/partitioning; keep models single-responsibility so
+  the DAG parallelizes.
+
+!!! tip "Analytics-engineering soundbite"
+    *"dbt turns SQL into software: version-controlled, tested, documented models
+    with a DAG from `ref()`. In CI I run slim builds on just what changed, and
+    contracts stop a schema change from silently breaking a downstream mart."*
+
+---
+
+## Governance & observability
+
+- **Docs + lineage** — `dbt docs generate` builds a searchable, column-lineage
+  site from the manifest; it's the "what feeds this and who uses it" answer.
+- **Source freshness** — `dbt source freshness` warns/errors when raw data is
+  stale, catching upstream pipeline failures early.
+- **Exposures** — declare downstream dashboards/apps so lineage extends past dbt
+  and you know the blast radius of a change.
+- **Ownership + meta** — tag models with owner/domain for accountability.
+
+---
+
+## More system-design & production incidents
+
+Each: **diagnose → mitigate → prevent.**
+
+??? question "An incremental model is producing duplicate rows. Root cause?"
+    Almost always a **missing or wrong `unique_key`**, or an `is_incremental()`
+    filter that lets overlapping rows in. **Mitigate:** set the correct
+    `unique_key` with a `merge` strategy and `--full-refresh` once to clean up.
+    **Prevent:** a `unique` test on the grain so CI catches recurrence.
+
+??? question "A dashboard number silently went wrong after a PR. How should this have been caught?"
+    A **fan-out from a many-to-many join** inflated the grain. **Prevent:** a
+    grain test (`unique` on the key), `relationships` tests, and **model
+    contracts** so column/type/constraint changes fail the build. Read the
+    **compiled SQL** to confirm the join.
+
+??? question "Upstream data was late and the whole run built on stale data. Fix the process."
+    **Diagnose:** no freshness gate. **Mitigate/prevent:** add
+    **`dbt source freshness`** as a pre-run check that errors on stale sources,
+    and gate the build on it so you don't publish stale marts.
+
+??? question "The nightly run is taking too long and blocking morning dashboards. Speed it up."
+    Convert big full-rebuild `table` models to **incremental**; split monolithic
+    models so the DAG parallelizes; use **slim CI** so only changed models rebuild
+    on PRs; move the schedule earlier or add warehouse concurrency. Profile with
+    `run_results.json` to find the slowest models.
+
+??? question "How do you safely refactor a heavily-used model without breaking consumers?"
+    Add a **model contract** to lock the interface, use **exposures** to see who
+    depends on it, ship behind tests, and deploy via CI on green. If the shape
+    must change, version the model and deprecate the old one.
+
+---
+
+## 60-second ramp checklist
+
+- [ ] Explain `ref()`'s three jobs (DAG, env resolution, lineage).
+- [ ] Pick a materialization and incremental strategy for a given case.
+- [ ] Name generic vs singular vs unit tests and what a grain test catches.
+- [ ] Describe model contracts and why they matter.
+- [ ] Explain slim CI (`state:modified+`) and deploy-on-green.
+- [ ] Use source freshness + exposures for governance.
+- [ ] Debug a duplicate-rows and a silent-fan-out incident out loud.
+
+## Related in this site
+
+- [Snowflake](../snowflake/index.md) · [Databricks](../databricks/index.md) — the warehouses dbt runs inside.
+- [Data Engineering Interview Q&A](../../Personal-SourceCode/DataEngineering_Interview_QA.md) · [dbt Interview Q&A](../../Personal-SourceCode/dbt_Interview_QA.md).
+- [DevOps for AI](../../GenAI-Topics/devops-ai/index.md) — CI/CD patterns that apply to dbt.

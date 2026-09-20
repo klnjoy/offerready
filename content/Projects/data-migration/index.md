@@ -136,5 +136,5 @@ flowchart LR
 
 - **[Snowflake](../../Technologies/snowflake/index.md)** — Streams & Tasks,
   Snapshot/CDC, secure views, tagging.
-- **[AWS](../../Technologies/aws/index.md)** — S3, DMS-adjacent patterns.
+- **[AWS (Interview Q&A)](../../Personal-SourceCode/AWS_Interview_QA.md)** — S3, DMS-adjacent patterns.
 - **[dbt](../../Technologies/dbt/index.md)** — the transformation layer for marts.

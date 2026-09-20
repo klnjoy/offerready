@@ -59,4 +59,4 @@ Keep humans in the loop for regulated decisions.
 - [Observability & Eval](../../GenAI-Topics/observability/index.md)
   · [Bedrock](../../GenAI-Topics/bedrock/index.md)
   · [Snowflake governance](../../Technologies/snowflake/index.md)
-  · [AWS security](../../Technologies/aws/index.md)
+  · [AWS security (Interview Q&A)](../../Personal-SourceCode/AWS_Interview_QA.md)

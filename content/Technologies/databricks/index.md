@@ -201,3 +201,159 @@ mix (heavy ML → Databricks; SQL-first + sharing → Snowflake), and openness n
 | Delta over Parquet adds? | ACID, transaction log, Time Travel, schema evolution, MERGE |
 | Medallion layers? | Bronze (raw) → Silver (clean) → Gold (aggregates) |
 | Broadcast join is for? | Joining a small table without shuffling the large one |
+
+---
+
+## Deep dive: Spark execution model
+
+The internals interviewers escalate into once you've said "lazy DAG."
+
+```mermaid
+flowchart TB
+    APP[Driver: your code + SparkSession] --> DAG[Logical plan]
+    DAG --> CAT[Catalyst optimizer] --> PHYS[Physical plan]
+    PHYS --> JOBS[Jobs]
+    JOBS --> STAGES[Stages - split at shuffle boundaries]
+    STAGES --> TASKS[Tasks - one per partition]
+    TASKS --> EX[Executors run tasks in parallel]
+    EX --> SHUF[(Shuffle service)]
+```
+
+- **Driver vs executors** — the driver plans and schedules; executors do the
+  work on partitions. `collect()` pulls all data to the driver → OOM risk.
+- **Job → stage → task** — an **action** launches a job; a **shuffle** splits it
+  into stages; each stage runs one **task per partition**.
+- **Catalyst + Tungsten** — Catalyst optimizes the query plan (predicate
+  pushdown, join reordering); Tungsten does code-gen and off-heap memory
+  management.
+- **Adaptive Query Execution (AQE)** — re-optimizes at runtime using actual
+  stats: coalesces shuffle partitions, switches join strategies, and splits skew
+  automatically. Know it by name — it's the answer to half of "my job is slow."
+
+### Join strategies (and when Spark picks each)
+
+| Strategy | When | Cost |
+|----------|------|------|
+| **Broadcast hash join** | One side is small (fits in memory) | No shuffle — cheapest |
+| **Shuffle hash join** | Medium tables, one side hashable | One shuffle |
+| **Sort-merge join** | Two large tables | Shuffle + sort — default for big joins |
+
+Forcing a broadcast (`broadcast(df)`) on a small dimension is the single most
+common Spark speedup.
+
+---
+
+## Performance & cost tuning
+
+Databricks bills **DBUs** (compute) on top of cloud VM cost, so tuning is both a
+speed and a money conversation.
+
+- **Kill the shuffle** — broadcast small sides, filter early (predicate
+  pushdown), and pick partition keys that match your joins/filters.
+- **Fix the tiny-file problem** — many small files murder read performance. Run
+  `OPTIMIZE` (+ Z-order) to compact; use Auto Optimize / Optimized Writes on
+  streaming tables.
+- **Partition sensibly** — partition on low-cardinality, frequently-filtered
+  columns (date), not high-cardinality ones (user_id → millions of dirs).
+- **Right-size clusters** — autoscaling for bursty jobs; **job clusters** (spun
+  up per job, torn down after) over always-on all-purpose clusters for
+  scheduled work; **spot/preemptible** instances for fault-tolerant batch.
+- **Photon** — the vectorized C++ engine; enable it for SQL/DataFrame workloads
+  for a large speedup on scans and aggregations.
+- **Cache deliberately** — `cache()`/`persist()` a DataFrame reused many times;
+  don't cache one-shot reads (wastes memory).
+
+!!! tip "Cost soundbite"
+    *"Databricks cost is DBUs times time. I cut both by killing shuffles
+    (broadcast + partition strategy), compacting small files with OPTIMIZE, using
+    ephemeral job clusters with autoscaling, and turning on Photon for SQL
+    workloads."*
+
+---
+
+## Governance & security (Unity Catalog depth)
+
+- **Three-level namespace** `catalog.schema.table` unifies governance across all
+  workspaces from one metastore.
+- **Fine-grained access** — grants on catalogs/schemas/tables; **row filters**
+  and **column masks** enforce row/column security centrally.
+- **Lineage** — table- and column-level lineage captured automatically; answers
+  "what feeds this Gold table and who consumes it."
+- **Data discovery + tags** — search and classify assets; tag PII for policy.
+- **Governed AI** — models, features, and volumes (unstructured files) are
+  first-class securable objects, so ML/GenAI assets inherit the same controls as
+  tables. Compare to [Snowflake governance](../snowflake/index.md) and
+  [Cortex governance](../../Snowflake-Cortex/governance-cost-observability.md).
+
+---
+
+## Observability
+
+- **Spark UI / query profile** — the primary tool: stage timeline, task skew,
+  spill, shuffle read/write, and the physical plan.
+- **Job runs + alerts** — monitor scheduled jobs, retries, and SLAs; alert on
+  failure and runtime drift.
+- **Lakehouse Monitoring / expectations** — track data quality and drift on
+  tables over time.
+- **System tables / billing** — query usage and DBU spend for cost attribution.
+
+---
+
+## More system-design & production incidents
+
+Each drill: **diagnose → mitigate → prevent.**
+
+??? question "A streaming job's latency keeps climbing until it falls behind. What's happening?"
+    Likely **small-file accumulation** (each micro-batch writes tiny files, so
+    reads and compaction slow down) or **state growth** in a stateful stream.
+    **Diagnose:** check batch duration trend and input rate vs processing rate in
+    the Structured Streaming dashboard. **Mitigate:** enable Optimized Writes /
+    Auto Compaction, tune trigger interval and `maxFilesPerTrigger`, add
+    watermarks to bound state. **Prevent:** schedule `OPTIMIZE`, set retention,
+    and monitor batch duration with alerts.
+
+??? question "A join that used to work now OOMs after data grew. Fix it."
+    **Diagnose:** the small side stopped fitting for a broadcast, or skew put a
+    hot key on one executor. **Mitigate:** let **AQE** handle skew and partition
+    coalescing, salt the hot key, or switch to sort-merge and size executors up.
+    **Prevent:** don't hardcode broadcast on a growing table; keep AQE on;
+    monitor partition sizes.
+
+??? question "Two teams' jobs interfere and costs spiked. Design the fix."
+    **Diagnose:** shared all-purpose clusters cause contention and idle burn.
+    **Mitigate + prevent:** isolate workloads with **job clusters** per pipeline,
+    autoscaling with sane min/max, spot for batch, and **budget/usage alerts** via
+    system tables. Tag jobs for cost attribution.
+
+??? question "GDPR erasure on an append-only Delta table — walk me through it."
+    `DELETE` rewrites affected files transactionally, then `VACUUM` past the
+    retention window purges old file versions (so **Time Travel** copies are also
+    removed). Track scope via Unity Catalog **lineage**; confirm no downstream
+    Gold table re-materializes the deleted rows.
+
+??? question "Design a lakehouse serving both BI and a RAG app over the same data."
+    Medallion to **Gold**; expose Gold to BI via SQL warehouses (Photon). For
+    RAG, embed the relevant text with **Mosaic AI Vector Search** and serve
+    retrieval + an LLM endpoint via **Model Serving** / `ai_query`. Govern
+    everything (tables, model, vector index) with **Unity Catalog**. This mirrors
+    the [Snowflake Cortex](../../Snowflake-Cortex/index.md) native-RAG story on
+    the Databricks side.
+
+---
+
+## 60-second ramp checklist
+
+- [ ] Explain lakehouse = one copy + ACID/schema/perf via Delta.
+- [ ] Draw job → stage → task and name what causes a shuffle.
+- [ ] Name the three join strategies and when Spark picks each.
+- [ ] Know AQE, Photon, and OPTIMIZE/Z-order/VACUUM by name.
+- [ ] Tie cost to DBUs × time and list three levers.
+- [ ] Describe Unity Catalog's three-level namespace + lineage + masking.
+- [ ] Handle a skew incident and a GDPR-erasure incident out loud.
+
+## Related in this site
+
+- [Snowflake](../snowflake/index.md) · [Snowflake Cortex](../../Snowflake-Cortex/index.md) — the warehouse-native counterpart.
+- [dbt](../dbt/index.md) — the transformation layer that runs on top.
+- [Databricks Interview Q&A](../../Personal-SourceCode/Databricks_Interview_QA.md) — the full question bank.
+- [Data Migration case study](../../Projects/data-migration/index.md).

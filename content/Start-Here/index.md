@@ -64,7 +64,7 @@ Best if your focus is the platform side.
 
 1. [Snowflake](../Technologies/snowflake/index.md) (Cortex, CDC, governance)
 2. [Databricks](../Technologies/databricks/index.md) (Lakehouse, Spark, Unity Catalog)
-3. [dbt](../Technologies/dbt/index.md) · [AWS](../Technologies/aws/index.md) · [FastAPI](../Technologies/fastapi/index.md)
+3. [dbt](../Technologies/dbt/index.md) · [FastAPI](../Technologies/fastapi/index.md) · [AWS Interview Q&A](../Personal-SourceCode/AWS_Interview_QA.md)
 4. Applied: [Data Migration case study](../Personal-SourceCode/genai-procurement-architecture.md) and the [Oracle→Snowflake migration](../Projects/data-migration/index.md)
 
 ## How to use the retrieval agent

@@ -194,3 +194,178 @@ set timeouts on model calls, validate/limit input size, and add rate limiting.
 | What is `Depends` for? | Injecting reusable logic: auth, DB, config |
 | Auto docs URLs? | `/docs` (Swagger), `/redoc` |
 | Stream tokens with? | `StreamingResponse` |
+
+---
+
+## Deep dive: the ASGI concurrency model
+
+Why FastAPI scales for I/O — and exactly how people break it.
+
+```mermaid
+flowchart TB
+    REQ[Many concurrent requests] --> LOOP[Single event loop per worker]
+    LOOP -->|await I/O| YIELD[Coroutine yields; loop serves others]
+    LOOP -->|def handler| POOL[Threadpool runs blocking code]
+    LOOP -->|CPU-bound| WARN[Blocks the loop - move to a worker]
+```
+
+- **One event loop per worker process.** `async def` handlers that `await` I/O
+  yield control so the loop serves other requests — that's the concurrency win.
+- **The cardinal sin:** a **blocking call inside `async def`** (sync DB driver,
+  `requests`, `time.sleep`, heavy CPU) freezes the loop and stalls *every*
+  concurrent request. Use async clients, or make the handler `def` (FastAPI runs
+  `def` handlers in a threadpool).
+- **CPU-bound work** belongs in a background worker (Celery/RQ/Arq) or a separate
+  service — not the event loop.
+- **Scale out** with multiple Uvicorn workers (processes); scale the loop within
+  each for I/O. GIL means CPU parallelism needs processes, not threads.
+
+---
+
+## Dependency injection in depth
+
+`Depends` is FastAPI's backbone for clean, testable wiring.
+
+```python
+from fastapi import Depends, HTTPException, Header
+
+async def get_db():
+    async with SessionLocal() as session:   # yield-based: setup + teardown
+        yield session
+
+async def require_api_key(x_api_key: str = Header(...)):
+    if not valid(x_api_key):
+        raise HTTPException(401, "bad key")
+    return x_api_key
+
+@app.post("/chat")
+async def chat(req: AskRequest,
+               db=Depends(get_db),
+               _=Depends(require_api_key)):
+    ...
+```
+
+- **Yield dependencies** run setup before and teardown after the request (DB
+  sessions, transactions) — like context managers.
+- **Sub-dependencies** compose; FastAPI resolves the graph and **caches** each
+  dependency per request by default.
+- **Testability** — `app.dependency_overrides` swaps real deps for fakes in
+  tests. This is why DI beats global state.
+
+---
+
+## Serving GenAI/LLM endpoints (production shape)
+
+FastAPI is the front door for the RAG/agent systems described in
+[GenAI Topics](../../GenAI-Topics/index.md) and the
+[Snowflake Cortex](../../Snowflake-Cortex/index.md) REST integration.
+
+```python
+from fastapi.responses import StreamingResponse
+
+@app.post("/chat")
+async def chat(req: AskRequest, _=Depends(require_api_key)):
+    ctx = await retrieve(req.question)          # async vector search
+    async def gen():
+        async for token in llm_stream(req.question, ctx):  # async LLM client
+            yield token
+    return StreamingResponse(gen(), media_type="text/event-stream")
+```
+
+Production checklist for an LLM endpoint:
+
+- **Stream** tokens (`StreamingResponse` / SSE) for responsive UX.
+- **Timeouts** on every model/tool call; a hung upstream must not hang your API.
+- **Backpressure & concurrency caps** — a semaphore limiting in-flight LLM calls
+  so a spike doesn't exhaust tokens/budget (ties to
+  [cost optimization](../../GenAI-Topics/cost-optimization/index.md)).
+- **Input limits & validation** — cap prompt size; reject oversized bodies.
+- **Idempotency** for retriable POSTs (idempotency key) so client retries don't
+  double-charge an LLM call.
+- **Treat model output as untrusted** — never `eval`/exec it, escape before
+  downstream use ([AI Security](../../AI-Security/index.md), insecure output handling).
+
+---
+
+## Security
+
+- **AuthN/AuthZ** — OAuth2/JWT via `Depends`; scope-check per route; never trust
+  client-supplied identity fields.
+- **Secrets** — `pydantic-settings` + env/secret manager; never hardcode.
+- **Input hardening** — Pydantic validation + explicit size/rate limits; strict
+  `response_model` so internal fields don't leak.
+- **CORS/TLS** — lock CORS to known origins; terminate TLS at the proxy/ALB.
+- **Rate limiting** — per-key/IP (e.g. slowapi or gateway-level) to contain abuse
+  and cost.
+
+---
+
+## Observability & performance
+
+- **Structured logging** with a request/correlation ID (middleware) so you can
+  trace one request end-to-end.
+- **Metrics** — latency (p50/p95/p99), error rate, in-flight requests, and for
+  LLM apps: tokens and cost per request. Prometheus/OpenTelemetry integrate
+  cleanly with ASGI.
+- **Tracing** — OpenTelemetry spans across retrieve → prompt → model call to see
+  where latency lives.
+- **Health/readiness** — `/health` (liveness) and a readiness check (deps
+  reachable) for orchestrators.
+- **Perf levers** — async clients everywhere on the hot path, connection pooling,
+  cache hot reads, `orjson` responses, and right-sizing worker count.
+
+---
+
+## More system-design & production incidents
+
+Each: **diagnose → mitigate → prevent.**
+
+??? question "Latency spikes to seconds under moderate load though the code is async. Why?"
+    A **blocking call in an `async def`** (sync DB/HTTP client, CPU work) is
+    stalling the event loop. **Diagnose:** profile the handler; look for non-await
+    I/O. **Mitigate:** switch to an async client or make the handler `def`
+    (threadpool); move CPU work to a worker. **Prevent:** lint for blocking calls,
+    load-test, and cap concurrency.
+
+??? question "The LLM provider slowed down and your whole API became unresponsive. Design the fix."
+    No **timeout/isolation** on the upstream. **Mitigate/prevent:** per-call
+    timeouts, a **circuit breaker** and retries with backoff, a concurrency
+    **semaphore** so slow calls don't consume every worker, and a graceful
+    fallback/queue. This is the [reliability](../../GenAI-Topics/reliability/index.md)
+    playbook applied at the API edge.
+
+??? question "Design a multi-tenant LLM API that stays within a cost budget."
+    Per-tenant **API keys** (DI-checked), per-tenant **rate limits** and
+    **token/cost budgets**, request size caps, response caching for repeat
+    prompts, and model routing (cheap model first). Emit per-tenant cost metrics
+    and alert on drift.
+
+??? question "How do you deploy and roll this out safely?"
+    Containerize; **Uvicorn workers under Gunicorn** behind ALB/Nginx (TLS, LB);
+    run on ECS/Fargate or K8s (or **Mangum** on Lambda + API Gateway). Health +
+    readiness probes, **canary/blue-green** rollout, structured logs, and config
+    via env/secrets. See [Kubernetes](../../GenAI-Topics/kubernetes/index.md) and
+    [DevOps for AI](../../GenAI-Topics/devops-ai/index.md).
+
+??? question "How do you keep the API contract stable as it evolves?"
+    Strict `response_model` (no leaked fields), URL versioning (`/v1`), the
+    auto-generated OpenAPI schema as the client contract, and additive changes
+    over breaking ones. Deprecate old versions on a schedule.
+
+---
+
+## 60-second ramp checklist
+
+- [ ] Explain one event loop per worker and the blocking-call trap.
+- [ ] Decide `async def` vs `def` correctly for a given handler.
+- [ ] Use `Depends` (incl. yield deps + overrides) for DB/auth/config.
+- [ ] Design a streaming LLM endpoint with timeouts, limits, and idempotency.
+- [ ] List the security controls (auth, secrets, rate limit, response_model).
+- [ ] Describe logging/metrics/tracing + health vs readiness.
+- [ ] Handle the "blocking loop" and "slow upstream" incidents out loud.
+
+## Related in this site
+
+- [GenAI Topics](../../GenAI-Topics/index.md) · [Snowflake Cortex](../../Snowflake-Cortex/index.md) — the systems this API fronts.
+- [Reliability](../../GenAI-Topics/reliability/index.md) · [Kubernetes](../../GenAI-Topics/kubernetes/index.md) · [DevOps for AI](../../GenAI-Topics/devops-ai/index.md).
+- [AI Security](../../AI-Security/index.md) — output handling and input hardening for AI endpoints.

@@ -15,8 +15,7 @@ flowchart LR
       DB[Databricks]
       DBT[dbt]
     end
-    subgraph Cloud[Cloud & Serving]
-      AWS[AWS]
+    subgraph Serving[Serving]
       API[FastAPI]
     end
     SRC[(Sources)] --> DBT
@@ -24,7 +23,6 @@ flowchart LR
     DBT --> DB
     SF --> API
     DB --> API
-    AWS -. hosts .-> API
     API --> APP[Apps / BI / GenAI]
 ```
 
@@ -54,11 +52,5 @@ flowchart LR
     Python APIs: async, Pydantic, serving GenAI endpoints.
 
     [Open](fastapi/index.md)
-
--   :material-aws: __AWS__
-
-    Lambda, S3, Bedrock, IAM, and the rest of the stack.
-
-    [Open](aws/index.md)
 
 </div>

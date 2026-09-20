@@ -48,4 +48,4 @@ flowchart TB
 
 - [Security Architecture](../security-architecture/index.md)
   · [Snowflake governance](../../Technologies/snowflake/index.md)
-  · [AWS IAM](../../Technologies/aws/index.md)
+  · [AWS IAM (Interview Q&A)](../../Personal-SourceCode/AWS_Interview_QA.md)
