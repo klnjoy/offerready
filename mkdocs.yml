@@ -200,6 +200,10 @@ nav:
       - "Requirements → Production": Personal-SourceCode/Interview_Requirements_to_Production.md
       - "Production Incident Interviews": Personal-SourceCode/Interview_Production_Incidents.md
       - "The Interviewer Keeps Asking Why": Personal-SourceCode/Interview_Why_Chains.md
+      - "Senior / Staff / Principal / FDE": Personal-SourceCode/Interview_Level_Comparison.md
+      - "Master Interview Simulator": Personal-SourceCode/Interview_Master_Simulator.md
+      - "Master Cheat Sheets": Personal-SourceCode/Interview_Cheat_Sheets.md
+      - "30-Day Prep Plan": Personal-SourceCode/Interview_30_Day_Plan.md
   - Practice Labs:
       - Personal-SourceCode/Lab_Scenario_Drills.md
       - "Live-Coding Drills": Personal-SourceCode/Lab_LiveCoding_Drills.md

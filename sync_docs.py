@@ -143,6 +143,10 @@ NAV_LABEL_OVERRIDES: dict[str, tuple[int, str]] = {
     "Interview_Requirements_to_Production.md": (21, "Requirements → Production"),
     "Interview_Production_Incidents.md": (22, "Production Incident Interviews"),
     "Interview_Why_Chains.md": (23, "The Interviewer Keeps Asking Why"),
+    "Interview_Level_Comparison.md": (24, "Senior / Staff / Principal / FDE"),
+    "Interview_Master_Simulator.md": (25, "Master Interview Simulator"),
+    "Interview_Cheat_Sheets.md": (26, "Master Cheat Sheets"),
+    "Interview_30_Day_Plan.md": (27, "30-Day Prep Plan"),
 }
 
 
