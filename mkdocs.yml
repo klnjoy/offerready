@@ -123,6 +123,7 @@ nav:
       - LangGraph: GenAI-Topics/langgraph/index.md
       - MCP: GenAI-Topics/mcp/index.md
       - Agent Engineering: GenAI-Topics/agent-engineering/index.md
+      - Building Agents — Deep Dive: GenAI-Topics/agent-principles/index.md
       - A2A Communication: GenAI-Topics/a2a/index.md
       - AgentCore: GenAI-Topics/agentcore/index.md
       - Bedrock: GenAI-Topics/bedrock/index.md
@@ -137,6 +138,13 @@ nav:
       - AI-Security/index.md
   - Case Studies:
       - Case-Studies/index.md
+  - Snowflake Cortex:
+      - Snowflake-Cortex/index.md
+      - Cortex Agents — Deep Dive: Snowflake-Cortex/agents.md
+      - "Analyst, Semantic Models & Search (RAG)": Snowflake-Cortex/analyst-search-rag.md
+      - "Security, Cost & Observability": Snowflake-Cortex/governance-cost-observability.md
+      - System Design + Mock Interview: Snowflake-Cortex/system-design-mock.md
+      - Cheat Sheet + 30-Day Ramp: Snowflake-Cortex/cheat-sheet-30-day.md
   - Setup Guides:
       - Overview: Setup-Guides/index.md
       - Local Environment: Setup-Guides/local-environment/index.md
@@ -197,19 +205,19 @@ nav:
       - "AWS Interview Q&A": Personal-SourceCode/AWS_Interview_QA.md
       - "DevOps Interview Q&A": Personal-SourceCode/DevOps_Interview_QA.md
       - "Behavioral / STAR Interview Q&A": Personal-SourceCode/Behavioral_STAR_Interview_QA.md
-      - "Requirements → Production": Personal-SourceCode/Interview_Requirements_to_Production.md
-      - "Production Incident Interviews": Personal-SourceCode/Interview_Production_Incidents.md
-      - "The Interviewer Keeps Asking Why": Personal-SourceCode/Interview_Why_Chains.md
-      - "Senior / Staff / Principal / FDE": Personal-SourceCode/Interview_Level_Comparison.md
-      - "Master Interview Simulator": Personal-SourceCode/Interview_Master_Simulator.md
-      - "Master Cheat Sheets": Personal-SourceCode/Interview_Cheat_Sheets.md
-      - "30-Day Prep Plan": Personal-SourceCode/Interview_30_Day_Plan.md
-  - Practice Labs:
-      - Personal-SourceCode/Lab_Scenario_Drills.md
-      - "Live-Coding Drills": Personal-SourceCode/Lab_LiveCoding_Drills.md
-      - "Hackathon Build Challenges": Personal-SourceCode/Lab_Hackathon_Builds.md
+      - Requirements → Production: Personal-SourceCode/Interview_Requirements_to_Production.md
+      - Production Incident Interviews: Personal-SourceCode/Interview_Production_Incidents.md
+      - The Interviewer Keeps Asking Why: Personal-SourceCode/Interview_Why_Chains.md
+      - Senior / Staff / Principal / FDE: Personal-SourceCode/Interview_Level_Comparison.md
+      - Master Interview Simulator: Personal-SourceCode/Interview_Master_Simulator.md
+      - Master Cheat Sheets: Personal-SourceCode/Interview_Cheat_Sheets.md
+      - 30-Day Prep Plan: Personal-SourceCode/Interview_30_Day_Plan.md
   - Projects & POCs:
       - Data Migration (Oracle to Snowflake): Projects/data-migration/index.md
       - "GenAI POC (LangChain & LangGraph)": Projects/genai-poc/index.md
       - GenAI Procurement Audit Bot — Architecture: Personal-SourceCode/genai-procurement-architecture.md
+  - Practice Labs:
+      - Personal-SourceCode/Lab_Scenario_Drills.md
+      - Live-Coding Drills: Personal-SourceCode/Lab_LiveCoding_Drills.md
+      - Hackathon Build Challenges: Personal-SourceCode/Lab_Hackathon_Builds.md
 # NAV:END

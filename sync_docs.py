@@ -1051,6 +1051,27 @@ def write_nav(md_catalog, modules) -> None:
         nav.append("  - Case Studies:")
         nav.append("      - Case-Studies/index.md")
 
+    # Snowflake Cortex — deep AI & Agents interview section. First entry is the
+    # bare section index (its `icon:` front matter gives the section icon); the
+    # rest are labeled child pages in reading order.
+    if (DOCS_DIR / "Snowflake-Cortex" / "index.md").exists():
+        cortex_pages = [
+            ("Cortex Agents — Deep Dive", "Snowflake-Cortex/agents.md"),
+            ("Analyst, Semantic Models & Search (RAG)",
+             "Snowflake-Cortex/analyst-search-rag.md"),
+            ("Security, Cost & Observability",
+             "Snowflake-Cortex/governance-cost-observability.md"),
+            ("System Design + Mock Interview",
+             "Snowflake-Cortex/system-design-mock.md"),
+            ("Cheat Sheet + 30-Day Ramp",
+             "Snowflake-Cortex/cheat-sheet-30-day.md"),
+        ]
+        nav.append("  - Snowflake Cortex:")
+        nav.append("      - Snowflake-Cortex/index.md")  # bare = section index
+        for label, rel in cortex_pages:
+            if (DOCS_DIR / rel).exists():
+                nav.append(f"      - {nav_label(label)}: {rel}")
+
     # Setup Guides
     nav.append("  - Setup Guides:")
     nav.append("      - Overview: Setup-Guides/index.md")
