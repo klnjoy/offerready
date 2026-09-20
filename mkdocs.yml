@@ -129,6 +129,8 @@ nav:
       - "Observability & Eval": GenAI-Topics/observability/index.md
       - "Reliability & Distributed Systems": GenAI-Topics/reliability/index.md
       - LLMOps / Deployment: GenAI-Topics/llmops/index.md
+      - "Kubernetes & Containers": GenAI-Topics/kubernetes/index.md
+      - DevOps for AI: GenAI-Topics/devops-ai/index.md
       - Cost Optimization: GenAI-Topics/cost-optimization/index.md
       - "Trends & Market (2026)": GenAI-Topics/trends/index.md
   - AI Security:
