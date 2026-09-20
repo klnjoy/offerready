@@ -44,6 +44,10 @@ theme:
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
+    # Top-level nav groups (Learn / Build / Interview Prep / Study Guide) render
+    # as tabs across the top; sticky keeps them visible while scrolling.
+    - navigation.tabs
+    - navigation.tabs.sticky
     # Collapsible sections in the left sidebar: click a section to drill down.
     # (No navigation.expand -> the list stays short and scrolls smoothly.)
     - navigation.indexes
@@ -102,87 +106,83 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Start Here: Start-Here/index.md
-  - Technologies:
-      - Overview: Technologies/index.md
-      - Snowflake: Technologies/snowflake/index.md
-      - Databricks: Technologies/databricks/index.md
-      - dbt: Technologies/dbt/index.md
-      - FastAPI: Technologies/fastapi/index.md
-  - GenAI Topics:
-      - Overview: GenAI-Topics/index.md
-      - LLM Fundamentals: GenAI-Topics/llm-fundamentals/index.md
-      - Prompt Engineering: GenAI-Topics/prompt-engineering/index.md
-      - Context Engineering: GenAI-Topics/context-engineering/index.md
-      - RAG: GenAI-Topics/rag/index.md
-      - Retrieval Tuning: GenAI-Topics/retrieval-tuning/index.md
-      - Embedding Models: GenAI-Topics/embeddings/index.md
-      - Vector DB: GenAI-Topics/vector-db/index.md
-      - Graph DB: GenAI-Topics/graph-db/index.md
-      - LangChain: GenAI-Topics/langchain/index.md
-      - LangGraph: GenAI-Topics/langgraph/index.md
-      - MCP: GenAI-Topics/mcp/index.md
-      - Agent Engineering: GenAI-Topics/agent-engineering/index.md
-      - Building Agents — Deep Dive: GenAI-Topics/agent-principles/index.md
-      - A2A Communication: GenAI-Topics/a2a/index.md
-      - AgentCore: GenAI-Topics/agentcore/index.md
-      - Bedrock: GenAI-Topics/bedrock/index.md
-      - "Observability & Eval": GenAI-Topics/observability/index.md
-      - "Reliability & Distributed Systems": GenAI-Topics/reliability/index.md
-      - LLMOps / Deployment: GenAI-Topics/llmops/index.md
-      - "Kubernetes & Containers": GenAI-Topics/kubernetes/index.md
-      - DevOps for AI: GenAI-Topics/devops-ai/index.md
-      - Cost Optimization: GenAI-Topics/cost-optimization/index.md
-      - "Trends & Market (2026)": GenAI-Topics/trends/index.md
-  - AI Security:
-      - AI-Security/index.md
-  - Case Studies:
-      - Case-Studies/index.md
-  - Snowflake Cortex:
-      - Snowflake-Cortex/index.md
-      - Cortex Agents — Deep Dive: Snowflake-Cortex/agents.md
-      - "Analyst, Semantic Models & Search (RAG)": Snowflake-Cortex/analyst-search-rag.md
-      - "Security, Cost & Observability": Snowflake-Cortex/governance-cost-observability.md
-      - System Design + Mock Interview: Snowflake-Cortex/system-design-mock.md
-      - Cheat Sheet + 30-Day Ramp: Snowflake-Cortex/cheat-sheet-30-day.md
-  - Setup Guides:
-      - Overview: Setup-Guides/index.md
-      - Local Environment: Setup-Guides/local-environment/index.md
-      - LLM Access: Setup-Guides/llm-access/index.md
-      - Vector DB Setup: Setup-Guides/vector-db-setup/index.md
-      - First RAG App: Setup-Guides/first-rag/index.md
-      - First Agent: Setup-Guides/first-agent/index.md
-  - Documentation:
-      - Overview: Documentation/index.md
-      - Architecture Overview: Documentation/architecture-overview/index.md
-      - RAG Flow: Documentation/rag-flow/index.md
-      - Agent Workflow: Documentation/agent-workflow/index.md
-      - Model Selection Guide: Documentation/model-selection/index.md
-      - Prompt Best Practices: Documentation/prompt-best-practices/index.md
-      - "Security & Governance": Documentation/security-governance/index.md
-      - Troubleshooting: Documentation/troubleshooting/index.md
-      - FAQ: Documentation/faq/index.md
-  - Enterprise:
-      - Overview: Enterprise/index.md
-      - Security Architecture: Enterprise/security-architecture/index.md
-      - RBAC Model: Enterprise/rbac/index.md
-      - Audit Logging: Enterprise/audit-logging/index.md
-      - "Monitoring & Observability": Enterprise/monitoring/index.md
-      - Compliance: Enterprise/compliance/index.md
-      - Reference Architectures: Enterprise/reference-architectures/index.md
-  - Study Guide:
-      - Personal-SourceCode/GenAI-AgenticAI-Complete-Study-Book.md
-      - MODULE1-GENAI: Course-Modules/module1-genai.md
-      - MODULE2-AWS-CLOUD: Course-Modules/module2-aws-cloud.md
-      - MODULE3-PYTHON: Course-Modules/module3-python.md
-      - MODULE4-PROMPT-ENGINEERING: Course-Modules/module4-prompt-engineering.md
-      - MODULE5-RAG: Course-Modules/module5-rag.md
-      - MODULE6-LANGCHAIN: Course-Modules/module6-langchain.md
-      - MODULE7-GRAPHDB: Course-Modules/module7-graphdb.md
-      - MODULE8.LANG-GRAPH: Course-Modules/module8-lang-graph.md
-      - MODULE9-MCP: Course-Modules/module9-mcp.md
-      - MODULE10-BEDROCK-N-AGENTCORE: Course-Modules/module10-bedrock-n-agentcore.md
-      - SUNDAY-SESSIONS: Course-Modules/sunday-sessions.md
-  - Interview Guide:
+  - Learn:
+      - Foundations (GenAI Topics):
+          - Overview: GenAI-Topics/index.md
+          - LLM Fundamentals: GenAI-Topics/llm-fundamentals/index.md
+          - Prompt Engineering: GenAI-Topics/prompt-engineering/index.md
+          - Context Engineering: GenAI-Topics/context-engineering/index.md
+          - RAG: GenAI-Topics/rag/index.md
+          - Retrieval Tuning: GenAI-Topics/retrieval-tuning/index.md
+          - Embedding Models: GenAI-Topics/embeddings/index.md
+          - Vector DB: GenAI-Topics/vector-db/index.md
+          - Graph DB: GenAI-Topics/graph-db/index.md
+          - LangChain: GenAI-Topics/langchain/index.md
+          - LangGraph: GenAI-Topics/langgraph/index.md
+          - MCP: GenAI-Topics/mcp/index.md
+          - Agent Engineering: GenAI-Topics/agent-engineering/index.md
+          - Building Agents — Deep Dive: GenAI-Topics/agent-principles/index.md
+          - A2A Communication: GenAI-Topics/a2a/index.md
+          - AgentCore: GenAI-Topics/agentcore/index.md
+          - Bedrock: GenAI-Topics/bedrock/index.md
+          - "Observability & Eval": GenAI-Topics/observability/index.md
+          - "Reliability & Distributed Systems": GenAI-Topics/reliability/index.md
+          - LLMOps / Deployment: GenAI-Topics/llmops/index.md
+          - "Kubernetes & Containers": GenAI-Topics/kubernetes/index.md
+          - DevOps for AI: GenAI-Topics/devops-ai/index.md
+          - Cost Optimization: GenAI-Topics/cost-optimization/index.md
+          - "Trends & Market (2026)": GenAI-Topics/trends/index.md
+      - Data & Cloud Tech (Technologies):
+          - Overview: Technologies/index.md
+          - Snowflake: Technologies/snowflake/index.md
+          - Databricks: Technologies/databricks/index.md
+          - dbt: Technologies/dbt/index.md
+          - FastAPI: Technologies/fastapi/index.md
+      - Snowflake Cortex:
+          - Snowflake-Cortex/index.md
+          - Cortex Agents — Deep Dive: Snowflake-Cortex/agents.md
+          - "Analyst, Semantic Models & Search (RAG)": Snowflake-Cortex/analyst-search-rag.md
+          - "Security, Cost & Observability": Snowflake-Cortex/governance-cost-observability.md
+          - System Design + Mock Interview: Snowflake-Cortex/system-design-mock.md
+          - Cheat Sheet + 30-Day Ramp: Snowflake-Cortex/cheat-sheet-30-day.md
+      - Reference Docs:
+          - Overview: Documentation/index.md
+          - Architecture Overview: Documentation/architecture-overview/index.md
+          - RAG Flow: Documentation/rag-flow/index.md
+          - Agent Workflow: Documentation/agent-workflow/index.md
+          - Model Selection Guide: Documentation/model-selection/index.md
+          - Prompt Best Practices: Documentation/prompt-best-practices/index.md
+          - "Security & Governance": Documentation/security-governance/index.md
+          - Troubleshooting: Documentation/troubleshooting/index.md
+          - FAQ: Documentation/faq/index.md
+      - Enterprise & Security:
+          - Overview: Enterprise/index.md
+          - Security Architecture: Enterprise/security-architecture/index.md
+          - RBAC Model: Enterprise/rbac/index.md
+          - Audit Logging: Enterprise/audit-logging/index.md
+          - "Monitoring & Observability": Enterprise/monitoring/index.md
+          - Compliance: Enterprise/compliance/index.md
+          - Reference Architectures: Enterprise/reference-architectures/index.md
+          - AI Security (LLM/Agent threats): AI-Security/index.md
+  - Build:
+      - Setup Guides:
+          - Overview: Setup-Guides/index.md
+          - Local Environment: Setup-Guides/local-environment/index.md
+          - LLM Access: Setup-Guides/llm-access/index.md
+          - Vector DB Setup: Setup-Guides/vector-db-setup/index.md
+          - First RAG App: Setup-Guides/first-rag/index.md
+          - First Agent: Setup-Guides/first-agent/index.md
+      - Projects & POCs:
+          - Data Migration (Oracle to Snowflake): Projects/data-migration/index.md
+          - "GenAI POC (LangChain & LangGraph)": Projects/genai-poc/index.md
+          - GenAI Procurement Audit Bot — Architecture: Personal-SourceCode/genai-procurement-architecture.md
+      - Case Studies:
+          - Case-Studies/index.md
+      - Practice Labs:
+          - Personal-SourceCode/Lab_Scenario_Drills.md
+          - Live-Coding Drills: Personal-SourceCode/Lab_LiveCoding_Drills.md
+          - Hackathon Build Challenges: Personal-SourceCode/Lab_Hackathon_Builds.md
+  - Interview Prep:
       - Personal-SourceCode/Interview_Guide_Overview.md
       - Practice (Mock Session): Personal-SourceCode/Interview_Practice.md
       - Progress Dashboard: Personal-SourceCode/Interview_Progress.md
@@ -211,12 +211,17 @@ nav:
       - Master Interview Simulator: Personal-SourceCode/Interview_Master_Simulator.md
       - Master Cheat Sheets: Personal-SourceCode/Interview_Cheat_Sheets.md
       - 30-Day Prep Plan: Personal-SourceCode/Interview_30_Day_Plan.md
-  - Projects & POCs:
-      - Data Migration (Oracle to Snowflake): Projects/data-migration/index.md
-      - "GenAI POC (LangChain & LangGraph)": Projects/genai-poc/index.md
-      - GenAI Procurement Audit Bot — Architecture: Personal-SourceCode/genai-procurement-architecture.md
-  - Practice Labs:
-      - Personal-SourceCode/Lab_Scenario_Drills.md
-      - Live-Coding Drills: Personal-SourceCode/Lab_LiveCoding_Drills.md
-      - Hackathon Build Challenges: Personal-SourceCode/Lab_Hackathon_Builds.md
+  - Study Guide:
+      - Personal-SourceCode/GenAI-AgenticAI-Complete-Study-Book.md
+      - MODULE1-GENAI: Course-Modules/module1-genai.md
+      - MODULE2-AWS-CLOUD: Course-Modules/module2-aws-cloud.md
+      - MODULE3-PYTHON: Course-Modules/module3-python.md
+      - MODULE4-PROMPT-ENGINEERING: Course-Modules/module4-prompt-engineering.md
+      - MODULE5-RAG: Course-Modules/module5-rag.md
+      - MODULE6-LANGCHAIN: Course-Modules/module6-langchain.md
+      - MODULE7-GRAPHDB: Course-Modules/module7-graphdb.md
+      - MODULE8.LANG-GRAPH: Course-Modules/module8-lang-graph.md
+      - MODULE9-MCP: Course-Modules/module9-mcp.md
+      - MODULE10-BEDROCK-N-AGENTCORE: Course-Modules/module10-bedrock-n-agentcore.md
+      - SUNDAY-SESSIONS: Course-Modules/sunday-sessions.md
 # NAV:END

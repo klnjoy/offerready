@@ -1024,34 +1024,32 @@ def write_nav(md_catalog, modules) -> None:
         return
     buckets = _bucketize(md_catalog)
 
+    # Nav is grouped into intent-based top-level buckets so it reads as a study
+    # journey (with navigation.tabs, each of these becomes a tab):
+    #   Home · Start Here · LEARN · BUILD · INTERVIEW PREP · STUDY GUIDE
+    # Indentation levels:
+    #   "  - Tab:"            (2 spaces)  top-level tab / group
+    #   "      - Section:"    (6 spaces)  a section inside a group
+    #   "          - Page"    (10 spaces) a page inside a section
     nav = ["nav:", "  - Home: index.md",
            "  - Start Here: Start-Here/index.md"]
 
-    # Technologies
-    nav.append("  - Technologies:")
-    nav.append("      - Overview: Technologies/index.md")
-    for slug, display, _icon, _desc in TECHNOLOGIES:
-        nav.append(f"      - {nav_label(display)}: Technologies/{slug}/index.md")
+    # ----- LEARN --------------------------------------------------------------
+    nav.append("  - Learn:")
 
-    # GenAI Topics
-    nav.append("  - GenAI Topics:")
-    nav.append("      - Overview: GenAI-Topics/index.md")
+    # Foundations (GenAI Topics)
+    nav.append("      - Foundations (GenAI Topics):")
+    nav.append("          - Overview: GenAI-Topics/index.md")
     for slug, display, _icon, _desc in TOPICS:
-        nav.append(f"      - {nav_label(display)}: GenAI-Topics/{slug}/index.md")
+        nav.append(f"          - {nav_label(display)}: GenAI-Topics/{slug}/index.md")
 
-    # AI Security — standalone top-level section (bare index → section icon).
-    if (DOCS_DIR / "AI-Security" / "index.md").exists():
-        nav.append("  - AI Security:")
-        nav.append("      - AI-Security/index.md")
+    # Data & Cloud Tech (Technologies)
+    nav.append("      - Data & Cloud Tech (Technologies):")
+    nav.append("          - Overview: Technologies/index.md")
+    for slug, display, _icon, _desc in TECHNOLOGIES:
+        nav.append(f"          - {nav_label(display)}: Technologies/{slug}/index.md")
 
-    # Case Studies — standalone top-level section (bare index → section icon).
-    if (DOCS_DIR / "Case-Studies" / "index.md").exists():
-        nav.append("  - Case Studies:")
-        nav.append("      - Case-Studies/index.md")
-
-    # Snowflake Cortex — deep AI & Agents interview section. First entry is the
-    # bare section index (its `icon:` front matter gives the section icon); the
-    # rest are labeled child pages in reading order.
+    # Snowflake Cortex — deep AI & Agents dive (kept near the data/AI material).
     if (DOCS_DIR / "Snowflake-Cortex" / "index.md").exists():
         cortex_pages = [
             ("Cortex Agents — Deep Dive", "Snowflake-Cortex/agents.md"),
@@ -1064,38 +1062,91 @@ def write_nav(md_catalog, modules) -> None:
             ("Cheat Sheet + 30-Day Ramp",
              "Snowflake-Cortex/cheat-sheet-30-day.md"),
         ]
-        nav.append("  - Snowflake Cortex:")
-        nav.append("      - Snowflake-Cortex/index.md")  # bare = section index
+        nav.append("      - Snowflake Cortex:")
+        nav.append("          - Snowflake-Cortex/index.md")  # bare = section index
         for label, rel in cortex_pages:
             if (DOCS_DIR / rel).exists():
-                nav.append(f"      - {nav_label(label)}: {rel}")
+                nav.append(f"          - {nav_label(label)}: {rel}")
+
+    # Reference Docs (Documentation)
+    nav.append("      - Reference Docs:")
+    nav.append("          - Overview: Documentation/index.md")
+    for slug, display, _icon, _desc in DOCUMENTATION:
+        nav.append(f"          - {nav_label(display)}: Documentation/{slug}/index.md")
+
+    # Enterprise & Security (Enterprise section + AI Security dive)
+    nav.append("      - Enterprise & Security:")
+    nav.append("          - Overview: Enterprise/index.md")
+    for slug, display, _icon, _desc in ENTERPRISE:
+        nav.append(f"          - {nav_label(display)}: Enterprise/{slug}/index.md")
+    if (DOCS_DIR / "AI-Security" / "index.md").exists():
+        nav.append("          - AI Security (LLM/Agent threats): AI-Security/index.md")
+
+    # ----- BUILD --------------------------------------------------------------
+    nav.append("  - Build:")
 
     # Setup Guides
-    nav.append("  - Setup Guides:")
-    nav.append("      - Overview: Setup-Guides/index.md")
+    nav.append("      - Setup Guides:")
+    nav.append("          - Overview: Setup-Guides/index.md")
     for slug, display, _icon, _desc in SETUP_GUIDES:
-        nav.append(f"      - {nav_label(display)}: Setup-Guides/{slug}/index.md")
+        nav.append(f"          - {nav_label(display)}: Setup-Guides/{slug}/index.md")
 
-    # Documentation
-    nav.append("  - Documentation:")
-    nav.append("      - Overview: Documentation/index.md")
-    for slug, display, _icon, _desc in DOCUMENTATION:
-        nav.append(f"      - {nav_label(display)}: Documentation/{slug}/index.md")
+    # Projects & POCs (authored + code projects + procurement architecture case)
+    projects_entries = sorted(buckets.get("Projects & POCs", []),
+                              key=lambda e: e[1].lower())
+    nav.append("      - Projects & POCs:")
+    for slug, display, _icon2, _desc in PROJECTS_AUTHORED:
+        nav.append(f"          - {nav_label(display)}: Projects/{slug}/index.md")
+    for c_slug, c_disp, _ci, _cd, _f, _p in CODE_PROJECTS:
+        nav.append(f"          - {nav_label(c_disp)}: Projects/{c_slug}/index.md")
+    for rel_dest, title in projects_entries:
+        nav.append(f"          - {nav_label(title)}: {rel_dest}")
 
-    # Enterprise
-    nav.append("  - Enterprise:")
-    nav.append("      - Overview: Enterprise/index.md")
-    for slug, display, _icon, _desc in ENTERPRISE:
-        nav.append(f"      - {nav_label(display)}: Enterprise/{slug}/index.md")
+    # Case Studies dive
+    if (DOCS_DIR / "Case-Studies" / "index.md").exists():
+        nav.append("      - Case Studies:")
+        nav.append("          - Case-Studies/index.md")
 
-    # Study Guide — only emit the section if there is content for it (the study
-    # book + course modules come from an external source that may be absent,
-    # e.g. on the public CI build). An empty section header breaks the nav.
+    # Practice Labs — hands-on "doing" content (kept out of the auto-catalog via
+    # COPY_NO_CATALOG so they aren't double-listed).
+    lab_pages = [
+        ("Scenario Drills (Data & GenAI)", "Personal-SourceCode/Lab_Scenario_Drills.md"),
+        ("Live-Coding Drills", "Personal-SourceCode/Lab_LiveCoding_Drills.md"),
+        ("Hackathon Build Challenges", "Personal-SourceCode/Lab_Hackathon_Builds.md"),
+    ]
+    existing_labs = [(t, p) for (t, p) in lab_pages if (DOCS_DIR / p).exists()]
+    if existing_labs:
+        nav.append("      - Practice Labs:")
+        nav.append(f"          - {existing_labs[0][1]}")  # bare = section index
+        for title, rel in existing_labs[1:]:
+            nav.append(f"          - {nav_label(title)}: {rel}")
+
+    # ----- INTERVIEW PREP -----------------------------------------------------
+    interview_entries = buckets.get("Interview Guide", [])
+    if interview_entries:
+        nav.append("  - Interview Prep:")
+
+        def _entry_key(e):
+            base = Path(e[0]).name
+            ov = NAV_LABEL_OVERRIDES.get(base)
+            return (0, ov[0], "") if ov else (1, 0, e[1].lower())
+
+        index_base = "Interview_Guide_Overview.md"
+        for rel_dest, title in sorted(interview_entries, key=_entry_key):
+            base = Path(rel_dest).name
+            if base == index_base:
+                nav.append(f"      - {rel_dest}")  # bare = section index (icon)
+                continue
+            ov = NAV_LABEL_OVERRIDES.get(base)
+            label = nav_label(ov[1]) if ov else nav_label(title)
+            nav.append(f"      - {label}: {rel_dest}")
+
+    # ----- STUDY GUIDE --------------------------------------------------------
+    # The long-form study book + course modules (external source; may be absent
+    # on the public CI build). An empty section header would break the nav.
     study_entries = sorted(buckets.get("Study Guide", []), key=lambda e: e[1].lower())
     if study_entries or modules:
         nav.append("  - Study Guide:")
-        # Emit the study book as the bare section index (it has icon front matter)
-        # so the section shows an icon in the nav; the rest follow as children.
         study_index = "GenAI-AgenticAI-Complete-Study-Book.md"
         emitted_index = False
         for rel_dest, title in study_entries:
@@ -1107,56 +1158,17 @@ def write_nav(md_catalog, modules) -> None:
         for mtitle, rel_dest, _count, _slug in sorted(modules, key=_module_sort_key):
             nav.append(f"      - {nav_label(mtitle)}: {rel_dest}")
 
-    # Remaining categories
+    # ----- Any leftover categories (e.g. "More") not placed above -------------
+    placed = {"Study Guide", "Interview Guide", "Projects & POCs"}
     for name, _icon, _kw in CATEGORIES:
-        if name == "Study Guide":
+        if name in placed:
             continue
         entries = buckets.get(name, [])
-        authored = PROJECTS_AUTHORED if name == "Projects & POCs" else []
-        if not entries and not authored:
+        if not entries:
             continue
         nav.append(f"  - {name}:")
-        for slug, display, _icon2, _desc in authored:
-            nav.append(f"      - {nav_label(display)}: Projects/{slug}/index.md")
-        if name == "Projects & POCs":
-            for c_slug, c_disp, _ci, _cd, _f, _p in CODE_PROJECTS:
-                nav.append(f"      - {nav_label(c_disp)}: Projects/{c_slug}/index.md")
-        def _entry_key(e):
-            base = Path(e[0]).name
-            ov = NAV_LABEL_OVERRIDES.get(base)
-            # Overridden pages sort by their explicit order and come first;
-            # everything else falls back to alphabetical by title.
-            return (0, ov[0], "") if ov else (1, 0, e[1].lower())
-
-        # Sections whose first (index) page should be the bare section index, so
-        # Material renders the section icon from that page's `icon:` front matter.
-        SECTION_INDEX = {"Interview Guide": "Interview_Guide_Overview.md"}
-        index_base = SECTION_INDEX.get(name)
-        for rel_dest, title in sorted(entries, key=_entry_key):
-            base = Path(rel_dest).name
-            if base == index_base:
-                nav.append(f"      - {rel_dest}")  # bare = section index (icon)
-                continue
-            ov = NAV_LABEL_OVERRIDES.get(base)
-            label = nav_label(ov[1]) if ov else nav_label(title)
-            nav.append(f"      - {label}: {rel_dest}")
-
-    # Practice Labs — hands-on "doing" content (scenarios, live-coding, hackathons).
-    # Placed explicitly (its pages are kept out of the auto-catalog via
-    # COPY_NO_CATALOG so they aren't double-listed).
-    lab_pages = [
-        ("Scenario Drills (Data & GenAI)", "Personal-SourceCode/Lab_Scenario_Drills.md"),
-        ("Live-Coding Drills", "Personal-SourceCode/Lab_LiveCoding_Drills.md"),
-        ("Hackathon Build Challenges", "Personal-SourceCode/Lab_Hackathon_Builds.md"),
-    ]
-    existing_labs = [(t, p) for (t, p) in lab_pages if (DOCS_DIR / p).exists()]
-    if existing_labs:
-        nav.append("  - Practice Labs:")
-        # First entry as the bare section index so Material shows the section
-        # icon (from the page's `icon:` front matter) in the nav.
-        nav.append(f"      - {existing_labs[0][1]}")
-        for title, rel in existing_labs[1:]:
-            nav.append(f"      - {nav_label(title)}: {rel}")
+        for rel_dest, title in sorted(entries, key=lambda e: e[1].lower()):
+            nav.append(f"      - {nav_label(title)}: {rel_dest}")
 
     block = "# NAV:BEGIN\n" + "\n".join(nav) + "\n# NAV:END"
     text = MKDOCS_YML.read_text(encoding="utf-8")
