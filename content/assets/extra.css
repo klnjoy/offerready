@@ -721,6 +721,20 @@
   margin-left: 0.3rem;
 }
 
+/* Hide page icons in the LEFT NAV only (e.g. the flag on "Start Here").
+   Page-header icons and home-page card icons are unaffected. */
+.md-nav__link .twemoji,
+.md-nav__link svg.twemoji,
+.md-nav__item .md-nav__link > .twemoji {
+  display: none !important;
+}
+
+/* Hide the redundant "OfferReady" site title at the top of the left sidebar —
+   the header bar already shows the logo + wordmark. */
+.md-nav--primary > .md-nav__title {
+  display: none !important;
+}
+
 /* Branded footer accent bar + copyright styling */
 .md-footer-meta {
   background: linear-gradient(135deg, var(--kb-grad-2), var(--kb-grad-1));
