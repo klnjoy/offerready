@@ -758,15 +758,32 @@
   color: #fff; font-size: 0.72rem; font-weight: 700;
 }
 
-/* Hide the permalink ¶ on the top page title (h1) — it looks like a stray glyph
-   next to the brand/hero heading. Section headings (h2+) keep theirs for
-   shareable anchors. Use !important to beat the theme's own .headerlink rules
-   regardless of stylesheet load order. */
+/* Permalink (¶) handling. On the H1 / hero it's always hidden (it reads as a
+   stray glyph next to the brand). On section headings (h2+) it stays a
+   shareable anchor but is HOVER-ONLY — invisible until you hover the heading —
+   which is the clean SaaS behavior and removes the stray ¶ that was showing
+   next to headings like "1. The job". */
 .md-typeset h1 > .headerlink,
-.md-typeset h1 .headerlink { display: none !important; }
-/* Also hide it inside branded hero blocks regardless of heading level. */
-.ig-hero .headerlink,
+.md-typeset h1 .headerlink,
 .ig-hero .headerlink { display: none !important; }
+
+/* h2–h6: fade the permalink in only on hover/focus. */
+.md-typeset h2 > .headerlink,
+.md-typeset h3 > .headerlink,
+.md-typeset h4 > .headerlink,
+.md-typeset h5 > .headerlink,
+.md-typeset h6 > .headerlink {
+  opacity: 0 !important;
+  transition: opacity 150ms ease;
+}
+.md-typeset h2:hover > .headerlink,
+.md-typeset h3:hover > .headerlink,
+.md-typeset h4:hover > .headerlink,
+.md-typeset h5:hover > .headerlink,
+.md-typeset h6:hover > .headerlink,
+.md-typeset .headerlink:focus {
+  opacity: 1 !important;
+}
 
 /* ============================================================
    SaaS polish pass (batch 2) — spacing, hierarchy, mobile.

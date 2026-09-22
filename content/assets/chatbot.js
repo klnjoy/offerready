@@ -11,7 +11,14 @@
   if (window.__kbChatbotLoaded) return;
   window.__kbChatbotLoaded = true;
 
-  const API = window.KB_AGENT_URL || "http://localhost:8000";
+  // Prefer the hosted API (Vercel) when configured; else fall back to a local
+  // agent (KB_AGENT_URL / localhost) for local development.
+  const HOSTED = (window.OFFERREADY_API_BASE || "").replace(/\/$/, "");
+  const API = HOSTED || window.KB_AGENT_URL || "http://localhost:8000";
+  const IS_HOSTED = Boolean(HOSTED);
+  // Hosted uses /api/ask + /api/areas; local agent uses /ask + /areas.
+  const ASK_PATH = IS_HOSTED ? "/api/ask" : "/ask";
+  const AREAS_PATH = IS_HOSTED ? "/api/areas" : "/areas";
 
   // ---- DOM ----
   const btn = document.createElement("button");
@@ -189,8 +196,8 @@
     return html.join("\n");
   }
 
-  // Populate area dropdown from /areas (best effort)
-  fetch(API + "/areas")
+  // Populate area dropdown from /areas (best effort; hosted may not provide it)
+  fetch(API + AREAS_PATH)
     .then((r) => r.json())
     .then((d) => {
       (d.areas || []).forEach((a) => {
@@ -211,12 +218,16 @@
     input.value = "";
     const thinking = addMsg("<em>Thinking…</em>", "kb-bot kb-thinking");
     try {
-      const resp = await fetch(API + "/ask", {
+      const resp = await fetch(API + ASK_PATH, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q, area: areaSel.value, k: 4 }),
       });
-      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      if (!resp.ok) {
+        let m = "The assistant had a problem. Please try again.";
+        try { const e = await resp.json(); if (e && e.error) m = e.error; } catch (_) {}
+        throw new Error(m);
+      }
       const data = await resp.json();
       let html = renderMarkdown(data.answer || "_(no answer)_");
       if (data.citations && data.citations.length) {
@@ -240,12 +251,24 @@
       addMsg(html, "kb-bot");
     } catch (err) {
       thinking.remove();
-      addMsg(
-        "⚠️ Can't reach the agent. Start it first:" +
-        "<pre><code>cd agent\nuvicorn serve:app --port 8000</code></pre>" +
-        "then reload this page. (Tip: use <strong>start-chatbot.bat</strong>.)",
-        "kb-bot kb-err"
-      );
+      const msg = (err && err.message) ? escapeHtml(err.message) : "";
+      if (IS_HOSTED) {
+        // Public site: friendly, no dev/localhost instructions.
+        addMsg(
+          "⚠️ " + (msg || "The assistant is unavailable right now.") +
+          " In the meantime, use the <strong>search</strong> at the top of the page, " +
+          "or browse the topics from the left menu.",
+          "kb-bot kb-err"
+        );
+      } else {
+        // Local dev only: the agent isn't running.
+        addMsg(
+          "⚠️ Can't reach the local agent. Start it first:" +
+          "<pre><code>cd agent\nuvicorn serve:app --port 8000</code></pre>" +
+          "then reload. (Tip: <strong>start-chatbot.bat</strong>.)",
+          "kb-bot kb-err"
+        );
+      }
     } finally {
       busy = false;
       setTimeout(() => input.focus(), 30);

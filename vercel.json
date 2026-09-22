@@ -3,6 +3,9 @@
   "functions": {
     "api/analyze-job.js": {
       "maxDuration": 60
+    },
+    "api/ask.js": {
+      "maxDuration": 30
     }
   }
 }
