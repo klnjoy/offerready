@@ -1,0 +1,26 @@
+# Vercel only needs to build the Node API in api/. Ignore the MkDocs site and
+# all the Python so Vercel doesn't mis-detect this as a Python project.
+# (The website itself is served by GitHub Pages, not Vercel.)
+
+# Python / MkDocs site
+*.py
+agent/
+content/
+docs/
+site/
+personal-docs/
+mkdocs.yml
+requirements.txt
+__pycache__/
+
+# Batch / shell helpers
+*.bat
+*.ps1
+*.sh
+
+# Docs & misc
+*.md
+!DEPLOY.md
+.github/
+.kiro/
+*.pem
