@@ -69,6 +69,8 @@ extra_css:
   - assets/extra.css
 
 extra_javascript:
+  # Must load first: sets window.OFFERREADY_API_BASE for chatbot.js + analyze.js.
+  - assets/api-config.js
   - assets/mermaid-init.js
   - assets/chatbot.js
   - assets/practice.js

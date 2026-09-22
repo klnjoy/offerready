@@ -37,19 +37,20 @@ Add them for **Production** (and Preview if you want). Never commit a real key �
 - The endpoint is then `https://<your-vercel-url>/api/analyze-job`.
 
 ## 5. Point the frontend at the API
-The frontend reads the API base from `window.OFFERREADY_API_BASE`. Set it once
-so `analyze.js` knows where to call. Easiest: add a tiny config include.
+The config file already exists: **`content/assets/api-config.js`** (loaded first,
+before `chatbot.js`/`analyze.js`). Just edit one line:
 
-Option A — set it in `mkdocs.yml` `extra_javascript` won't take a variable, so
-add a one-line script. Create `content/assets/api-config.js`:
 ```js
-window.OFFERREADY_API_BASE = "https://<your-vercel-url>";
+var BASE = "https://<your-vercel-url>";   // paste your Vercel URL, no trailing slash
 ```
-and add `- assets/api-config.js` to `extra_javascript` **before** `analyze.js`.
-Rebuild/redeploy the site (push to GitHub — CI republishes Pages).
 
-If `OFFERREADY_API_BASE` is empty/unset, the Analyze page still works — it shows
-the **clearly-labeled Sample Demo** instead of calling the API.
+Then commit + push — GitHub Actions republishes Pages. This single change
+activates **both** `/api/analyze-job` (Analyze My Job) and `/api/ask` (the
+chat widget).
+
+While the value is left as the placeholder, the site stays in a safe
+"not enabled yet" state: the Analyze page shows the **labeled Sample Demo**, and
+the chat widget shows a friendly message — **no broken calls**.
 
 ## 6. Test the API directly
 ```bash
