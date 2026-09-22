@@ -47,11 +47,12 @@ theme:
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
-    # Left-sidebar navigation (better for studying deep content than top tabs):
-    # the Learn / Build / Interview Prep / Study Guide groups render as
-    # always-visible section headers in the left menu, each expandable to its
-    # pages. navigation.indexes lets a section's index page act as its landing.
-    - navigation.sections
+    # Left-sidebar navigation, fully expanded so every group and page is
+    # browsable and drill-downable from any page (including Home). Using
+    # navigation.expand (not navigation.sections) keeps the collapsible tree
+    # working — sections open on click and the whole map is visible.
+    # navigation.indexes lets a section's index page act as its landing.
+    - navigation.expand
     - navigation.indexes
     - navigation.top
     # Right-hand table of contents for the current page.
