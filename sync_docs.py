@@ -860,12 +860,14 @@ def write_index(md_catalog, modules) -> None:
         "",
         "## See it in action",
         "",
-        "Most prep starts with content. **OfferReady starts with the job.** Walk a "
-        "real example — a job description turned into a gap analysis and a focused "
+        "Most prep starts with content. **OfferReady starts with the job.** Paste a "
+        "job description and get a role analysis, a readiness view, gaps, and a "
         "preparation plan that links straight into the study material.",
         "",
         '<p class="home-cta" markdown>'
-        '[:material-clipboard-check-outline: View the sample walkthrough](Sample-Walkthrough/index.md){ .md-button .md-button--primary }'
+        '[:material-clipboard-search-outline: Analyze My Job](Analyze/index.md){ .md-button .md-button--primary }'
+        "&nbsp;"
+        "[:material-clipboard-check-outline: See a sample walkthrough](Sample-Walkthrough/index.md){ .md-button }"
         "</p>",
         "",
         "## Architecture at a glance",
@@ -1086,6 +1088,9 @@ def write_nav(md_catalog, modules) -> None:
     #   "          - Page"    (10 spaces) a page inside a section
     nav = ["nav:", "  - Home: index.md",
            "  - Start Here: Start-Here/index.md"]
+    # Analyze My Job — the interactive MVP entry point.
+    if (DOCS_DIR / "Analyze" / "index.md").exists():
+        nav.append("  - Analyze My Job: Analyze/index.md")
     # Sample Readiness Walkthrough — the product-demo entry point (labeled demo).
     if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
         nav.append("  - Sample Walkthrough: Sample-Walkthrough/index.md")

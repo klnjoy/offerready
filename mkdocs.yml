@@ -74,6 +74,7 @@ extra_javascript:
   - assets/practice.js
   - assets/progress.js
   - assets/why.js
+  - assets/analyze.js
 
 markdown_extensions:
   - admonition
@@ -108,6 +109,8 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Start Here: Start-Here/index.md
+  - Analyze My Job: Analyze/index.md
+  - Sample Walkthrough: Sample-Walkthrough/index.md
   - Learn:
       - Foundations (GenAI Topics):
           - Overview: GenAI-Topics/index.md
@@ -238,4 +241,6 @@ nav:
       - MODULE9-MCP: Course-Modules/module9-mcp.md
       - MODULE10-BEDROCK-N-AGENTCORE: Course-Modules/module10-bedrock-n-agentcore.md
       - SUNDAY-SESSIONS: Course-Modules/sunday-sessions.md
+  - Privacy:
+      - Privacy/index.md
 # NAV:END

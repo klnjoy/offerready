@@ -809,3 +809,52 @@
 
 /* Slightly stronger heading rhythm so long study pages scan better. */
 .md-typeset h2 { margin-top: 2.2rem; }
+
+/* ============================================================
+   Analyze My Job (MVP) — form, results, status pills
+   ============================================================ */
+.or-analyze-form { display: flex; flex-direction: column; gap: 0.3rem; }
+.or-field-label { font-size: 0.78rem; font-weight: 700; color: var(--md-default-fg-color--light); margin-top: 0.6rem; }
+.or-input {
+  width: 100%; padding: 0.55rem 0.7rem; border-radius: 0.5rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  background: var(--md-default-bg-color); color: var(--md-default-fg-color);
+  font-size: 0.9rem;
+}
+.or-error { color: #c62828; font-size: 0.85rem; margin-top: 0.5rem; font-weight: 600; }
+
+.or-demo-banner {
+  border-left: 4px solid var(--md-accent-fg-color);
+  background: color-mix(in srgb, var(--md-accent-fg-color) 8%, transparent);
+  padding: 0.7rem 0.9rem; border-radius: 0.5rem; font-size: 0.85rem; margin: 0.4rem 0 1rem;
+}
+
+.or-steps { list-style: none; padding: 0; margin: 0.5rem 0; }
+.or-steps li { opacity: 0.35; padding: 0.2rem 0; transition: opacity 200ms ease; }
+.or-steps li.or-step-on { opacity: 1; font-weight: 600; }
+.or-steps li.or-step-on::before { content: "\2713 "; color: var(--md-accent-fg-color); }
+
+.or-chips { margin: 0.4rem 0; }
+.or-tag {
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.03em; padding: 0.05rem 0.35rem;
+  border-radius: 0.3rem; margin-left: 0.3rem;
+  background: color-mix(in srgb, var(--md-primary-fg-color) 12%, transparent);
+  color: var(--md-primary-fg-color); vertical-align: middle;
+}
+.or-reslist { display: flex; flex-direction: column; gap: 0.35rem; }
+.or-reslink {
+  display: inline-block; font-weight: 600; text-decoration: none;
+  border-bottom: 1px dotted currentColor; color: var(--md-primary-fg-color);
+}
+.or-next { margin-top: 1.2rem; }
+
+/* Status pills for alignment / readiness tables. */
+.or-pill { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 1rem; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
+.or-pill.or-ok   { background: #1b7f4d; color: #fff; }
+.or-pill.or-warn { background: #b26a00; color: #fff; }
+.or-pill.or-gap  { background: #b23b3b; color: #fff; }
+.or-pill.or-info { background: color-mix(in srgb, var(--md-default-fg-color) 18%, transparent); color: var(--md-default-fg-color); }
+
+@media screen and (max-width: 44.9375em) {
+  #analyze-app table { display: block; overflow-x: auto; }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "offerready-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OfferReady serverless API (Vercel Functions) — Analyze My Job MVP.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {}
+}

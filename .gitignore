@@ -41,3 +41,7 @@ aws-credentials*
 Thumbs.db
 .idea/
 .vscode/
+
+# ---- Node / Vercel backend (api/) ----
+node_modules/
+.vercel/
