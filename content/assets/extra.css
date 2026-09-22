@@ -721,17 +721,23 @@
   margin-left: 0.3rem;
 }
 
-/* Hide page icons in the LEFT NAV only (e.g. the flag on "Start Here").
-   Page-header icons and home-page card icons are unaffected. */
+/* Hide page icons in the LEFT NAV only (e.g. the flag on "Start Here" and the
+   topic icons). Covers Material's emoji spans AND inline SVG icons rendered
+   inside nav links. Page-header icons and home-page card icons are unaffected
+   because they live outside .md-nav. */
 .md-nav__link .twemoji,
-.md-nav__link svg.twemoji,
-.md-nav__item .md-nav__link > .twemoji {
+.md-nav__link .emojione,
+.md-nav__link > svg,
+.md-nav__link img.twemoji {
   display: none !important;
 }
 
 /* Hide the redundant "OfferReady" site title at the top of the left sidebar —
-   the header bar already shows the logo + wordmark. */
-.md-nav--primary > .md-nav__title {
+   the header bar already shows the logo + wordmark. (Broad match: the primary
+   nav title in both the desktop sidebar and the mobile drawer.) */
+.md-sidebar--primary .md-nav__title,
+.md-nav--primary > .md-nav__title,
+.md-nav__title[for="__drawer"] {
   display: none !important;
 }
 

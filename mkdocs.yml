@@ -47,12 +47,10 @@ theme:
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
-    # Left-sidebar navigation, fully expanded so every group and page is
-    # browsable and drill-downable from any page (including Home). Using
-    # navigation.expand (not navigation.sections) keeps the collapsible tree
-    # working — sections open on click and the whole map is visible.
+    # Plain collapsible left-sidebar nav: groups start COLLAPSED and expand when
+    # you click the chevron (no navigation.sections which broke drill-down, and
+    # no navigation.expand which force-opened everything on every refresh).
     # navigation.indexes lets a section's index page act as its landing.
-    - navigation.expand
     - navigation.indexes
     - navigation.top
     # Right-hand table of contents for the current page.
