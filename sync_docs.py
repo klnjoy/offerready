@@ -1301,6 +1301,11 @@ def write_nav(md_catalog, modules) -> None:
         for rel_dest, title in sorted(entries, key=lambda e: e[1].lower()):
             nav.append(f"      - {nav_label(title)}: {rel_dest}")
 
+    # Privacy & Data Handling — standalone bottom-of-nav item (bare index).
+    if (DOCS_DIR / "Privacy" / "index.md").exists():
+        nav.append("  - Privacy:")
+        nav.append("      - Privacy/index.md")
+
     block = "# NAV:BEGIN\n" + "\n".join(nav) + "\n# NAV:END"
     text = MKDOCS_YML.read_text(encoding="utf-8")
     pattern = re.compile(r"# NAV:BEGIN.*?# NAV:END", re.DOTALL)
