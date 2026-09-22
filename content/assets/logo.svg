@@ -1,19 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="OfferReady">
   <title>OfferReady</title>
   <!--
-    Header mark: bold bullseye + arrow, tuned to read clearly at ~24px on the
-    coloured header bar. White on transparent so it sits on the purple header.
+    Header mark: a circle with a road/path rising into an upward arrow — the
+    "path to the offer" from the OfferReady brand. Tuned to read at ~24px on the
+    navy header bar. Circle + road in white; arrowhead in brand green so the
+    mark carries the palette while staying legible on the dark bar.
   -->
-  <!-- outer ring -->
-  <circle cx="22" cy="26" r="15" fill="none" stroke="#ffffff" stroke-width="4"/>
-  <!-- inner ring -->
-  <circle cx="22" cy="26" r="8" fill="none" stroke="#ffffff" stroke-width="4"/>
-  <!-- solid bullseye -->
-  <circle cx="22" cy="26" r="3.5" fill="#ffffff"/>
-  <!-- arrow shaft from centre to top-right, drawn OVER the rings -->
-  <path d="M22 26 L41 7" fill="none" stroke="#ffffff" stroke-width="4.5"
-        stroke-linecap="round"/>
-  <!-- arrow head -->
-  <path d="M32 6 L43 5 L42 16" fill="none" stroke="#ffffff" stroke-width="4.5"
+  <!-- outer ring (open at the top-right where the arrow breaks out) -->
+  <path d="M40 15 A17 17 0 1 0 42 26"
+        fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round"/>
+  <!-- perspective road/path narrowing from bottom up toward the arrow -->
+  <path d="M17 39 L23 24 L30 14"
+        fill="none" stroke="#ffffff" stroke-width="5.5"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26 39 L28 27 L31 16"
+        fill="none" stroke="#ffffff" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  <!-- rising arrow shaft + head in brand green, breaking out of the ring -->
+  <path d="M28 22 L43 7"
+        fill="none" stroke="#22c07a" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M34 6 L44 5 L43 15"
+        fill="none" stroke="#22c07a" stroke-width="4.5"
         stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

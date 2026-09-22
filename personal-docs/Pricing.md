@@ -6,15 +6,62 @@ icon: material/tag-heart
 
 # OfferReady Pricing
 
-**Prep smarter. Land the offer.** Advanced, role-tailored question banks, model
-answers, worked scenarios, and an interactive practice mode — everything you
-need to walk into your next data or GenAI interview ready. Start free, upgrade
-when you want more.
+**Learn. Build. Defend. Interview.** All the learning content and question banks
+are **free**. What Pro adds is the thing free sites can't: **a coach that grades
+*your* answers, tracks *your* progress, and tells *you* what to fix.**
 
 [:material-rocket-launch: Start free](Interview_Guide_Overview.md){ .md-button .md-button--primary }
 [:material-dumbbell: Try practice mode](Interview_Practice.md){ .md-button }
 
 </div>
+
+## What actually makes Pro worth paying for
+
+Reading questions and model answers is free here — and free most places. That's
+not what wins interviews. **Practising your answer and getting told exactly what
+you missed** is. That's the line between Free and Pro.
+
+<div class="ig-features" markdown>
+
+<div class="ig-feature" markdown>
+<div class="ig-ico">🤖</div>
+### AI grades your answer
+Type an answer, get a **1–5 score plus specific feedback** — what was strong and
+what to add — measured against the model answer. Like a coach reviewing every
+response. *(This is real: it already runs in
+[Practice mode](Interview_Practice.md) and the
+["Keep Asking Why"](Interview_Why_Interactive.md) drill when the grader is on.)*
+</div>
+
+<div class="ig-feature" markdown>
+<div class="ig-ico">📈</div>
+### Tracks your progress
+Every session is scored and saved, so you see trends over time and across
+devices — not a one-off self-rating you forget.
+</div>
+
+<div class="ig-feature" markdown>
+<div class="ig-ico">🎯</div>
+### Finds your weak areas
+Aggregates your scores by topic and tells you where you keep losing points
+("you're strong on RAG, weak on cost and security") so you study the right thing.
+</div>
+
+<div class="ig-feature" markdown>
+<div class="ig-ico">🗓️</div>
+### Personalizes your plan
+Turns your actual results into a focused **30-day plan** — what to drill next,
+in order — instead of a generic checklist.
+</div>
+
+</div>
+
+!!! note "Straight talk on what's live"
+    The **free tier works today** — all content, self-scored practice, and the
+    self-guided "Keep Asking Why" drill. The **Pro features above depend on a
+    hosted grading service** (the grader exists and runs locally now; the hosted
+    version + accounts are what launch enables). We'd rather tell you that than
+    pretend the button already charges. Join the waitlist below to be notified.
 
 ## Plans
 
@@ -45,11 +92,11 @@ when you want more.
 
 <ul class="pr-feats">
 <li>Everything in Free</li>
-<li><strong>AI answer grading</strong> with feedback</li>
-<li>Personalized weak-area recommendations</li>
-<li>Progress tracking & session history</li>
-<li>Downloadable summaries</li>
-<li>Priority updates & new banks first</li>
+<li><strong>AI answer grading</strong> — score + specific feedback</li>
+<li><strong>Progress tracking</strong> across sessions & devices</li>
+<li><strong>Weak-area detection</strong> by topic</li>
+<li><strong>Personalized 30-day plan</strong> from your results</li>
+<li>Interview history & downloadable summaries</li>
 </ul>
 
 <a class="pr-cta pr-primary" href="#">Coming soon</a>
@@ -82,14 +129,16 @@ are launching soon — the buttons above are placeholders until checkout is live
 
 | Feature | Free | Pro |
 |---------|:----:|:---:|
-| Question banks (all topics) | ✅ | ✅ |
-| Model answers & scenarios | ✅ | ✅ |
-| Self-quizzes & checklists | ✅ | ✅ |
+| All learning content & question banks | ✅ | ✅ |
+| Model answers & worked scenarios | ✅ | ✅ |
+| Role paths (Senior/Staff/Principal/FDE) | ✅ | ✅ |
 | Interactive practice (self-scored) | ✅ | ✅ |
-| AI answer grading & feedback | — | ✅ |
-| Progress tracking & history | — | ✅ |
-| Downloadable summaries | — | ✅ |
-| New banks first / priority updates | — | ✅ |
+| "Keep Asking Why" drill (self-guided) | ✅ | ✅ |
+| **AI grades your answer** (score + feedback) | — | ✅ |
+| **Progress tracking** across sessions/devices | — | ✅ |
+| **Weak-area detection** by topic | — | ✅ |
+| **Personalized 30-day plan** from your results | — | ✅ |
+| Interview history & downloadable summaries | — | ✅ |
 
 </div>
 
