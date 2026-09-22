@@ -858,6 +858,16 @@ def write_index(md_catalog, modules) -> None:
         "- **Handle the production incident** — [Production Incident Interviews](Personal-SourceCode/Interview_Production_Incidents.md).",
         "- **Answer the follow-up \u201cwhy?\u201d** — [The Interviewer Keeps Asking Why](Personal-SourceCode/Interview_Why_Chains.md).",
         "",
+        "## See it in action",
+        "",
+        "Most prep starts with content. **OfferReady starts with the job.** Walk a "
+        "real example — a job description turned into a gap analysis and a focused "
+        "preparation plan that links straight into the study material.",
+        "",
+        '<p class="home-cta" markdown>'
+        '[:material-clipboard-check-outline: View the sample walkthrough](Sample-Walkthrough/index.md){ .md-button .md-button--primary }'
+        "</p>",
+        "",
         "## Architecture at a glance",
         "",
         "How a modern GenAI application flows end to end — every box links to a "
@@ -1076,6 +1086,9 @@ def write_nav(md_catalog, modules) -> None:
     #   "          - Page"    (10 spaces) a page inside a section
     nav = ["nav:", "  - Home: index.md",
            "  - Start Here: Start-Here/index.md"]
+    # Sample Readiness Walkthrough — the product-demo entry point (labeled demo).
+    if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
+        nav.append("  - Sample Walkthrough: Sample-Walkthrough/index.md")
 
     # ----- LEARN --------------------------------------------------------------
     nav.append("  - Learn:")
