@@ -767,3 +767,45 @@
 /* Also hide it inside branded hero blocks regardless of heading level. */
 .ig-hero .headerlink,
 .ig-hero .headerlink { display: none !important; }
+
+/* ============================================================
+   SaaS polish pass (batch 2) — spacing, hierarchy, mobile.
+   Additive and scoped; doesn't override the brand palette above.
+   ============================================================ */
+
+/* Give the home card grids a touch more breathing room and consistent height. */
+.md-typeset .grid.cards > ul > li {
+  padding: 1rem 1.1rem;
+  border-radius: 0.8rem;
+}
+
+/* Clear primary-vs-secondary CTA hierarchy on the home hero. */
+.home-cta .md-button {
+  margin: 0.2rem 0.15rem;
+}
+.home-cta .md-button--primary {
+  box-shadow: 0 6px 18px rgba(22, 48, 92, 0.22);
+}
+.home-cta .md-button:not(.md-button--primary) {
+  /* Secondary buttons: outlined, lower emphasis than the primary. */
+  background: transparent;
+  border: 1px solid var(--md-primary-fg-color);
+  color: var(--md-primary-fg-color);
+}
+
+/* Stat pills: a little more separation and a subtle divider feel. */
+.home-stats { gap: 0.5rem 1.1rem; margin: 0.6rem 0 1.4rem; }
+
+/* Mobile: stack the hero CTAs full-width and tighten hero type so the value
+   prop and buttons are readable without horizontal scrolling on a phone. */
+@media screen and (max-width: 44.9375em) {
+  .home-hero { font-size: 1rem; }
+  .home-cta { display: flex; flex-direction: column; align-items: stretch; }
+  .home-cta .md-button { margin: 0.25rem 0; text-align: center; }
+  .home-stats { justify-content: flex-start; }
+  /* Single-column card grids on small screens for comfortable tap targets. */
+  .md-typeset .grid.cards > ul { grid-template-columns: 1fr; }
+}
+
+/* Slightly stronger heading rhythm so long study pages scan better. */
+.md-typeset h2 { margin-top: 2.2rem; }
