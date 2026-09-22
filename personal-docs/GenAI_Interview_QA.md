@@ -409,6 +409,95 @@ A: Calculates gradients backward through network using chain rule to update weig
 
 ---
 
+## Section 6b: AI Fundamentals — Interview Depth
+
+The one-liners above are for fast recall. Interviews reward the next layer:
+**why, the trade-off, how you'd prove it, and what breaks.** Below are the
+highest-leverage fundamentals rewritten to that bar — the difference between a
+correct answer and a senior one.
+
+??? question "RAG vs fine-tuning — which, and why? (the classic trap)"
+    **Short answer:** RAG for *knowledge that changes or must be cited*;
+    fine-tuning for *behavior/format/style* the model should always exhibit.
+
+    **Why:** RAG injects fresh, attributable facts at query time — you can update
+    the corpus without retraining, and you get citations. Fine-tuning bakes
+    patterns into weights (tone, structure, domain phrasing) but does **not**
+    reliably teach new facts and can't cite sources.
+
+    **Trade-offs:** RAG adds retrieval latency + a store to maintain, and quality
+    is capped by retrieval quality. Fine-tuning adds a training/eval pipeline,
+    risks catastrophic forgetting, and goes stale the moment facts change.
+
+    **How you'd prove the choice:** if the failure is "wrong/outdated facts" →
+    measure retrieval recall and groundedness (RAG wins). If the failure is
+    "right facts, wrong format/behavior" → RAG won't fix it; a few-shot prompt or
+    light fine-tune will.
+
+    **Senior tell:** "Try prompt-engineering first, then RAG, then fine-tune —
+    in that order of cost. Most 'we need fine-tuning' asks are actually retrieval
+    or prompt problems." Often you use **both**: fine-tune for format, RAG for facts.
+
+??? question "Temperature — beyond 'controls randomness'"
+    It scales the logits before sampling: low sharpens toward the top token
+    (near-deterministic), high flattens the distribution (more diverse, more
+    error-prone). **Trade-off:** 0 for extraction/SQL/classification where you
+    want repeatability and testability; 0.5–0.8 for drafting/brainstorm.
+    **Failure mode people miss:** temperature 0 is *not* guaranteed identical
+    across runs (batching/hardware nondeterminism), so don't rely on it for
+    exact-match caching. Pair with top-p; tuning both at once is usually a smell.
+
+??? question "Hallucination — why it happens and how you actually reduce it"
+    An LLM predicts likely tokens; it has no notion of truth, so a fluent wrong
+    answer is as natural as a right one. **You reduce, not eliminate:** ground it
+    with RAG and *require* citations; lower temperature; constrain with structured
+    output; add a verification step (self-check or a second model); and gate the
+    answer if retrieval confidence is low ("I don't have that"). **How you'd
+    prove it improved:** a groundedness/faithfulness metric (LLM-as-judge +
+    human spot-check) on a fixed eval set, tracked over releases — not vibes.
+
+??? question "Chunking — the decision that quietly makes or breaks RAG"
+    Too large: retrieval pulls irrelevant text, dilutes the prompt, wastes tokens.
+    Too small: a chunk loses the context needed to be meaningful. **Trade-off** is
+    recall vs precision of the retrieved context. Start ~200–500 tokens with
+    overlap so ideas that straddle a boundary survive; prefer **semantic/structural**
+    splits (by heading/paragraph) over blind fixed-size cuts. **Prove it:** build a
+    small labeled set (query → which chunk should answer it) and measure recall@k
+    as you vary chunk size — don't guess.
+
+??? question "Improve RAG accuracy — the ordered lever list (not a grab-bag)"
+    Interviewers want *order of operations*, cheapest first:
+    1. **Fix chunking** (biggest, cheapest win).
+    2. **Hybrid retrieval** (BM25 + vector) so exact terms aren't lost.
+    3. **Rerank** the top candidates with a cross-encoder.
+    4. **Query rewriting / expansion** for vague questions.
+    5. **Metadata filters** to shrink the search space.
+    6. Only then consider a better embedding model or fine-tuning.
+    Each step: measure recall@k / groundedness before and after — if a lever
+    doesn't move the metric, drop it. (See the interactive
+    [Keep Asking Why → RAG](Interview_Why_Interactive.md) drill.)
+
+??? question "Reliability of an LLM service — what 'production-ready' means"
+    Beyond "add retries": **timeouts** on every model/tool call; **retry with
+    backoff** for transient errors only (not for a bad prompt); a **circuit
+    breaker** so a slow provider doesn't cascade; a **fallback** (smaller model or
+    cached/graceful answer); **idempotency keys** so client retries don't
+    double-charge; and **concurrency caps** so a spike can't exhaust tokens/budget.
+    **Prove it:** load-test to find the real p95 bottleneck and chaos-test a
+    provider slowdown — don't promise SLOs you haven't measured.
+
+??? question "Model vs data drift — and what you actually do about it"
+    **Data drift:** the input distribution shifts (new topics, new phrasing).
+    **Model/concept drift:** the same inputs now need different outputs, so quality
+    decays. **Detection:** monitor input embeddings/feature distributions for
+    drift, and track output quality via an eval set + user feedback (thumbs, edit
+    rate). **Response:** refresh the RAG corpus (often fixes "drift" without any
+    retraining), update prompts/few-shots, and retrain/fine-tune only if the task
+    itself changed. **Senior tell:** most "model drift" in LLM apps is stale
+    retrieval, not stale weights.
+
+---
+
 ## Section 7: Snowflake Cortex AI — Interview Q&A
 
 ### Q1: What is Snowflake Cortex and how does it differ from using external LLMs?
