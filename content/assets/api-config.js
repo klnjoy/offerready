@@ -14,7 +14,7 @@
  * check below intentionally ignores the placeholder value.
  */
 (function () {
-  var BASE = "PASTE_YOUR_VERCEL_URL_HERE";
+  var BASE = "https://offerready-beta.vercel.app";
   // Only activate if a real https URL was set (ignore the placeholder).
   if (/^https:\/\//.test(BASE)) {
     window.OFFERREADY_API_BASE = BASE.replace(/\/$/, "");
