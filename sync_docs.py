@@ -1216,6 +1216,7 @@ def write_nav(md_catalog, modules) -> None:
                 ("Interview_Requirements_to_Production.md", "Requirements → Production"),
                 ("Interview_Production_Incidents.md", "Production Incident Interviews"),
                 ("Interview_Why_Chains.md", "The Interviewer Keeps Asking Why"),
+                ("Interview_Why_Interactive.md", "\u201cKeep Asking Why\u201d (interactive)"),
             ]),
             ("Coding", [
                 ("FDE_Coding_Interview_Prep.md", "FDE Coding Prep"),

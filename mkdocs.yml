@@ -75,6 +75,7 @@ extra_javascript:
   - assets/chatbot.js
   - assets/practice.js
   - assets/progress.js
+  - assets/why.js
 
 markdown_extensions:
   - admonition
@@ -214,6 +215,7 @@ nav:
           - Requirements → Production: Personal-SourceCode/Interview_Requirements_to_Production.md
           - Production Incident Interviews: Personal-SourceCode/Interview_Production_Incidents.md
           - The Interviewer Keeps Asking Why: Personal-SourceCode/Interview_Why_Chains.md
+          - Keep Asking Why” (interactive): Personal-SourceCode/Interview_Why_Interactive.md
       - Coding:
           - FDE Coding Prep: Personal-SourceCode/FDE_Coding_Interview_Prep.md
           - "Live-Coding & Scenarios": Personal-SourceCode/FDE_LiveCoding_Scenarios_Prep.md
