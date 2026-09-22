@@ -15,7 +15,11 @@
   // agent (KB_AGENT_URL / localhost) for local development.
   const HOSTED = (window.OFFERREADY_API_BASE || "").replace(/\/$/, "");
   const API = HOSTED || window.KB_AGENT_URL || "http://localhost:8000";
-  const IS_HOSTED = Boolean(HOSTED);
+  // "Local" only when actually browsing on localhost/127.0.0.1 without a hosted
+  // API. Everywhere else is treated as public — so visitors never see the
+  // developer "start the local agent" instructions.
+  const ON_LOCALHOST = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  const IS_HOSTED = Boolean(HOSTED) || !ON_LOCALHOST;
   // Hosted uses /api/ask + /api/areas; local agent uses /ask + /areas.
   const ASK_PATH = IS_HOSTED ? "/api/ask" : "/ask";
   const AREAS_PATH = IS_HOSTED ? "/api/areas" : "/areas";
@@ -254,8 +258,11 @@
       const msg = (err && err.message) ? escapeHtml(err.message) : "";
       if (IS_HOSTED) {
         // Public site: friendly, no dev/localhost instructions.
+        const base = HOSTED
+          ? (msg || "The assistant is unavailable right now.")
+          : "The assistant isn't enabled on this site yet.";
         addMsg(
-          "⚠️ " + (msg || "The assistant is unavailable right now.") +
+          "\u26a0\ufe0f " + base +
           " In the meantime, use the <strong>search</strong> at the top of the page, " +
           "or browse the topics from the left menu.",
           "kb-bot kb-err"
