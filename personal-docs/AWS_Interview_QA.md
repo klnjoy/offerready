@@ -217,5 +217,4 @@ Can you explain each without notes?
 
 !!! note "Cross-links"
     Related: [DevOps Interview Q&A](DevOps_Interview_QA.md) ·
-    [Data Engineering Interview Q&A](DataEngineering_Interview_QA.md) ·
-    [Technologies → AWS](../Technologies/aws/index.md)
+    [Data Engineering Interview Q&A](DataEngineering_Interview_QA.md)

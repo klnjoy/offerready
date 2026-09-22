@@ -11,7 +11,7 @@ Study at a glance, then open each question for depth.
 !!! tip "How to use this page"
     Skim the **60-second talking points** and **rapid-fire** for recall, then
     drill into the collapsible questions. Finish with the **self-quiz**.
-    Deep dive: [Technologies → AWS](../Technologies/aws/index.md).
+    Related: [AWS Interview Q&A](AWS_Interview_QA.md).
 
 ---
 
@@ -267,5 +267,5 @@ Can you explain each without notes?
 8. You're paged for latency — how do you triage?
 
 !!! note "Cross-links"
-    Deep dive: [Technologies → AWS](../Technologies/aws/index.md) ·
-    Related: [AI Engineer Interview Q&A](AI_Engineer_Interview_QA.md)
+    Related: [AWS Interview Q&A](AWS_Interview_QA.md) ·
+    [AI Engineer Interview Q&A](AI_Engineer_Interview_QA.md)
