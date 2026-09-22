@@ -821,36 +821,29 @@ def write_index(md_catalog, modules) -> None:
         "",
         "    ---",
         "",
-        "    Build and ship LLM apps. Start with the "
-        "[Interview Guide](Personal-SourceCode/Interview_Guide_Overview.md) and the "
-        "[AI Engineer Q&A](Personal-SourceCode/AI_Engineer_Interview_QA.md).",
+        "    Build and ship LLM apps. Follow the "
+        "[AI / GenAI Engineer path](Personal-SourceCode/Path_AI_Engineer.md).",
         "",
         "-   :material-stairs-up:{ .lg .middle } __Staff / Principal AI Architect__",
         "",
         "    ---",
         "",
-        "    Own the design and the trade-offs. See "
-        "[Senior/Staff/Principal/FDE](Personal-SourceCode/Interview_Level_Comparison.md), "
-        "[Requirements &rarr; Production](Personal-SourceCode/Interview_Requirements_to_Production.md), "
-        "and the [Why-chains](Personal-SourceCode/Interview_Why_Chains.md).",
+        "    Own the design, trade-offs, and economics. Follow the "
+        "[Staff / Principal Architect path](Personal-SourceCode/Path_Staff_Principal_Architect.md).",
         "",
         "-   :material-airplane-takeoff:{ .lg .middle } __Forward Deployed Engineer__",
         "",
         "    ---",
         "",
-        "    Customer-facing build + delivery. See the "
-        "[FDE Q&A](Personal-SourceCode/Forward_Deployed_Engineer_Interview_QA.md), "
-        "[FDE Coding](Personal-SourceCode/FDE_Coding_Interview_Prep.md), and "
-        "[Live-Coding & Scenarios](Personal-SourceCode/FDE_LiveCoding_Scenarios_Prep.md).",
+        "    Customer-facing build + delivery. Follow the "
+        "[Forward Deployed Engineer path](Personal-SourceCode/Path_FDE.md).",
         "",
         "-   :material-database-cog:{ .lg .middle } __Data & AI / Platform Engineer__",
         "",
         "    ---",
         "",
-        "    The data/cloud side. See "
-        "[Snowflake Cortex](Snowflake-Cortex/index.md), "
-        "[Data Engineering Q&A](Personal-SourceCode/DataEngineering_Interview_QA.md), and "
-        "[SQL Q&A](Personal-SourceCode/SQL_Interview_QA.md).",
+        "    The data/cloud platform side. Follow the "
+        "[Data & AI / Platform Engineer path](Personal-SourceCode/Path_Data_Platform.md).",
         "",
         "</div>",
         "",
@@ -1193,6 +1186,12 @@ def write_nav(md_catalog, modules) -> None:
         P = "Personal-SourceCode/"
         # base filename -> display label (label overrides NAV_LABEL_OVERRIDES here)
         groups: list[tuple[str, list[tuple[str, str]]]] = [
+            ("Choose Your Path", [
+                ("Path_AI_Engineer.md", "AI / GenAI Engineer"),
+                ("Path_Staff_Principal_Architect.md", "Staff / Principal Architect"),
+                ("Path_FDE.md", "Forward Deployed Engineer"),
+                ("Path_Data_Platform.md", "Data & AI / Platform Engineer"),
+            ]),
             ("By Level & Role", [
                 ("Interview_Level_Comparison.md", "Senior / Staff / Principal / FDE"),
                 ("AI_Engineer_Interview_QA.md", "AI Engineer"),
@@ -1236,6 +1235,14 @@ def write_nav(md_catalog, modules) -> None:
 
         # Map available interview pages by base filename.
         available = {Path(rel).name: rel for rel, _t in interview_entries}
+        # Curated per-level path pages: authored under personal-docs/ and always
+        # synced to Personal-SourceCode/, but their filenames don't match the
+        # interview catalog keywords, so register them explicitly (only if the
+        # synced file is actually present).
+        for _pb in ("Path_AI_Engineer.md", "Path_Staff_Principal_Architect.md",
+                    "Path_FDE.md", "Path_Data_Platform.md"):
+            if (DOCS_DIR / P / _pb).exists():
+                available[_pb] = f"{P}{_pb}"
         index_base = "Interview_Guide_Overview.md"
         placed_bases = {index_base}
 

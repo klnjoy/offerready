@@ -184,6 +184,11 @@ nav:
           - Hackathon Build Challenges: Personal-SourceCode/Lab_Hackathon_Builds.md
   - Interview Prep:
       - Personal-SourceCode/Interview_Guide_Overview.md
+      - Choose Your Path:
+          - AI / GenAI Engineer: Personal-SourceCode/Path_AI_Engineer.md
+          - Staff / Principal Architect: Personal-SourceCode/Path_Staff_Principal_Architect.md
+          - Forward Deployed Engineer: Personal-SourceCode/Path_FDE.md
+          - "Data & AI / Platform Engineer": Personal-SourceCode/Path_Data_Platform.md
       - By Level & Role:
           - Senior / Staff / Principal / FDE: Personal-SourceCode/Interview_Level_Comparison.md
           - AI Engineer: Personal-SourceCode/AI_Engineer_Interview_QA.md
