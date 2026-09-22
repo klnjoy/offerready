@@ -694,17 +694,31 @@
    OfferReady branding
    ============================================================ */
 
-/* Header wordmark — style the site title next to the target logo */
+/* Header wordmark — style the site title next to the logo mark */
 .md-header__title .md-header__topic:first-child .md-ellipsis {
   font-weight: 800;
   letter-spacing: -0.01em;
   font-size: 1.05rem;
 }
 
-/* Gradient accent on the logo mark */
+/* Logo mark: fill the button, and close the gap between it and the wordmark.
+   Material's default .md-logo is wide with padding, which left a large space
+   before "OfferReady". Tighten the button and pull the title left. */
+.md-header__button.md-logo {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  margin-right: 0.1rem;
+}
 .md-header__button.md-logo img,
 .md-header__button.md-logo svg {
+  width: 2rem;
+  height: 2rem;
   color: #fff;
+}
+/* Remove the extra left padding the theme puts before the title. */
+.md-header__title {
+  margin-left: 0.3rem;
 }
 
 /* Branded footer accent bar + copyright styling */

@@ -47,12 +47,11 @@ theme:
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
-    # Top-level nav groups (Learn / Build / Interview Prep / Study Guide) render
-    # as tabs across the top; sticky keeps them visible while scrolling.
-    - navigation.tabs
-    - navigation.tabs.sticky
-    # Collapsible sections in the left sidebar: click a section to drill down.
-    # (No navigation.expand -> the list stays short and scrolls smoothly.)
+    # Left-sidebar navigation (better for studying deep content than top tabs):
+    # the Learn / Build / Interview Prep / Study Guide groups render as
+    # always-visible section headers in the left menu, each expandable to its
+    # pages. navigation.indexes lets a section's index page act as its landing.
+    - navigation.sections
     - navigation.indexes
     - navigation.top
     # Right-hand table of contents for the current page.
