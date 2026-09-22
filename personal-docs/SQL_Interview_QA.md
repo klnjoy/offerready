@@ -258,12 +258,6 @@ Can you explain each without notes?
 7. Deduplicate keeping the latest row per key.
 8. Solve consecutive-runs (gaps-and-islands).
 
-## Further reading
-
-- [PostgreSQL — Window Functions](https://www.postgresql.org/docs/current/tutorial-window.html)
-- [Snowflake — Analyzing queries with Query Profile](https://docs.snowflake.com/en/user-guide/ui-snowsight-activity)
-- [Use The Index, Luke — SQL indexing & tuning](https://use-the-index-luke.com/)
-
 !!! note "Cross-links"
     Related: [Snowflake Interview Q&A](Snowflake_Interview_QA.md) ·
     [dbt Interview Q&A](dbt_Interview_QA.md) ·

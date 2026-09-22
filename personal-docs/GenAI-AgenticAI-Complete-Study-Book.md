@@ -322,7 +322,7 @@ Focuses on **what information you provide** — curating the right context for t
 ## 2.1 AWS Account Setup
 
 ### Creating an AWS Account
-1. Go to [aws.amazon.com](https://aws.amazon.com)
+1. Go to aws.amazon.com
 2. Click "Create an AWS Account"
 3. Provide email, password, account name
 4. Add payment information (free tier available)

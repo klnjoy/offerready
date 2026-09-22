@@ -38,8 +38,7 @@ competing on price/performance rather than a single leader.
 | Open-weight / self-host | Llama, Qwen 3.x, DeepSeek V4, Mistral Large 3 | Private/air-gapped, price-sensitive |
 
 Talking points, grounded in current comparisons
-([azumo.com](https://azumo.com/artificial-intelligence/ai-insights/top-10-llms-0625),
-[aimlapi.com](https://aimlapi.com/blog/top-llm-models-in-2026-the-best-ai-models-for-reasoning-coding-multimodal-tasks)):
+(industry sources: azumo.com, aimlapi.com):
 
 - **Pick by workload, not brand.** A frontier model for hard reasoning, a
   cheaper model for classification/extraction, an open model when data can't
@@ -47,8 +46,7 @@ Talking points, grounded in current comparisons
 - **Open-weight caught up** for many tasks — the gap to closed frontier models
   narrowed enough that cost and control often decide.
 - **Multimodality is table stakes** — leading models reason across text, images,
-  documents, audio, and video in one call
-  ([aimlapi.com](https://aimlapi.com/blog/best-llms-for-long-context-multimodal-tasks-in-2026)).
+  documents, audio, and video in one call (source: aimlapi.com).
 
 *Content rephrased and summarized for licensing compliance.*
 
@@ -56,8 +54,7 @@ Talking points, grounded in current comparisons
 
 The biggest shift since 2024: agents got **open standards**. The default 2026
 enterprise stack is two complementary protocols
-([beam.ai](https://beam.ai/agentic-insights/agent2agent-vs-mcp-2026-ai-agent-stack),
-[gainam.com](https://gainam.com/insights/mcp-vs-a2a-protocols)):
+(industry sources: beam.ai, gainam.com):
 
 | Protocol | Connects | Role |
 |----------|----------|------|
@@ -66,51 +63,47 @@ enterprise stack is two complementary protocols
 | **ACP** | agent → agent (intra-enterprise) | REST-style messaging inside one org |
 
 - **They're layers, not competitors** — a serious deployment runs MCP *and* A2A
-  ([beam.ai](https://beam.ai/agentic-insights/agent2agent-vs-mcp-2026-ai-agent-stack)).
+  (source: beam.ai).
 - **The pilot-to-production gap is the story:** reports put ~63% of enterprises
-  piloting agents but **under 25% scaled to production**
-  ([jangwook.net](https://jangwook.net/en/blog/en/a2a-mcp-hybrid-architecture-production-guide/)).
+  piloting agents but **under 25% scaled to production** (source: jangwook.net).
   Closing that gap — reliability, cost, governance — is where the jobs are.
 - **Supervised multi-agent** patterns win: one plans, one retrieves, one
-  executes, one evaluates before a human approves
-  ([acecloud.ai](https://acecloud.ai/blog/agentic-ai-trends/)).
+  executes, one evaluates before a human approves (source: acecloud.ai).
 
 ## 3. RAG fractured into a toolkit
 
 RAG is still the dominant grounding pattern, but "RAG" now means a **family** of
 patterns with very different cost/latency/quality tradeoffs
-([starmorph.com](https://blog.starmorph.com/blog/rag-techniques-compared-best-practices-guide)):
+(source: starmorph.com):
 
 - **Agentic RAG** — the agent decides *whether/what/how many times* to retrieve.
 - **GraphRAG** — retrieve over a knowledge graph for multi-hop questions.
   Microsoft's research showed a large multi-hop accuracy jump by grounding in a
-  graph ([atolio.com](https://www.atolio.com/blog/enterprise-rag-guide)).
+  graph (source: atolio.com).
 - **Hybrid search + reranking** — BM25 + vector, then a cross-encoder reranker
   (meaningful accuracy gains for modest latency)
-  ([atolio.com](https://www.atolio.com/blog/enterprise-rag-guide)).
+  (source: atolio.com).
 
 A common 2026 stack: **LangGraph** to orchestrate, a retrieval framework for the
 RAG, and **RAGAS / Phoenix / Langfuse** for evaluation
-([marsdevs.com](https://www.marsdevs.com/guides/agentic-rag-2026-guide)).
+(source: marsdevs.com).
 
 ## 4. Evaluation is now infrastructure, not an afterthought
 
 The teams shipping reliable systems treat eval like testing — built in, not
-bolted on ([medium.com](https://medium.com/@basukori8463/rag-evaluation-the-complete-guide-to-ragas-trulens-llm-as-judge-2026-edition-068b6e9dc5d0)):
+bolted on (source: medium.com):
 
 - **Offline eval** — RAGAS/TruLens metrics (faithfulness, answer relevancy,
   context precision), **LLM-as-judge** for open-ended output.
 - **Online eval** — tracing (Langfuse, Phoenix, LangSmith), user feedback,
   regression checks per release.
 - **Targets people quote:** faithfulness ≈0.9, answer relevancy ≈0.85
-  ([marsdevs.com](https://www.marsdevs.com/guides/agentic-rag-2026-guide)).
+  (source: marsdevs.com).
 
 ## 5. The job market read
 
 From current interview guides
-([interviewcoder.co](https://www.interviewcoder.co/blog/agentic-ai-interview-questions),
-[tekrecruiter.com](https://www.tekrecruiter.com/post/ai-engineer-interview-questions),
-[lockedinai.com](https://www.lockedinai.com/blog/ai-engineer-interview-questions)):
+(industry sources: interviewcoder.co, tekrecruiter.com, lockedinai.com):
 
 - Senior **agentic AI** roles are paying strongly (reports cite ~$140–300k for
   senior engineers) and the bar rose fast.

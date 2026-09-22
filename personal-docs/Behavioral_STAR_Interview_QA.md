@@ -175,11 +175,6 @@ Action, Result). Build your own story bank from the prompts below.
 7. Quantify a win where you lacked clean metrics.
 8. Why this role, and 3 questions you'd ask back.
 
-## Further reading
-
-- [Amazon Leadership Principles (widely used behavioral frame)](https://www.amazon.jobs/content/en/our-workplace/leadership-principles)
-- [STAR method overview (general reference)](https://en.wikipedia.org/wiki/Situation,_task,_action,_result)
-
 !!! note "Cross-links"
     Pair with the technical banks in the
     [Interview Guide overview](Interview_Guide_Overview.md).

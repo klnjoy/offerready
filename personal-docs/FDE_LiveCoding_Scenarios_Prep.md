@@ -11,17 +11,14 @@ walk in **calmer and more confident**.
 
 !!! note "Sources"
     Interview-format details paraphrased from current 2026 FDE guides
-    ([Exponent](https://www.tryexponent.com/blog/forward-deployed-engineer-interview-the-definitive-2026-guide-fde),
-    [Scaler](https://www.scaler.com/topics/forward-deployed-engineer-interview-questions/),
-    [Itexus](https://itexus.com/how-to-prepare-for-forward-deployed-engineer/)).
+    (industry sources: Exponent, Scaler, Itexus).
     Verify your exact loop with your recruiter. Content rephrased for licensing.
 
 ## What an FDE loop actually tests
 
 The FDE role is a **hybrid**: you embed with a customer, scope a real problem,
 and ship production code fast. So the loop tests a **"dual muscle"** — hard
-engineering *and* high-stakes communication
-([Scaler](https://www.scaler.com/topics/forward-deployed-engineer-interview-questions/)).
+engineering *and* high-stakes communication (source: Scaler).
 
 ```mermaid
 flowchart LR
@@ -31,8 +28,7 @@ flowchart LR
     T --> B[Behavioral<br/>STAR war stories]
 ```
 
-Typical rounds you'll see (varies by company —
-[Exponent guides](https://www.tryexponent.com/guides/openai-forward-deployed-engineer-interview)):
+Typical rounds you'll see (varies by company — source: Exponent guides):
 
 - **Live coding** — production-quality Python/JavaScript, not just LeetCode tricks.
 - **Decomposition** — turn a messy, vague business need into a concrete plan.
@@ -43,8 +39,7 @@ Typical rounds you'll see (varies by company —
   messy real infra).
 
 Market note: FDE postings surged (~5x year-over-year into 2026) as AI companies
-built customer-facing engineering teams
-([UKy/Lightcast](https://pigmancareers.uky.edu/blog/2026/05/28/forward-deployed-engineer-interview-the-definitive-2026-guide-fde/)).
+built customer-facing engineering teams (source: UKy/Lightcast).
 
 ## Live coding: a repeatable method
 
@@ -115,7 +110,7 @@ behave. These come up constantly.
   tokens. Long prompts = more cost + latency; you trim/compress context to fit.
 - At each step the model outputs a **logit** (raw score) per vocabulary token
   (vocabularies run ~100k tokens), turned into probabilities via softmax
-  ([ML Mastery](https://machinelearningmastery.com/the-statistics-of-token-selection-logits-temperature-and-top-p-walkthrough/)).
+  (source: ML Mastery).
 
 ### Context window
 
@@ -128,16 +123,16 @@ behave. These come up constantly.
 
 | Param | What it does | Interview one-liner |
 |-------|-------------|---------------------|
-| **Temperature** | Scales the probability distribution's sharpness | 0 = deterministic/factual; higher = more creative/varied ([Google whitepaper summary](https://medium.com/@nikhil.j2se/mastering-prompt-engineering-temperature-top-k-and-top-p-explained-based-on-googles-whitepaper-2f267bced63f)) |
-| **Top-p (nucleus)** | Sample from the smallest set of tokens whose cumulative prob ≥ p | Cuts the low-probability tail that causes rambling ([Marktechpost](https://www.marktechpost.com/2025/10/14/7-llm-generation-parameters-what-they-do-and-how-to-tune-them/)) |
+| **Temperature** | Scales the probability distribution's sharpness | 0 = deterministic/factual; higher = more creative/varied (source: Google whitepaper summary) |
+| **Top-p (nucleus)** | Sample from the smallest set of tokens whose cumulative prob ≥ p | Cuts the low-probability tail that causes rambling (source: Marktechpost) |
 | **Top-k** | Sample only from the k most-likely tokens | Simpler cap on the candidate set |
 | **Max tokens** | Caps output length | Controls cost/latency + avoids truncation surprises |
 
 **Practical presets to quote** (paraphrased from public guides): factual/SQL/JSON
 → temperature 0; creative copy → higher temperature + top-p ~0.95
-([Google whitepaper summary](https://medium.com/@nikhil.j2se/mastering-prompt-engineering-temperature-top-k-and-top-p-explained-based-on-googles-whitepaper-2f267bced63f)).
+(source: Google whitepaper summary).
 Newer samplers (min-p, DRY, XTC) exist but temperature/top-p/max-tokens cover most
-interview needs ([localaimaster](https://localaimaster.com/blog/llm-sampling-parameters-explained)).
+interview needs (source: localaimaster).
 
 ### Choosing a model (workload thinking)
 

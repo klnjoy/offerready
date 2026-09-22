@@ -52,4 +52,4 @@ flowchart LR
 
 !!! tip "Prerequisites"
     Python 3.10+, a terminal, and one of: AWS account with Bedrock access,
-    an OpenAI API key, or [Ollama](https://ollama.com) installed locally.
+    an OpenAI API key, or **Ollama** installed locally.

@@ -216,12 +216,6 @@ Can you explain each without notes?
 7. What does tracing (LangSmith) buy you?
 8. When is the framework the wrong choice?
 
-## Further reading
-
-- [LangChain documentation](https://python.langchain.com/docs/introduction/)
-- [LangGraph documentation](https://langchain-ai.github.io/langgraph/)
-- [LangSmith — tracing & evaluation](https://docs.smith.langchain.com/)
-
 !!! note "Cross-links"
     Deep dives: [LangChain](../GenAI-Topics/langchain/index.md) ·
     [LangGraph](../GenAI-Topics/langgraph/index.md) ·

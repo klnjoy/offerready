@@ -16,10 +16,9 @@ and the security / cost / observability story an interviewer will probe.
     Cortex features ship fast and names change. The **patterns** here (agentic
     orchestration, semantic models, hybrid retrieval, governed-in-perimeter AI)
     are stable, but treat specific capability claims as "as of current Snowflake
-    docs" and verify against
-    [docs.snowflake.com](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-agents)
-    before an interview. This guide was checked against Snowflake's official
-    Cortex Agents documentation.
+    docs" and verify against Snowflake's official Cortex documentation
+    (docs.snowflake.com) before an interview. This guide was checked against
+    Snowflake's official Cortex Agents documentation.
     *Content was rephrased for compliance with licensing restrictions.*
 
 !!! abstract "The one-sentence pitch"

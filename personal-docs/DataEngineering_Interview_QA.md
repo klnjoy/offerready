@@ -211,12 +211,6 @@ Can you explain each without notes?
 7. Handle a breaking schema change from an upstream team.
 8. Choose partitioning + file sizing for a large fact table.
 
-## Further reading
-
-- [The Data Engineering Cookbook (open resource)](https://github.com/andkret/Cookbook)
-- [dbt — Best practices](https://docs.getdbt.com/best-practices)
-- [AWS — Big Data / analytics lens](https://docs.aws.amazon.com/wellarchitected/latest/analytics-lens/analytics-lens.html)
-
 !!! note "Cross-links"
     Related: [SQL](SQL_Interview_QA.md) · [Snowflake](Snowflake_Interview_QA.md) ·
     [Databricks](Databricks_Interview_QA.md) · [AWS](AWS_Interview_QA.md) ·

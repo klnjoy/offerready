@@ -209,12 +209,6 @@ Can you explain each without notes?
 7. Explain least privilege with a concrete policy shape.
 8. Cut cost on a storage- and egress-heavy workload.
 
-## Further reading
-
-- [AWS Well-Architected Framework](https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html)
-- [IAM best practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
-- [Amazon Bedrock — User Guide](https://docs.aws.amazon.com/bedrock/latest/userguide/what-is-bedrock.html)
-
 !!! note "Cross-links"
     Related: [DevOps Interview Q&A](DevOps_Interview_QA.md) ·
     [Data Engineering Interview Q&A](DataEngineering_Interview_QA.md)
