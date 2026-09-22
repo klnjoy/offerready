@@ -27,14 +27,20 @@ questions, pitfalls, rapid-fire), so learning and prep reinforce each other.
 ```mermaid
 flowchart LR
     L[LEARN<br/>concepts] --> B[BUILD<br/>hands-on]
-    B --> P[INTERVIEW PREP<br/>Q&A + mocks]
+    B --> D[DEFEND<br/>why-chains, system design, incidents]
+    D --> P[INTERVIEW PREP<br/>Q&A + mocks]
     SG[STUDY GUIDE<br/>deep reference] -.supports.- L
     SG -.supports.- P
 ```
 
-A good default: **Learn → Build → Interview Prep**, dipping into the **Study
-Guide** for depth whenever a topic needs it. Pick the track below that matches
-where you are.
+A good default: **Learn → Build → Defend → Interview**, dipping into the **Study
+Guide** for depth whenever a topic needs it. The **Defend** step — practising
+*why* your design is right under follow-up questions — is what turns knowledge
+into interview-ready answers; it lives in the **Interview Prep** tab
+([Why-chains](../Personal-SourceCode/Interview_Why_Chains.md),
+[Requirements → Production](../Personal-SourceCode/Interview_Requirements_to_Production.md),
+[Production Incidents](../Personal-SourceCode/Interview_Production_Incidents.md)).
+Pick the track below that matches where you are.
 
 ---
 

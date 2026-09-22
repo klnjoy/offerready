@@ -3,9 +3,30 @@
    ============================================================ */
 
 :root {
-  --kb-grad-1: #7c4dff;
-  --kb-grad-2: #4f46e5;
-  --kb-grad-3: #06b6d4;
+  /* OfferReady brand: deep navy -> teal -> green (matches the logo). */
+  --kb-navy: #16305c;      /* deep navy   */
+  --kb-blue: #1f6fb2;      /* mid blue    */
+  --kb-green: #22c07a;     /* brand green */
+  --kb-grad-1: var(--kb-navy);
+  --kb-grad-2: var(--kb-blue);
+  --kb-grad-3: var(--kb-green);
+}
+
+/* Brand the Material primary (header/links) navy and the accent green so the
+   whole theme keys off the OfferReady palette. */
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #16305c;
+  --md-primary-fg-color--light: #1f6fb2;
+  --md-primary-fg-color--dark: #0f2547;
+  --md-accent-fg-color: #17a06a;
+}
+[data-md-color-scheme="slate"] {
+  /* On dark backgrounds, lift the navy so links/headers stay legible. */
+  --md-primary-fg-color: #2e6fb0;
+  --md-primary-fg-color--light: #4f8fd0;
+  --md-primary-fg-color--dark: #16305c;
+  --md-accent-fg-color: #22c07a;
 }
 
 /* ---- Landing hero ---- */
@@ -192,7 +213,7 @@
   font-weight: 700;
   color: #fff;
   cursor: pointer;
-  background: linear-gradient(135deg, var(--kb-grad-1, #7c4dff), var(--kb-grad-2, #4f46e5));
+  background: linear-gradient(135deg, var(--kb-grad-1, #16305c), var(--kb-grad-2, #1f6fb2));
   box-shadow: 0 6px 18px rgba(79, 70, 229, 0.4);
 }
 #kb-fab:hover { filter: brightness(1.08); }
@@ -219,7 +240,7 @@
   gap: 0.5rem;
   padding: 0.6rem 0.8rem;
   color: #fff;
-  background: linear-gradient(135deg, var(--kb-grad-1, #7c4dff), var(--kb-grad-2, #4f46e5));
+  background: linear-gradient(135deg, var(--kb-grad-1, #16305c), var(--kb-grad-2, #1f6fb2));
   font-weight: 700;
   font-size: 0.85rem;
 }

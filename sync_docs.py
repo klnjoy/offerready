@@ -789,12 +789,12 @@ def write_index(md_catalog, modules) -> None:
     lines = [
         "# OfferReady",
         "",
-        '<p class="home-hero"><strong>AI Engineering interview preparation.</strong> '
-        "Prep smarter and land the offer. OfferReady is a hands-on hub that takes "
-        "you <strong>Learn &rarr; Build &rarr; Interview</strong>: learn the "
-        "technology, build the system, then defend the architecture, handle the "
-        "production incident, and answer the follow-up &ldquo;why?&rdquo; the way a "
-        "senior interview demands.</p>",
+        '<p class="home-hero"><strong>Production AI Engineering &amp; FDE interview '
+        "preparation.</strong> Prep smarter and land the offer. OfferReady takes "
+        "you <strong>Learn &rarr; Build &rarr; Defend &rarr; Interview</strong>: "
+        "learn the technology, build the system, <strong>defend your "
+        "decisions</strong> under follow-up questions, and walk into the interview "
+        "ready — the way a senior/staff/FDE round actually works.</p>",
         "",
         '<p class="home-cta" markdown>'
         '[:material-school: Start Learning](Start-Here/index.md){ .md-button .md-button--primary }'

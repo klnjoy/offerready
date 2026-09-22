@@ -1,7 +1,7 @@
 site_name: OfferReady
-site_description: OfferReady — prep smarter and land the offer. Advanced interview question banks, model answers, and an interactive practice mode for data & GenAI roles.
+site_description: OfferReady — Production AI Engineering & FDE interview prep. Learn, build, defend your decisions, and land the offer. Advanced question banks, model answers, and interactive practice for AI/GenAI, data, and FDE roles.
 site_url: https://klnjoy.github.io/offerready/
-copyright: © 2026 OfferReady · Prep smarter. Land the offer.
+copyright: © 2026 OfferReady · Learn. Build. Defend. Interview.
 
 # All markdown is copied into docs/ by sync_docs.py before building.
 docs_dir: docs
@@ -25,18 +25,21 @@ theme:
     code: JetBrains Mono
   icon:
     repo: material/github
+  # primary/accent are "custom" so the OfferReady navy+green palette defined in
+  # assets/extra.css (--md-primary-fg-color / --md-accent-fg-color) drives the
+  # header, links, and controls in both light and dark schemes.
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: deep purple
-      accent: indigo
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: deep purple
-      accent: purple
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-sunny
         name: Switch to light mode
