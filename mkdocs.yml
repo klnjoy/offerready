@@ -189,6 +189,8 @@ nav:
           - GenAI Procurement Audit Bot — Architecture: Personal-SourceCode/genai-procurement-architecture.md
       - Case Studies:
           - Case-Studies/index.md
+      - Hands-on Labs:
+          - Labs/index.md
       - Practice Labs:
           - Personal-SourceCode/Lab_Scenario_Drills.md
           - Live-Coding Drills: Personal-SourceCode/Lab_LiveCoding_Drills.md

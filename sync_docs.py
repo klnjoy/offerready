@@ -1186,6 +1186,12 @@ def write_nav(md_catalog, modules) -> None:
         nav.append("      - Case Studies:")
         nav.append("          - Case-Studies/index.md")
 
+    # Hands-on Labs — original runnable notebooks (.ipynb) + editable diagrams
+    # (.drawio) authored for OfferReady; the page renders/links them.
+    if (DOCS_DIR / "Labs" / "index.md").exists():
+        nav.append("      - Hands-on Labs:")
+        nav.append("          - Labs/index.md")
+
     # Practice Labs — hands-on "doing" content (kept out of the auto-catalog via
     # COPY_NO_CATALOG so they aren't double-listed).
     lab_pages = [

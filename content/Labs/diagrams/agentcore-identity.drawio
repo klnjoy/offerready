@@ -1,0 +1,42 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram name="AgentCore Identity" id="agentcore-id">
+    <mxGraphModel dx="900" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="480" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="OfferReady — AgentCore Identity: inbound vs outbound auth" style="text;html=1;fontSize=16;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="620" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="user" value="User / MCP client" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="40" y="170" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="idp" value="Okta / Entra / Cognito&#10;(OAuth IdP)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="30" y="60" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="agent" value="Agent&#10;(Runtime + Identity)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="165" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="inbound" value="INBOUND: validate JWT&#10;(iss / aud / exp / signature)" style="text;html=1;fontSize=11;align=center;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="190" y="130" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="vault" value="Token vault&#10;keyed to (workload, user)" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="380" y="300" width="130" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="api1" value="Enterprise API&#10;(2LO: as itself)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="720" y="90" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="api2" value="SaaS API&#10;(3LO / OBO: as the user)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="720" y="180" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="outbound" value="OUTBOUND: short-lived token per call&#10;(secrets never in the prompt)" style="text;html=1;fontSize=11;align=center;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="545" y="140" width="180" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="OIDC login" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="idp" target="user"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" value="JWT" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="user" target="agent"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="agent" target="api1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;" edge="1" parent="1" source="agent" target="api2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" value="fetch creds" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;dashed=1;" edge="1" parent="1" source="agent" target="vault"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

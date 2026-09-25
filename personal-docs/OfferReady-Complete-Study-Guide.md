@@ -1392,6 +1392,8 @@ sequenceDiagram
 ---
 
 !!! success "Where to next"
+    - **Do the labs:** [Hands-on Labs](../Labs/index.md) — runnable notebooks
+      (RAG, agent loop, Bedrock Converse, Python patterns) + editable diagrams.
     - **Practice:** [Interview Guide Overview](Interview_Guide_Overview.md) and the
       role paths under **Interview Prep**.
     - **Build:** [Setup Guides](../Setup-Guides/index.md) and
