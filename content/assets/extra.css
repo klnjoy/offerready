@@ -790,7 +790,12 @@
 .md-header__title .md-header__topic:first-child .md-ellipsis {
   font-weight: 800;
   letter-spacing: -0.01em;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
+  color: #fff;
+}
+/* "Ready" recolored green by brand.js — matches the pricing/paywall wordmark. */
+.md-header__title .md-ellipsis .or-ready {
+  color: var(--kb-green);
 }
 
 /* Logo mark: fill the button, and close the gap between it and the wordmark.
