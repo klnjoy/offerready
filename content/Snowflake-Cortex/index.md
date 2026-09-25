@@ -64,7 +64,7 @@ flowchart TB
 
 | Layer | What it is | When you reach for it |
 |-------|-----------|-----------------------|
-| **AISQL / LLM functions** | Call LLMs and embeddings directly in SQL (`SNOWFLAKE.CORTEX.COMPLETE`, `SUMMARIZE`, `SENTIMENT`, `EXTRACT_ANSWER`, `AI_FILTER`, `EMBED_TEXT_*`) | Batch enrichment, classification, extraction over columns — set-based AI |
+| **AISQL / LLM functions** | Call LLMs and embeddings directly in SQL — newer `AI_*` family (`AI_COMPLETE`, `AI_CLASSIFY`, `AI_FILTER`, `AI_AGG`, `AI_EMBED`) and legacy `SNOWFLAKE.CORTEX.*` (`COMPLETE`, `SUMMARIZE`, `SENTIMENT`, `EMBED_TEXT_*`). See the [functions & API reference](aisql-functions-api.md). | Batch enrichment, classification, extraction over columns — set-based AI |
 | **Cortex Search** | Managed **hybrid** (vector + keyword) retrieval service over text | The RAG retrieval engine; grounding for chatbots and agents |
 | **Cortex Analyst** | Natural language → governed SQL over a **semantic view/model** | Self-serve analytics, "ask your data" over structured tables |
 | **Cortex Agents** | Fully managed agentic platform: an orchestrator LLM that plans, calls tools, runs code, and responds | Multi-step questions that mix structured + unstructured data and actions |
@@ -129,6 +129,12 @@ A senior candidate names the limits, not just the benefits:
 
     Semantic views, text-to-SQL, hybrid retrieval, Search↔Analyst integration,
     and combining structured + unstructured data.
+
+-   :material-function-variant: **[AISQL Functions & the Agents API (technical reference)](aisql-functions-api.md)**
+
+    The concrete layer: the `AI_*` vs `SNOWFLAKE.CORTEX.*` function surface,
+    `AI_COMPLETE` options + structured outputs, embeddings/vectors/chunking, and
+    the `agent:run` REST API vs `AGENT_RUN`.
 
 -   :material-shield-lock: **[Security, Governance, Cost & Observability](governance-cost-observability.md)**
 

@@ -1116,6 +1116,8 @@ def write_nav(md_catalog, modules) -> None:
             ("Cortex Agents — Deep Dive", "Snowflake-Cortex/agents.md"),
             ("Analyst, Semantic Models & Search (RAG)",
              "Snowflake-Cortex/analyst-search-rag.md"),
+            ("AISQL Functions & Agents API (reference)",
+             "Snowflake-Cortex/aisql-functions-api.md"),
             ("Security, Cost & Observability",
              "Snowflake-Cortex/governance-cost-observability.md"),
             ("System Design + Mock Interview",

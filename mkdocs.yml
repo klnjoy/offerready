@@ -149,6 +149,7 @@ nav:
           - Snowflake-Cortex/index.md
           - Cortex Agents — Deep Dive: Snowflake-Cortex/agents.md
           - "Analyst, Semantic Models & Search (RAG)": Snowflake-Cortex/analyst-search-rag.md
+          - "AISQL Functions & Agents API (reference)": Snowflake-Cortex/aisql-functions-api.md
           - "Security, Cost & Observability": Snowflake-Cortex/governance-cost-observability.md
           - System Design + Mock Interview: Snowflake-Cortex/system-design-mock.md
           - Cheat Sheet + 30-Day Ramp: Snowflake-Cortex/cheat-sheet-30-day.md
