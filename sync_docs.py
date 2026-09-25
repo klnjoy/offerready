@@ -1356,6 +1356,11 @@ def write_nav(md_catalog, modules) -> None:
         nav.append("  - Terms:")
         nav.append("      - Terms/index.md")
 
+    # Disclaimer — educational-content-only notice.
+    if (DOCS_DIR / "Disclaimer" / "index.md").exists():
+        nav.append("  - Disclaimer:")
+        nav.append("      - Disclaimer/index.md")
+
     # Contact — bottom-of-nav.
     if (DOCS_DIR / "Contact" / "index.md").exists():
         nav.append("  - Contact:")
