@@ -235,18 +235,7 @@ nav:
           - Master Cheat Sheets: Personal-SourceCode/Interview_Cheat_Sheets.md
           - 30-Day Prep Plan: Personal-SourceCode/Interview_30_Day_Plan.md
   - Study Guide:
-      - Personal-SourceCode/GenAI-AgenticAI-Complete-Study-Book.md
-      - MODULE1-GENAI: Course-Modules/module1-genai.md
-      - MODULE2-AWS-CLOUD: Course-Modules/module2-aws-cloud.md
-      - MODULE3-PYTHON: Course-Modules/module3-python.md
-      - MODULE4-PROMPT-ENGINEERING: Course-Modules/module4-prompt-engineering.md
-      - MODULE5-RAG: Course-Modules/module5-rag.md
-      - MODULE6-LANGCHAIN: Course-Modules/module6-langchain.md
-      - MODULE7-GRAPHDB: Course-Modules/module7-graphdb.md
-      - MODULE8.LANG-GRAPH: Course-Modules/module8-lang-graph.md
-      - MODULE9-MCP: Course-Modules/module9-mcp.md
-      - MODULE10-BEDROCK-N-AGENTCORE: Course-Modules/module10-bedrock-n-agentcore.md
-      - SUNDAY-SESSIONS: Course-Modules/sunday-sessions.md
+      - Personal-SourceCode/OfferReady-Complete-Study-Guide.md
   - Privacy:
       - Privacy/index.md
 # NAV:END
