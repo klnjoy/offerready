@@ -1143,7 +1143,17 @@ def write_nav(md_catalog, modules) -> None:
     for slug, display, _icon, _desc in ENTERPRISE:
         nav.append(f"          - {nav_label(display)}: Enterprise/{slug}/index.md")
     if (DOCS_DIR / "AI-Security" / "index.md").exists():
-        nav.append("          - AI Security (LLM/Agent threats): AI-Security/index.md")
+        nav.append("          - AI Security:")
+        nav.append("              - AI Security (LLM/Agent threats): AI-Security/index.md")
+        ai_sec_pages = [
+            ("Enterprise Identity & API Security (OAuth/OIDC/SAML)",
+             "AI-Security/identity-api-security.md"),
+            ("AgentCore Identity & Gateway",
+             "AI-Security/agentcore-identity-gateway.md"),
+        ]
+        for label, rel in ai_sec_pages:
+            if (DOCS_DIR / rel).exists():
+                nav.append(f"              - {nav_label(label)}: {rel}")
 
     # ----- BUILD --------------------------------------------------------------
     nav.append("  - Build:")

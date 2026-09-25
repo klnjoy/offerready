@@ -16,6 +16,18 @@ method for any AI system.
     instructions.** Almost every AI-specific attack is a variation of "attacker
     text got interpreted as a command."
 
+!!! abstract "Deep dives in this section"
+    This page covers **LLM/agent threats** (prompt injection, excessive agency,
+    MCP attacks). The two companion pages cover the **identity & API-security**
+    half that enterprise GenAI roles now require:
+
+    - **[Enterprise Identity & API Security](identity-api-security.md)** — OAuth 2.0,
+      OIDC, SAML, **2LO / 3LO / OBO**, PKCE, token validation, and **Okta /
+      Microsoft Entra ID** integration.
+    - **[AgentCore Identity & Gateway](agentcore-identity-gateway.md)** — how AWS
+      Bedrock AgentCore secures agents: inbound/outbound auth, workload identity,
+      the token vault, user consent, and turning APIs into governed MCP tools.
+
 ---
 
 ## The threat landscape (LLM/agent-specific)

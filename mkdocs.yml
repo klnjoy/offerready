@@ -171,7 +171,10 @@ nav:
           - "Monitoring & Observability": Enterprise/monitoring/index.md
           - Compliance: Enterprise/compliance/index.md
           - Reference Architectures: Enterprise/reference-architectures/index.md
-          - AI Security (LLM/Agent threats): AI-Security/index.md
+          - AI Security:
+              - AI Security (LLM/Agent threats): AI-Security/index.md
+              - "Enterprise Identity & API Security (OAuth/OIDC/SAML)": AI-Security/identity-api-security.md
+              - "AgentCore Identity & Gateway": AI-Security/agentcore-identity-gateway.md
   - Build:
       - Setup Guides:
           - Overview: Setup-Guides/index.md
