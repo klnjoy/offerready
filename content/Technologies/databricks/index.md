@@ -127,13 +127,6 @@ mix (heavy ML → Databricks; SQL-first + sharing → Snowflake), and openness n
     ACID transactions, a transaction log, Time Travel, schema enforcement/
     evolution, MERGE/upserts, and OPTIMIZE/Z-order for performance.
 
-## Related course modules
-
-- **[MODULE2-AWS-CLOUD](../../Course-Modules/module2-aws-cloud.md)** — cloud data
-  fundamentals that transfer to Databricks.
-- **[MODULE3-PYTHON](../../Course-Modules/module3-python.md)** — PySpark and
-  Python data engineering.
-
 ---
 
 ## Interview deep dive

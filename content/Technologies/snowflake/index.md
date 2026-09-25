@@ -278,15 +278,6 @@ AS
     spillage to disk (size up the warehouse), exploding joins (fix grain/keys), and
     leverage the result cache. Avoid `SELECT *`.
 
-## Related course modules
-
-The AWS-cloud and Python modules include Snowflake-adjacent data engineering
-material.
-
-- See **[MODULE2-AWS-CLOUD](../../Course-Modules/module2-aws-cloud.md)** and
-  **[MODULE3-PYTHON](../../Course-Modules/module3-python.md)** for pipeline and
-  integration examples.
-
 ---
 
 ## Interview deep dive

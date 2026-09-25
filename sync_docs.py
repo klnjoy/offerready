@@ -556,6 +556,16 @@ def _discover_committed_modules() -> list[tuple[str, str, int, str | None]]:
 
 
 def build_module_pages() -> list[tuple[str, str, int, str | None]]:
+    # Course-Modules are directory dumps of a third-party PAID training course
+    # (DVS GenAI/AgenticAI Bootcamp). That material is licensed for personal use
+    # only and must NOT be published or included in a paid product. Publishing is
+    # disabled here so no module pages are generated, listed in nav, or counted
+    # on the landing page. The source files remain private/local. See also the
+    # removal of the DVS-derived Study Book from personal-docs/.
+    return []
+
+
+def _build_module_pages_unused() -> list[tuple[str, str, int, str | None]]:
     """One catalog page per extracted module, with openable file links.
 
     Copies openable files into docs/<MODULES_SECTION>/files/<slug>/... and
@@ -806,7 +816,6 @@ def write_index(md_catalog, modules) -> None:
         "",
         '<p class="home-stats">'
         f"<span>📚 <strong>{total_docs}</strong> documents</span>"
-        f"<span>🎓 <strong>{total_modules}</strong> course modules</span>"
         f"<span>🧭 <strong>{len(TECHNOLOGIES)}</strong> tech areas</span>"
         f"<span>🤖 <strong>{len(TOPICS)}</strong> GenAI topics</span>"
         "</p>",
@@ -935,7 +944,7 @@ def write_index(md_catalog, modules) -> None:
         "| **Learn** | GenAI foundations, data & cloud tech, Snowflake Cortex, reference docs, security | Understanding concepts end to end |",
         "| **Build** | Setup guides, projects & POCs, case studies, hands-on labs | Doing the work |",
         "| **Interview Prep** | Q&A banks, mock simulators, cheat sheets, 30-day plan | Getting interview-ready |",
-        "| **Study Guide** | Consolidated book + course modules | Structured, module-by-module study |",
+        "| **Study Guide** | One original end-to-end guide, fundamentals to production | Structured start-to-finish study |",
         "",
         "Plus a local **retrieval agent** for cited answers over this knowledge "
         "base (`python ask.py \"...\"`).",
@@ -1016,18 +1025,15 @@ def write_index(md_catalog, modules) -> None:
         cards,
     )
 
-    # Study Guide (book + modules) — only if that content is present.
+    # Study Guide — the original OfferReady end-to-end study guide.
     cards = []
     for rel_dest, title in sorted(buckets.get("Study Guide", []), key=lambda e: e[1].lower()):
         cards.append(_card(":material-book-open-page-variant:", title, rel_dest,
-                           "The consolidated study book covering every topic."))
-    for mtitle, rel_dest, count, _slug in sorted(modules, key=_module_sort_key):
-        cards.append(_card(":material-folder-open:", mtitle, rel_dest,
-                           "Course module materials.", meta=f"{count} files"))
+                           "The original OfferReady study guide, fundamentals to production."))
     if cards:
         lines += _section(
             ":material-book-open-variant: Study Guide",
-            "The complete study book plus all course modules.",
+            "One structured path from fundamentals to shipping production GenAI.",
             cards,
         )
 
@@ -1297,7 +1303,7 @@ def write_nav(md_catalog, modules) -> None:
     study_entries = sorted(buckets.get("Study Guide", []), key=lambda e: e[1].lower())
     if study_entries or modules:
         nav.append("  - Study Guide:")
-        study_index = "GenAI-AgenticAI-Complete-Study-Book.md"
+        study_index = "OfferReady-Complete-Study-Guide.md"
         emitted_index = False
         for rel_dest, title in study_entries:
             if Path(rel_dest).name == study_index and not emitted_index:

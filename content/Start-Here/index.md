@@ -12,7 +12,7 @@ each answering a different question:
 | **Learn** | Understand concepts — GenAI foundations, data/cloud tech, Snowflake Cortex, reference docs, security |
 | **Build** | Do the work — setup guides, projects, case studies, hands-on practice labs |
 | **Interview Prep** | Get ready for interviews — Q&A banks, mock simulators, cheat sheets, the 30-day plan |
-| **Study Guide** | Read the long-form study book and course modules |
+| **Study Guide** | One original end-to-end path from fundamentals to production GenAI |
 
 Every Learn page ends with an **Interview deep dive** (talking points, scenario
 questions, pitfalls, rapid-fire), so learning and prep reinforce each other.

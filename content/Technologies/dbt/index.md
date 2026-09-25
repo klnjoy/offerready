@@ -116,11 +116,6 @@ discipline to the transformation layer.
     **Snapshots** implement SCD Type 2 — dbt detects changes and maintains
     valid-from/valid-to history automatically.
 
-## Related course modules
-
-- **[MODULE3-PYTHON](../../Course-Modules/module3-python.md)** — data pipeline
-  fundamentals that complement dbt transformations.
-
 ---
 
 ## Interview deep dive

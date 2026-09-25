@@ -133,13 +133,6 @@ set timeouts on model calls, validate/limit input size, and add rate limiting.
     grounded prompt, awaits an async LLM call, and returns the answer with
     citations — optionally streaming tokens via StreamingResponse.
 
-## Related course modules
-
-- **[MODULE3-PYTHON](../../Course-Modules/module3-python.md)** — Python and the
-  Lambda + API project (FastAPI plays the same API role).
-- **[MODULE4-PROMPT-ENGINEERING](../../Course-Modules/module4-prompt-engineering.md)**
-  — the SQL Assistant serving pattern.
-
 ---
 
 ## Interview deep dive
