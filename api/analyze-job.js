@@ -28,14 +28,15 @@ const REQUEST_TIMEOUT_MS = 45000;
 const MAX_OUTPUT_TOKENS = 1800;
 
 function setCors(res, origin) {
-  const allowed = process.env.ALLOWED_ORIGIN || 'https://klnjoy.github.io';
-  // Allow the configured origin (and let same-origin/local tools through by
-  // echoing an exact match). We keep this strict to one origin.
-  if (origin && (origin === allowed || origin.startsWith(allowed))) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else {
-    res.setHeader('Access-Control-Allow-Origin', allowed);
-  }
+  // Normalize: strip any trailing slash so a stray slash in ALLOWED_ORIGIN
+  // (e.g. "https://klnjoy.github.io/") can't break the exact-match CORS check.
+  const allowed = (process.env.ALLOWED_ORIGIN || 'https://klnjoy.github.io').replace(/\/+$/, '');
+  const reqOrigin = (origin || '').replace(/\/+$/, '');
+  // Echo the request origin back (exact match) when it matches the allowed one;
+  // browsers require Access-Control-Allow-Origin to equal the caller's origin
+  // exactly — including no trailing slash.
+  const value = reqOrigin && reqOrigin === allowed ? origin : allowed;
+  res.setHeader('Access-Control-Allow-Origin', value);
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');

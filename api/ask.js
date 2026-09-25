@@ -39,9 +39,12 @@ briefly and steer back. Do NOT invent citations or URLs. Keep answers tight
 `.trim();
 
 function setCors(res, origin) {
-  const allowed = process.env.ALLOWED_ORIGIN || 'https://klnjoy.github.io';
-  if (origin && origin.startsWith(allowed)) res.setHeader('Access-Control-Allow-Origin', origin);
-  else res.setHeader('Access-Control-Allow-Origin', allowed);
+  // Normalize trailing slashes so a stray slash in ALLOWED_ORIGIN can't break
+  // the exact-match CORS check the browser requires.
+  const allowed = (process.env.ALLOWED_ORIGIN || 'https://klnjoy.github.io').replace(/\/+$/, '');
+  const reqOrigin = (origin || '').replace(/\/+$/, '');
+  const value = reqOrigin && reqOrigin === allowed ? origin : allowed;
+  res.setHeader('Access-Control-Allow-Origin', value);
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
