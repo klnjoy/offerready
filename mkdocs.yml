@@ -242,4 +242,8 @@ nav:
   - Pricing: assets/pricing.html
   - Privacy:
       - Privacy/index.md
+  - Terms:
+      - Terms/index.md
+  - Contact:
+      - Contact/index.md
 # NAV:END

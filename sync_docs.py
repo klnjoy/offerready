@@ -1351,6 +1351,16 @@ def write_nav(md_catalog, modules) -> None:
         nav.append("  - Privacy:")
         nav.append("      - Privacy/index.md")
 
+    # Terms of Service — bottom-of-nav legal page.
+    if (DOCS_DIR / "Terms" / "index.md").exists():
+        nav.append("  - Terms:")
+        nav.append("      - Terms/index.md")
+
+    # Contact — bottom-of-nav.
+    if (DOCS_DIR / "Contact" / "index.md").exists():
+        nav.append("  - Contact:")
+        nav.append("      - Contact/index.md")
+
     block = "# NAV:BEGIN\n" + "\n".join(nav) + "\n# NAV:END"
     text = MKDOCS_YML.read_text(encoding="utf-8")
     pattern = re.compile(r"# NAV:BEGIN.*?# NAV:END", re.DOTALL)
