@@ -1332,6 +1332,10 @@ def write_nav(md_catalog, modules) -> None:
         for rel_dest, title in sorted(entries, key=lambda e: e[1].lower()):
             nav.append(f"      - {nav_label(title)}: {rel_dest}")
 
+    # Pricing — standalone HTML landing page (chrome-free), linked directly.
+    if (DOCS_DIR / "assets" / "pricing.html").exists():
+        nav.append("  - Pricing: assets/pricing.html")
+
     # Privacy & Data Handling — standalone bottom-of-nav item (bare index).
     if (DOCS_DIR / "Privacy" / "index.md").exists():
         nav.append("  - Privacy:")
