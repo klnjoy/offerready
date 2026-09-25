@@ -6,75 +6,108 @@
 <title>OfferReady — Pricing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* OfferReady brand palette — matches the main site (extra.css). */
   :root{
+    --navy:#16305c; --navy-2:#0f2547; --blue:#1f6fb2; --green:#22c07a; --green-ink:#08301f;
     --bg:#FFFFFF; --surface:#F5F7FA; --surface-2:#ECEEF2; --line:#E1E4EA;
-    --text:#1B2440; --muted:#6B7280; --gold:#1AA36A; --sage:#178F63; --rust:#C0472A;
-    --navy:#16244C; --navy-2:#0F1B38;
+    --text:#16305c; --body:#334155; --muted:#6B7280;
     --mono: 'JetBrains Mono', ui-monospace, monospace;
     --sans: 'Inter', system-ui, sans-serif;
     padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
   }
-  :root[data-theme="dark"]{
-    --bg:#101820; --surface:#17212C; --surface-2:#1D2833; --line:#2A3642;
-    --text:#EAEDF1; --muted:#8B98A5; --gold:#22C07A; --sage:#22C07A; --rust:#D9714A;
-    --navy:#0B1226; --navy-2:#0B1226;
-  }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --bg:#101820; --surface:#17212C; --surface-2:#1D2833; --line:#2A3642;
-      --text:#EAEDF1; --muted:#8B98A5; --gold:#22C07A; --sage:#22C07A; --rust:#D9714A;
-      --navy:#0B1226; --navy-2:#0B1226;
+      --bg:#0e1b2e; --surface:#152742; --surface-2:#1b3252; --line:#26405f;
+      --text:#eaf1fb; --body:#c4d2e4; --muted:#8ba0bd;
     }
   }
   html{scroll-padding-top:env(safe-area-inset-top,0px); box-sizing:border-box;}
   *,*::before,*::after{box-sizing:inherit;}
-  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.5;}
-  .wrap{max-width:920px; margin:0 auto; padding:0 24px;}
-  header{background:var(--navy); padding:20px 0;}
-  .brand{font-family:var(--sans); font-weight:700; font-size:16px; letter-spacing:.01em; color:#fff;}
-  .brand span{color:var(--gold);}
-  .hero{padding:64px 0 40px; border-bottom:1px solid var(--line);}
-  .hero h1{font-family:var(--mono); font-size:clamp(28px,5vw,42px); font-weight:600; line-height:1.15; margin:0 0 16px; max-width:14ch;}
-  .hero p{color:var(--muted); font-size:17px; max-width:56ch; margin:0;}
-  .path{font-family:var(--mono); font-size:13px; color:var(--sage); margin-top:20px; display:flex; gap:8px; flex-wrap:wrap;}
-  .path b{color:var(--text); font-weight:500;}
-  .tiers{display:grid; grid-template-columns:1fr; gap:0; border:1px solid var(--line); margin:40px 0; overflow-x:auto;}
-  .tier-row{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); min-width:640px;}
+  body{margin:0; background:var(--bg); color:var(--body); font-family:var(--sans); line-height:1.55;}
+  .wrap{max-width:960px; margin:0 auto; padding:0 24px;}
+
+  /* Header: navy bar with the real OfferReady logo mark + wordmark. */
+  header{background:var(--navy); padding:16px 0;}
+  .brand{display:flex; align-items:center; gap:10px; color:#fff; text-decoration:none;}
+  .brand svg{width:30px; height:30px; display:block;}
+  .brand .name{font-family:var(--sans); font-weight:800; font-size:18px; letter-spacing:-0.01em;}
+  .brand .name span{color:var(--green);}
+
+  /* Hero: subtle brand gradient wash. */
+  .hero{padding:60px 0 44px; border-bottom:1px solid var(--line);
+        background:radial-gradient(900px 240px at 12% -30%, rgba(34,192,122,.10), transparent 60%);}
+  .hero h1{font-family:var(--sans); font-weight:800; letter-spacing:-0.02em;
+           font-size:clamp(30px,5vw,46px); line-height:1.1; margin:0 0 16px; max-width:16ch; color:var(--text);}
+  .hero p{color:var(--body); font-size:17px; max-width:58ch; margin:0;}
+  .path{font-family:var(--mono); font-size:13px; color:var(--muted); margin-top:22px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .path .step{color:var(--green); font-weight:600;}
+  .path b{color:var(--text); font-weight:600;}
+
+  /* Tier table. */
+  .tiers{display:grid; grid-template-columns:1fr; gap:0; border:1px solid var(--line); border-radius:12px; margin:40px 0; overflow:hidden;}
+  .scroll{overflow-x:auto;}
+  .tier-row{display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; border-bottom:1px solid var(--line); min-width:660px;}
   .tier-row:last-child{border-bottom:none;}
-  .tier-row > div{padding:16px 18px; font-size:14px;}
-  .tier-row.head{background:var(--surface); font-family:var(--mono);}
-  .tier-row.head .t-name{font-size:15px; font-weight:600;}
-  .tier-row.head .price{color:var(--muted); font-size:12px; margin-top:4px; font-weight:400;}
-  .tier-row.head .pro .t-name{color:var(--gold);}
-  .tier-row.head .career .t-name{color:var(--rust);}
-  .tier-row:not(.head) .feature{color:var(--muted); border-right:1px solid var(--line);}
-  .yes{color:var(--sage);} .no{color:var(--line);} .lock{color:var(--rust); font-family:var(--mono); font-size:12px;}
-  .cta-row{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; min-width:640px;}
+  .tier-row > div{padding:15px 18px; font-size:14px;}
+  .tier-row.head{background:var(--surface);}
+  .tier-row.head .t-name{font-size:15px; font-weight:700; color:var(--text);}
+  .tier-row.head .price{color:var(--muted); font-size:12px; margin-top:4px; font-weight:500; font-family:var(--mono);}
+  .tier-row.head .pro .t-name{color:var(--blue);}
+  .tier-row.head .career .t-name{color:var(--green);}
+  .tier-row:not(.head) .feature{color:var(--body); border-right:1px solid var(--line);}
+  .tier-row:nth-child(even):not(.head){background:rgba(31,111,178,.03);}
+  .yes{color:var(--green); font-weight:600;} .no{color:var(--line);}
+  .lock{color:var(--blue); font-family:var(--mono); font-size:12px;}
+
+  /* CTA buttons — brand green primary, navy-outline secondary. */
+  .cta-row{display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; min-width:660px;}
   .cta-row > div{padding:16px 18px;}
-  .btn{display:inline-block; font-family:var(--mono); font-size:13px; padding:8px 14px; border:1px solid var(--line); color:var(--text); text-decoration:none; background:none; cursor:pointer;}
-  .btn.primary{border-color:var(--gold); color:var(--gold);}
-  .btn.primary.rust{border-color:var(--rust); color:var(--rust);}
-  .note{font-size:13px; color:var(--muted); margin-top:10px;}
-  .sprint{border:1px solid var(--line); padding:24px; margin:40px 0; display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap;}
-  .sprint h3{font-family:var(--mono); margin:0 0 6px; font-size:16px;}
-  .sprint p{color:var(--muted); margin:0; font-size:14px; max-width:44ch;}
-  footer{padding:32px 0 60px; color:var(--muted); font-size:13px; font-family:var(--mono); border-top:1px solid var(--line);}
-  @media (max-width:640px){ .tiers{overflow-x:auto;} }
+  .btn{display:inline-block; font-family:var(--sans); font-weight:600; font-size:13px; padding:9px 16px;
+       border-radius:8px; border:1.5px solid var(--navy); color:var(--navy); text-decoration:none; background:none; cursor:pointer; transition:.15s;}
+  .btn:hover{background:var(--navy); color:#fff;}
+  .btn.primary{background:var(--green); border-color:var(--green); color:var(--green-ink);}
+  .btn.primary:hover{background:#1ad07f; border-color:#1ad07f; color:var(--green-ink);}
+  .btn.accent{background:var(--blue); border-color:var(--blue); color:#fff;}
+  .btn.accent:hover{background:#2a7fc4; border-color:#2a7fc4;}
+  .note{font-size:13px; color:var(--muted); margin-top:12px;}
+
+  /* Sprint call-out. */
+  .sprint{border:1px solid var(--line); border-radius:12px; padding:26px; margin:44px 0;
+          display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap;
+          background:linear-gradient(135deg, rgba(22,48,92,.04), rgba(34,192,122,.06));}
+  .sprint h3{font-family:var(--sans); font-weight:700; margin:0 0 6px; font-size:17px; color:var(--text);}
+  .sprint p{color:var(--body); margin:0; font-size:14px; max-width:46ch;}
+
+  footer{padding:30px 0 60px; color:var(--muted); font-size:13px; border-top:1px solid var(--line); margin-top:20px;}
+  footer .wrap{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  footer a{color:var(--blue); text-decoration:none;}
 </style>
 </head>
 <body>
-<header><div class="wrap"><div class="brand">Offer<span>Ready</span></div></div></header>
+<header>
+  <div class="wrap">
+    <a class="brand" href="../index.html">
+      <svg viewBox="0 0 40 40" role="img" aria-label="OfferReady">
+        <path d="M33 11 A15 15 0 1 0 35 21" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+        <path d="M13 33 L19 20 L25 11" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M23 18 L37 4" fill="none" stroke="#22c07a" stroke-width="4" stroke-linecap="round"/>
+        <path d="M29 3 L38 3 L38 12" fill="none" stroke="#22c07a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="name">Offer<span>Ready</span></span>
+    </a>
+  </div>
+</header>
 
 <div class="wrap">
   <section class="hero">
     <h1>Read for free. Practice to get the offer.</h1>
     <p>Every GenAI Topic, deep-dive, and Study Guide chapter is free, always. Pay when you need the practice, the tracking, and the pressure-tested simulator that actually gets you ready to interview.</p>
-    <div class="path"><span class="lock">step 1</span> Learn <b>(free)</b> <span class="lock">→ step 2</span> Practice <b>(Pro)</b> <span class="lock">→ step 3</span> Interview <b>(Career Sprint)</b></div>
+    <div class="path"><span class="step">step 1</span> Learn <b>(free)</b> <span class="step">→ step 2</span> Practice <b>(Pro)</b> <span class="step">→ step 3</span> Interview <b>(Career Sprint)</b></div>
   </section>
 
-  <div class="tiers">
+  <div class="tiers scroll">
     <div class="tier-row head">
       <div class="feature">Included</div>
       <div class="free"><div class="t-name">Free</div><div class="price">$0</div></div>
@@ -91,11 +124,13 @@
     <div class="tier-row"><div class="feature">Accountability check-ins (30-Day Plan)</div><div class="no">—</div><div class="no">—</div><div class="yes">✓</div></div>
   </div>
 
-  <div class="cta-row">
-    <div></div>
-    <div><a class="btn" href="#">Start free</a></div>
-    <div><a class="btn primary" href="#">Go Pro</a></div>
-    <div><a class="btn primary rust" href="#">Start Sprint</a></div>
+  <div class="scroll">
+    <div class="cta-row">
+      <div></div>
+      <div><a class="btn" href="#">Start free</a></div>
+      <div><a class="btn accent" href="#">Go Pro</a></div>
+      <div><a class="btn primary" href="#">Start Sprint</a></div>
+    </div>
   </div>
   <p class="note">Annual Pro saves ~35%. Career Sprint is also available as a one-time 30-day pass — cram, interview, done, no subscription.</p>
 
@@ -104,10 +139,10 @@
       <h3>Interview in 2 weeks, not learning for 6 months?</h3>
       <p>Skip the subscription. Get 30 days of full access, the simulator, and a plan built around your actual job posting.</p>
     </div>
-    <a class="btn primary rust" href="#">$199 · one time</a>
+    <a class="btn primary" href="#">$199 · one time</a>
   </div>
 </div>
 
-<footer><div class="wrap">© 2026 OfferReady · Learn. Build. Defend. Interview.</div></footer>
+<footer><div class="wrap"><span>© 2026 OfferReady · Learn. Build. Defend. Interview.</span> <a href="../index.html">← Back to site</a></div></footer>
 </body>
 </html>
