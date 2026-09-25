@@ -769,6 +769,23 @@
    OfferReady branding
    ============================================================ */
 
+/* Branded gradient header bar (navy -> blue) to match the home hero and the
+   standalone pricing/paywall/dashboard pages — one consistent look sitewide. */
+.md-header {
+  background: linear-gradient(135deg, var(--kb-navy) 0%, #1a3a6b 55%, var(--kb-blue) 100%);
+  box-shadow: 0 2px 10px rgba(15, 37, 71, 0.25);
+}
+/* Thin brand-green accent line under the header, like the hero panel's top line. */
+.md-header::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, var(--kb-green), var(--kb-blue), var(--kb-green));
+}
+/* Match the tabs bar (if shown) to the header so there's no color seam. */
+.md-tabs {
+  background: transparent;
+}
+
 /* Header wordmark — style the site title next to the logo mark */
 .md-header__title .md-header__topic:first-child .md-ellipsis {
   font-weight: 800;
