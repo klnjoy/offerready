@@ -797,7 +797,15 @@ def write_index(md_catalog, modules) -> None:
 
     total_areas = len(TECHNOLOGIES) + len(TOPICS)
     lines = [
+        # Hero banner: branded panel wrapping the title, tagline, CTAs, and stat
+        # pills so the top of the home page reads as a product hero, not loose text.
+        # The H1 lives inside the panel (title text set via CSS so the page still
+        # has a proper <h1> for SEO/nav).
+        '<div class="or-hero" markdown>',
+        "",
         "# OfferReady",
+        "",
+        '<p class="or-hero-eyebrow">Learn · Build · Defend · Interview</p>',
         "",
         '<p class="home-hero"><strong>Production AI Engineering &amp; FDE interview '
         "preparation.</strong> Prep smarter and land the offer. OfferReady takes "
@@ -819,6 +827,8 @@ def write_index(md_catalog, modules) -> None:
         f"<span>🧭 <strong>{len(TECHNOLOGIES)}</strong> tech areas</span>"
         f"<span>🤖 <strong>{len(TOPICS)}</strong> GenAI topics</span>"
         "</p>",
+        "",
+        "</div>",
         "",
         "## Choose your target role",
         "",

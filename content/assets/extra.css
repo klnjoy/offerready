@@ -39,7 +39,82 @@
   max-width: 48rem;
 }
 
-/* Gradient page title on the home page (first h1) */
+/* ---- Hero banner panel (wraps the title, tagline, CTAs, stats) ---- */
+.md-typeset .or-hero {
+  position: relative;
+  margin: 0 0 2.4rem;
+  padding: 2.2rem 2.2rem 2rem;
+  border-radius: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 300px at 15% -20%, rgba(34, 192, 122, 0.18), transparent 60%),
+    linear-gradient(135deg, var(--kb-navy) 0%, #1a3a6b 45%, var(--kb-blue) 100%);
+  box-shadow: 0 18px 45px rgba(15, 37, 71, 0.28);
+}
+/* Thin brand-green accent line along the top of the panel. */
+.md-typeset .or-hero::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--kb-green), var(--kb-blue), var(--kb-green));
+}
+/* The page H1 now lives inside the panel — make it large and white, and hide
+   its hover permalink so it reads as a clean hero title. */
+.md-typeset .or-hero h1 {
+  margin: 0 0 0.2rem;
+  color: #fff;
+  font-size: clamp(2rem, 5vw, 2.9rem);
+  line-height: 1.1;
+}
+.md-typeset .or-hero h1 .headerlink { display: none !important; }
+
+/* Small uppercase eyebrow above the tagline. */
+.or-hero-eyebrow {
+  margin: 0 0 0.9rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--kb-green);
+}
+/* Tagline sits on the dark panel now — flip it to light text. */
+.md-typeset .or-hero .home-hero {
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 52rem;
+}
+.md-typeset .or-hero .home-hero strong { color: #fff; }
+
+/* CTA buttons on the dark band: primary = brand green, secondary = outlined white. */
+.md-typeset .or-hero .home-cta { margin: 0.4rem 0 1.3rem; }
+.md-typeset .or-hero .home-cta .md-button {
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #fff;
+}
+.md-typeset .or-hero .home-cta .md-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #fff;
+}
+.md-typeset .or-hero .home-cta .md-button--primary {
+  background: var(--kb-green);
+  border-color: var(--kb-green);
+  color: #08301f;
+}
+.md-typeset .or-hero .home-cta .md-button--primary:hover {
+  background: #1ad07f;
+  border-color: #1ad07f;
+  color: #08301f;
+}
+
+/* Stat pills inside the hero: translucent glass on the dark band. */
+.md-typeset .or-hero .home-stats { margin: 0; }
+.md-typeset .or-hero .home-stats > span {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(4px);
+}
+
+/* Move the "OfferReady" H1 visually onto the band: give it white text and
+   tuck the panel right beneath it. (The H1 renders just above .or-hero.) */
 .md-typeset h1 {
   font-weight: 800;
   letter-spacing: -0.02em;
