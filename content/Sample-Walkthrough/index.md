@@ -21,7 +21,13 @@ flowchart LR
     JOB[Job] --> AN[Analyze] --> RD[Readiness] --> PR[Prepare] --> IM[Improve]
 ```
 
+<div id="walkthrough-app" markdown="0"><p><em>Loading the walkthrough…</em></p></div>
+
 ---
+
+## The full worked example (reference)
+
+The same walkthrough as a static page you can scan top to bottom.
 
 ## 1. The job
 

@@ -4,20 +4,29 @@ icon: material/av-timer
 
 # Master Interview Simulator
 
-A mixed, cross-category question bank that mimics a real loop, questions jump
-between AI, data, cloud, security, and system design, at different levels. Each
-one tells you **what's tested**, what a **strong** answer shows, the **weak
-patterns** to avoid, a **follow-up**, and the **expected depth**.
-
-!!! tip "How to run a mock"
-    Pick a level, answer **out loud** and timed (~2 min), then reveal and compare.
-    Don't skip the **follow-up**, that's where loops separate candidates. This
-    page does **not** score you; use the strong/weak notes to self-assess and
-    revisit the linked deep pages.
+Run a **mock loop** that mimics a real onsite: questions jump between AI, data,
+cloud, security, and system design at different levels. For each, you answer out
+loud and timed, then reveal what's tested, the strong vs weak patterns, and the
+expected depth — rate yourself, then face the follow-up. Your scores feed the
+[Progress dashboard](Interview_Progress.md).
 
 !!! abstract "The universal strong-answer shape"
     **Clarify → claim → mechanism → trade-off → how I'd verify.** Weak answers skip
-    the trade-off and the verification. Every note below is a variation of this.
+    the trade-off and the verification. Every question below is a variation of this.
+
+<div id="simulator-app" markdown="0"><p><em>Loading the simulator…</em></p></div>
+
+---
+
+## The full question bank (reference)
+
+The same questions the simulator draws from, browsable. Each tells you **what's
+tested**, what a **strong** answer shows, the **weak patterns** to avoid, a
+**follow-up**, and the **expected depth**.
+
+!!! tip "How to run a mock without the app"
+    Pick a level, answer **out loud** and timed (~2 min), then reveal and compare.
+    Don't skip the **follow-up** — that's where loops separate candidates.
 
 ---
 

@@ -86,6 +86,8 @@ extra_javascript:
   - assets/progress.js
   - assets/why.js
   - assets/analyze.js
+  - assets/simulator.js
+  - assets/walkthrough.js
 
 markdown_extensions:
   - admonition

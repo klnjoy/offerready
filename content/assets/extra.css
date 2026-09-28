@@ -1196,3 +1196,96 @@ a > .ig-feature.ig-link { text-decoration: none; color: inherit; }
   .or-footer { justify-content: center; text-align: center; }
   .or-footer__links { justify-content: center; }
 }
+
+/* ============================================================
+   Master Interview Simulator (simulator.js, mounts #simulator-app)
+   Reuses the ip-* practice styles; these are the extra bits it adds.
+   ============================================================ */
+#simulator-app .ip-select {
+  font-size: 0.9rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--md-default-fg-color--lighter);
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  width: 100%;
+  max-width: 22rem;
+}
+#simulator-app .ip-area-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.3rem 0.9rem;
+  margin: 0.3rem 0 0.1rem;
+}
+#simulator-app .ip-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+#simulator-app .ip-check input { margin: 0; }
+
+/* Count-up timer on each question. */
+#simulator-app .ip-timer {
+  display: inline-block;
+  margin: 0.5rem 0 0.2rem;
+  font-family: var(--md-code-font-family, monospace);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--md-default-fg-color--light);
+}
+#simulator-app .ip-timer-over { color: #e53935; }
+
+/* Reveal block: what's tested / strong / weak / depth. */
+#simulator-app .ip-tested { margin: 0 0 0.6rem; }
+#simulator-app .ip-model .ip-weak-h { color: #c62828; }
+#simulator-app .ip-model ul.ip-weak { margin: 0 0 0.4rem; }
+#simulator-app .ip-model ul.ip-weak li { color: var(--md-default-fg-color--light); }
+#simulator-app .ip-depth {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--md-default-fg-color--light);
+}
+#simulator-app .ip-followup {
+  border-left-color: var(--kb-green, #22c07a);
+  background: rgba(34, 192, 122, 0.06);
+}
+#simulator-app .ip-followup h4 { color: var(--kb-green, #22c07a) !important; }
+
+/* ============================================================
+   Sample Readiness Walkthrough (walkthrough.js, mounts #walkthrough-app)
+   Guided step-through; reuses ip-card / ip-bar / ip-btn / ip-topic.
+   ============================================================ */
+#walkthrough-app .wt-steps { display: flex; gap: 0.5rem; margin: 0 0 0.6rem; flex-wrap: wrap; }
+#walkthrough-app .wt-step {
+  width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700; cursor: pointer;
+  background: var(--md-default-fg-color--lightest); color: var(--md-default-fg-color--light);
+  border: 1px solid var(--md-default-fg-color--lighter);
+}
+#walkthrough-app .wt-step-active { background: var(--kb-navy, #16305c); color: #fff; border-color: var(--kb-navy, #16305c); }
+#walkthrough-app .wt-step-done { background: var(--kb-green, #22c07a); color: #08301f; border-color: var(--kb-green, #22c07a); }
+#walkthrough-app .wt-title { margin: 0.4rem 0 0.6rem; font-size: 1.05rem; }
+#walkthrough-app .wt-body { font-size: 0.92rem; line-height: 1.6; }
+#walkthrough-app .wt-note { font-size: 0.85rem; color: var(--md-default-fg-color--light); }
+#walkthrough-app .wt-body blockquote {
+  border-left: 4px solid var(--kb-blue, #1f6fb2);
+  margin: 0.6rem 0; padding: 0.4rem 0.9rem;
+  background: var(--md-default-fg-color--lightest); font-size: 0.88rem;
+}
+#walkthrough-app .wt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.6rem 1.4rem; }
+#walkthrough-app .wt-grid h4 { margin: 0.3rem 0 0.2rem; font-size: 0.85rem; color: var(--md-primary-fg-color); }
+#walkthrough-app .wt-grid ul { margin: 0 0 0.4rem 1.1rem; font-size: 0.85rem; }
+#walkthrough-app .wt-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.5rem 0; }
+#walkthrough-app .wt-table th, #walkthrough-app .wt-table td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--md-default-fg-color--lightest); }
+#walkthrough-app .wt-plan-item {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.6rem; padding: 0.7rem 0.9rem; margin: 0.5rem 0;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+#walkthrough-app .wt-plan-item.wt-done { border-color: var(--kb-green, #22c07a); background: rgba(34, 192, 122, 0.06); }
+#walkthrough-app .wt-plan-check { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+#walkthrough-app .wt-plan-why { margin: 0.3rem 0 0.2rem 1.6rem; font-size: 0.82rem; color: var(--md-default-fg-color--light); }
+#walkthrough-app .wt-plan-links { margin: 0 0 0 1.6rem; font-size: 0.82rem; }
