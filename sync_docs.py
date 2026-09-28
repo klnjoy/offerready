@@ -1195,6 +1195,10 @@ def write_nav(md_catalog, modules) -> None:
     # them across the top level) makes the product core obvious and removes the
     # two-"practice" confusion. Sample Walkthrough is demoted into this group.
     practice_children = []
+    # Front-door overview page (bare entry = the Practice section's landing
+    # page). Introduces the interactive tools and routes into each one.
+    if (DOCS_DIR / "Practice" / "index.md").exists():
+        practice_children.append("      - Practice/index.md")
     if (DOCS_DIR / "Analyze" / "index.md").exists():
         practice_children.append("      - Analyze My Job: Analyze/index.md")
     if (DOCS_DIR / "Practice-Scenarios" / "index.md").exists():
