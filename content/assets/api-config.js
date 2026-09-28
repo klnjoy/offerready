@@ -19,4 +19,17 @@
   if (/^https:\/\//.test(BASE)) {
     window.OFFERREADY_API_BASE = BASE.replace(/\/$/, "");
   }
+
+  // ---- Supabase (auth) — BROWSER-SAFE values only -------------------------
+  // These are the publishable Supabase URL + anon key. They are protected by
+  // Row Level Security, so they are safe to ship to the browser. NEVER put the
+  // service-role key here. Paste your project values, then commit + push to
+  // turn on sign-in. Left as placeholders => auth UI stays in a disabled state.
+  var SUPABASE_URL = "https://your-project-ref.supabase.co";
+  var SUPABASE_ANON_KEY = "your-supabase-anon-publishable-key";
+  if (/^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL) &&
+      SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.indexOf("your-") !== 0) {
+    window.OFFERREADY_SUPABASE_URL = SUPABASE_URL.replace(/\/$/, "");
+    window.OFFERREADY_SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
+  }
 })();

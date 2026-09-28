@@ -1070,3 +1070,23 @@
   background: rgba(31, 111, 178, .08);
   font-size: .9rem;
 }
+
+/* ============================================================
+   Auth (Phase 2): sign-in slot + header state
+   ============================================================ */
+#or-auth-slot { margin: 1rem 0; }
+.or-auth-form { display: flex; flex-direction: column; gap: .5rem; max-width: 22rem; }
+.or-auth-form .or-input {
+  font-size: .95rem; padding: .5rem .7rem;
+  border: 1.5px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.15));
+  border-radius: 8px; background: var(--md-default-bg-color, #fff);
+  color: var(--md-default-fg-color, #16305c);
+}
+.or-auth-form .or-input:focus { outline: none; border-color: var(--kb-blue, #1f6fb2); }
+.or-auth-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.or-auth-row .ip-btn { margin: 0; }
+.or-linkbtn { background: none; border: none; color: var(--kb-blue, #1f6fb2); cursor: pointer; font-size: .85rem; text-decoration: underline; padding: 0; }
+.or-auth-msg { font-size: .85rem; color: var(--kb-green, #22c07a); min-height: 1.1em; }
+.or-auth-msg.or-auth-err { color: #c0392b; }
+.or-auth-who { font-weight: 600; margin-right: .5rem; }
+.or-auth-note { font-size: .85rem; opacity: .7; }
