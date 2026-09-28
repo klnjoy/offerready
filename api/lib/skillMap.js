@@ -13,7 +13,49 @@
 'use strict';
 
 // Each entry: { match: [keywords, lowercased], label, path }
+// NOTE: lookupResource() returns the FIRST entry whose keyword is a substring
+// of the query, so MORE-SPECIFIC / enterprise terms are listed first so they
+// win over generic ones (e.g. "policy-as-code" before "devops", "hipaa"/"owasp"
+// before "security"). These map enterprise AI-architect JD terms to EXISTING
+// OfferReady pages — no new pages are created here.
 const RESOURCES = [
+  // ---- Enterprise / DevSecOps / compliance (specific → listed first) --------
+  { match: ['devsecops', 'sast', 'sca', 'software composition', 'container scanning',
+            'secrets management', 'policy-as-code', 'policy as code', 'supply chain',
+            'sbom', 'iac governance', 'infrastructure-as-code', 'ci/cd security',
+            'quality gate', 'security scanning'],
+    label: 'DevOps for AI (secure SDLC / DevSecOps)', path: 'GenAI-Topics/devops-ai/index.html' },
+  { match: ['hipaa', 'phi', 'pii', 'gdpr', 'compliance', 'soc2', 'audit', 'lineage',
+            'governance', 'explainability', 'bias', 'data governance'],
+    label: 'Enterprise Compliance & Governance', path: 'Enterprise/compliance/index.html' },
+  { match: ['owasp', 'zero trust', 'zero-trust', 'threat model', 'secure-by-design',
+            'secure by design', 'security architecture'],
+    label: 'Enterprise Security Architecture', path: 'Enterprise/security-architecture/index.html' },
+  { match: ['enterprise architecture', 'reference architecture', 'ddd',
+            'domain-driven', 'domain driven', 'clean architecture', 'microservices',
+            'cloud-native', 'cloud native', 'solution architect', 'ai architect'],
+    label: 'Enterprise Reference Architectures', path: 'Enterprise/reference-architectures/index.html' },
+  // ---- AI-assisted engineering & agentic SDLC ------------------------------
+  { match: ['copilot', 'claude code', 'codex', 'ai coding', 'coding assistant',
+            'ai-assisted', 'ai assisted', 'code modernization', 'code generation',
+            'pull request review', 'pr review', 'multi-agent', 'agent ecosystem',
+            'agentic'],
+    label: 'Agent Engineering (agentic SDLC)', path: 'GenAI-Topics/agent-engineering/index.html' },
+  // ---- ML foundations (TensorFlow/PyTorch/MLOps/NLP/CV/DL) ------------------
+  { match: ['tensorflow', 'pytorch', 'scikit', 'mlops', 'deep learning', 'nlp',
+            'computer vision', 'model lifecycle', 'model training', 'ml pipeline',
+            'supervised', 'unsupervised', 'fine-tune', 'fine tuning'],
+    label: 'LLM & ML Fundamentals', path: 'GenAI-Topics/llm-fundamentals/index.html' },
+  // ---- Data & AI platform (newer product names) ----------------------------
+  { match: ['databricks', 'lakehouse', 'delta lake', 'genie', 'spark', 'unity catalog'],
+    label: 'Databricks (Lakehouse / Genie / Delta)', path: 'Technologies/databricks/index.html' },
+  { match: ['cortex', 'coco', 'cortex analyst', 'cortex search', 'semantic model'],
+    label: 'Snowflake Cortex', path: 'Snowflake-Cortex/index.html' },
+  // ---- Cloud platforms (Azure / GCP / AWS architect) -----------------------
+  { match: ['azure', 'gcp', 'google cloud', 'vertex', 'distributed systems',
+            'scalable systems', 'scalability'],
+    label: 'Reliability & Distributed Systems', path: 'GenAI-Topics/reliability/index.html' },
+
   { match: ['rag', 'retrieval augmented', 'retrieval-augmented'],
     label: 'RAG', path: 'GenAI-Topics/rag/index.html' },
   { match: ['retrieval tuning', 'reranking', 'hybrid search', 'top-k'],
