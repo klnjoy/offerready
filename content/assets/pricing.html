@@ -31,11 +31,21 @@
   .wrap{max-width:960px; margin:0 auto; padding:0 24px;}
 
   /* Header: navy bar with the real OfferReady logo mark + wordmark. */
-  header{background:var(--navy); padding:16px 0;}
+  header{background:var(--navy); padding:16px 0; position:sticky; top:0; z-index:50;}
+  .hdr{display:flex; align-items:center; justify-content:space-between; gap:12px;}
   .brand{display:flex; align-items:center; gap:10px; color:#fff; text-decoration:none;}
   .brand svg{width:30px; height:30px; display:block;}
   .brand .name{font-family:var(--sans); font-weight:800; font-size:18px; letter-spacing:-0.01em;}
   .brand .name span{color:var(--green);}
+  /* Explicit "Back to site" so mobile users always have a way home. */
+  .hdr-back{color:#fff; text-decoration:none; font-family:var(--sans); font-weight:600; font-size:13px;
+            border:1.5px solid rgba(255,255,255,.4); border-radius:8px; padding:6px 12px; white-space:nowrap;}
+  .hdr-back:hover{background:rgba(255,255,255,.12);}
+  @media (max-width:520px){
+    .brand .name{font-size:16px;}
+    .hdr-back{font-size:12px; padding:5px 10px;}
+    .wrap{padding:0 16px;}
+  }
 
   /* Hero: subtle brand gradient wash. */
   .hero{padding:60px 0 44px; border-bottom:1px solid var(--line);
@@ -129,7 +139,7 @@
 </head>
 <body>
 <header>
-  <div class="wrap">
+  <div class="wrap hdr">
     <a class="brand" href="../index.html">
       <svg viewBox="0 0 40 40" role="img" aria-label="OfferReady">
         <path d="M33 11 A15 15 0 1 0 35 21" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
@@ -139,6 +149,7 @@
       </svg>
       <span class="name">Offer<span>Ready</span></span>
     </a>
+    <a class="hdr-back" href="../index.html">&larr; Back to site</a>
   </div>
 </header>
 

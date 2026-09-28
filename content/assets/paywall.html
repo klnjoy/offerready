@@ -29,11 +29,16 @@
   *,*::before,*::after{box-sizing:inherit;}
   body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);}
   .wrap{max-width:760px; margin:0 auto; padding:0 24px 80px;}
-  header{background:var(--navy); padding:20px 0;}
+  header{background:var(--navy); padding:20px 0; position:sticky; top:0; z-index:50;}
+  header .wrap{display:flex; align-items:center; justify-content:space-between; gap:12px;}
   .brand{display:flex; align-items:center; gap:10px; color:#fff; text-decoration:none;}
   .brand svg{width:28px; height:28px; display:block;}
   .brand .name{font-family:var(--sans); font-weight:800; font-size:17px; letter-spacing:-0.01em;}
   .brand .name span{color:var(--green);}
+  .hdr-back{color:#fff; text-decoration:none; font-family:var(--sans); font-weight:600; font-size:13px;
+            border:1.5px solid rgba(255,255,255,.4); border-radius:8px; padding:6px 12px; white-space:nowrap;}
+  .hdr-back:hover{background:rgba(255,255,255,.12);}
+  @media (max-width:520px){ .brand .name{font-size:15px;} .hdr-back{font-size:12px; padding:5px 10px;} }
   .crumb{font-family:var(--mono); font-size:12px; color:var(--muted); margin:24px 0 6px;}
   article h1{font-family:var(--sans); font-weight:800; letter-spacing:-0.01em; font-size:28px; margin:0 0 18px; color:var(--text);}
   article p{font-size:16px; line-height:1.7; color:var(--text); margin:0 0 18px;}
@@ -61,7 +66,7 @@
 </style>
 </head>
 <body>
-<header><div class="wrap"><a class="brand" href="../index.html"><svg viewBox="0 0 40 40" role="img" aria-label="OfferReady"><path d="M33 11 A15 15 0 1 0 35 21" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/><path d="M13 33 L19 20 L25 11" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 18 L37 4" fill="none" stroke="#22c07a" stroke-width="4" stroke-linecap="round"/><path d="M29 3 L38 3 L38 12" fill="none" stroke="#22c07a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="name">Offer<span>Ready</span></span></a></div></header>
+<header><div class="wrap"><a class="brand" href="../index.html"><svg viewBox="0 0 40 40" role="img" aria-label="OfferReady"><path d="M33 11 A15 15 0 1 0 35 21" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/><path d="M13 33 L19 20 L25 11" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 18 L37 4" fill="none" stroke="#22c07a" stroke-width="4" stroke-linecap="round"/><path d="M29 3 L38 3 L38 12" fill="none" stroke="#22c07a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="name">Offer<span>Ready</span></span></a><a class="hdr-back" href="../index.html">&larr; Back to site</a></div></header>
 
 <div class="wrap">
   <div class="crumb">Interview Prep / Technical Deep Dive / MCP</div>

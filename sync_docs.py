@@ -1189,16 +1189,27 @@ def write_nav(md_catalog, modules) -> None:
     #   "          - Page"    (10 spaces) a page inside a section
     nav = ["nav:", "  - Home: index.md",
            "  - Start Here: Start-Here/index.md"]
-    # Analyze My Job — the interactive MVP entry point.
+    # ----- PRACTICE (the interactive product core) ---------------------------
+    # One home for the monetizable capabilities: Analyze, Scenarios, Practice
+    # mode, Keep Asking Why, and Progress. Grouping these (instead of scattering
+    # them across the top level) makes the product core obvious and removes the
+    # two-"practice" confusion. Sample Walkthrough is demoted into this group.
+    practice_children = []
     if (DOCS_DIR / "Analyze" / "index.md").exists():
-        nav.append("  - Analyze My Job: Analyze/index.md")
-    # Sample Readiness Walkthrough — the product-demo entry point (labeled demo).
-    if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
-        nav.append("  - Sample Walkthrough: Sample-Walkthrough/index.md")
-    # Practice — the core defend-your-decision scenario experience (Pro-gated
-    # full trees; public teasers). Top-level so it reads as the product core.
+        practice_children.append("      - Analyze My Job: Analyze/index.md")
     if (DOCS_DIR / "Practice-Scenarios" / "index.md").exists():
-        nav.append("  - Practice: Practice-Scenarios/index.md")
+        practice_children.append("      - Defend-Your-Decision Scenarios: Practice-Scenarios/index.md")
+    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Practice.md").exists():
+        practice_children.append("      - Practice Mode (Q&A drills): Personal-SourceCode/Interview_Practice.md")
+    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Why_Interactive.md").exists():
+        practice_children.append("      - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md")
+    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Progress.md").exists():
+        practice_children.append("      - Progress Dashboard: Personal-SourceCode/Interview_Progress.md")
+    if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
+        practice_children.append("      - Sample Walkthrough: Sample-Walkthrough/index.md")
+    if practice_children:
+        nav.append("  - Practice:")
+        nav.extend(practice_children)
 
     # ----- LEARN --------------------------------------------------------------
     nav.append("  - Learn:")
@@ -1431,29 +1442,25 @@ def write_nav(md_catalog, modules) -> None:
         for rel_dest, title in sorted(entries, key=lambda e: e[1].lower()):
             nav.append(f"      - {nav_label(title)}: {rel_dest}")
 
-    # Pricing — standalone HTML landing page (chrome-free), linked directly.
+    # Pricing — standalone HTML landing page (chrome-free); kept top-level as a
+    # conversion entry point.
     if (DOCS_DIR / "assets" / "pricing.html").exists():
         nav.append("  - Pricing: assets/pricing.html")
 
-    # Privacy & Data Handling — standalone bottom-of-nav item (bare index).
+    # More — collapse the legal/util pages into one group so they stop competing
+    # with the product at the top level (declutters the nav).
+    more_children = []
     if (DOCS_DIR / "Privacy" / "index.md").exists():
-        nav.append("  - Privacy:")
-        nav.append("      - Privacy/index.md")
-
-    # Terms of Service — bottom-of-nav legal page.
+        more_children.append("      - Privacy: Privacy/index.md")
     if (DOCS_DIR / "Terms" / "index.md").exists():
-        nav.append("  - Terms:")
-        nav.append("      - Terms/index.md")
-
-    # Disclaimer — educational-content-only notice.
+        more_children.append("      - Terms of Service: Terms/index.md")
     if (DOCS_DIR / "Disclaimer" / "index.md").exists():
-        nav.append("  - Disclaimer:")
-        nav.append("      - Disclaimer/index.md")
-
-    # Contact — bottom-of-nav.
+        more_children.append("      - Disclaimer: Disclaimer/index.md")
     if (DOCS_DIR / "Contact" / "index.md").exists():
-        nav.append("  - Contact:")
-        nav.append("      - Contact/index.md")
+        more_children.append("      - Contact: Contact/index.md")
+    if more_children:
+        nav.append("  - More:")
+        nav.extend(more_children)
 
     block = "# NAV:BEGIN\n" + "\n".join(nav) + "\n# NAV:END"
     text = MKDOCS_YML.read_text(encoding="utf-8")
