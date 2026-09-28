@@ -83,6 +83,30 @@
   footer{padding:30px 0 60px; color:var(--muted); font-size:13px; border-top:1px solid var(--line); margin-top:20px;}
   footer .wrap{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
   footer a{color:var(--blue); text-decoration:none;}
+
+  /* "Available now" / "Coming soon" badges on tier headers. */
+  .badge{display:inline-block; font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.02em;
+         padding:2px 7px; border-radius:999px; vertical-align:middle; margin-left:6px; white-space:nowrap;}
+  .badge.live{background:rgba(34,192,122,.14); color:var(--green); border:1px solid rgba(34,192,122,.4);}
+  .badge.soon{background:rgba(31,111,178,.12); color:var(--blue); border:1px solid rgba(31,111,178,.35);}
+
+  /* Notify-me modal. */
+  .or-modal{position:fixed; inset:0; z-index:1000; display:flex; align-items:center; justify-content:center;
+            background:rgba(15,37,71,.55); padding:20px;}
+  .or-modal[hidden]{display:none;}
+  .or-modal-card{background:var(--bg); color:var(--body); border:1px solid var(--line); border-radius:14px;
+                 padding:26px 26px 20px; max-width:400px; width:100%; position:relative; box-shadow:0 20px 60px rgba(15,37,71,.35);}
+  .or-modal-x{position:absolute; top:12px; right:14px; background:none; border:none; font-size:22px; line-height:1;
+              color:var(--muted); cursor:pointer;}
+  .or-modal-card h3{font-family:var(--sans); font-weight:800; color:var(--text); margin:0 0 6px; font-size:19px;}
+  .or-modal-sub{font-size:14px; margin:0 0 16px;}
+  #notify-form{display:flex; gap:8px; flex-wrap:wrap;}
+  #notify-email{flex:1 1 12rem; min-width:0; font-family:var(--sans); font-size:14px; padding:9px 12px;
+                border:1.5px solid var(--line); border-radius:8px; background:var(--surface); color:var(--text);}
+  #notify-email:focus{outline:none; border-color:var(--blue);}
+  .or-modal-done{color:var(--green); font-weight:600; font-size:14px; margin:14px 0 0;}
+  .or-modal-fine{font-size:11.5px; color:var(--muted); margin:14px 0 0;}
+  .or-modal-fine a{color:var(--blue);}
 </style>
 </head>
 <body>
@@ -110,9 +134,9 @@
   <div class="tiers scroll">
     <div class="tier-row head">
       <div class="feature">Included</div>
-      <div class="free"><div class="t-name">Free</div><div class="price">$0</div></div>
-      <div class="pro"><div class="t-name">Pro</div><div class="price">$19/mo · $149/yr</div></div>
-      <div class="career"><div class="t-name">Career Sprint</div><div class="price">$59/mo · $199 / 30 days</div></div>
+      <div class="free"><div class="t-name">Free <span class="badge live">Available now</span></div><div class="price">$0</div></div>
+      <div class="pro"><div class="t-name">Pro <span class="badge soon">Coming soon</span></div><div class="price">$19/mo · $149/yr</div></div>
+      <div class="career"><div class="t-name">Career Sprint <span class="badge soon">Coming soon</span></div><div class="price">$59/mo · $199 / 30 days</div></div>
     </div>
     <div class="tier-row"><div class="feature">Learn: GenAI Topics, Technologies, Reference Docs</div><div class="yes">✓</div><div class="yes">✓</div><div class="yes">✓</div></div>
     <div class="tier-row"><div class="feature">Complete Study Guide (all 12 chapters)</div><div class="yes">✓</div><div class="yes">✓</div><div class="yes">✓</div></div>
@@ -127,19 +151,34 @@
   <div class="scroll">
     <div class="cta-row">
       <div></div>
-      <div><a class="btn" href="#">Start free</a></div>
-      <div><a class="btn accent" href="#">Go Pro</a></div>
-      <div><a class="btn primary" href="#">Start Sprint</a></div>
+      <div><a class="btn" href="../Start-Here/index.html">Start free</a></div>
+      <div><button class="btn accent" type="button" data-notify="Pro">Notify me</button></div>
+      <div><button class="btn primary" type="button" data-notify="Career Sprint">Notify me</button></div>
     </div>
   </div>
-  <p class="note">Annual Pro saves ~35%. Career Sprint is also available as a one-time 30-day pass — cram, interview, done, no subscription.</p>
+  <p class="note">Everything under <b>Free</b> is available today. <b>Pro</b> and <b>Career Sprint</b> are in development — leave your email and we'll tell you the moment they open. Annual Pro will save ~35%; Career Sprint will also come as a one-time 30-day pass.</p>
 
   <div class="sprint">
     <div>
       <h3>Interview in 2 weeks, not learning for 6 months?</h3>
       <p>Skip the subscription. Get 30 days of full access, the simulator, and a plan built around your actual job posting.</p>
     </div>
-    <a class="btn primary" href="#">$199 · one time</a>
+    <button class="btn primary" type="button" data-notify="Career Sprint (30-day pass)">Notify me when it opens</button>
+  </div>
+</div>
+
+<!-- Notify-me modal (waitlist). No backend: email is saved locally + a mailto draft opens. -->
+<div class="or-modal" id="notify-modal" hidden>
+  <div class="or-modal-card" role="dialog" aria-modal="true" aria-labelledby="notify-title">
+    <button class="or-modal-x" type="button" aria-label="Close">×</button>
+    <h3 id="notify-title">Get notified</h3>
+    <p class="or-modal-sub" id="notify-sub">We'll email you when this opens. No spam, no charge until you choose to subscribe.</p>
+    <form id="notify-form">
+      <input type="email" id="notify-email" placeholder="you@email.com" required autocomplete="email">
+      <button class="btn primary" type="submit">Join the waitlist</button>
+    </form>
+    <p class="or-modal-done" id="notify-done" hidden>✓ You're on the list. We'll be in touch.</p>
+    <p class="or-modal-fine">Your email is stored in this browser and used only to open a pre-filled message to us. See <a href="../Privacy/index.html">Privacy</a>.</p>
   </div>
 </div>
 
@@ -148,5 +187,55 @@
   <span style="flex:1"></span>
   <a href="../Terms/index.html">Terms</a> · <a href="../Privacy/index.html">Privacy</a> · <a href="../Disclaimer/index.html">Disclaimer</a> · <a href="../Contact/index.html">Contact</a> · <a href="../index.html">← Back to site</a>
 </div></footer>
+
+<script>
+(function () {
+  var modal = document.getElementById("notify-modal");
+  if (!modal) return;
+  var sub = document.getElementById("notify-sub");
+  var form = document.getElementById("notify-form");
+  var email = document.getElementById("notify-email");
+  var done = document.getElementById("notify-done");
+  var closeX = modal.querySelector(".or-modal-x");
+  var currentPlan = "Pro";
+  var STORE = "offerready.waitlist.v1";
+
+  function open(plan) {
+    currentPlan = plan || "Pro";
+    sub.textContent = "We'll email you when " + currentPlan + " opens. No spam, no charge until you choose to subscribe.";
+    done.hidden = true; form.hidden = false;
+    try { var saved = JSON.parse(localStorage.getItem(STORE) || "{}"); if (saved.email) email.value = saved.email; } catch (e) {}
+    modal.hidden = false;
+    setTimeout(function () { email.focus(); }, 50);
+  }
+  function close() { modal.hidden = true; }
+
+  document.querySelectorAll("[data-notify]").forEach(function (b) {
+    b.addEventListener("click", function () { open(b.getAttribute("data-notify")); });
+  });
+  closeX.addEventListener("click", close);
+  modal.addEventListener("click", function (e) { if (e.target === modal) close(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !modal.hidden) close(); });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var addr = (email.value || "").trim();
+    if (!addr) return;
+    // Persist locally (record which plans this visitor asked about).
+    var rec = {};
+    try { rec = JSON.parse(localStorage.getItem(STORE) || "{}"); } catch (_) {}
+    rec.email = addr;
+    rec.plans = rec.plans || [];
+    if (rec.plans.indexOf(currentPlan) === -1) rec.plans.push(currentPlan);
+    rec.updatedAt = new Date().toISOString();
+    try { localStorage.setItem(STORE, JSON.stringify(rec)); } catch (_) {}
+    // Open a pre-filled email to us as the delivery mechanism (no server needed).
+    var subject = encodeURIComponent("OfferReady waitlist — " + currentPlan);
+    var body = encodeURIComponent("Please add me to the " + currentPlan + " waitlist.\n\nEmail: " + addr + "\n");
+    window.location.href = "mailto:hello@offerready.example?subject=" + subject + "&body=" + body;
+    form.hidden = true; done.hidden = false;
+  });
+})();
+</script>
 </body>
 </html>

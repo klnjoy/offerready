@@ -16,6 +16,36 @@
     "Building your preparation plan\u2026",
   ];
 
+  // ---- persistence + share (no backend) --------------------------------------
+  const STORE_KEY = "offerready.analysis.v1";   // last saved analysis (+ input)
+  const SHARE_PREFIX = "#a=";                    // shareable URL-hash marker
+
+  // Save the most recent analysis so a returning visitor can resume it.
+  function saveAnalysis(record) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(record)); } catch (e) {}
+  }
+  function loadAnalysis() {
+    try { const raw = localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+  }
+  function clearAnalysis() { try { localStorage.removeItem(STORE_KEY); } catch (e) {} }
+
+  // Unicode-safe base64 for the shareable hash.
+  function b64encode(str) { return btoa(unescape(encodeURIComponent(str))); }
+  function b64decode(str) { return decodeURIComponent(escape(atob(str))); }
+
+  // Encode just the analysis (not the resume) into a shareable link.
+  function buildShareUrl(analysis) {
+    try {
+      const payload = b64encode(JSON.stringify(analysis));
+      return location.origin + location.pathname + SHARE_PREFIX + payload;
+    } catch (e) { return null; }
+  }
+  function readSharedAnalysis() {
+    const h = location.hash || "";
+    if (h.indexOf(SHARE_PREFIX) !== 0) return null;
+    try { return JSON.parse(b64decode(h.slice(SHARE_PREFIX.length))); } catch (e) { return null; }
+  }
+
   function init() {
     const app = document.getElementById("analyze-app");
     if (!app || app.dataset.mounted) return;
@@ -26,10 +56,35 @@
     // site base for resolving OfferReady resource links (…/offerready/)
     const base = (window.__md_scope && window.__md_scope.pathname ? window.__md_scope.pathname.replace(/[^/]*$/, "") : "/");
 
+    // 1) A shared link (URL hash) always wins — re-render that analysis read-only-ish.
+    const shared = readSharedAnalysis();
+    if (shared && shared.roleSummary) { renderResult(shared, { shared: true }); return; }
+
     renderForm();
 
     function renderForm(prefill) {
       app.innerHTML = "";
+
+      // Offer to resume the last saved analysis (unless we're prefilling the form).
+      if (!prefill) {
+        const saved = loadAnalysis();
+        if (saved && saved.analysis && saved.analysis.roleSummary) {
+          const banner = el("div", "or-resume-banner");
+          const when = saved.savedAt ? new Date(saved.savedAt) : null;
+          const whenTxt = when ? " (" + when.toLocaleDateString() + ")" : "";
+          banner.appendChild(el("span", null,
+            "\uD83D\uDD16 You have a saved analysis" +
+            (saved.input && saved.input.targetRole ? " for <strong>" + esc(saved.input.targetRole) + "</strong>" : "") +
+            whenTxt + "."));
+          const resume = el("button", "ip-btn"); resume.type = "button"; resume.textContent = "Resume it";
+          resume.addEventListener("click", () => renderResult(saved.analysis, { model: saved.model, restored: true }));
+          const discard = el("button", "ip-btn ip-ghost"); discard.type = "button"; discard.textContent = "Start fresh";
+          discard.addEventListener("click", () => { clearAnalysis(); banner.remove(); });
+          banner.append(resume, discard);
+          app.appendChild(banner);
+        }
+      }
+
       app.appendChild(el("p", "ip-ai-hint",
         "OfferReady analyzes the role requirements and creates a preparation path based on <strong>this specific job</strong>. Paste a job description below."));
 
@@ -99,6 +154,13 @@
         if (!resp.ok) { const d = await safeJson(resp); renderError((d && d.error) || "Analysis failed. Please try again.", payload); return; }
         const d = await resp.json();
         if (!d || !d.analysis) { renderError("The analysis came back empty. Please try again.", payload); return; }
+        // Persist the result (store the role only, not the full JD/resume text).
+        saveAnalysis({
+          analysis: d.analysis,
+          model: d.model,
+          input: { targetRole: payload.targetRole || "" },
+          savedAt: Date.now(),
+        });
         renderResult(d.analysis, { model: d.model });
       } catch (e) {
         stop && stop();
@@ -230,9 +292,55 @@
       start.addEventListener("click", () => { if (firstLink) location.href = base + firstLink.path; else location.href = base + "Interview_Guide_Overview.html".replace(/^/, "Personal-SourceCode/"); });
       cta.appendChild(start);
       const again = el("button", "ip-btn ip-ghost"); again.textContent = "Analyze another job";
-      again.addEventListener("click", () => renderForm());
+      again.addEventListener("click", () => { if (location.hash) { try { history.replaceState(null, "", location.pathname); } catch (e) {} } renderForm(); });
       cta.appendChild(again);
       app.appendChild(cta);
+
+      // ---- export + share toolbar (works offline, no backend) ----
+      if (!meta.demo) {
+        const tools = el("div", "or-toolbar");
+        tools.appendChild(el("div", "or-field-label", "Save & share this plan"));
+        const btnRow = el("div", "or-toolbar-row");
+
+        const copyBtn = el("button", "ip-btn ip-ghost"); copyBtn.type = "button"; copyBtn.textContent = "Copy plan (Markdown)";
+        copyBtn.addEventListener("click", () => {
+          const md = toMarkdown(a);
+          const done = () => { const t = copyBtn.textContent; copyBtn.textContent = "Copied \u2713"; setTimeout(() => { copyBtn.textContent = t; }, 1600); };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(md).then(done, () => fallbackCopy(md, done));
+          else fallbackCopy(md, done);
+        });
+
+        const dlBtn = el("button", "ip-btn ip-ghost"); dlBtn.type = "button"; dlBtn.textContent = "Download .md";
+        dlBtn.addEventListener("click", () => {
+          const md = toMarkdown(a);
+          const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          const slug = (a.seniority || a.roleSummary || "offerready").toString().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "offerready";
+          link.href = url; link.download = "offerready-plan-" + slug + ".md";
+          document.body.appendChild(link); link.click();
+          setTimeout(() => { URL.revokeObjectURL(url); link.remove(); }, 0);
+        });
+
+        const printBtn = el("button", "ip-btn ip-ghost"); printBtn.type = "button"; printBtn.textContent = "Print / PDF";
+        printBtn.addEventListener("click", () => window.print());
+
+        const shareBtn = el("button", "ip-btn ip-ghost"); shareBtn.type = "button"; shareBtn.textContent = "Copy shareable link";
+        shareBtn.addEventListener("click", () => {
+          const url = buildShareUrl(a);
+          if (!url) { shareBtn.textContent = "Couldn't build link"; return; }
+          const done = () => { shareBtn.textContent = "Link copied \u2713"; setTimeout(() => { shareBtn.textContent = "Copy shareable link"; }, 1800); };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, () => fallbackCopy(url, done));
+          else fallbackCopy(url, done);
+        });
+
+        btnRow.append(copyBtn, dlBtn, printBtn, shareBtn);
+        tools.appendChild(btnRow);
+        tools.appendChild(el("p", "ip-ai-hint",
+          meta.shared ? "You're viewing a shared plan. Nothing here is stored on a server."
+                      : "Saved to this browser \u2014 it'll be here when you come back. The shareable link contains only the plan, not your resume."));
+        app.appendChild(tools);
+      }
 
       if (meta.model) app.appendChild(el("p", "ip-ai-hint", "Analyzed with model: " + esc(meta.model) + "."));
     }
@@ -271,6 +379,65 @@
       };
       const cls = map[s] || "or-info";
       return `<span class="or-pill ${cls}">${esc(String(s || "").replace(/_/g, " "))}</span>`;
+    }
+
+    // ---- export helpers ----
+    function fallbackCopy(text, done) {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand("copy"); done && done(); } catch (e) {}
+      ta.remove();
+    }
+
+    // Serialize an analysis object to clean, portable Markdown.
+    function toMarkdown(a) {
+      const L = [];
+      const clean = (s) => String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+      L.push("# OfferReady \u2014 Preparation Plan");
+      if (a.seniority) L.push("", "**Seniority:** " + clean(a.seniority));
+      L.push("", "_Preparation guidance only \u2014 not a prediction of interview or offer outcomes._");
+
+      if (a.roleSummary) L.push("", "## Role summary", "", clean(a.roleSummary));
+
+      const core = (a.coreSkills || []).map((s) => typeof s === "string" ? s : s.name).filter(Boolean);
+      if (core.length || (a.technologies || []).length) {
+        L.push("", "## What this job requires");
+        if (core.length) L.push("", "**Core skills:** " + core.join(", "));
+        if ((a.technologies || []).length) L.push("", "**Technologies:** " + a.technologies.join(", "));
+        (a.experienceRequirements || []).length && L.push("", "**Experience:**", ...a.experienceRequirements.map((e) => "- " + clean(e)));
+      }
+
+      if ((a.readiness || []).length) {
+        L.push("", "## Your readiness", "", "| Dimension | Status | Role requires | You have | Gap |", "|---|---|---|---|---|");
+        a.readiness.forEach((r) => L.push("| " + [r.dimension, String(r.status || "").replace(/_/g, " "), r.roleRequires, r.candidateHas, r.gap].map(clean).join(" | ") + " |"));
+      }
+
+      if ((a.potentialGaps || []).length) {
+        L.push("", "## Potential gaps");
+        a.potentialGaps.forEach((g) => {
+          L.push("", "### " + clean(g.requirement));
+          g.whatIsMissing && L.push("", "**Missing:** " + clean(g.whatIsMissing));
+          g.whyItMatters && L.push("", "**Why it matters:** " + clean(g.whyItMatters));
+          (g.whatToStudy || []).length && L.push("", "**Study:** " + g.whatToStudy.map(clean).join(", "));
+          (g.whatToBuild || []).length && L.push("**Build:** " + g.whatToBuild.map(clean).join(", "));
+          (g.whatToPractice || []).length && L.push("**Practice:** " + g.whatToPractice.map(clean).join(", "));
+          g.interviewExpectation && L.push("", "**In the interview:** " + clean(g.interviewExpectation));
+        });
+      }
+
+      if ((a.preparationPlan || []).length) {
+        L.push("", "## Your preparation plan");
+        a.preparationPlan.forEach((p) => {
+          L.push("", "### Priority " + clean(p.priority) + " \u2014 " + clean(p.title));
+          p.why && L.push("", clean(p.why));
+          p.resource && p.resource.label && L.push("", "- Resource: " + clean(p.resource.label));
+        });
+      }
+
+      if (a.nextStep) L.push("", "## Next step", "", clean(a.nextStep));
+      L.push("", "---", "Generated by OfferReady \u00b7 https://klnjoy.github.io/offerready/");
+      return L.join("\n") + "\n";
     }
   }
 
