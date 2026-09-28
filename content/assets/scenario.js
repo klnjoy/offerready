@@ -57,6 +57,7 @@
       "ai-architect": "AI Architect",
       "data-architect": "Data Architect",
       "cloud-platform": "Cloud / Platform",
+      "ai-security": "AI Security",
       "fde": "Forward Deployed",
     };
     function catLabel(c) { return CATEGORY_LABELS[c] || (c || "General"); }

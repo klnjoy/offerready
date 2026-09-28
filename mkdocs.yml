@@ -47,6 +47,11 @@ theme:
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
+    # Render top-level sections as a horizontal tab bar so the product areas
+    # (Practice, Interview Prep, Pricing) read as prominent destinations, not
+    # buried sidebar rows. Sticky keeps them visible while scrolling.
+    - navigation.tabs
+    - navigation.tabs.sticky
     # Plain collapsible left-sidebar nav: groups start COLLAPSED and expand when
     # you click the chevron (no navigation.sections which broke drill-down, and
     # no navigation.expand which force-opened everything on every refresh).
@@ -116,9 +121,13 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Start Here: Start-Here/index.md
-  - Analyze My Job: Analyze/index.md
-  - Sample Walkthrough: Sample-Walkthrough/index.md
-  - Practice: Practice-Scenarios/index.md
+  - Practice:
+      - Analyze My Job: Analyze/index.md
+      - Defend-Your-Decision Scenarios: Practice-Scenarios/index.md
+      - Practice Mode (Q&A drills): Personal-SourceCode/Interview_Practice.md
+      - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md
+      - Progress Dashboard: Personal-SourceCode/Interview_Progress.md
+      - Sample Walkthrough: Sample-Walkthrough/index.md
   - Learn:
       - Foundations (GenAI Topics):
           - Overview: GenAI-Topics/index.md
@@ -245,12 +254,9 @@ nav:
   - Study Guide:
       - Personal-SourceCode/OfferReady-Complete-Study-Guide.md
   - Pricing: assets/pricing.html
-  - Privacy:
-      - Privacy/index.md
-  - Terms:
-      - Terms/index.md
-  - Disclaimer:
-      - Disclaimer/index.md
-  - Contact:
-      - Contact/index.md
+  - More:
+      - Privacy: Privacy/index.md
+      - Terms of Service: Terms/index.md
+      - Disclaimer: Disclaimer/index.md
+      - Contact: Contact/index.md
 # NAV:END

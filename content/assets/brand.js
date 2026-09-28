@@ -14,8 +14,23 @@
     el.innerHTML = 'Offer<span class="or-ready">Ready</span>';
   }
 
-  if (document.readyState !== "loading") brandTitle();
-  else document.addEventListener("DOMContentLoaded", brandTitle);
+  // Accent the value-connected top tabs (Practice, Interview Prep, Pricing) so
+  // they read as the product's primary destinations. We tag them with a class
+  // that extra.css styles; pure CSS can't select a tab by its label text.
+  var VALUE_TABS = { "practice": 1, "interview prep": 1, "pricing": 1 };
+  function accentTabs() {
+    var links = document.querySelectorAll(".md-tabs__link");
+    links.forEach(function (a) {
+      var label = (a.textContent || "").trim().toLowerCase();
+      if (VALUE_TABS[label]) a.classList.add("or-tab-value");
+      else a.classList.remove("or-tab-value");
+    });
+  }
+
+  function run() { brandTitle(); accentTabs(); }
+
+  if (document.readyState !== "loading") run();
+  else document.addEventListener("DOMContentLoaded", run);
   // Re-apply after instant navigation (Material fires document$ on page load).
-  if (window.document$) { try { window.document$.subscribe(brandTitle); } catch (e) {} }
+  if (window.document$) { try { window.document$.subscribe(run); } catch (e) {} }
 })();
