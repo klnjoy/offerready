@@ -1151,3 +1151,37 @@ a > .ig-feature.ig-link { text-decoration: none; color: inherit; }
 .ip-gaps { margin: .4rem 0 .2rem 1.1rem; }
 .ip-gaps li { margin: .15rem 0; font-size: .92rem; }
 
+
+/* ============================================================
+   Footer legal/contact links (theme override: overrides/partials/copyright.html)
+   Terms/Privacy/Disclaimer/Contact were moved out of the top nav "More" menu
+   into the footer, mirroring the standalone pricing page footer.
+   ============================================================ */
+.or-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 18px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.or-footer__copy { opacity: .85; }
+.or-footer__links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: .72rem;
+}
+.or-footer__links a {
+  color: #4aa3df;               /* brand blue, readable on the navy footer */
+  text-decoration: none;
+  white-space: nowrap;
+}
+.or-footer__links a:hover,
+.or-footer__links a:focus { text-decoration: underline; }
+.or-footer__sep { opacity: .5; }
+@media (max-width: 480px) {
+  .or-footer { justify-content: center; text-align: center; }
+  .or-footer__links { justify-content: center; }
+}

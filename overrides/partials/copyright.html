@@ -1,0 +1,28 @@
+{#-
+  OfferReady footer override.
+
+  Replaces Material's default footer copyright block so the legal / utility
+  pages (Privacy, Terms, Disclaimer, Contact) live in the FOOTER instead of the
+  top nav "More" menu. Mirrors the standalone pricing page footer
+  (assets/pricing.html): copyright on the left, brand-blue text links on the
+  right, separated by middots.
+
+  Link targets use site-root-relative paths ({{ base_url }}) so they resolve
+  correctly under the GitHub Pages sub-path (…/offerready/).
+-#}
+<div class="md-copyright or-footer">
+  {% if config.copyright %}
+    <div class="md-copyright__highlight or-footer__copy">
+      {{ config.copyright }}
+    </div>
+  {% endif %}
+  <nav class="or-footer__links" aria-label="Legal and contact">
+    <a href="{{ base_url }}/Privacy/">Privacy</a>
+    <span class="or-footer__sep" aria-hidden="true">·</span>
+    <a href="{{ base_url }}/Terms/">Terms of Service</a>
+    <span class="or-footer__sep" aria-hidden="true">·</span>
+    <a href="{{ base_url }}/Disclaimer/">Disclaimer</a>
+    <span class="or-footer__sep" aria-hidden="true">·</span>
+    <a href="{{ base_url }}/Contact/">Contact</a>
+  </nav>
+</div>

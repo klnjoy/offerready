@@ -18,6 +18,10 @@ exclude_docs: |
 
 theme:
   name: material
+  # Theme overrides live in overrides/ (tracked in git; survives sync_docs.py &
+  # `mkdocs build --clean`). Used for the footer partial that surfaces the
+  # Privacy/Terms/Disclaimer/Contact links instead of a top-nav "More" menu.
+  custom_dir: overrides
   logo: assets/logo.svg
   favicon: assets/favicon.svg
   font:
@@ -247,9 +251,4 @@ nav:
   - Study Guide:
       - Personal-SourceCode/OfferReady-Complete-Study-Guide.md
   - Pricing: assets/pricing.html
-  - More:
-      - Privacy: Privacy/index.md
-      - Terms of Service: Terms/index.md
-      - Disclaimer: Disclaimer/index.md
-      - Contact: Contact/index.md
 # NAV:END

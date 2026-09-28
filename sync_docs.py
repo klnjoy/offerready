@@ -1464,20 +1464,12 @@ def write_nav(md_catalog, modules) -> None:
     if (DOCS_DIR / "assets" / "pricing.html").exists():
         nav.append("  - Pricing: assets/pricing.html")
 
-    # More — collapse the legal/util pages into one group so they stop competing
-    # with the product at the top level (declutters the nav).
-    more_children = []
-    if (DOCS_DIR / "Privacy" / "index.md").exists():
-        more_children.append("      - Privacy: Privacy/index.md")
-    if (DOCS_DIR / "Terms" / "index.md").exists():
-        more_children.append("      - Terms of Service: Terms/index.md")
-    if (DOCS_DIR / "Disclaimer" / "index.md").exists():
-        more_children.append("      - Disclaimer: Disclaimer/index.md")
-    if (DOCS_DIR / "Contact" / "index.md").exists():
-        more_children.append("      - Contact: Contact/index.md")
-    if more_children:
-        nav.append("  - More:")
-        nav.extend(more_children)
+    # Legal / utility pages (Privacy, Terms, Disclaimer, Contact) are intentionally
+    # NOT added to the top nav. They are surfaced in the site FOOTER instead, via
+    # the Material theme override at overrides/partials/copyright.html (declutters
+    # the top nav; matches the standalone pricing page footer). The pages are still
+    # built and reachable by URL — MkDocs emits an informational "not in nav" note
+    # only (strict mode is off), which is expected here.
 
     block = "# NAV:BEGIN\n" + "\n".join(nav) + "\n# NAV:END"
     text = MKDOCS_YML.read_text(encoding="utf-8")
