@@ -30,6 +30,22 @@
   }
   function clearAnalysis() { try { localStorage.removeItem(STORE_KEY); } catch (e) {} }
 
+  // Log the analysis as a Progress activity: role + top gap labels, so the
+  // dashboard can recommend the next reps (reuse of the shared store).
+  function logAnalyzeActivity(analysis, role) {
+    try {
+      if (!window.OfferReadyProgress || !analysis) return;
+      var gaps = [];
+      (analysis.potentialGaps || []).forEach(function (g) { if (g && g.requirement) gaps.push(g.requirement); });
+      (analysis.preparationPlan || []).forEach(function (p) { if (p && p.title) gaps.push(p.title); });
+      window.OfferReadyProgress.logActivity({
+        type: "analyze",
+        role: role || analysis.seniority || "target role",
+        gaps: gaps,
+      });
+    } catch (e) {}
+  }
+
   // Unicode-safe base64 for the shareable hash.
   function b64encode(str) { return btoa(unescape(encodeURIComponent(str))); }
   function b64decode(str) { return decodeURIComponent(escape(atob(str))); }
@@ -162,6 +178,9 @@
           input: { targetRole: payload.targetRole || "" },
           savedAt: Date.now(),
         });
+        // Log an activity so the Progress dashboard can close the loop:
+        // "you analyzed X — drill these gaps". No JD/resume text is stored.
+        logAnalyzeActivity(d.analysis, payload.targetRole);
         renderResult(d.analysis, { model: d.model });
       } catch (e) {
         stop && stop();

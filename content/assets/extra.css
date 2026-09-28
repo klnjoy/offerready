@@ -1128,3 +1128,16 @@ a > .ig-feature.ig-link { text-decoration: none; color: inherit; }
 }
 /* The markdown link wrapper shouldn't add its own inline-link styling. */
 .ig-features a { text-decoration: none; color: inherit; display: block; }
+
+/* ============================================================
+   Progress dashboard: "Next up" loop panel (Analyze -> drills)
+   ============================================================ */
+.ip-nextup {
+  border-left: 4px solid var(--kb-green, #22c07a);
+  background: rgba(34, 192, 122, .06);
+}
+.ip-nextup h2 { margin-top: 0; }
+.ip-nextup .ip-controls { margin-top: .6rem; gap: .5rem; flex-wrap: wrap; }
+.ip-nextup .ip-btn { margin: 0; text-decoration: none; }
+.ip-gaps { margin: .4rem 0 .2rem 1.1rem; }
+.ip-gaps li { margin: .15rem 0; font-size: .92rem; }

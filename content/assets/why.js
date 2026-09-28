@@ -196,6 +196,17 @@
       const best = load();
       const reached = Math.max(best[st.key] || 0, st.maxRevealed);
       best[st.key] = reached; save(best);
+      // Also record into the shared progress store so why-chains show up on the
+      // Progress dashboard alongside Practice (reuse, not a separate silo).
+      try {
+        if (window.OfferReadyProgress) {
+          const pct = Math.round((st.maxRevealed / st.sc.chain.length) * 100);
+          window.OfferReadyProgress.record({
+            mode: "why", track: "Defend decisions", topic: st.sc.topic,
+            score: pct, n: st.maxRevealed, topics: { [st.sc.topic]: pct },
+          });
+        }
+      } catch (e) {}
       app.innerHTML = "";
       const wrap = el("div", "ip-card ip-summary");
       wrap.appendChild(el("div", "ip-score", st.maxRevealed + "/" + st.sc.chain.length));

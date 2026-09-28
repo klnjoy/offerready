@@ -18,11 +18,16 @@
     function render() {
       const h = load();
       root.innerHTML = "";
+
+      // "Next up" — recommended drills from the latest Analyze run (closes the
+      // loop: Analyze -> Practice/Why). Shown whether or not sessions exist.
+      root.appendChild(recommended());
+
       if (!h.length) {
         root.appendChild(el("div", "ip-card",
-          '<p>No practice sessions yet. Head to ' +
-          '<a href="Interview_Practice.html">Practice mode</a> and complete a ' +
-          'session — your progress will show up here.</p>'));
+          '<p>No practice sessions yet. Do a drill and your progress shows up here:</p>' +
+          '<p><a class="ip-btn" href="Interview_Practice.html">📝 Practice mode</a> ' +
+          '<a class="ip-btn ip-ghost" href="Interview_Why_Interactive.html">🗡️ Keep Asking Why</a></p>'));
         return;
       }
 
@@ -77,8 +82,10 @@
       // ---- recent sessions table ----
       root.appendChild(el("h2", null, "Recent sessions"));
       let t = '<table><thead><tr><th>When</th><th>Mode</th><th>Track</th><th>Topic</th><th>Q</th><th>Score</th></tr></thead><tbody>';
+      const MODE_LABEL = { practice: "Practice", flashcard: "Flashcards", exam: "Timed Exam", why: "Keep Asking Why", scenario: "Scenario" };
       h.slice(0, 15).forEach((s) => {
-        t += `<tr><td>${esc(s.when || "")}</td><td>${esc(s.mode || "practice")}</td><td>${esc(s.track || "")}</td><td>${esc(s.topic || "")}</td><td>${s.n || 0}</td><td>${s.score || 0}%</td></tr>`;
+        const modeLbl = MODE_LABEL[s.mode] || (s.mode || "Practice");
+        t += `<tr><td>${esc(s.when || "")}</td><td>${esc(modeLbl)}</td><td>${esc(s.track || "")}</td><td>${esc(s.topic || "")}</td><td>${s.n || 0}</td><td>${s.score || 0}%</td></tr>`;
       });
       t += "</tbody></table>";
       root.appendChild(el("div", null, t));
@@ -92,6 +99,42 @@
         }
       });
       root.appendChild(reset);
+    }
+
+    // "Next up" panel: turn the latest Analyze result into recommended reps,
+    // and surface recent activity. Reuses the shared progress store.
+    function recommended() {
+      const wrap = el("div", "ip-card ip-nextup");
+      const store = window.OfferReadyProgress;
+      const analyze = store && store.latestAnalyze ? store.latestAnalyze() : null;
+      if (analyze) {
+        wrap.appendChild(el("h2", null, "Next up"));
+        wrap.appendChild(el("p", null,
+          `You analyzed <strong>${esc(analyze.role || "a role")}</strong> — turn the gaps into reps:`));
+        if ((analyze.gaps || []).length) {
+          const ul = el("ul", "ip-gaps");
+          analyze.gaps.slice(0, 5).forEach((g) => ul.appendChild(el("li", null, esc(g))));
+          wrap.appendChild(ul);
+        }
+        const row = el("div", "ip-controls");
+        row.innerHTML =
+          '<a class="ip-btn" href="Interview_Practice.html">📝 Drill weak areas</a>' +
+          '<a class="ip-btn ip-ghost" href="Interview_Why_Interactive.html">🗡️ Defend a decision</a>' +
+          '<a class="ip-btn ip-ghost" href="../Analyze/index.html">🔁 Re-analyze</a>';
+        wrap.appendChild(row);
+      } else {
+        wrap.appendChild(el("h2", null, "Start the loop"));
+        wrap.appendChild(el("p", null,
+          "OfferReady works as a loop: <strong>Analyze</strong> your target job → "
+          + "<strong>Practice</strong> and <strong>defend</strong> the gaps → watch your readiness move here."));
+        const row = el("div", "ip-controls");
+        row.innerHTML =
+          '<a class="ip-btn" href="../Analyze/index.html">🎯 Analyze My Job</a>' +
+          '<a class="ip-btn ip-ghost" href="Interview_Practice.html">📝 Practice</a>' +
+          '<a class="ip-btn ip-ghost" href="Interview_Why_Interactive.html">🗡️ Keep Asking Why</a>';
+        wrap.appendChild(row);
+      }
+      return wrap;
     }
 
     function chart(scores) {

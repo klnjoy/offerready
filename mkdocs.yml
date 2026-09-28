@@ -73,6 +73,7 @@ extra_javascript:
   # auth + feature scripts.
   - assets/api-config.js
   - assets/auth.js
+  - assets/progress-store.js
   - assets/brand.js
   - assets/mermaid-init.js
   - assets/chatbot.js

@@ -261,6 +261,16 @@
     function persistSession(score, n) {
       var rec = { slug: state.slug, score: score, n: n, mode: "scenario",
                   category: state.slug, completed: true, when: new Date().toISOString() };
+      // Also record into the shared Progress store so scenario runs show on the
+      // dashboard alongside Practice + Why (reuse of the shared store).
+      try {
+        if (window.OfferReadyProgress) {
+          window.OfferReadyProgress.record({
+            mode: "scenario", track: "Scenarios", topic: state.title || state.slug,
+            score: score, n: n, topics: state.title ? { [state.title]: score } : {},
+          });
+        }
+      } catch (e) {}
       // Signed in -> Supabase practice_sessions (own row via RLS). Else local.
       if (window.OfferReadyAuth) {
         window.OfferReadyAuth.getAccessToken().then(function (tok) {
