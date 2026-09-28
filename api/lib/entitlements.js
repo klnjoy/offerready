@@ -113,10 +113,20 @@ async function listPremiumTeasers() {
       url.replace(/\/+$/, '') + '/rest/v1/premium_content?' + qs,
       { method: 'GET', headers: serviceHeaders(), signal: controller.signal }
     );
-    if (!resp.ok) return [];
+    if (!resp.ok) {
+      // TEMP DIAGNOSTIC (safe: no key/secret logged) — remove once verified.
+      let body = '';
+      try { body = (await resp.text()).slice(0, 300); } catch (_) {}
+      console.error('listPremiumTeasers REST not-ok:', resp.status, body);
+      return [];
+    }
     const rows = await resp.json();
+    // TEMP DIAGNOSTIC — remove once verified.
+    console.log('listPremiumTeasers ok rows=', Array.isArray(rows) ? rows.length : 'not-array');
     return Array.isArray(rows) ? rows : [];
-  } catch (_err) {
+  } catch (err) {
+    // TEMP DIAGNOSTIC (safe: message only) — remove once verified.
+    console.error('listPremiumTeasers fetch error:', err && err.message, err && err.cause && err.cause.code);
     return [];
   } finally {
     clearTimeout(timer);
