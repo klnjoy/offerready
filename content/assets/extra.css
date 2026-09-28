@@ -1050,3 +1050,23 @@
 .or-feedback-q { font-weight: 600; margin-right: .2rem; }
 .or-feedback .ip-btn { margin: 0; padding: .3rem .7rem; font-size: .85rem; }
 .or-feedback-thanks { color: var(--kb-green, #22c07a); font-weight: 600; }
+
+/* Practice: "Read the full topic" link under a revealed answer. */
+.ip-source-link {
+  display: inline-block;
+  margin-top: .7rem;
+  font-size: .85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.ip-source-link:hover { text-decoration: underline; }
+
+/* Practice: weakest-topics nudge on the setup screen. */
+.ip-weak-hint {
+  margin: .2rem 0 1rem;
+  padding: .6rem .85rem;
+  border-radius: 8px;
+  border-left: 4px solid var(--kb-blue, #1f6fb2);
+  background: rgba(31, 111, 178, .08);
+  font-size: .9rem;
+}

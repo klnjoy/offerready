@@ -34,7 +34,52 @@
       practice:  { label: "📝 Practice",   desc: "Answer, reveal, self-rate 1-5." },
       flashcard: { label: "🃏 Flashcards", desc: "Flip to reveal, then Again/Good/Easy." },
       exam:      { label: "⏱️ Timed Exam", desc: "Countdown, answer all, score at the end." },
+      weak:      { label: "🎯 Weak areas", desc: "Focuses on topics you've scored low. Needs a little history." },
     };
+
+    // Map a question's `source` (a Q&A file stem) to its published page so the
+    // learner can jump from an answer straight to the full topic.
+    const SOURCE_LINKS = {
+      SQL_Interview_QA: "SQL Interview Q&A",
+      DataEngineering_Interview_QA: "Data Engineering Interview Q&A",
+      Snowflake_Interview_QA: "Snowflake Interview Q&A",
+      Databricks_Interview_QA: "Databricks Interview Q&A",
+      dbt_Interview_QA: "dbt Interview Q&A",
+      Python_Interview_QA: "Python Interview Q&A",
+      AWS_Interview_QA: "AWS Interview Q&A",
+      DevOps_Interview_QA: "DevOps Interview Q&A",
+      AI_Engineer_Interview_QA: "AI Engineer Interview Q&A",
+      Agents_Interview_QA: "Agents Interview Q&A",
+      LangChain_LangGraph_Interview_QA: "LangChain / LangGraph Interview Q&A",
+      MCP_Interview_QA: "MCP Interview Q&A",
+      GenAI_Interview_QA: "GenAI Interview Q&A",
+      Behavioral_STAR_Interview_QA: "Behavioral / STAR Interview Q&A",
+    };
+    // Practice pages live alongside this one under Personal-SourceCode/.
+    function sourceLinkEl(item) {
+      if (!item || !item.source || !SOURCE_LINKS[item.source]) return null;
+      const a = el("a", "ip-source-link");
+      a.href = item.source + ".html";                 // sibling page (same dir)
+      a.target = "_blank"; a.rel = "noopener";
+      a.innerHTML = "\uD83D\uDCD6 Read the full topic: " + esc(SOURCE_LINKS[item.source]) + " \u2197";
+      return a;
+    }
+
+    // Build a weakness profile from saved history: average % per topic across
+    // recent sessions. Lower = weaker. Used by the "Weak areas" mode.
+    function weakTopicScores() {
+      const h = loadHistory();
+      const acc = {};
+      h.forEach((e) => {
+        const t = e.topics || {};
+        Object.keys(t).forEach((k) => {
+          (acc[k] = acc[k] || []).push(Number(t[k]) || 0);
+        });
+      });
+      const out = {};
+      Object.keys(acc).forEach((k) => { out[k] = Math.round(acc[k].reduce((a, b) => a + b, 0) / acc[k].length); });
+      return out; // { topic: avgPct }
+    }
 
     let BANK = [];
     let session = null;
@@ -55,6 +100,16 @@
       app.appendChild(el("p", null,
         `<strong>${BANK.length}</strong> questions loaded. Choose a mode and track, ` +
         `then start. Scores are saved locally in this browser.`));
+
+      // If we have history, surface the current weakest topics as a nudge.
+      const wscores = weakTopicScores();
+      const wkeys = Object.keys(wscores).sort((a, b) => wscores[a] - wscores[b]);
+      if (wkeys.length) {
+        const weakest = wkeys.slice(0, 3).map((k) => `${esc(k)} (${wscores[k]}%)`).join(", ");
+        app.appendChild(el("div", "ip-weak-hint",
+          `\uD83C\uDFAF Your weakest topics so far: <strong>${weakest}</strong>. ` +
+          `Try <em>Weak areas</em> mode to drill them.`));
+      }
 
       // Mode picker
       app.appendChild(el("div", "ip-progress", "Mode"));
@@ -94,11 +149,35 @@
         let pool = track === "all" ? BANK.slice() : BANK.filter((q) => (q.tracks || []).includes(track));
         const topic = topicSel.value;
         if (topic && topic !== "All") pool = pool.filter((q) => q.topic === topic);
-        pool = shuffle(pool.slice()).slice(0, parseInt(countSel.value, 10));
+        const count = parseInt(countSel.value, 10);
+
+        if (mode === "weak") {
+          const scores = weakTopicScores();
+          const scored = Object.keys(scores);
+          if (!scored.length) {
+            // No history yet — explain, and fall back to a normal random set.
+            alert("Weak-areas mode gets smarter after you finish a few sessions. " +
+                  "For now, here's a normal mixed set — your ratings will train it.");
+          } else {
+            // Prioritize questions whose topic scored below 70% (weakest first),
+            // then backfill with the rest so the session is always full.
+            const weight = (q) => (q.topic in scores) ? scores[q.topic] : 65; // unseen ~ mid
+            const weak = pool.filter((q) => weight(q) < 70);
+            const rest = pool.filter((q) => weight(q) >= 70);
+            weak.sort((a, b) => weight(a) - weight(b));
+            pool = shuffle(weak).concat(shuffle(rest));
+            pool = pool.slice(0, count);
+          }
+        }
+        if (mode !== "weak" || !Object.keys(weakTopicScores()).length) {
+          pool = shuffle(pool.slice()).slice(0, count);
+        }
         if (!pool.length) return;
-        session = { items: pool, i: 0, ratings: [], mode, track: TRACKS[track].label, topic, startedAt: Date.now() };
-        if (mode === "exam") startExam();
-        else if (mode === "flashcard") renderFlashcard();
+        // "weak" runs as a Practice-style session (answer → reveal → rate).
+        const runMode = mode === "weak" ? "practice" : mode;
+        session = { items: pool, i: 0, ratings: [], mode: runMode, track: TRACKS[track].label, topic, startedAt: Date.now(), origin: mode };
+        if (runMode === "exam") startExam();
+        else if (runMode === "flashcard") renderFlashcard();
         else renderQuestion();
       });
 
@@ -133,7 +212,9 @@
       const modelWrap = el("div"); card.appendChild(modelWrap);
       revealBtn.addEventListener("click", () => {
         revealBtn.disabled = true;
-        modelWrap.appendChild(el("div", "ip-model", `<h4>Model answer</h4>${mdInline(item.a)}`));
+        const mv = el("div", "ip-model", `<h4>Model answer</h4>${mdInline(item.a)}`);
+        const link = sourceLinkEl(item); if (link) mv.appendChild(link);
+        modelWrap.appendChild(mv);
         modelWrap.appendChild(ratingRow((val) => { s.ratings[s.i] = val; advance(); }));
       });
       aiBtn.addEventListener("click", () => gradeWithAI(item, ta.value, aiOut, aiBtn));
@@ -151,7 +232,9 @@
       const modelWrap = el("div"); card.appendChild(modelWrap);
       flip.addEventListener("click", () => {
         flip.disabled = true;
-        modelWrap.appendChild(el("div", "ip-model", `<h4>Answer</h4>${mdInline(item.a)}`));
+        const mv = el("div", "ip-model", `<h4>Answer</h4>${mdInline(item.a)}`);
+        const link = sourceLinkEl(item); if (link) mv.appendChild(link);
+        modelWrap.appendChild(mv);
         const rate = el("div", "ip-rate");
         [["Again", 1], ["Good", 3], ["Easy", 5]].forEach(([lab, val]) => {
           const b = el("button", "ip-star", esc(lab));
@@ -204,7 +287,9 @@
       const card = cardHeader(s, item);
       card.appendChild(el("div", "ip-progress", "Your answer"));
       card.appendChild(el("div", "ip-model", (s.answers[s.i] ? esc(s.answers[s.i]) : "<em>(left blank)</em>")));
-      card.appendChild(el("div", "ip-model", `<h4>Model answer</h4>${mdInline(item.a)}`));
+      const mv = el("div", "ip-model", `<h4>Model answer</h4>${mdInline(item.a)}`);
+      const link = sourceLinkEl(item); if (link) mv.appendChild(link);
+      card.appendChild(mv);
       card.appendChild(ratingRow((val) => { s.ratings[s.i] = val; advance(); }));
       app.appendChild(card);
     }
@@ -285,7 +370,18 @@
               : "Good start. Reread the source pages, then retake.";
       wrap.appendChild(el("p", null, esc(msg)));
       const row = el("div", "ip-controls");
-      const again = el("button", "ip-btn", "New session");
+      // Retry the questions rated 3 or below — turns a weak run into a focused redo.
+      const weakItems = s.items.filter((_, idx) => s.ratings[idx] != null && s.ratings[idx] <= 3);
+      if (weakItems.length) {
+        const retry = el("button", "ip-btn", `Retry ${weakItems.length} I rated low`);
+        retry.addEventListener("click", () => {
+          session = { items: shuffle(weakItems.slice()), i: 0, ratings: [], mode: "practice",
+                      track: s.track, topic: s.topic, startedAt: Date.now(), origin: "retry" };
+          renderQuestion();
+        });
+        row.appendChild(retry);
+      }
+      const again = el("button", "ip-btn" + (weakItems.length ? " ip-ghost" : ""), "New session");
       again.addEventListener("click", renderSetup);
       const dash = el("a", "ip-btn ip-ghost", "View progress →"); dash.href = "Interview_Progress.html";
       row.append(again, dash); wrap.appendChild(row);
