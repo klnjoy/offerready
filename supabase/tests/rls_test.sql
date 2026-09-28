@@ -9,10 +9,11 @@
 --   * psql:  psql "$DATABASE_URL" -f supabase/tests/rls_test.sql
 --
 -- Mechanism: Supabase's auth.uid() reads request.jwt.claims->>'sub'. We
--- impersonate the API roles with SET ROLE and set that claim per test.
+-- impersonate the API roles with SET LOCAL ROLE and set that claim per test.
 --
--- A failed assertion RAISES EXCEPTION and aborts (non-zero) — a passing run
--- prints "ALL RLS TESTS PASSED".
+-- NOTE: `perform`, `set local role`, and `reset role` are PL/pgSQL statements,
+-- so every test runs INSIDE a `do $$ ... $$` block. A failed assertion RAISES
+-- EXCEPTION and aborts; a passing run prints "ALL RLS TESTS PASSED".
 -- =============================================================================
 
 begin;
@@ -61,7 +62,7 @@ end;
 $$;
 
 -- Helper: count rows visible in a table under the current role/claims,
--- treating a permission-denied error as 0 visible rows.
+-- treating a permission-denied error as -1 (hard GRANT denial).
 create or replace function pg_temp.visible_count(tbl text)
 returns integer language plpgsql as $$
 declare n integer;
@@ -76,71 +77,83 @@ $$;
 -- ===========================================================================
 -- TEST 1 — anonymous cannot read user tables (§29: anon → premium denied)
 -- ===========================================================================
-set local role anon;
-select set_config('request.jwt.claims', '{}', true);
+do $$
+begin
+  set local role anon;
+  perform set_config('request.jwt.claims', '{}', true);
 
-perform pg_temp.assert(pg_temp.visible_count('public.premium_content') <= 0,
-  'anon must not read premium_content');
-perform pg_temp.assert(pg_temp.visible_count('public.entitlements') <= 0,
-  'anon must not read entitlements');
-perform pg_temp.assert(pg_temp.visible_count('public.subscriptions') <= 0,
-  'anon must not read subscriptions');
-perform pg_temp.assert(pg_temp.visible_count('public.user_progress') <= 0,
-  'anon must not read user_progress');
--- features is a public catalog: anon SHOULD see it.
-perform pg_temp.assert(pg_temp.visible_count('public.features') > 0,
-  'anon should read features catalog');
-reset role;
+  perform pg_temp.assert(pg_temp.visible_count('public.premium_content') <= 0,
+    'anon must not read premium_content');
+  perform pg_temp.assert(pg_temp.visible_count('public.entitlements') <= 0,
+    'anon must not read entitlements');
+  perform pg_temp.assert(pg_temp.visible_count('public.subscriptions') <= 0,
+    'anon must not read subscriptions');
+  perform pg_temp.assert(pg_temp.visible_count('public.user_progress') <= 0,
+    'anon must not read user_progress');
+  -- features is a public catalog: anon SHOULD see it.
+  perform pg_temp.assert(pg_temp.visible_count('public.features') > 0,
+    'anon should read features catalog');
+
+  reset role;
+end $$;
 
 -- ===========================================================================
 -- TEST 2 — user1 sees ONLY their own rows (§29: own allowed)
 -- ===========================================================================
-set local role authenticated;
-select set_config('request.jwt.claims',
-  '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+do $$
+begin
+  set local role authenticated;
+  perform set_config('request.jwt.claims',
+    '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
 
-perform pg_temp.assert(
-  (select count(*) from public.entitlements) = 1,
-  'user1 should see exactly their 1 entitlement');
-perform pg_temp.assert(
-  (select count(*) from public.user_progress) = 1,
-  'user1 should see exactly their 1 progress row');
-perform pg_temp.assert(
-  (select count(*) from public.subscriptions) = 1,
-  'user1 should see their subscription');
--- Premium content is server-only: even an entitled, authenticated user gets 0
--- rows directly from the client role (must go through the backend).
-perform pg_temp.assert(pg_temp.visible_count('public.premium_content') <= 0,
-  'authenticated must not read premium_content directly');
-reset role;
+  perform pg_temp.assert(
+    (select count(*) from public.entitlements) = 1,
+    'user1 should see exactly their 1 entitlement');
+  perform pg_temp.assert(
+    (select count(*) from public.user_progress) = 1,
+    'user1 should see exactly their 1 progress row');
+  perform pg_temp.assert(
+    (select count(*) from public.subscriptions) = 1,
+    'user1 should see their subscription');
+  -- Premium content is server-only: even an entitled, authenticated user gets 0
+  -- rows directly from the client role (must go through the backend).
+  perform pg_temp.assert(pg_temp.visible_count('public.premium_content') <= 0,
+    'authenticated must not read premium_content directly');
+
+  reset role;
+end $$;
 
 -- ===========================================================================
 -- TEST 3 — user2 CANNOT see user1's rows (§29: cross-user denied by RLS)
 -- ===========================================================================
-set local role authenticated;
-select set_config('request.jwt.claims',
-  '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', true);
+do $$
+begin
+  set local role authenticated;
+  perform set_config('request.jwt.claims',
+    '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', true);
 
-perform pg_temp.assert(
-  (select count(*) from public.entitlements) = 0,
-  'user2 must NOT see user1 entitlements');
-perform pg_temp.assert(
-  (select count(*) from public.user_progress) = 0,
-  'user2 must NOT see user1 progress');
-perform pg_temp.assert(
-  (select count(*) from public.subscriptions) = 0,
-  'user2 must NOT see user1 subscription');
-reset role;
+  perform pg_temp.assert(
+    (select count(*) from public.entitlements) = 0,
+    'user2 must NOT see user1 entitlements');
+  perform pg_temp.assert(
+    (select count(*) from public.user_progress) = 0,
+    'user2 must NOT see user1 progress');
+  perform pg_temp.assert(
+    (select count(*) from public.subscriptions) = 0,
+    'user2 must NOT see user1 subscription');
+
+  reset role;
+end $$;
 
 -- ===========================================================================
 -- TEST 4 — user2 cannot WRITE a row impersonating user1 (§29: RLS with check)
 -- ===========================================================================
-set local role authenticated;
-select set_config('request.jwt.claims',
-  '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', true);
-
 do $$
 begin
+  set local role authenticated;
+  perform set_config('request.jwt.claims',
+    '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', true);
+
   begin
     insert into public.user_progress (user_id, category)
       values ('11111111-1111-1111-1111-111111111111', 'agents');
@@ -149,8 +162,9 @@ begin
     when insufficient_privilege or check_violation then
       null;  -- expected: RLS with-check blocks it
   end;
+
+  reset role;
 end $$;
-reset role;
 
 select 'ALL RLS TESTS PASSED' as result;
 
