@@ -790,7 +790,7 @@
 .md-header__title .md-header__topic:first-child .md-ellipsis {
   font-weight: 800;
   letter-spacing: -0.01em;
-  font-size: 1.15rem;
+  font-size: 1.125rem;    /* 18px — same wordmark size as the standalone pages */
   color: #fff;
 }
 /* "Ready" recolored green by brand.js — matches the pricing/paywall wordmark. */
@@ -798,29 +798,33 @@
   color: var(--kb-green);
 }
 
-/* Logo mark: fill the button, and close the gap between it and the wordmark.
-   Material's default .md-logo is wide with padding, which left a large space
-   before "OfferReady". Tighten the button and pull the title left. */
+/* Logo mark + wordmark: one consistent, tight gap between them — matching the
+   standalone pricing page header (30px mark + 10px gap + wordmark).
+   Material's default .md-logo button is wide (fixed padding + margin) which left
+   a large space before "OfferReady". We shrink the button to the mark itself and
+   set a single, predictable gap (no fragile negative-margin hacks). */
 .md-header__button.md-logo {
-  width: 2rem;
-  height: 2rem;
+  width: 1.875rem;        /* 30px — same mark size as the standalone pages */
+  height: 1.875rem;
   padding: 0;
-  margin-right: 0;
+  margin: 0 0.625rem 0 0; /* 0.625rem = 10px gap — matches .brand{gap:10px} */
+  flex: 0 0 auto;
 }
 .md-header__button.md-logo img,
 .md-header__button.md-logo svg {
-  width: 2rem;
-  height: 2rem;
+  width: 1.875rem;
+  height: 1.875rem;
   color: #fff;
 }
-/* Pull the title tight against the logo — kill the theme's left padding/margin
-   so the wordmark sits right next to the mark (matches the pricing header). */
+/* Sit the wordmark right after the mark — remove the theme's own left
+   padding/margin so the gap is exactly the logo's margin-right above. */
 .md-header__title {
-  margin-left: -0.4rem;
+  margin-left: 0;
   padding-left: 0;
 }
 .md-header__title .md-header__topic {
   padding-left: 0;
+  margin-left: 0;
 }
 
 /* Hide page icons in the LEFT NAV only (e.g. the flag on "Start Here" and the
