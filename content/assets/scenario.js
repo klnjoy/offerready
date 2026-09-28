@@ -42,16 +42,6 @@
       } else { cb({}); }
     }
 
-    // No backend (e.g. GitHub Pages): run bundled scenarios fully client-side
-    // instead of showing a dead "not connected" banner. Same traversal, rating,
-    // and progress recording as the API path — just local data, no auth.
-    if (!API) {
-      renderOfflineList();
-      return;
-    }
-
-    renderList();
-
     // Friendly role labels per category (keeps the list readable as multi-role).
     var CATEGORY_LABELS = {
       "ai-engineer": "AI / GenAI Engineer",
@@ -189,6 +179,12 @@
         },
       },
     ];
+
+    // Entry point (placed AFTER the data above so it's assigned before use):
+    // no backend (e.g. GitHub Pages) => run bundled scenarios fully client-side
+    // instead of a dead "not connected" banner; otherwise use the API list.
+    if (!API) { renderOfflineList(); return; }
+    renderList();
 
     // Offline scenario list + runner — no fetch, no auth. Reuses startRun().
     function renderOfflineList() {
