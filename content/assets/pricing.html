@@ -101,6 +101,22 @@
   .btn.accent:hover{background:#2a7fc4; border-color:#2a7fc4;}
   .note{font-size:13px; color:var(--muted); margin-top:12px;}
 
+  /* "What's included in Free" — reassure before the Pro pitch. */
+  .free-inc{border:1px solid var(--line); border-radius:14px; padding:26px; margin:40px 0;
+            background:linear-gradient(135deg, rgba(34,192,122,.06), rgba(31,111,178,.04));}
+  .free-inc .fi-tag{display:inline-block; font-family:var(--mono); font-size:11px; font-weight:600;
+                    color:var(--green); background:rgba(34,192,122,.14); border:1px solid rgba(34,192,122,.4);
+                    padding:2px 10px; border-radius:999px;}
+  .free-inc h2{font-family:var(--sans); font-weight:800; color:var(--text); margin:12px 0 6px; font-size:20px;}
+  .free-inc .fi-sub{color:var(--body); font-size:14px; margin:0 0 20px; max-width:60ch;}
+  .fi-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px;}
+  .fi-item{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:16px 18px;}
+  .fi-item .fi-h{display:flex; align-items:center; gap:8px; font-family:var(--sans); font-weight:700;
+                 font-size:14px; color:var(--text); margin:0 0 6px;}
+  .fi-item .fi-h::before{content:"✓"; color:var(--green); font-weight:700;}
+  .fi-item p{margin:0; font-size:13px; color:var(--body); line-height:1.5;}
+  .free-inc .note{margin-top:18px;}
+
   /* Sprint call-out. */
   .sprint{border:1px solid var(--line); border-radius:12px; padding:26px; margin:44px 0;
           display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap;
@@ -202,6 +218,22 @@
     </div>
   </div>
   <p class="note">Everything under <b>Free</b> is available today. <b>Pro</b> is in development — leave your email and we'll tell you the moment it opens. Pricing will be announced before launch.</p>
+
+  <!-- What's included in Free — concrete reassurance that free is genuinely useful. -->
+  <section class="free-inc">
+    <span class="fi-tag">Free · available now</span>
+    <h2>What's included in Free</h2>
+    <p class="fi-sub">Free isn't a teaser. It's a complete learning track plus one full sample of every Pro flagship, so you can see exactly how the paid practice works before you ever pay.</p>
+    <div class="fi-grid">
+      <div class="fi-item"><p class="fi-h">Foundational GenAI, RAG &amp; agents</p><p>The full learning track — retrieval, agents, evaluation, and architecture fundamentals for AI engineering roles.</p></div>
+      <div class="fi-item"><p class="fi-h">Interview Q&amp;A banks</p><p>Question &amp; answer banks across every role and topic — Senior/Staff/Principal AI Engineer, AI Architect, and FDE.</p></div>
+      <div class="fi-item"><p class="fi-h">Complete Study Guide</p><p>The end-to-end study guide, free in full — structure your prep from fundamentals to interview day.</p></div>
+      <div class="fi-item"><p class="fi-h">One full sample of each flagship</p><p>A complete why-chain, a production incident, and an FDE customer scenario — real examples, not previews.</p></div>
+      <div class="fi-item"><p class="fi-h">Master Interview Simulator (sample)</p><p>Try a sample run of the simulator to feel the defend-under-pressure format before unlocking the full library.</p></div>
+      <div class="fi-item"><p class="fi-h">No account, no card</p><p>Start immediately. Free stays free — you only leave an email if you want to be told when Pro opens.</p></div>
+    </div>
+    <p class="note">Free gives you the complete <b>Learn</b> stage and a real taste of <b>Defend</b>. Pro unlocks the complete why-chains, incidents, Requirements → Production, and advanced FDE scenarios.</p>
+  </section>
 
   <div class="sprint">
     <div>
