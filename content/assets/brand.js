@@ -14,20 +14,25 @@
     el.innerHTML = 'Offer<span class="or-ready">Ready</span>';
   }
 
-  // Accent the value-connected top tabs (Practice, Interview Prep, Pricing) so
-  // they read as the product's primary destinations. We tag them with a class
-  // that extra.css styles; pure CSS can't select a tab by its label text.
-  var VALUE_TABS = { "practice": 1, "interview prep": 1, "pricing": 1 };
-  function accentTabs() {
-    var links = document.querySelectorAll(".md-tabs__link");
-    links.forEach(function (a) {
-      var label = (a.textContent || "").trim().toLowerCase();
-      if (VALUE_TABS[label]) a.classList.add("or-tab-value");
-      else a.classList.remove("or-tab-value");
+  // Accent the value-connected nav items (Practice, Interview Prep, Pricing) so
+  // they read as the product's primary destinations. We tag the sidebar links
+  // with a class that extra.css styles; pure CSS can't select a nav item by its
+  // label text. Only tag TOP-LEVEL items (depth check) so nested pages with the
+  // same words aren't accented.
+  var VALUE_NAV = { "practice": 1, "interview prep": 1, "pricing": 1 };
+  function accentNav() {
+    // Top-level sidebar items are the direct <label>/<a> in the primary nav list.
+    var items = document.querySelectorAll(".md-nav--primary > .md-nav__list > .md-nav__item");
+    items.forEach(function (li) {
+      var node = li.querySelector(":scope > .md-nav__link, :scope > label.md-nav__link");
+      if (!node) return;
+      var label = (node.textContent || "").trim().toLowerCase();
+      if (VALUE_NAV[label]) node.classList.add("or-nav-value");
+      else node.classList.remove("or-nav-value");
     });
   }
 
-  function run() { brandTitle(); accentTabs(); }
+  function run() { brandTitle(); accentNav(); }
 
   if (document.readyState !== "loading") run();
   else document.addEventListener("DOMContentLoaded", run);

@@ -1152,24 +1152,24 @@ a > .ig-feature.ig-link { text-decoration: none; color: inherit; }
 .ip-gaps li { margin: .15rem 0; font-size: .92rem; }
 
 /* ============================================================
-   Prominent value tabs: Practice · Interview Prep · Pricing
-   (tagged by brand.js as .or-tab-value). These are the parts
-   connected to product value, so they get visual weight.
+   Prominent value nav items: Practice · Interview Prep · Pricing
+   (tagged by brand.js as .or-nav-value on the top-level sidebar
+   links). These are the parts connected to product value, so they
+   get a subtle green marker + bolder label — same layout, more
+   visual weight. Mobile drawer uses the same class, so it carries
+   over to the hamburger menu too.
    ============================================================ */
-.md-tabs__link.or-tab-value {
+.md-nav__link.or-nav-value {
   font-weight: 700;
-  opacity: 1;
   position: relative;
+  padding-left: .7rem;
 }
-/* Green underline accent under the value tabs. */
-.md-tabs__link.or-tab-value::after {
+/* Green left-marker so the eye lands on the value items first. */
+.md-nav__link.or-nav-value::before {
   content: "";
   position: absolute;
-  left: 0; right: 0; bottom: -2px;
-  height: 2px;
+  left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 1.05em;
   background: var(--kb-green, #22c07a);
   border-radius: 2px;
 }
-/* De-emphasize the non-value tabs slightly so the value ones lead. */
-.md-tabs__link:not(.or-tab-value) { opacity: .82; }
-.md-tabs__link:hover { opacity: 1; }
