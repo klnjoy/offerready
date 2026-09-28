@@ -1115,3 +1115,16 @@
 .or-paywall .ip-btn { margin-top: .4rem; }
 .or-check { display: block; margin: .3rem 0; font-size: .92rem; }
 .or-check input { margin-right: .5rem; }
+
+/* Interview-hub feature cards that are now links: keep the card look (no blue
+   underline), add a clear clickable affordance. The <a> wraps a .ig-feature. */
+a:has(> .ig-feature.ig-link),
+a > .ig-feature.ig-link { text-decoration: none; color: inherit; }
+.ig-feature.ig-link { cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+.ig-feature.ig-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(22, 48, 92, .12);
+  border-color: var(--kb-green, #22c07a);
+}
+/* The markdown link wrapper shouldn't add its own inline-link styling. */
+.ig-features a { text-decoration: none; color: inherit; display: block; }

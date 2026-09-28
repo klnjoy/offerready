@@ -18,41 +18,41 @@ walk in ready.
 
 <div class="ig-features" markdown>
 
-<div class="ig-feature" markdown>
+[<div class="ig-feature ig-link" markdown>
 <div class="ig-ico">🎯</div>
 ### Role-tailored tracks
 Curated study orders for Data, AI/GenAI, Forward-Deployed, and Delivery roles.
-</div>
+</div>](#recommended-study-order)
 
-<div class="ig-feature" markdown>
+[<div class="ig-feature ig-link" markdown>
 <div class="ig-ico">🧠</div>
 ### Advanced, not basics
 Scenario-based questions with model answers, "simple then nuance," and pitfalls.
-</div>
+</div>](#all-question-banks)
 
-<div class="ig-feature" markdown>
+[<div class="ig-feature ig-link" markdown>
 <div class="ig-ico">📝</div>
 ### Interactive practice
 Question-by-question mock mode with self-scoring — right here in the browser.
-</div>
+</div>](Interview_Practice.md)
 
-<div class="ig-feature" markdown>
+[<div class="ig-feature ig-link" markdown>
 <div class="ig-ico">✅</div>
-### Self-quiz & recall
-Every page ends with a self-quiz and a "can you explain X?" checklist.
-</div>
+### Self-quiz &amp; recall
+Practise recall the way interviews test it — flashcards and timed drills in [Practice mode](Interview_Practice.md).
+</div>](Interview_Practice.md)
 
-<div class="ig-feature" markdown>
+[<div class="ig-feature ig-link" markdown>
 <div class="ig-ico">🗣️</div>
 ### Behavioral ready
 A STAR story-bank builder so the non-technical round doesn't sink you.
-</div>
+</div>](Behavioral_STAR_Interview_QA.md)
 
-<div class="ig-feature" markdown>
-<div class="ig-ico">📚</div>
-### Self-contained
-Everything's here; external links are optional deeper reference only.
-</div>
+[<div class="ig-feature ig-link" markdown>
+<div class="ig-ico">🗡️</div>
+### Defend your decisions
+Scenario trees that challenge every choice with "why?" — the [Practice scenarios](../Practice-Scenarios/index.md).
+</div>](../Practice-Scenarios/index.md)
 
 </div>
 
