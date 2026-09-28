@@ -18,6 +18,10 @@
     app.dataset.mounted = "1";
 
     const AGENT = window.KB_AGENT_URL || "http://localhost:8000";
+    // AI grading talks to a LOCAL agent (agent/serve.py). It only works on
+    // localhost, so we only show the button there — on the public site it would
+    // just surface a "start-chatbot.bat" dev message, which looks broken.
+    const ON_LOCALHOST = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
     const base = (window.__md_scope && window.__md_scope.pathname) || "/";
     const JSON_URL = base.replace(/\/[^/]*$/, "/") + "assets/interview_questions.json";
     const ALT_URL = "../assets/interview_questions.json";
@@ -206,8 +210,9 @@
       card.appendChild(ta);
       const row = el("div", "ip-controls");
       const revealBtn = el("button", "ip-btn", "Reveal model answer");
-      const aiBtn = el("button", "ip-btn ip-ghost", "🤖 AI grade (local)");
-      row.append(revealBtn, aiBtn); card.appendChild(row);
+      // AI grade is a local-dev-only convenience; hide it on the hosted site.
+      const aiBtn = ON_LOCALHOST ? el("button", "ip-btn ip-ghost", "🤖 AI grade (local)") : null;
+      row.append(revealBtn); if (aiBtn) row.append(aiBtn); card.appendChild(row);
       const aiOut = el("div", "ip-ai"); card.appendChild(aiOut);
       const modelWrap = el("div"); card.appendChild(modelWrap);
       revealBtn.addEventListener("click", () => {
@@ -217,7 +222,7 @@
         modelWrap.appendChild(mv);
         modelWrap.appendChild(ratingRow((val) => { s.ratings[s.i] = val; advance(); }));
       });
-      aiBtn.addEventListener("click", () => gradeWithAI(item, ta.value, aiOut, aiBtn));
+      if (aiBtn) aiBtn.addEventListener("click", () => gradeWithAI(item, ta.value, aiOut, aiBtn));
       app.appendChild(card);
       setTimeout(() => ta.focus(), 30);
     }
