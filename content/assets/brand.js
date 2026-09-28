@@ -1,17 +1,40 @@
-/* OfferReady header wordmark: recolor the title so "Offer" is white and
-   "Ready" is brand green — matching the standalone pricing/paywall pages.
-   The MkDocs header title renders as the plain string "OfferReady"; here we
-   split it into two spans. Runs on load and re-applies after Material's
-   instant-navigation swaps the header. Safe/no-op if the title isn't found. */
+/* OfferReady wordmark: recolor "Offer" white + "Ready" brand green — matching
+   the standalone pricing/paywall pages. Applied in TWO places: the MkDocs header
+   title AND the home-page hero <h1>. Runs on load and re-applies after Material's
+   instant-navigation swaps. Safe/no-op if a target isn't found; preserves any
+   heading permalink anchor. */
 (function () {
-  function brandTitle() {
-    // The header title text lives in .md-header__topic .md-ellipsis
-    var el = document.querySelector(".md-header__topic .md-ellipsis");
+  // Split the "OfferReady" wordmark into Offer + green "Ready", replacing ONLY
+  // the leading text node so we don't clobber a heading's permalink anchor
+  // (MkDocs appends <a class="headerlink">¶</a> inside the hero <h1>).
+  function splitWordmark(el) {
     if (!el || el.dataset.branded) return;
-    var text = (el.textContent || "").trim();
-    if (text.toLowerCase() !== "offerready") return; // only touch the exact wordmark
+    // Ignore trailing headerlink text (e.g. "¶") when checking the wordmark.
+    var visible = (el.textContent || "").replace(/\u00b6/g, "").trim();
+    if (visible.toLowerCase() !== "offerready") return; // only touch the exact wordmark
+    // Find the first text node containing "OfferReady" and replace just it.
+    var node = el.firstChild;
+    while (node) {
+      if (node.nodeType === 3 && /offerready/i.test(node.textContent)) {
+        var span = document.createElement("span");
+        span.innerHTML = 'Offer<span class="or-ready">Ready</span>';
+        el.replaceChild(span, node);
+        el.dataset.branded = "1";
+        return;
+      }
+      node = node.nextSibling;
+    }
+    // Fallback: no separate text node (plain wordmark, e.g. the header) — safe
+    // to rewrite the whole element since there's no permalink to preserve.
     el.dataset.branded = "1";
     el.innerHTML = 'Offer<span class="or-ready">Ready</span>';
+  }
+
+  function brandTitle() {
+    // Header wordmark: .md-header__topic .md-ellipsis
+    splitWordmark(document.querySelector(".md-header__topic .md-ellipsis"));
+    // Home hero title: the H1 inside .or-hero (same lockup as the header).
+    splitWordmark(document.querySelector(".or-hero h1"));
   }
 
   function run() { brandTitle(); }

@@ -66,6 +66,9 @@
   line-height: 1.1;
 }
 .md-typeset .or-hero h1 .headerlink { display: none !important; }
+/* Split wordmark on the hero: "Offer" white, "Ready" green — same lockup as the
+   header and the standalone pages (span injected by brand.js). */
+.md-typeset .or-hero h1 .or-ready { color: var(--kb-green); }
 
 /* Small uppercase eyebrow above the tagline. */
 .or-hero-eyebrow {
