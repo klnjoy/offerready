@@ -1106,6 +1106,15 @@
   color: var(--kb-blue, #1f6fb2); border: 1px solid rgba(31,111,178,.35);
   background: rgba(31,111,178,.1); border-radius: 999px; padding: 2px 9px; align-self: center;
 }
+/* Role filter chips on the scenarios list. */
+.or-scn-filter { display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0 1rem; }
+.or-scn-chip {
+  font-size: .82rem; font-weight: 600; padding: .3rem .8rem; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.15));
+  background: transparent; color: var(--md-default-fg-color, #16305c); transition: .12s;
+}
+.or-scn-chip:hover { border-color: var(--kb-blue, #1f6fb2); }
+.or-scn-chip.on { background: var(--kb-navy, #16305c); border-color: var(--kb-navy, #16305c); color: #fff; }
 .or-paywall {
   border: 1px solid var(--kb-green, #22c07a); border-left: 4px solid var(--kb-green, #22c07a);
   border-radius: 12px; padding: 1.2rem 1.4rem; margin: 1rem 0;

@@ -51,6 +51,19 @@
 
     renderList();
 
+    // Friendly role labels per category (keeps the list readable as multi-role).
+    var CATEGORY_LABELS = {
+      "ai-engineer": "AI / GenAI Engineer",
+      "ai-architect": "AI Architect",
+      "data-architect": "Data Architect",
+      "cloud-platform": "Cloud / Platform",
+      "fde": "Forward Deployed",
+    };
+    function catLabel(c) { return CATEGORY_LABELS[c] || (c || "General"); }
+
+    var allScenarios = [];   // cached list for client-side filtering
+    var activeCat = "all";
+
     // ---- Scenario list (public teasers) -----------------------------------
     function renderList() {
       app.innerHTML = "";
@@ -59,13 +72,8 @@
       fetch(API + "/api/premium/scenarios", { headers: h })
         .then(function (r) { return r.json(); })
         .then(function (d) {
-          app.innerHTML = "";
-          var list = (d && d.scenarios) || [];
-          if (!list.length) { app.appendChild(el("p", "ip-ai-hint", "No scenarios published yet.")); return; }
-          app.appendChild(el("h2", null, "Defend-your-decision scenarios"));
-          app.appendChild(el("p", "ip-ai-hint",
-            "Practice the decisions senior AI engineers defend under pressure. Sign in with OfferReady Pro to open the full tree; everyone can preview."));
-          list.forEach(function (s) { app.appendChild(card(s)); });
+          allScenarios = (d && d.scenarios) || [];
+          paintList();
         })
         .catch(function () {
           app.innerHTML = "";
@@ -74,9 +82,37 @@
       });
     }
 
+    function paintList() {
+      app.innerHTML = "";
+      if (!allScenarios.length) { app.appendChild(el("p", "ip-ai-hint", "No scenarios published yet.")); return; }
+      app.appendChild(el("h2", null, "Defend-your-decision scenarios"));
+      app.appendChild(el("p", "ip-ai-hint",
+        "Practice the decisions senior AI, data, and cloud engineers defend under pressure \u2014 across roles. Preview any scenario free; open the full tree with OfferReady Pro."));
+
+      // Role filter chips (built from the categories actually present).
+      var cats = ["all"].concat(uniqueCats(allScenarios));
+      var chips = el("div", "or-scn-filter");
+      cats.forEach(function (c) {
+        var b = el("button", "or-scn-chip" + (c === activeCat ? " on" : ""), c === "all" ? "All roles" : esc(catLabel(c)));
+        b.addEventListener("click", function () { activeCat = c; paintList(); });
+        chips.appendChild(b);
+      });
+      app.appendChild(chips);
+
+      var shown = allScenarios.filter(function (s) { return activeCat === "all" || s.category === activeCat; });
+      if (!shown.length) { app.appendChild(el("p", "ip-ai-hint", "No scenarios in this role yet.")); return; }
+      shown.forEach(function (s) { app.appendChild(card(s)); });
+    }
+
+    function uniqueCats(list) {
+      var seen = {}, out = [];
+      list.forEach(function (s) { if (s.category && !seen[s.category]) { seen[s.category] = 1; out.push(s.category); } });
+      return out;
+    }
+
     function card(s) {
       var c = el("div", "or-scn-card");
-      c.appendChild(el("span", "ip-topic", esc((s.category || "").toUpperCase())));
+      c.appendChild(el("span", "ip-topic", esc(catLabel(s.category))));
       c.appendChild(el("h3", null, esc(s.title)));
       var t = s.teaser || {};
       if (t.setup) c.appendChild(el("p", null, esc(t.setup)));

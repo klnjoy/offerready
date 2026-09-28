@@ -4,10 +4,11 @@ icon: material/sword-cross
 
 # Practice: Defend Your Decisions
 
-This is the core OfferReady experience. Pick a scenario, make a decision, and
-defend it as the interviewer keeps pushing — **why?**, then the trade-off, then
-a production constraint, then an incident. It's the part of the interview that
-actually decides the offer.
+This is the core OfferReady experience — across roles. Pick a scenario for your
+target role (**AI/GenAI Engineer, AI Architect, Data Architect, Cloud/Platform,
+or Forward Deployed**), make a decision, and defend it as the interviewer keeps
+pushing — **why?**, then the trade-off, then a production constraint, then an
+incident. It's the part of the interview that actually decides the offer.
 
 !!! info "Free preview · Pro unlocks the full tree"
     Everyone can preview each scenario (the setup + a sample decision). Running

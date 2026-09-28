@@ -1,0 +1,122 @@
+{
+  "slug": "ai-engineer-rag-feature",
+  "title": "Ship a Production RAG Feature (AI/GenAI Engineer)",
+  "role": "AI / GenAI Engineer",
+  "category": "ai-engineer",
+  "required_entitlement": "interview_pro",
+  "estimated_minutes": 20,
+  "teaser": {
+    "setup": "Your PM says: \u201cAdd an assistant that answers questions from our product docs, in the app, this quarter.\u201d You own it as the AI engineer. Design it, then defend every choice as the interviewer pushes.",
+    "you_will_practice": [
+      "Framing an ambiguous feature into a concrete RAG design",
+      "Defending chunking, embeddings, and retrieval choices under \u201cwhy?\u201d",
+      "Evaluation, hallucination control, latency and cost",
+      "A production incident and what you ship first"
+    ],
+    "node_titles": ["Approach", "Chunking", "Why hybrid?", "Evaluation", "Hallucination", "Latency", "Cost", "Incident: quality drop", "MVP scope", "Reflection", "Next"],
+    "sample_node": {
+      "id": "n3",
+      "kind": "why",
+      "prompt": "Why hybrid retrieval instead of just a strong embedding model with a bigger top-k?",
+      "model": "A better embedding still can't reliably match rare literal tokens (error codes, API names, SKUs); keyword/BM25 catches those, vector catches paraphrase. Hybrid fuses both. Bigger top-k just adds noise, cost, and 'lost in the middle' without fixing the exact-match miss. Trade-off: two indexes + a fusion step to maintain.",
+      "signals": ["names the exact-match failure of pure vector", "rejects 'bigger top-k' as the fix", "states the maintenance trade-off"]
+    }
+  },
+  "start": "n1",
+  "nodes": {
+    "n1": {
+      "id": "n1", "kind": "decision",
+      "prompt": "The feature: an in-app assistant answering from product docs, shipping this quarter. What do you clarify, and what's your one-paragraph design?",
+      "model": "Clarify: how many docs and how often they change; expected traffic + latency bar; do answers need citations; any per-user/tenant access rules; quality bar and how it's judged. Design: ingest+chunk docs \u2192 embed \u2192 index \u2192 at query time retrieve (hybrid) \u2192 rerank \u2192 answer only from retrieved context with citations \u2192 stream to the UI. Start read-only, one doc source, measurable eval.",
+      "signals": ["clarifies scale/latency/citations/access before designing", "answer-from-context + citations", "narrow first source, measurable"],
+      "next": "n2"
+    },
+    "n2": {
+      "id": "n2", "kind": "choice",
+      "prompt": "How do you chunk the docs?",
+      "options": [
+        { "label": "Fixed 512-token chunks", "next": "n2b", "note": "simple but splits mid-idea" },
+        { "label": "Semantic / heading-aware chunks with overlap", "next": "n3", "note": "keeps chunks self-contained" },
+        { "label": "Whole documents", "next": "n2b", "note": "blows the context budget, dilutes retrieval" }
+      ]
+    },
+    "n2b": {
+      "id": "n2b", "kind": "why",
+      "prompt": "That chunking has a known downside. Name it and say what you'd prefer.",
+      "model": "Fixed-size splits ideas mid-sentence so a chunk lacks the context to answer; whole-doc chunks overflow the budget and retrieve irrelevant sections. Prefer semantic/heading-aware chunks (with ~10-20% overlap) so each chunk is self-contained and retrievable on its own.",
+      "signals": ["names the specific downside", "arrives at semantic chunking + overlap"],
+      "next": "n3"
+    },
+    "n3": {
+      "id": "n3", "kind": "why",
+      "prompt": "Why hybrid retrieval instead of just a strong embedding model with a bigger top-k?",
+      "model": "A better embedding still can't reliably match rare literal tokens (error codes, API names, SKUs); keyword/BM25 catches those, vector catches paraphrase. Hybrid fuses both. Bigger top-k just adds noise, cost, and 'lost in the middle'. Trade-off: two indexes + fusion to maintain.",
+      "signals": ["exact-match failure of pure vector", "rejects bigger top-k", "maintenance trade-off"],
+      "next": "n4"
+    },
+    "n4": {
+      "id": "n4", "kind": "decision",
+      "prompt": "The interviewer asks: \u201cHow do you know it's actually good before you ship?\u201d",
+      "model": "Build a small labeled eval set (real questions \u2192 known-good docs/answers). Measure retrieval (recall@k, MRR) separately from answer quality (groundedness/citation accuracy, via LLM-as-judge + human spot-check). Gate changes on it in CI so a chunking/model/top-k tweak is a measurable regression, not a guess. Grow the set from logged misses.",
+      "signals": ["separate retrieval eval from answer eval", "recall@k / groundedness", "eval in CI as a regression gate"],
+      "next": "n5"
+    },
+    "n5": {
+      "id": "n5", "kind": "constraint", "constraint_type": "security",
+      "prompt": "How do you keep it from confidently making things up?",
+      "model": "Constrain the model to answer only from retrieved context and cite chunks; if retrieval returns nothing relevant, say 'I don't have that' rather than fabricate. Measure groundedness as a metric. A no-answer is a retrieval bug to fix (index/query/top-k), not a reason to loosen the prompt. Log misses to improve retrieval.",
+      "signals": ["answer-from-context + citations", "explicit not-found path", "treats no-answer as retrieval bug"],
+      "next": "n6"
+    },
+    "n6": {
+      "id": "n6", "kind": "constraint", "constraint_type": "latency",
+      "prompt": "It needs to feel responsive in the app. How do you hit that?",
+      "model": "Stream tokens (first token < ~1s), rerank only a small candidate set (retrieve ~50 \u2192 rerank top ~10), cache the fixed system/context prefix and hot Q&A, and right-size the model for the common path. Measure per-hop latency (retrieve vs rerank vs model) so you optimize the real bottleneck. Don't commit a hard p99 before load-testing.",
+      "signals": ["streaming + first-token", "small rerank candidate set", "per-hop measurement"],
+      "next": "n7"
+    },
+    "n7": {
+      "id": "n7", "kind": "constraint", "constraint_type": "cost",
+      "prompt": "Finance asks what it costs and how you keep it bounded. Answer.",
+      "model": "Cost \u2248 requests/day \u00d7 avg tokens \u00d7 price, minus cache-hit rate, plus embedding + rerank + vector-store. Levers: route easy queries to a cheaper model, prompt-cache the fixed prefix, cap max tokens, cache frequent answers, right-size top-k. Add per-request cost telemetry + a budget alert so drift is visible before the invoice.",
+      "signals": ["a cost formula", "routing/caching/token caps", "cost telemetry + alerts"],
+      "next": "n8"
+    },
+    "n8": {
+      "id": "n8", "kind": "incident",
+      "prompt": "Post-launch, users report the assistant 'got dumber' this week. No deploy went out. Debug.",
+      "model": "Isolate the layer, cheap things first. No deploy + sudden drop points at data/index: did an ingestion job re-embed with a different/upgraded embedding model (dimension/version drift) so query and index are in different spaces? Did a bulk doc update replace/tombstone chunks? Check recall@k vs last week, index freshness/version, and the retrieved chunks for a few known questions. Fix: pin/rollback the embedding model, re-embed consistently, add a version guard. It's almost always retrieval, not the LLM.",
+      "signals": ["isolates layers, suspects retrieval first", "embedding-version drift", "recall@k vs baseline", "version-guard fix"],
+      "next": "n9"
+    },
+    "n9": {
+      "id": "n9", "kind": "decision",
+      "prompt": "It's a one-quarter feature. What's the smallest thing you ship first?",
+      "model": "A vertical slice that proves value + architecture: ingest one high-value doc source with incremental re-index, hybrid retrieval + rerank, answer-from-context with citations, a small eval set in CI, basic latency/cost/quality telemetry, in-app streaming UI. Defer: multiple sources, actions/tools, multi-language, personalization. A working, evaluated slice beats a broad demo.",
+      "signals": ["narrow evaluated vertical slice", "explicit deferrals", "proves value + architecture"],
+      "next": "n10"
+    },
+    "n10": {
+      "id": "n10", "kind": "reflection",
+      "prompt": "Where did you assert a choice without a mechanism and a trade-off?",
+      "checklist": [
+        "I clarified scale/latency/citations before designing",
+        "I justified chunking and hybrid retrieval, not just named them",
+        "I had an evaluation plan, not vibes",
+        "I gave concrete latency + cost levers with telemetry",
+        "I debugged the incident by isolating the retrieval layer",
+        "I scoped an honest first slice"
+      ],
+      "next": "n11"
+    },
+    "n11": {
+      "id": "n11", "kind": "next_drill",
+      "prompt": "Solid. Push further:",
+      "recommend": [
+        { "label": "Keep Asking Why \u2014 RAG chain", "path": "Personal-SourceCode/Interview_Why_Chains.html" },
+        { "label": "Requirements \u2192 Production (full system design)", "path": "Personal-SourceCode/Interview_Requirements_to_Production.html" },
+        { "label": "Production Incident Interviews", "path": "Personal-SourceCode/Interview_Production_Incidents.html" }
+      ]
+    }
+  }
+}

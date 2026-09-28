@@ -1,0 +1,108 @@
+{
+  "slug": "cloud-platform-incident",
+  "title": "AI Service Failing in Production (Cloud / Platform)",
+  "role": "Cloud / Platform Engineer",
+  "category": "cloud-platform",
+  "required_entitlement": "incident_pro",
+  "estimated_minutes": 22,
+  "teaser": {
+    "setup": "You're on call for the platform running a customer-facing AI service (any cloud). At 9am it's slow, error rates climb, and the bill is trending up. Run the incident and defend every move.",
+    "you_will_practice": [
+      "A calm, layer-by-layer incident method",
+      "Latency spikes, provider outages, and autoscaling",
+      "Cost explosions and runaway workloads",
+      "Rollback, blast radius, and prevention"
+    ],
+    "node_titles": ["First move", "Isolate the layer", "Model provider down", "Latency at peak", "Cost spike", "Bad deploy", "Blast radius", "Prevention", "Reflection", "Next"],
+    "sample_node": {
+      "id": "n3",
+      "kind": "constraint",
+      "constraint_type": "production",
+      "prompt": "You confirm the model provider itself is degraded/down. What protects the service?",
+      "model": "Timeouts + retries with backoff (bounded, with jitter) so you fail fast, not pile up; a circuit breaker that trips to a fallback (alternate provider/region or a smaller model) via your gateway; graceful degradation \u2014 cached/partial answers or a clear 'try again' rather than hanging. You don't control the provider; you control your blast radius. Communicate status to customers.",
+      "signals": ["timeouts + bounded retries + circuit breaker", "fallback provider/region via gateway", "graceful degradation, not hanging"]
+    }
+  },
+  "start": "n1",
+  "nodes": {
+    "n1": {
+      "id": "n1", "kind": "decision",
+      "prompt": "The alert fires: latency up, errors climbing, cost trending up. What's your first move?",
+      "model": "Stabilize + scope before fixing. Acknowledge the incident, check the dashboards for the blast radius (which service/region/tenant, since when), and look for a recent change (deploy, config, provider status, traffic spike). Don't shotgun fixes. Establish a single hypothesis and a comms channel. Mitigate first (protect users), root-cause second.",
+      "signals": ["stabilize + scope before fixing", "check for a recent change", "mitigate first, RCA second"],
+      "next": "n2"
+    },
+    "n2": {
+      "id": "n2", "kind": "incident",
+      "prompt": "Nothing obvious deployed. How do you isolate which layer is failing?",
+      "model": "Bisect the request path with your traces/metrics: gateway/auth \u2192 retrieval/data \u2192 model provider \u2192 post-processing. Look at per-hop latency and error rate to find the slow/failing hop. Check the cheap things first: expired credentials, a dependency's status page, rate limits, a config/env change, a saturated resource (CPU/mem/connections). One hypothesis, test it, narrate.",
+      "signals": ["bisect the request path with traces", "per-hop latency to find the hop", "cheap causes first"],
+      "next": "n3"
+    },
+    "n3": {
+      "id": "n3", "kind": "constraint", "constraint_type": "production",
+      "prompt": "You confirm the model provider is degraded. What protects the service?",
+      "model": "Timeouts + bounded retries with backoff/jitter so you fail fast, not pile up; a circuit breaker tripping to a fallback (alternate provider/region or smaller model) via the gateway; graceful degradation \u2014 cached/partial answers or a clear retry, not hanging. You don't control the provider; you control your blast radius. Post customer status.",
+      "signals": ["timeouts + retries + circuit breaker", "fallback via gateway", "graceful degradation + comms"],
+      "next": "n4"
+    },
+    "n4": {
+      "id": "n4", "kind": "constraint", "constraint_type": "latency",
+      "prompt": "Turns out it's peak-hour load, not the provider \u2014 requests are queuing. What do you change?",
+      "model": "Scale the stateless tier horizontally (autoscaling on the right signal \u2014 queue depth / concurrency, not just CPU); add backpressure + a concurrency cap so slow calls don't exhaust workers; shed or queue non-interactive load; route easy requests to a smaller/faster model on the hot path; cache hot results. The model/provider is usually the throughput bottleneck \u2014 size and route accordingly. Fix the autoscaling signal so it pre-empts next peak.",
+      "signals": ["autoscale on the right signal", "backpressure + concurrency cap", "route/cache to relieve the bottleneck"],
+      "next": "n5"
+    },
+    "n5": {
+      "id": "n5", "kind": "incident",
+      "prompt": "Meanwhile cost has spiked hard. Find and stop it without breaking the service.",
+      "model": "Attribute the spike by workload/tenant/model from cost telemetry \u2014 don't guess. Usual culprits: a retry storm hammering an expensive model, an agent stuck looping, or a batch job with no pre-filter. Stop the bleed: cap retries, add loop/step limits, pre-filter before inference, route to a cheaper model, throttle the offending workload. Then add a budget alert + per-request cost metric so it's caught before the invoice.",
+      "signals": ["attribute by workload from telemetry", "retry-storm / loop / unfiltered batch", "caps + alerts to prevent recurrence"],
+      "next": "n6"
+    },
+    "n6": {
+      "id": "n6", "kind": "incident",
+      "prompt": "Root cause: a config change did ship 20 minutes ago via an untracked path. What now?",
+      "model": "Roll back to the last known-good immediately (mitigate first) \u2014 don't debug forward under fire. Confirm recovery on the dashboards. Then: how did an untracked change reach prod? Enforce change through CI/CD with review, canary + automatic rollback on SLO regression, and config-as-code so every change is versioned and revertible. A fast, clean rollback path is the point.",
+      "signals": ["roll back to known-good first", "confirm recovery", "close the untracked-change gap (CI/canary/config-as-code)"],
+      "next": "n7"
+    },
+    "n7": {
+      "id": "n7", "kind": "constraint", "constraint_type": "production",
+      "prompt": "The interviewer asks: how do you keep one failure from taking down everything next time?",
+      "model": "Contain blast radius by design: isolate tenants/workloads (quotas, separate queues/capacity for batch vs interactive), bulkheads + circuit breakers between dependencies, multi-AZ and a tested failover, and SLOs with alerting so you detect early. Degrade gracefully rather than cascade. Test failure (game-days/chaos), don't assume it. Blast-radius control is a design property, not a runbook line.",
+      "signals": ["isolation/bulkheads/quotas", "multi-AZ + tested failover", "degrade not cascade; test failure"],
+      "next": "n8"
+    },
+    "n8": {
+      "id": "n8", "kind": "constraint", "constraint_type": "production",
+      "prompt": "What observability did you need to run this incident \u2014 and what will you add?",
+      "model": "You needed end-to-end tracing (per-hop latency), error rates + saturation per dependency, per-request/per-tenant cost, and a change log correlated to metrics. Add what was missing: SLOs + burn-rate alerts, a status page, cost anomaly alerts, and dashboards that show blast radius fast. You can't fix fast what you can't see \u2014 observability is what turned this from guessing into bisecting.",
+      "signals": ["tracing + saturation + cost + change log", "SLO/burn-rate + anomaly alerts", "observability enables fast bisection"],
+      "next": "n9"
+    },
+    "n9": {
+      "id": "n9", "kind": "reflection",
+      "prompt": "Where did you jump to a fix instead of stabilizing, scoping, and isolating first?",
+      "checklist": [
+        "I stabilized + scoped before fixing",
+        "I isolated the failing layer with traces, not guesses",
+        "I protected against the provider with breakers + fallback",
+        "I autoscaled on the right signal under load",
+        "I attributed and stopped the cost spike",
+        "I rolled back first, then closed the change-control gap",
+        "I designed for blast-radius containment + observability"
+      ],
+      "next": "n10"
+    },
+    "n10": {
+      "id": "n10", "kind": "next_drill",
+      "prompt": "Well handled. Push into more incidents and design:",
+      "recommend": [
+        { "label": "Production Incident Interviews (full set)", "path": "Personal-SourceCode/Interview_Production_Incidents.html" },
+        { "label": "Keep Asking Why \u2014 cost / reliability chains", "path": "Personal-SourceCode/Interview_Why_Chains.html" },
+        { "label": "Reliability & Distributed Systems", "path": "GenAI-Topics/reliability/index.html" }
+      ]
+    }
+  }
+}

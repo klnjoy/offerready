@@ -1,0 +1,116 @@
+{
+  "slug": "ai-architect-multitenant-platform",
+  "title": "Design a Multi-Tenant Enterprise AI Platform (AI Architect)",
+  "role": "AI Architect / Solutions Architect",
+  "category": "ai-architect",
+  "required_entitlement": "architecture_pro",
+  "estimated_minutes": 30,
+  "teaser": {
+    "setup": "You're the architect. Leadership wants one AI platform that many internal teams (and later, external customers) build on: shared retrieval, agents, and model access \u2014 governed and cost-attributed. Design it and defend the hard trade-offs.",
+    "you_will_practice": [
+      "Tenant isolation and where you draw the boundary",
+      "Model strategy and routing across teams",
+      "Governance, cost attribution, and noisy-neighbor control",
+      "Scale, DR, and build-vs-buy under challenge"
+    ],
+    "node_titles": ["Approach", "Tenant isolation", "Model strategy", "Noisy neighbor", "Governance", "Cost attribution", "Scale & DR", "Build vs buy", "Reflection", "Next"],
+    "sample_node": {
+      "id": "n2",
+      "kind": "choice",
+      "prompt": "How do you isolate tenants' data and retrieval?",
+      "model": "Prefer logical isolation with enforced tenant scoping (a tenant_id on every row/vector + policies that filter every query), with physical isolation (separate stores/keys) reserved for tenants with hard compliance needs. Trade-off: physical-per-tenant is safest but costly and operationally heavy; shared-with-enforced-scoping scales but you must guarantee the filter is never bypassed.",
+      "signals": ["names logical vs physical isolation", "enforced scoping on every query", "states the cost/safety trade-off"]
+    }
+  },
+  "start": "n1",
+  "nodes": {
+    "n1": {
+      "id": "n1", "kind": "decision",
+      "prompt": "Before any diagram: what do you clarify, and what's your platform's shape in a paragraph?",
+      "model": "Clarify: how many tenants/teams, internal-only or external too, data-residency/compliance, expected traffic skew, latency bars, and who owns cost. Shape: a shared control plane (auth, routing, guardrails, observability, quotas) over per-tenant-scoped data planes (retrieval indexes, agent state), with a model gateway abstracting providers. Tenants get isolation + quotas; the platform team owns governance, cost, and reliability.",
+      "signals": ["clarifies tenancy/compliance/ownership first", "separates control plane from tenant data plane", "a model gateway abstraction"],
+      "next": "n2"
+    },
+    "n2": {
+      "id": "n2", "kind": "choice",
+      "prompt": "How do you isolate tenants' data and retrieval?",
+      "options": [
+        { "label": "Shared store, tenant_id filter enforced by policy", "next": "n3", "note": "scales; must guarantee the filter" },
+        { "label": "Separate store/keys per tenant", "next": "n2b", "note": "safest, but costly/heavy" },
+        { "label": "Trust the app layer to scope queries", "next": "n2b", "note": "risky \u2014 one bug leaks across tenants" }
+      ]
+    },
+    "n2b": {
+      "id": "n2b", "kind": "why",
+      "prompt": "Defend or correct that isolation choice under compliance pressure.",
+      "model": "App-layer-only scoping is unsafe \u2014 a single query bug crosses tenants; enforce isolation at the data layer (row/vector policies keyed on tenant, or separate stores). Physical-per-tenant is the safest but is costly and operationally heavy, so reserve it for tenants with hard compliance/residency needs and use enforced logical scoping for the rest. Never rely on the prompt or app code alone.",
+      "signals": ["isolation enforced at the data layer", "physical only where compliance demands", "never app/prompt-only"],
+      "next": "n3"
+    },
+    "n3": {
+      "id": "n3", "kind": "decision",
+      "prompt": "Teams have very different workloads. What's your model strategy across the platform?",
+      "model": "A model gateway with routing: cheap/fast models for high-volume simple calls, strong models for hard reasoning, per-team policy + quotas. Abstract the provider so you can add/swap models and fail over. Governed model allowlist (no team calls an unvetted model). Justify routing with per-class eval sets, not preference.",
+      "signals": ["gateway + routing by workload", "provider abstraction + failover", "governed allowlist + eval-justified"],
+      "next": "n4"
+    },
+    "n4": {
+      "id": "n4", "kind": "constraint", "constraint_type": "production",
+      "prompt": "One tenant's batch job floods the platform and everyone slows down. What prevents this?",
+      "model": "Per-tenant quotas + rate limits at the gateway; fair-scheduling / separate queues so a batch tenant can't starve interactive ones; concurrency caps and backpressure; isolate heavy async workloads onto their own capacity. Monitor per-tenant usage and alert on spikes. Noisy-neighbor control is a platform responsibility, not each app's.",
+      "signals": ["per-tenant quotas/rate limits", "queue isolation / fair scheduling", "backpressure + monitoring"],
+      "next": "n5"
+    },
+    "n5": {
+      "id": "n5", "kind": "constraint", "constraint_type": "security",
+      "prompt": "How do you govern this so security and compliance sign off?",
+      "model": "Identity flows through from the tenant's IdP; retrieval enforces per-user/tenant access; audit every model + tool call; data classification + masking; secrets in a manager; egress controls; treat retrieved/tool content as data not instructions. Central guardrails (input/output scanning) applied at the gateway so every tenant inherits them. A documented threat model per boundary.",
+      "signals": ["identity through to retrieval", "central guardrails at the gateway", "audit + classification + egress control"],
+      "next": "n6"
+    },
+    "n6": {
+      "id": "n6", "kind": "constraint", "constraint_type": "cost",
+      "prompt": "Finance wants each team billed for what they use, and total cost predictable. How?",
+      "model": "Meter at the gateway: tokens + model tier + retrieval/rerank per request, tagged by tenant/team \u2192 chargeback/showback dashboards. Levers: routing, prompt caching, quotas, cap max tokens. Budget alerts per tenant. Cost becomes attributable and controllable instead of one opaque bill. State assumptions (model mix, cache hit rate) when giving a forecast.",
+      "signals": ["per-tenant metering + chargeback", "gateway is the metering point", "budget alerts + stated assumptions"],
+      "next": "n7"
+    },
+    "n7": {
+      "id": "n7", "kind": "constraint", "constraint_type": "production",
+      "prompt": "How does it scale, and what's the DR story when a region or the model provider fails?",
+      "model": "Scale the stateless control plane + gateway horizontally; the model + vector store are the throughput bottlenecks \u2014 size/route accordingly. DR: multi-AZ, an alternate model provider/region as failover behind the gateway, backups of indexes + config, and a documented runbook. Test failover, don't assume it. SLOs per tier with alerting.",
+      "signals": ["names the real bottleneck (model/store)", "provider/region failover behind the gateway", "tested DR + SLOs"],
+      "next": "n8"
+    },
+    "n8": {
+      "id": "n8", "kind": "decision",
+      "prompt": "The CTO asks: 'Should we build this platform at all, or buy?' Defend your recommendation.",
+      "model": "The architect move is to challenge the premise with TCO + strategic fit, not default to build. Buy/managed where it's undifferentiated (model hosting, vector store, observability); build the thin differentiated layer (governance, routing policy, tenant isolation, cost attribution) that's specific to us. Consider lock-in, compliance, and team capacity. Decide deliberately with a 1-2 year TCO view, not by reflex.",
+      "signals": ["challenges build-by-default", "buy undifferentiated / build differentiated", "TCO + lock-in + capacity reasoning"],
+      "next": "n9"
+    },
+    "n9": {
+      "id": "n9", "kind": "reflection",
+      "prompt": "Where did you draw a box without naming the boundary, the trade-off, or how you'd verify it?",
+      "checklist": [
+        "I clarified tenancy/compliance/ownership before designing",
+        "I enforced tenant isolation at the data layer",
+        "I justified model routing with eval, not preference",
+        "I controlled noisy neighbors with quotas + isolation",
+        "I made cost attributable per tenant",
+        "I gave a tested DR story, not an assumed one",
+        "I reasoned build-vs-buy on TCO, not reflex"
+      ],
+      "next": "n10"
+    },
+    "n10": {
+      "id": "n10", "kind": "next_drill",
+      "prompt": "Strong architecture defense. Go deeper:",
+      "recommend": [
+        { "label": "Requirements \u2192 Production (flagship system design)", "path": "Personal-SourceCode/Interview_Requirements_to_Production.html" },
+        { "label": "Keep Asking Why \u2014 system design chain", "path": "Personal-SourceCode/Interview_Why_Chains.html" },
+        { "label": "Enterprise & Security reference architectures", "path": "Enterprise/reference-architectures/index.html" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "slug": "data-architect-snowflake-cortex",
+  "title": "Design a Governed Analytics + Cortex Platform (Data Architect)",
+  "role": "Snowflake / Data Architect",
+  "category": "data-architect",
+  "required_entitlement": "system_design_pro",
+  "estimated_minutes": 28,
+  "teaser": {
+    "setup": "You're the data architect. The business wants natural-language analytics and an AI assistant over the warehouse \u2014 without data leaving governance, and without the bill exploding. Design it on Snowflake and defend the calls.",
+    "you_will_practice": [
+      "Warehousing + ingestion/freshness design",
+      "RBAC, masking, and row-access enforced through AI",
+      "Cortex (in-boundary) vs an external LLM",
+      "Query performance and cost control under challenge"
+    ],
+    "node_titles": ["Approach", "Ingestion & freshness", "Cortex vs external", "Access control", "Text-to-SQL risk", "Query performance", "Cost control", "Incident: bill spiked", "Reflection", "Next"],
+    "sample_node": {
+      "id": "n3",
+      "kind": "why",
+      "prompt": "Why keep the GenAI inside Snowflake (Cortex) instead of calling an external LLM?",
+      "model": "Data never leaves the governance boundary, so existing RBAC, masking, and row-access policies still apply and there's no egress/compliance headache. Cortex functions/agents run where the data lives. Trade-off: you're bounded by Cortex's model catalog and features \u2014 for a capability it lacks (e.g. a specific external model or long multi-turn chat) you'd route out through a governed gateway with masking, accepting the added control burden.",
+      "signals": ["governance boundary + existing RBAC applies", "no egress", "names when you'd still go external + the trade-off"]
+    }
+  },
+  "start": "n1",
+  "nodes": {
+    "n1": {
+      "id": "n1", "kind": "decision",
+      "prompt": "Clarify first, then give your one-paragraph design for NL analytics + an AI assistant over the warehouse.",
+      "model": "Clarify: data sensitivity (PII/regulated?), who can see what, freshness needs, query volume/concurrency, and the cost ceiling. Design: governed warehouse (layered raw\u2192clean\u2192marts), a semantic model for NL\u2192metrics, Cortex Analyst/Search for in-boundary AI, RBAC + masking + row-access enforced under every query, read-only least-privilege roles for the assistant, and cost guardrails. Verify generated SQL; cite the rows.",
+      "signals": ["clarifies sensitivity/freshness/cost first", "semantic model over raw text-to-SQL", "in-boundary + least-privilege + verify SQL"],
+      "next": "n2"
+    },
+    "n2": {
+      "id": "n2", "kind": "constraint", "constraint_type": "production",
+      "prompt": "How do you ingest and keep the data fresh enough for the assistant to be trusted?",
+      "model": "Layered pipeline (raw \u2192 cleaned \u2192 marts) with incremental loads (streams/CDC or scheduled merges), tracked freshness/lag SLOs per table, and provenance so an answer can cite when the data was last updated. Full rebuilds only as a safety net. Surface freshness to the assistant so it can say 'as of <timestamp>'. Stale data silently wrong is worse than a visible lag.",
+      "signals": ["incremental not full rebuild", "freshness/lag SLO + provenance", "surface as-of timestamp"],
+      "next": "n3"
+    },
+    "n3": {
+      "id": "n3", "kind": "why",
+      "prompt": "Why keep the GenAI inside Snowflake (Cortex) instead of calling an external LLM?",
+      "model": "Data never leaves the governance boundary, so existing RBAC/masking/row-access apply and there's no egress/compliance issue. Cortex runs where the data lives. Trade-off: bounded by Cortex's model catalog/features \u2014 for something it lacks you'd route out through a governed gateway with masking, accepting extra control burden.",
+      "signals": ["governance boundary + RBAC applies", "no egress", "names when you'd still go external"],
+      "next": "n4"
+    },
+    "n4": {
+      "id": "n4", "kind": "constraint", "constraint_type": "security",
+      "prompt": "How do you guarantee the assistant can't show a user data they aren't allowed to see?",
+      "model": "Run the assistant's queries under the user's identity/role, not a superuser service account, so RBAC + row-access policies + dynamic masking apply automatically \u2014 you can't return what the role can't select. Never post-filter in the app. Audit every query. For shared service patterns, pass the user context into row-access policy conditions. Access control lives in the warehouse, not the prompt.",
+      "signals": ["queries run as the user's role, not superuser", "row-access + masking do the enforcing", "audit, no app post-filter"],
+      "next": "n5"
+    },
+    "n5": {
+      "id": "n5", "kind": "constraint", "constraint_type": "security",
+      "prompt": "NL\u2192SQL can generate a wrong or dangerous query. How do you make it safe and correct?",
+      "model": "Prefer a governed semantic model (Cortex Analyst) over free text-to-SQL so the AI maps to vetted metrics/joins, not arbitrary SQL. Read-only least-privilege role (no writes/DDL). Validate/whitelist generated SQL, cap scanned bytes, and show the SQL + cite the result rows so a wrong number is auditable. Treat 'the AI wrote a wrong number' as a validation + provenance problem, not an accept-on-faith one.",
+      "signals": ["semantic model over raw text-to-SQL", "read-only least-privilege", "show SQL + cite rows + scan cap"],
+      "next": "n6"
+    },
+    "n6": {
+      "id": "n6", "kind": "incident",
+      "prompt": "A dashboard that was fast is now slow after 10\u00d7 data growth. Diagnose on Snowflake.",
+      "model": "Read the Query Profile. Common causes: poor partition pruning (cluster on the filtered/join columns), spilling to disk (warehouse undersized for the step), exploding joins from a grain/key bug, or scanning columns you discard. Fix the specific cause \u2014 clustering for pruning, right-size the warehouse for spill, fix the join grain. Snowflake has no b-tree indexes, so 'add an index' is the wrong instinct; pruning + clustering + warehouse sizing are the levers.",
+      "signals": ["reads the Query Profile", "pruning/spill/join-grain as suspects", "clustering not indexes"],
+      "next": "n7"
+    },
+    "n7": {
+      "id": "n7", "kind": "incident",
+      "prompt": "Finance says the Snowflake + Cortex bill doubled this month. Walk your response.",
+      "model": "Find the delta by warehouse/query/workload before acting. Usual suspects: a Cortex job inferring over millions of un-pre-filtered rows, an auto-resume warehouse left running, or a new large scan. Fix: filter with cheap SQL BEFORE inference, route to a smaller Cortex model where adequate, batch via scheduled jobs, cache/persist results, right-size + auto-suspend warehouses. Add resource monitors + budget alerts so it's visible before the invoice.",
+      "signals": ["find the delta by workload first", "pre-filter before inference / auto-suspend", "resource monitors + alerts"],
+      "next": "n8"
+    },
+    "n8": {
+      "id": "n8", "kind": "decision",
+      "prompt": "What do you ship first, and what do you deliberately not promise?",
+      "model": "Ship a governed vertical slice: one high-value subject area with a semantic model, Cortex Analyst read-only under user roles, freshness + cost guardrails, and citations on answers. Don't promise: 100% correct NL\u2192SQL on every question, sub-second on unbounded scans before load-testing, or write/action capability early. Trade a fake guarantee for a measurable one: 'vetted metrics, cited rows, an accuracy number you can hold me to.'",
+      "signals": ["governed vertical slice first", "refuses fake guarantees", "measurable commitments"],
+      "next": "n9"
+    },
+    "n9": {
+      "id": "n9", "kind": "reflection",
+      "prompt": "Where did you assert a choice without the mechanism, the trade-off, or the verification?",
+      "checklist": [
+        "I clarified sensitivity/freshness/cost first",
+        "I enforced access via the user's role, not the app",
+        "I preferred a semantic model over raw text-to-SQL",
+        "I diagnosed perf via the Query Profile (pruning/spill/grain)",
+        "I found cost by workload and pre-filtered before inference",
+        "I scoped an honest first slice and refused fake guarantees"
+      ],
+      "next": "n10"
+    },
+    "n10": {
+      "id": "n10", "kind": "next_drill",
+      "prompt": "Strong data-architecture defense. Keep going:",
+      "recommend": [
+        { "label": "Snowflake Cortex \u2014 System Design + Mock", "path": "Snowflake-Cortex/system-design-mock.html" },
+        { "label": "Snowflake Cortex \u2014 Security, Cost & Observability", "path": "Snowflake-Cortex/governance-cost-observability.html" },
+        { "label": "Keep Asking Why \u2014 data platform chain", "path": "Personal-SourceCode/Interview_Why_Chains.html" }
+      ]
+    }
+  }
+}
