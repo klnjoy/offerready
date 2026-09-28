@@ -14,8 +14,16 @@
  * check below intentionally ignores the placeholder value.
  */
 (function () {
-  var BASE = "https://offerready-beta.vercel.app";
-  // Only activate if a real https URL was set (ignore the placeholder).
+  // No live backend right now. The previous Vercel URL
+  // (offerready-beta.vercel.app) is down and returned 404 + CORS errors on
+  // every page, which broke the Practice features. Leaving this empty puts the
+  // site in its graceful "no backend" state: the interactive Practice pages
+  // (Defend-Your-Decision scenarios, Master Simulator, Walkthrough, Why-chains,
+  // Practice drills) run fully client-side, and Analyze/chatbot show their
+  // sample/disabled states instead of erroring. Set a real https URL here to
+  // re-enable the hosted features.
+  var BASE = "";
+  // Only activate if a real https URL was set (ignore the empty placeholder).
   if (/^https:\/\//.test(BASE)) {
     window.OFFERREADY_API_BASE = BASE.replace(/\/$/, "");
   }
