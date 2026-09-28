@@ -11,10 +11,12 @@ interviewer keeps
 pushing — **why?**, then the trade-off, then a production constraint, then an
 incident. It's the part of the interview that actually decides the offer.
 
-!!! info "Free preview · Pro unlocks the full tree"
-    Everyone can preview each scenario (the setup + a sample decision). Running
-    the **complete** branch-by-branch defense — with progress tracking — is part
-    of **OfferReady Pro**. See [Free vs Pro](../assets/pricing.html).
+!!! info "Free scenarios run here · Pro adds the full library"
+    A set of complete defend-your-decision scenarios runs **free, right here** —
+    make the call, then hold your reasoning through the why → trade-off →
+    constraint → incident follow-ups, and self-rate. **OfferReady Pro** adds the
+    full multi-role library with progress saved across devices. See
+    [Free vs Pro](../assets/pricing.html).
 
 <div id="scenario-app" markdown="0">
   <p><em>Loading scenarios…</em></p>
