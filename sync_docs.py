@@ -807,25 +807,26 @@ def write_index(md_catalog, modules) -> None:
         "",
         '<p class="or-hero-eyebrow">Learn · Build · Defend · Interview</p>',
         "",
-        '<p class="home-hero"><strong>Production AI Engineering &amp; FDE interview '
-        "preparation.</strong> Prep smarter and land the offer. OfferReady takes "
-        "you <strong>Learn &rarr; Build &rarr; Defend &rarr; Interview</strong>: "
-        "learn the technology, build the system, <strong>defend your "
-        "decisions</strong> under follow-up questions, and walk into the interview "
-        "ready — the way a senior/staff/FDE round actually works.</p>",
+        '<p class="home-hero"><strong>Production AI engineering interview '
+        "practice</strong> for people who need to <strong>defend real engineering "
+        "decisions</strong>. Stop just reading interview questions — practice the "
+        "decisions senior AI engineers are expected to defend under pressure. "
+        "OfferReady takes you <strong>Learn &rarr; Build &rarr; Defend &rarr; "
+        "Interview</strong>: learn the technology, build the system, defend your "
+        "decisions under follow-up questions, and master the interview.</p>",
         "",
         '<p class="home-cta" markdown>'
-        '[:material-school: Start Learning](Start-Here/index.md){ .md-button .md-button--primary }'
+        '[:material-sword-cross: Practice defending decisions](Personal-SourceCode/Interview_Why_Chains.md){ .md-button .md-button--primary }'
         "&nbsp;"
-        "[:material-briefcase-check: Interview Prep](Personal-SourceCode/Interview_Guide_Overview.md){ .md-button }"
+        "[:material-school: Start learning (free)](Start-Here/index.md){ .md-button }"
         "&nbsp;"
-        "[:material-dumbbell: Practice Mock](Personal-SourceCode/Interview_Practice.md){ .md-button }"
+        "[:material-tag-outline: See Free vs Pro](assets/pricing.html){ .md-button }"
         "</p>",
         "",
         '<p class="home-stats">'
-        f"<span>📚 <strong>{total_docs}</strong> documents</span>"
-        f"<span>🧭 <strong>{len(TECHNOLOGIES)}</strong> tech areas</span>"
-        f"<span>🤖 <strong>{len(TOPICS)}</strong> GenAI topics</span>"
+        "<span>🧠 <strong>Senior · Staff · Principal</strong></span>"
+        "<span>🏛️ <strong>AI Architect</strong></span>"
+        "<span>✈️ <strong>Forward Deployed</strong></span>"
         "</p>",
         "",
         "</div>",
@@ -843,7 +844,11 @@ def write_index(md_catalog, modules) -> None:
         "",
         "## Choose your target role",
         "",
-        "Each role page routes you through the right depth, in the right order.",
+        "OfferReady prepares you for the senior technical roles building and "
+        "shipping production AI — each path routes you through the right depth, "
+        "in the right order.",
+        "",
+        "**Core tracks**",
         "",
         '<div class="grid cards" markdown>',
         "",
@@ -851,29 +856,51 @@ def write_index(md_catalog, modules) -> None:
         "",
         "    ---",
         "",
-        "    Build and ship LLM apps. Follow the "
+        "    Build and ship LLM apps — RAG, agents, evaluation. Follow the "
         "[AI / GenAI Engineer path](Personal-SourceCode/Path_AI_Engineer.md).",
         "",
-        "-   :material-stairs-up:{ .lg .middle } __Staff / Principal AI Architect__",
+        "-   :material-stairs-up:{ .lg .middle } __Senior / Staff / Principal AI Engineer__",
         "",
         "    ---",
         "",
-        "    Own the design, trade-offs, and economics. Follow the "
-        "[Staff / Principal Architect path](Personal-SourceCode/Path_Staff_Principal_Architect.md).",
+        "    Own design, trade-offs, and economics at scale. Follow the "
+        "[Staff / Principal path](Personal-SourceCode/Path_Staff_Principal_Architect.md).",
+        "",
+        "-   :material-sitemap:{ .lg .middle } __AI Architect / Solutions Architect__",
+        "",
+        "    ---",
+        "",
+        "    End-to-end architecture and defensible design decisions. Work "
+        "[Requirements &rarr; Production](Personal-SourceCode/Interview_Requirements_to_Production.md).",
         "",
         "-   :material-airplane-takeoff:{ .lg .middle } __Forward Deployed Engineer__",
         "",
         "    ---",
         "",
-        "    Customer-facing build + delivery. Follow the "
+        "    Customer-facing build + delivery under ambiguity — a deep OfferReady "
+        "specialization. Follow the "
         "[Forward Deployed Engineer path](Personal-SourceCode/Path_FDE.md).",
         "",
-        "-   :material-database-cog:{ .lg .middle } __Data & AI / Platform Engineer__",
+        "</div>",
+        "",
+        "**Supporting tracks**",
+        "",
+        '<div class="grid cards" markdown>',
+        "",
+        "-   :material-database-cog:{ .lg .middle } __AI Platform / Data Engineer__",
         "",
         "    ---",
         "",
-        "    The data/cloud platform side. Follow the "
-        "[Data & AI / Platform Engineer path](Personal-SourceCode/Path_Data_Platform.md).",
+        "    The data/cloud platform side — warehouses, pipelines, governance. "
+        "Follow the [Data & AI / Platform path](Personal-SourceCode/Path_Data_Platform.md).",
+        "",
+        "-   :material-infinity:{ .lg .middle } __Cloud / DevOps for AI__",
+        "",
+        "    ---",
+        "",
+        "    Serving, CI/CD, IaC, and reliability for AI systems. See "
+        "[DevOps for AI](GenAI-Topics/devops-ai/index.md) and "
+        "[LLMOps](GenAI-Topics/llmops/index.md).",
         "",
         "</div>",
         "",
@@ -887,6 +914,54 @@ def write_index(md_catalog, modules) -> None:
         "- **Defend the architecture** — [Requirements &rarr; Production](Personal-SourceCode/Interview_Requirements_to_Production.md) and system-design walkthroughs.",
         "- **Handle the production incident** — [Production Incident Interviews](Personal-SourceCode/Interview_Production_Incidents.md).",
         "- **Answer the follow-up \u201cwhy?\u201d** — [The Interviewer Keeps Asking Why](Personal-SourceCode/Interview_Why_Chains.md).",
+        "",
+        "## Practice defending a decision",
+        "",
+        "This is what the interview actually feels like — and what OfferReady "
+        "trains. One decision, challenged until it holds:",
+        "",
+        "!!! quote \"Scenario &rarr; Decision &rarr; Why &rarr; Trade-off &rarr; Production challenge\"",
+        "    **Scenario:** *\u201cDesign a secure enterprise RAG assistant over internal docs.\u201d*",
+        "",
+        "    **You:** Hybrid retrieval + reranker, per-user ACL at retrieval, answer only from context with citations.",
+        "",
+        "    **Interviewer:** *Why hybrid and not pure vector search?* \u2192 *Why a reranker on top?* \u2192 *Why that top-k?*",
+        "",
+        "    **Trade-off:** *What does the reranker cost you in latency, and when is it not worth it?*",
+        "",
+        "    **Production challenge:** *The documents change daily \u2014 how do you keep retrieval fresh without a full re-index? A customer refuses to share production credentials \u2014 now what?*",
+        "",
+        "    Full why-chains, incidents, and Requirements &rarr; Production live in "
+        "[Interview Prep](Personal-SourceCode/Interview_Guide_Overview.md).",
+        "",
+        "## Free vs Pro",
+        "",
+        "The reason to go Pro isn't *more to read* — it's **practice defending the "
+        "decisions senior AI engineers make under pressure.**",
+        "",
+        '<div class="grid cards" markdown>',
+        "",
+        "-   :material-book-open-variant:{ .lg .middle } __Free \u2014 Learn &amp; sample__",
+        "",
+        "    ---",
+        "",
+        "    Foundational GenAI, RAG and agent concepts, selected system design, "
+        "interview Q&amp;A banks, and a **sample** of every flagship: one why-chain, "
+        "one production incident, one FDE scenario. Enough to see the quality.",
+        "",
+        "-   :material-sword-cross:{ .lg .middle } __Pro \u2014 Practice &amp; defend__",
+        "",
+        "    ---",
+        "",
+        "    The full interview simulator, complete why-chains, Requirements &rarr; "
+        "Production, production-incident interviews, and advanced FDE customer "
+        "scenarios \u2014 with progress tracking and weak-area drills.",
+        "",
+        "</div>",
+        "",
+        '<p class="home-cta" markdown>'
+        '[:material-tag-outline: See Free vs Pro](assets/pricing.html){ .md-button .md-button--primary }'
+        "</p>",
         "",
         "## See a worked example",
         "",

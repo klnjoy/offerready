@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>OfferReady — Pricing</title>
+<title>OfferReady — Pricing · Practice defending AI engineering decisions</title>
+<meta name="description" content="OfferReady Free vs Pro. Free: learn and sample. Pro: practice defending production AI engineering decisions — why-chains, production incidents, Requirements to Production, and advanced FDE scenarios.">
+<meta name="robots" content="index,follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -58,8 +60,24 @@
   .tier-row.head .career .t-name{color:var(--green);}
   .tier-row:not(.head) .feature{color:var(--body); border-right:1px solid var(--line);}
   .tier-row:nth-child(even):not(.head){background:rgba(31,111,178,.03);}
-  .yes{color:var(--green); font-weight:600;} .no{color:var(--line);}
+  .yes{color:var(--green); font-weight:600;} .no{color:var(--muted); font-size:12px;}
   .lock{color:var(--blue); font-family:var(--mono); font-size:12px;}
+
+  /* Two-column (Free / Pro) layout. */
+  .tier-row.two{grid-template-columns:2fr 1fr 1fr; min-width:520px;}
+  .tier-row.head.two .pro .t-name{color:var(--blue);}
+  .cta-row.two{grid-template-columns:2fr 1fr 1fr; min-width:520px;}
+
+  /* "Practice defending a decision" scenario demo — the differentiator. */
+  .scenario-demo{border:1px solid var(--line); border-radius:14px; padding:26px; margin:36px 0;
+                 background:linear-gradient(135deg, rgba(22,48,92,.05), rgba(34,192,122,.07)); position:relative;}
+  .scenario-demo .sd-tag{position:absolute; top:-11px; left:22px; background:var(--blue); color:#fff;
+                         font-family:var(--mono); font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px;}
+  .scenario-demo h2{font-family:var(--sans); font-weight:800; color:var(--text); margin:6px 0 18px; font-size:20px;}
+  .sd-flow{display:flex; flex-direction:column; gap:10px;}
+  .sd-step{border-left:3px solid var(--green); padding:6px 0 6px 14px;}
+  .sd-step .sd-k{display:block; font-family:var(--mono); font-size:11px; font-weight:600; color:var(--blue); letter-spacing:.02em; text-transform:uppercase;}
+  .sd-step p{margin:3px 0 0; font-size:14px; color:var(--body);}
 
   /* CTA buttons — brand green primary, navy-outline secondary. */
   .cta-row{display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr; min-width:660px;}
@@ -126,44 +144,60 @@
 
 <div class="wrap">
   <section class="hero">
-    <h1>Read for free. Practice to get the offer.</h1>
-    <p>Every GenAI Topic, deep-dive, and Study Guide chapter is free, always. Pay when you need the practice, the tracking, and the pressure-tested simulator that actually gets you ready to interview.</p>
-    <div class="path"><span class="step">step 1</span> Learn <b>(free)</b> <span class="step">→ step 2</span> Practice <b>(Pro)</b> <span class="step">→ step 3</span> Interview <b>(Career Sprint)</b></div>
+    <h1>Stop just reading interview questions. Practice defending engineering decisions.</h1>
+    <p>OfferReady prepares senior AI engineers, architects, and Forward Deployed Engineers for the part of the interview that actually decides the offer — defending your design under relentless follow-ups. Free lets you learn and sample. Pro is where you practice and defend.</p>
+    <div class="path"><span class="step">Learn</span> <b>(free)</b> <span class="step">→ Build</span> <span class="step">→ Defend</span> <b>(Pro)</b> <span class="step">→ Interview</span></div>
   </section>
 
-  <div class="tiers scroll">
-    <div class="tier-row head">
-      <div class="feature">Included</div>
-      <div class="free"><div class="t-name">Free <span class="badge live">Available now</span></div><div class="price">$0</div></div>
-      <div class="pro"><div class="t-name">Pro <span class="badge soon">Coming soon</span></div><div class="price">$19/mo · $149/yr</div></div>
-      <div class="career"><div class="t-name">Career Sprint <span class="badge soon">Coming soon</span></div><div class="price">$59/mo · $199 / 30 days</div></div>
+  <!-- Differentiator: show, don't tell — one decision, challenged until it holds. -->
+  <section class="scenario-demo">
+    <div class="sd-tag">This is Pro</div>
+    <h2>Practice defending a decision</h2>
+    <div class="sd-flow">
+      <div class="sd-step"><span class="sd-k">Scenario</span><p>“Design a secure enterprise RAG assistant over internal docs.”</p></div>
+      <div class="sd-step"><span class="sd-k">Your decision</span><p>Hybrid retrieval + reranker, per-user ACL at retrieval, answer only from context with citations.</p></div>
+      <div class="sd-step"><span class="sd-k">Interviewer: “Why?”</span><p>Why hybrid, not pure vector? → Why a reranker? → Why that top-k?</p></div>
+      <div class="sd-step"><span class="sd-k">Trade-off</span><p>What does the reranker cost in latency — and when is it not worth it?</p></div>
+      <div class="sd-step"><span class="sd-k">Production challenge</span><p>Docs change daily — keep retrieval fresh without a full re-index. The customer won’t share prod credentials — now what?</p></div>
     </div>
-    <div class="tier-row"><div class="feature">Learn: GenAI Topics, Technologies, Reference Docs</div><div class="yes">✓</div><div class="yes">✓</div><div class="yes">✓</div></div>
-    <div class="tier-row"><div class="feature">Complete Study Guide (all 12 chapters)</div><div class="yes">✓</div><div class="yes">✓</div><div class="yes">✓</div></div>
-    <div class="tier-row"><div class="feature">Interview Q&amp;A banks (all roles &amp; topics)</div><div class="no">—</div><div class="yes">✓</div><div class="yes">✓</div></div>
-    <div class="tier-row"><div class="feature">Practice Labs (Scenario, Live-Coding, Hackathon)</div><div class="no">—</div><div class="yes">✓</div><div class="yes">✓</div></div>
-    <div class="tier-row"><div class="feature">Progress Dashboard</div><div class="no">—</div><div class="yes">✓</div><div class="yes">✓</div></div>
-    <div class="tier-row"><div class="feature">Analyze My Job → tailored plan</div><div class="no">—</div><div class="no">—</div><div class="yes">✓</div></div>
-    <div class="tier-row"><div class="feature">Master Interview Simulator (unlimited runs)</div><div class="no">—</div><div class="lock">3 / month</div><div class="yes">Unlimited</div></div>
-    <div class="tier-row"><div class="feature">Accountability check-ins (30-Day Plan)</div><div class="no">—</div><div class="no">—</div><div class="yes">✓</div></div>
+    <p class="note">Free includes one full sample like this. Pro unlocks the complete why-chains, incidents, and Requirements → Production library.</p>
+  </section>
+
+  <div class="tiers two scroll">
+    <div class="tier-row head two">
+      <div class="feature">What you get</div>
+      <div class="free"><div class="t-name">Free <span class="badge live">Available now</span></div><div class="price">$0 · learn &amp; sample</div></div>
+      <div class="pro"><div class="t-name">Pro <span class="badge soon">Coming soon</span></div><div class="price">practice &amp; defend</div></div>
+    </div>
+    <div class="tier-row two"><div class="feature">Foundational GenAI, RAG &amp; agent learning</div><div class="yes">✓</div><div class="yes">✓</div></div>
+    <div class="tier-row two"><div class="feature">Interview Q&amp;A banks (all roles &amp; topics)</div><div class="yes">✓</div><div class="yes">✓</div></div>
+    <div class="tier-row two"><div class="feature">Complete Study Guide</div><div class="yes">✓</div><div class="yes">✓</div></div>
+    <div class="tier-row two"><div class="feature"><b>Sample</b> of each flagship (1 why-chain, 1 incident, 1 FDE scenario)</div><div class="yes">✓</div><div class="yes">✓</div></div>
+    <div class="tier-row two"><div class="feature">“Interviewer Keeps Asking Why” — complete library</div><div class="no">sample</div><div class="yes">✓</div></div>
+    <div class="tier-row two"><div class="feature">Requirements → Production — full scenarios</div><div class="no">sample</div><div class="yes">✓</div></div>
+    <div class="tier-row two"><div class="feature">Production Incident interviews</div><div class="no">sample</div><div class="yes">✓</div></div>
+    <div class="tier-row two"><div class="feature">Master Interview Simulator</div><div class="no">—</div><div class="yes">✓</div></div>
+    <div class="tier-row two"><div class="feature">Advanced FDE customer scenarios</div><div class="no">sample</div><div class="yes">✓</div></div>
+    <div class="tier-row two"><div class="feature">Senior / Staff / Principal system design &amp; AI architecture</div><div class="no">—</div><div class="yes">✓</div></div>
+    <div class="tier-row two"><div class="feature">Security, cost &amp; observability challenges</div><div class="no">—</div><div class="yes">✓</div></div>
+    <div class="tier-row two"><div class="feature">Progress tracking, weak-area drills &amp; recommended next</div><div class="no">—</div><div class="yes">✓</div></div>
   </div>
 
   <div class="scroll">
-    <div class="cta-row">
+    <div class="cta-row two">
       <div></div>
       <div><a class="btn" href="../Start-Here/index.html">Start free</a></div>
-      <div><button class="btn accent" type="button" data-notify="Pro">Notify me</button></div>
-      <div><button class="btn primary" type="button" data-notify="Career Sprint">Notify me</button></div>
+      <div><button class="btn primary" type="button" data-notify="Pro">Notify me when Pro opens</button></div>
     </div>
   </div>
-  <p class="note">Everything under <b>Free</b> is available today. <b>Pro</b> and <b>Career Sprint</b> are in development — leave your email and we'll tell you the moment they open. Annual Pro will save ~35%; Career Sprint will also come as a one-time 30-day pass.</p>
+  <p class="note">Everything under <b>Free</b> is available today. <b>Pro</b> is in development — leave your email and we'll tell you the moment it opens. Pricing will be announced before launch.</p>
 
   <div class="sprint">
     <div>
-      <h3>Interview in 2 weeks, not learning for 6 months?</h3>
-      <p>Skip the subscription. Get 30 days of full access, the simulator, and a plan built around your actual job posting.</p>
+      <h3>The reason to go Pro isn’t “more to read.”</h3>
+      <p>It’s practicing the decisions senior AI engineers are expected to defend under pressure — full why-chains, production incidents, Requirements → Production, and advanced FDE scenarios, with progress tracking.</p>
     </div>
-    <button class="btn primary" type="button" data-notify="Career Sprint (30-day pass)">Notify me when it opens</button>
+    <button class="btn primary" type="button" data-notify="Pro">Notify me when it opens</button>
   </div>
 </div>
 
