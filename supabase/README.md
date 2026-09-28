@@ -85,10 +85,65 @@ verified, the backend **denies** Pro access — it never grants access from
 client-side claims. The server auth helper (`api/lib/supabaseAuth.js`) returns
 `null` on any error, so callers deny.
 
+## Phase 3 — premium scenario API + content (added)
+
+The defend-your-decision **scenario engine** is the Pro differentiator. Its data
+and authorization live here:
+
+```
+supabase/premium/
+  scenario-schema.md          # the node-tree format (spec §23)
+  scenarios/fde-secure-rag.json  # authored flagship (teaser + full tree)
+  seed_scenarios.js           # loads scenarios into premium_content (service-role)
+```
+
+Backend endpoints (Vercel `api/`):
+
+- `GET /api/premium/scenarios` — public list of **teasers** only.
+- `GET /api/premium/scenarios/:slug` — the **full tree**, returned ONLY when the
+  caller is authenticated (verified Supabase JWT) AND holds the required
+  entitlement. Anonymous → 401; authenticated-without-entitlement → 403 + teaser;
+  entitled → 200. Fail-closed on any backend error (spec §20/§28/§34).
+- Helpers: `api/lib/supabaseAuth.js` (identity), `api/lib/entitlements.js`
+  (authorization, service-role), `api/lib/http.js` (CORS/JSON).
+
+### Seeding scenarios (server-side)
+
+```bash
+SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node supabase/premium/seed_scenarios.js
+```
+
+This upserts each `scenarios/*.json` into `premium_content`. After seeding, the
+full node tree exists **only in Supabase** — it is never in the public build.
+
+### To grant a test user access (before Stripe exists)
+
+Insert an entitlement manually (SQL Editor), then sign in as that user:
+
+```sql
+insert into public.entitlements (user_id, feature, status)
+values ('<the-user-uuid>', 'fde_pro', 'active')
+on conflict (user_id, feature) do update set status = 'active';
+```
+
+The scenario page will then return the full tree for that user and deny everyone
+else — a clean end-to-end authorization test even before payments.
+
+### Content-extraction stance (important)
+
+Phase 3 adds the scenario engine as **NEW protected content** (authored JSON in
+Supabase). It does **not** yet remove the existing flagship prose
+(`Interview_Why_Chains`, `Interview_Production_Incidents`,
+`Interview_Requirements_to_Production`) from the public static site — those
+remain public for now. Migrating that prose behind the paywall is a deliberate,
+reviewed sub-step (it changes what's public) and will be done on explicit
+sign-off, converting each to a scenario tree + public teaser.
+
 ## What's NOT done yet
 
-- No Stripe, no checkout, no webhooks (Phase 4).
-- No premium content API / entitlement enforcement endpoint (Phase 3).
-- No content extracted from the public site yet (Phase 3) — premium bodies are
-  still in the static build until then.
+- No Stripe, no checkout, no webhooks (Phase 4) — entitlements are set manually
+  for testing until then.
+- Existing flagship prose is still public (see extraction stance above).
+- End-to-end auth/entitlement testing needs a live Supabase project + the env
+  vars set in Vercel.
 - Live payments are disabled by default (spec §31/§39).

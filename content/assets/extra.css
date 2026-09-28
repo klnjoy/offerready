@@ -1090,3 +1090,28 @@
 .or-auth-msg.or-auth-err { color: #c0392b; }
 .or-auth-who { font-weight: 600; margin-right: .5rem; }
 .or-auth-note { font-size: .85rem; opacity: .7; }
+
+/* ============================================================
+   Scenario engine (Phase 3): cards, lock badge, paywall
+   ============================================================ */
+.or-scn-card {
+  border: 1px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.12));
+  border-radius: 12px; padding: 1rem 1.2rem; margin: .9rem 0;
+  background: var(--md-code-bg-color, rgba(0,0,0,.02));
+}
+.or-scn-card h3 { margin: .3rem 0 .5rem; }
+.or-scn-card ul { margin: .3rem 0 .6rem 1.1rem; }
+.or-scn-lock {
+  font-family: var(--md-code-font, monospace); font-size: .78rem; font-weight: 600;
+  color: var(--kb-blue, #1f6fb2); border: 1px solid rgba(31,111,178,.35);
+  background: rgba(31,111,178,.1); border-radius: 999px; padding: 2px 9px; align-self: center;
+}
+.or-paywall {
+  border: 1px solid var(--kb-green, #22c07a); border-left: 4px solid var(--kb-green, #22c07a);
+  border-radius: 12px; padding: 1.2rem 1.4rem; margin: 1rem 0;
+  background: rgba(34,192,122,.06);
+}
+.or-paywall h2 { margin-top: 0; }
+.or-paywall .ip-btn { margin-top: .4rem; }
+.or-check { display: block; margin: .3rem 0; font-size: .92rem; }
+.or-check input { margin-right: .5rem; }

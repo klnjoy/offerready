@@ -1,0 +1,199 @@
+{
+  "slug": "fde-secure-rag",
+  "title": "Secure Enterprise RAG Assistant (FDE)",
+  "role": "Forward Deployed Engineer",
+  "category": "fde",
+  "required_entitlement": "fde_pro",
+  "estimated_minutes": 25,
+  "teaser": {
+    "setup": "A customer says: \u201cWe need a secure enterprise RAG assistant over our internal docs. Can you ship something in six weeks?\u201d You're the Forward Deployed Engineer. Scope it, defend every decision, and survive the follow-ups.",
+    "you_will_practice": [
+      "Turning an ambiguous customer ask into a plan",
+      "Defending retrieval + architecture choices under \u201cwhy?\u201d",
+      "PII, security, latency, and cost constraints",
+      "A live production incident",
+      "Deciding what to ship in six weeks \u2014 and what to refuse to promise"
+    ],
+    "node_titles": [
+      "Your approach",
+      "Why RAG (not fine-tuning)?",
+      "Why hybrid retrieval?",
+      "Reranker or bigger top-k?",
+      "Documents change daily \u2014 freshness",
+      "How do you evaluate retrieval?",
+      "Detecting hallucination",
+      "Customer refuses production credentials",
+      "PII in the corpus",
+      "Latency target",
+      "Cost control",
+      "Incident: quality dropped overnight",
+      "What ships in six weeks",
+      "What you refuse to promise",
+      "Reflection",
+      "Next drill"
+    ],
+    "sample_node": {
+      "id": "n2",
+      "kind": "why",
+      "prompt": "Why RAG here \u2014 why not fine-tune a model on the customer's docs?",
+      "model": "The knowledge is large, changes often, and answers must cite sources. RAG keeps facts fresh (re-index, don't retrain) and auditable. Fine-tuning teaches behavior/format, not volatile facts, and re-training on every doc change is slow and costly. Trade-off: RAG adds retrieval infrastructure and its own failure modes (bad recall, stale index).",
+      "signals": ["separates 'knowledge' from 'behavior'", "names freshness + citations", "states the trade-off, not just the win"]
+    }
+  },
+  "start": "n1",
+  "nodes": {
+    "n1": {
+      "id": "n1",
+      "kind": "decision",
+      "prompt": "The customer wants \u201ca secure enterprise RAG assistant over internal docs\u201d in six weeks. Before any architecture \u2014 what do you clarify first, and what is your one-paragraph approach?",
+      "model": "Clarify before designing: who are the users and how many; what docs and where; data sensitivity (PII/regulated?); must data stay in their cloud/region; is this Q&A only or does it take actions; latency expectation; existing IdP. Approach: a retrieval-grounded assistant \u2014 ingest+index their docs with per-document access control, answer only from retrieved context with citations, enforce the user's identity at retrieval so people only see what they're allowed to. Start read-only.",
+      "signals": ["clarifies scale/sensitivity/latency BEFORE drawing boxes", "answers only from context + citations", "per-user access at retrieval", "starts read-only / narrow"],
+      "next": "n2"
+    },
+    "n2": {
+      "id": "n2",
+      "kind": "why",
+      "prompt": "Why RAG here \u2014 why not fine-tune a model on the customer's docs?",
+      "model": "The knowledge is large, changes often, and answers must cite sources. RAG keeps facts fresh (re-index, don't retrain) and auditable. Fine-tuning teaches behavior/format, not volatile facts, and retraining on every change is slow and costly. Trade-off: RAG adds retrieval infrastructure and its own failure modes.",
+      "signals": ["separates knowledge from behavior", "freshness + citations", "states trade-off"],
+      "next": "n3"
+    },
+    "n3": {
+      "id": "n3",
+      "kind": "choice",
+      "prompt": "For retrieval, which do you propose to the customer?",
+      "options": [
+        { "label": "Pure vector (semantic) search", "next": "n3b", "note": "misses exact terms like IDs/codes" },
+        { "label": "Hybrid (vector + keyword)", "next": "n4", "note": "strong default" },
+        { "label": "Keyword/BM25 only", "next": "n3b", "note": "misses paraphrase" }
+      ]
+    },
+    "n3b": {
+      "id": "n3b",
+      "kind": "why",
+      "prompt": "That single-method choice has a known blind spot. Name it \u2014 then say what you'd add.",
+      "model": "Pure vector misses exact-match terms (part numbers, error codes, policy IDs); keyword misses paraphrase and synonyms. The fix is hybrid: run both and fuse the scores, so exact terms and semantic matches both surface.",
+      "signals": ["names the specific failure of the chosen method", "arrives at hybrid"],
+      "next": "n4"
+    },
+    "n4": {
+      "id": "n4",
+      "kind": "why",
+      "prompt": "You proposed hybrid. Do you also add a reranker, or just increase top-k until recall is high?",
+      "model": "Add a reranker. Hybrid gives good recall but noisy ordering; a cross-encoder reranker fixes precision of the top results so the model sees the best few, not just many. Just raising top-k dilutes the context, adds cost/latency, and worsens 'lost in the middle'. Trade-off: the reranker adds latency and a model to operate \u2014 skip it if the corpus is tiny or latency budget is brutal.",
+      "signals": ["reranker for precision, not bigger top-k", "names lost-in-the-middle", "states when NOT to use it"],
+      "next": "n5"
+    },
+    "n5": {
+      "id": "n5",
+      "kind": "constraint",
+      "constraint_type": "production",
+      "prompt": "The customer's documents change every day. How do you keep retrieval fresh without rebuilding the whole index nightly?",
+      "model": "Incremental indexing driven by change events (or a change feed / timestamps): re-embed and upsert only changed/new docs, tombstone deletes, track provenance + version per chunk. Target an index-lag SLO (e.g. < 15 min). Full rebuilds only as a periodic safety net. Watch for embedding-model version drift \u2014 if you change models you must re-embed everything.",
+      "signals": ["incremental upsert, not full rebuild", "handles deletes", "an explicit freshness/lag target", "embedding-version drift"],
+      "next": "n6"
+    },
+    "n6": {
+      "id": "n6",
+      "kind": "decision",
+      "prompt": "The customer asks: \u201cHow will you know retrieval is actually good?\u201d What's your evaluation plan?",
+      "model": "Build a small labeled eval set of real questions \u2192 known-relevant docs. Measure retrieval separately from answer quality: recall@k and MRR/nDCG for retrieval; groundedness/citation-accuracy for answers. Run it in CI so a chunking/model/top-k change is a measurable regression, not a vibe. Expand the set from real logged misses.",
+      "signals": ["separates retrieval eval from answer eval", "names recall@k / MRR", "eval in CI / regression gate"],
+      "next": "n7"
+    },
+    "n7": {
+      "id": "n7",
+      "kind": "constraint",
+      "constraint_type": "security",
+      "prompt": "How do you detect and reduce hallucination \u2014 and what do you do when retrieval returns nothing relevant?",
+      "model": "Constrain the model to answer only from retrieved context and cite the chunks; if nothing relevant is retrieved, return 'I don't have that' rather than fabricate. Detect with groundedness checks (is each claim supported by a citation?) and an eval metric. A no-answer is a retrieval bug to fix (index/query/top-k), not a prompt to loosen. Log misses.",
+      "signals": ["answer-from-context + citations", "explicit 'not found' path, never fabricate", "treats no-answer as a retrieval bug"],
+      "next": "n8"
+    },
+    "n8": {
+      "id": "n8",
+      "kind": "constraint",
+      "constraint_type": "security",
+      "prompt": "Two weeks in, the customer's security team refuses to give you production credentials or access to real documents. Now what?",
+      "model": "This is normal in FDE work \u2014 don't stall. Work against a representative sample or synthetic docs the customer approves; agree on a data-handling boundary (their cloud/VPC, no egress). Build the pipeline so credentials are injected at their environment, not held by you: least-privilege service accounts, secrets in their manager, you deliver code + IaC they run. Define a joint test plan they execute inside their boundary. Never ask them to lower security for your convenience.",
+      "signals": ["keeps momentum with sample/synthetic data", "shifts creds/secrets into the customer's boundary", "delivers deployable artifacts, not your-laptop access", "doesn't ask them to weaken security"],
+      "next": "n9"
+    },
+    "n9": {
+      "id": "n9",
+      "kind": "constraint",
+      "constraint_type": "security",
+      "prompt": "The corpus contains employee PII and HR documents. How do you prevent one user from seeing another's data through the assistant?",
+      "model": "Enforce access at retrieval, not after: carry the user's identity (via their IdP/SSO) into the query and filter to documents that user is allowed to see (per-doc/row ACLs). You can't leak what you never retrieve. Add an output DLP scan for PII/secrets as defense in depth, classify + mask sensitive fields, and audit every retrieval. Treat retrieved text as data, not instructions (indirect injection).",
+      "signals": ["per-user ACL AT retrieval, not post-filter", "identity passed through from SSO", "output DLP as second layer", "audit + injection awareness"],
+      "next": "n10"
+    },
+    "n10": {
+      "id": "n10",
+      "kind": "constraint",
+      "constraint_type": "latency",
+      "prompt": "The customer wants it to \u201cfeel instant.\u201d What latency target do you commit to, and how?",
+      "model": "Commit to a perceived-latency target, not a single number: stream tokens so first-token < ~1s, full answer in a few seconds. Levers: cache the fixed system/context prefix (prompt caching), cache frequent Q&A, keep the reranker to a small candidate set, right-size the model for the hot path and escalate only hard queries. Measure per-hop latency (retrieval vs rerank vs model) so you optimize the actual bottleneck. Don't promise a hard p99 before you've measured under their load.",
+      "signals": ["streaming + first-token target", "names the per-hop breakdown", "caching + model routing", "won't commit a number before measuring"],
+      "next": "n11"
+    },
+    "n11": {
+      "id": "n11",
+      "kind": "constraint",
+      "constraint_type": "cost",
+      "prompt": "Finance asks what this will cost to run and how you'll keep it from exploding. Answer.",
+      "model": "Give a cost model: requests/day \u00d7 avg tokens \u00d7 per-token price, minus cache-hit rate, plus embedding + rerank + vector-store cost. Levers: route easy queries to a cheaper model, prompt-cache the fixed prefix, cap max tokens, dedupe/cache frequent questions, right-size top-k. Put a budget alert + per-request cost telemetry in place so a spike is visible and attributable. Don't let cost be discovered on the invoice.",
+      "signals": ["an actual cost formula", "routing/caching/token caps", "budget alerts + cost-per-request telemetry"],
+      "next": "n12"
+    },
+    "n12": {
+      "id": "n12",
+      "kind": "incident",
+      "prompt": "You shipped. One morning the customer says answer quality \u201csuddenly got worse\u201d overnight \u2014 nothing was deployed. Walk your debugging.",
+      "model": "Isolate the layer, cheap things first. Overnight + no deploy points at data/index: did an ingestion job run and re-embed with a different/upgraded embedding model (dimension or version drift), leaving the query and index in different spaces? Did a bulk doc update tombstone/replace chunks or change ACLs so retrieval now returns less? Check: retrieval metrics (recall@k) vs yesterday, index freshness/version, embedding-model version, and a few known queries' retrieved chunks. Mitigate: pin/rollback the embedding model and re-embed consistently; add a version guard so query and index models must match. It's almost always retrieval, not the LLM.",
+      "signals": ["isolates layers, suspects retrieval/index first", "embedding-version mismatch as prime suspect", "checks recall@k vs baseline + retrieved chunks", "rollback + version guard fix"],
+      "next": "n13"
+    },
+    "n13": {
+      "id": "n13",
+      "kind": "decision",
+      "prompt": "It's a six-week engagement. What do you actually commit to shipping in that window?",
+      "model": "Ship the smallest thing that delivers real value and proves the architecture: ingestion + incremental index for the top document sources, hybrid retrieval + reranker, answer-from-context with citations, SSO + per-user ACL at retrieval, a small eval set in CI, basic observability (latency/cost/retrieval quality), read-only (no write actions yet). Explicitly defer: actions/tool-use, every edge-case source, multi-language, fancy UI. A working, secure, evaluated slice beats a broad demo.",
+      "signals": ["a narrow, secure, evaluated vertical slice", "read-only first", "explicit deferrals", "value + proves architecture"],
+      "next": "n14"
+    },
+    "n14": {
+      "id": "n14",
+      "kind": "decision",
+      "prompt": "The customer pushes for guarantees. What do you refuse to promise \u2014 and how do you say it?",
+      "model": "Refuse to promise: 100% accuracy / zero hallucination; a hard latency p99 before load testing in their environment; that it can take write actions safely in six weeks; that it covers every document source day one. Say it as scope, not weakness: 'I won't promise zero hallucination \u2014 no one honestly can \u2014 but I will promise citations on every answer, an eval gate, and a measured groundedness number you can hold me to.' Trading a fake guarantee for a real, measurable commitment is the senior move.",
+      "signals": ["refuses fake guarantees (accuracy, hard p99, safe writes in 6wk)", "reframes as measurable commitments", "customer-facing tone, not defensive"],
+      "next": "n15"
+    },
+    "n15": {
+      "id": "n15",
+      "kind": "reflection",
+      "prompt": "Rate how you defended this end-to-end. Where did you hand-wave instead of naming a mechanism and a trade-off?",
+      "checklist": [
+        "I clarified scale/sensitivity/latency before designing",
+        "I enforced per-user access AT retrieval",
+        "I had an evaluation plan, not vibes",
+        "I kept momentum when blocked on credentials",
+        "I named cost + latency levers with telemetry",
+        "I debugged the incident by isolating layers",
+        "I scoped six weeks honestly and refused fake guarantees"
+      ],
+      "next": "n16"
+    },
+    "n16": {
+      "id": "n16",
+      "kind": "next_drill",
+      "prompt": "Strong work. Keep the pressure on with a related drill:",
+      "recommend": [
+        { "label": "The Interviewer Keeps Asking Why \u2014 RAG chain", "path": "Personal-SourceCode/Interview_Why_Chains.html" },
+        { "label": "Requirements \u2192 Production (full system design)", "path": "Personal-SourceCode/Interview_Requirements_to_Production.html" },
+        { "label": "Production Incident Interviews", "path": "Personal-SourceCode/Interview_Production_Incidents.html" }
+      ]
+    }
+  }
+}

@@ -1195,6 +1195,10 @@ def write_nav(md_catalog, modules) -> None:
     # Sample Readiness Walkthrough — the product-demo entry point (labeled demo).
     if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
         nav.append("  - Sample Walkthrough: Sample-Walkthrough/index.md")
+    # Practice — the core defend-your-decision scenario experience (Pro-gated
+    # full trees; public teasers). Top-level so it reads as the product core.
+    if (DOCS_DIR / "Practice-Scenarios" / "index.md").exists():
+        nav.append("  - Practice: Practice-Scenarios/index.md")
 
     # ----- LEARN --------------------------------------------------------------
     nav.append("  - Learn:")

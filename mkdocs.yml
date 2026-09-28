@@ -77,6 +77,7 @@ extra_javascript:
   - assets/mermaid-init.js
   - assets/chatbot.js
   - assets/practice.js
+  - assets/scenario.js
   - assets/progress.js
   - assets/why.js
   - assets/analyze.js
@@ -116,6 +117,7 @@ nav:
   - Start Here: Start-Here/index.md
   - Analyze My Job: Analyze/index.md
   - Sample Walkthrough: Sample-Walkthrough/index.md
+  - Practice: Practice-Scenarios/index.md
   - Learn:
       - Foundations (GenAI Topics):
           - Overview: GenAI-Topics/index.md
