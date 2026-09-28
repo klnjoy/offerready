@@ -1203,6 +1203,8 @@ def write_nav(md_catalog, modules) -> None:
         practice_children.append("      - Practice Mode (Q&A drills): Personal-SourceCode/Interview_Practice.md")
     if (DOCS_DIR / "Personal-SourceCode" / "Interview_Why_Interactive.md").exists():
         practice_children.append("      - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md")
+    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Master_Simulator.md").exists():
+        practice_children.append("      - Master Interview Simulator: Personal-SourceCode/Interview_Master_Simulator.md")
     if (DOCS_DIR / "Personal-SourceCode" / "Interview_Progress.md").exists():
         practice_children.append("      - Progress Dashboard: Personal-SourceCode/Interview_Progress.md")
     if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
@@ -1353,11 +1355,13 @@ def write_nav(md_catalog, modules) -> None:
                 ("AWS_Interview_QA.md", "AWS"),
                 ("DevOps_Interview_QA.md", "DevOps"),
             ]),
+            # Written system-design/scenario reference. The INTERACTIVE
+            # "Keep Asking Why" drill lives in the Practice tab (not here) to
+            # avoid duplicating it across two tabs.
             ("System Design & Scenarios", [
                 ("Interview_Requirements_to_Production.md", "Requirements → Production"),
                 ("Interview_Production_Incidents.md", "Production Incident Interviews"),
                 ("Interview_Why_Chains.md", "The Interviewer Keeps Asking Why"),
-                ("Interview_Why_Interactive.md", "\u201cKeep Asking Why\u201d (interactive)"),
             ]),
             ("Coding", [
                 ("FDE_Coding_Interview_Prep.md", "FDE Coding Prep"),
@@ -1366,10 +1370,10 @@ def write_nav(md_catalog, modules) -> None:
             ("Behavioral", [
                 ("Behavioral_STAR_Interview_QA.md", "Behavioral / STAR"),
             ]),
-            ("Practice & Plans", [
-                ("Interview_Practice.md", "Practice (Mock Session)"),
-                ("Interview_Master_Simulator.md", "Master Interview Simulator"),
-                ("Interview_Progress.md", "Progress Dashboard"),
+            # Reference plans only. The interactive tools (Practice Mode,
+            # Master Interview Simulator, Progress Dashboard) live in the
+            # Practice tab — deliberately NOT duplicated here.
+            ("Plans", [
                 ("Interview_Cheat_Sheets.md", "Master Cheat Sheets"),
                 ("Interview_30_Day_Plan.md", "30-Day Prep Plan"),
             ]),
@@ -1386,7 +1390,16 @@ def write_nav(md_catalog, modules) -> None:
             if (DOCS_DIR / P / _pb).exists():
                 available[_pb] = f"{P}{_pb}"
         index_base = "Interview_Guide_Overview.md"
-        placed_bases = {index_base}
+        # Pages that live in the top-level PRACTICE tab must NOT reappear here
+        # (in an explicit group OR the "More Q&A" safety net) — that's what
+        # caused the duplicate nav entries. Pre-seed them as already-placed.
+        practice_tab_bases = {
+            "Interview_Practice.md",
+            "Interview_Why_Interactive.md",
+            "Interview_Master_Simulator.md",
+            "Interview_Progress.md",
+        }
+        placed_bases = {index_base} | practice_tab_bases
 
         nav.append("  - Interview Prep:")
         # Overview page as the bare section index (icon + landing).
