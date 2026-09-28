@@ -99,7 +99,15 @@ async function getPremiumContent(slug) {
 async function listPremiumTeasers() {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return [];
+  // TEMP DIAGNOSTIC (safe: presence + lengths only, never values) — remove once verified.
+  console.log('listPremiumTeasers env:',
+    'urlSet=' + Boolean(url), 'urlLen=' + ((url || '').length),
+    'keySet=' + Boolean(key), 'keyLen=' + ((key || '').length),
+    'keyPrefix=' + ((key || '').slice(0, 3)));
+  if (!url || !key) {
+    console.error('listPremiumTeasers: missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in this deployment');
+    return [];
+  }
 
   const qs =
     `published=eq.true` +
