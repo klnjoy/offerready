@@ -24,6 +24,26 @@
   const ASK_PATH = IS_HOSTED ? "/api/ask" : "/ask";
   const AREAS_PATH = IS_HOSTED ? "/api/areas" : "/areas";
 
+  // Site base for resolving citation paths. The API returns SITE-RELATIVE paths
+  // (e.g. "GenAI-Topics/rag/index.html"); without a base they'd resolve against
+  // the current page and 404. Prefer MkDocs' scope, else derive from the URL.
+  const SITE_BASE = (function () {
+    if (window.__md_scope && window.__md_scope.pathname) {
+      return window.__md_scope.pathname.replace(/[^/]*$/, "");
+    }
+    // Derive the site root from the path (handles GitHub Pages project subpath).
+    const p = location.pathname;
+    const m = p.match(/^(\/[^/]+\/)/);           // e.g. /offerready/
+    return m ? m[1] : "/";
+  })();
+
+  // Turn a citation URL/path into something that actually navigates.
+  function resolveCitationUrl(u) {
+    if (!u) return "";
+    if (/^https?:\/\//i.test(u) || /^(mailto:|\/)/.test(u)) return u; // already absolute
+    return SITE_BASE + u.replace(/^\.?\//, "");                        // site-relative → absolute
+  }
+
   // ---- DOM ----
   const btn = document.createElement("button");
   btn.id = "kb-fab";
@@ -238,16 +258,16 @@
         html += '<div class="kb-cites"><strong>Sources</strong><ul>' +
           data.citations.map((c) => {
             // Support both new {label,url} and legacy string citations.
-            if (c && typeof c === "object") {
-              const label = escapeHtml(c.label || c.url || "");
-              const url = c.url ? escapeHtml(c.url) : "";
-              return url
-                ? `<li><a href="${url}">${label}</a></li>`
-                : `<li>${label}</li>`;
-            }
-            return "<li>" + escapeHtml(c) + "</li>";
+            let label, rawUrl;
+            if (c && typeof c === "object") { label = c.label || c.url || ""; rawUrl = c.url || ""; }
+            else { label = String(c); rawUrl = ""; }
+            label = escapeHtml(label);
+            const href = resolveCitationUrl(rawUrl);
+            return href
+              ? `<li><a href="${escapeHtml(href)}" target="_blank" rel="noopener">${label} <span class="kb-cite-go" aria-hidden="true">\u2197</span></a></li>`
+              : `<li>${label}</li>`;
           }).join("") +
-          "</ul></div>";
+          "</ul><div class=\"kb-cites-hint\">Opens the full page in a new tab.</div></div>";
       }
       const tag = data.used_llm ? "LLM" : "from KB";
       html += `<div class="kb-tag">${tag} · area: ${escapeHtml(data.area || "all")}</div>`;

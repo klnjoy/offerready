@@ -830,6 +830,17 @@ def write_index(md_catalog, modules) -> None:
         "",
         "</div>",
         "",
+        "## Start with the job",
+        "",
+        "Most prep starts with content. **OfferReady starts with the job.** Paste a "
+        "job description below and get a role analysis, a readiness view, likely "
+        "gaps, and a preparation plan that links straight into the study material "
+        "— free, right here.",
+        "",
+        '<div id="analyze-app" markdown="0">',
+        '  <p><em>Loading the analyzer\u2026</em></p>',
+        "</div>",
+        "",
         "## Choose your target role",
         "",
         "Each role page routes you through the right depth, in the right order.",
@@ -877,16 +888,15 @@ def write_index(md_catalog, modules) -> None:
         "- **Handle the production incident** — [Production Incident Interviews](Personal-SourceCode/Interview_Production_Incidents.md).",
         "- **Answer the follow-up \u201cwhy?\u201d** — [The Interviewer Keeps Asking Why](Personal-SourceCode/Interview_Why_Chains.md).",
         "",
-        "## See it in action",
+        "## See a worked example",
         "",
-        "Most prep starts with content. **OfferReady starts with the job.** Paste a "
-        "job description and get a role analysis, a readiness view, gaps, and a "
-        "preparation plan that links straight into the study material.",
+        "Want to see the full flow before pasting your own role? The sample "
+        "walkthrough maps a real job to a focused preparation plan, end to end.",
         "",
         '<p class="home-cta" markdown>'
-        '[:material-clipboard-search-outline: Analyze My Job](Analyze/index.md){ .md-button .md-button--primary }'
+        '[:material-clipboard-check-outline: See a sample walkthrough](Sample-Walkthrough/index.md){ .md-button .md-button--primary }'
         "&nbsp;"
-        "[:material-clipboard-check-outline: See a sample walkthrough](Sample-Walkthrough/index.md){ .md-button }"
+        "[:material-clipboard-search-outline: Open the full Analyze page](Analyze/index.md){ .md-button }"
         "</p>",
         "",
         "## Architecture at a glance",

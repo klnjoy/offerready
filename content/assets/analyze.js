@@ -18,6 +18,7 @@
 
   // ---- persistence + share (no backend) --------------------------------------
   const STORE_KEY = "offerready.analysis.v1";   // last saved analysis (+ input)
+  const FEEDBACK_KEY = "offerready.feedback.v1"; // aggregate helpful/not counts
   const SHARE_PREFIX = "#a=";                    // shareable URL-hash marker
 
   // Save the most recent analysis so a returning visitor can resume it.
@@ -340,6 +341,31 @@
           meta.shared ? "You're viewing a shared plan. Nothing here is stored on a server."
                       : "Saved to this browser \u2014 it'll be here when you come back. The shareable link contains only the plan, not your resume."));
         app.appendChild(tools);
+      }
+
+      // ---- "Was this helpful?" feedback (local-only signal) ----
+      if (!meta.shared) {
+        const fb = el("div", "or-feedback");
+        fb.appendChild(el("span", "or-feedback-q", "Was this analysis helpful?"));
+        const yes = el("button", "ip-btn ip-ghost"); yes.type = "button"; yes.textContent = "\uD83D\uDC4D Yes";
+        const no = el("button", "ip-btn ip-ghost"); no.type = "button"; no.textContent = "\uD83D\uDC4E Not really";
+        const thanks = el("span", "or-feedback-thanks"); thanks.style.display = "none"; thanks.textContent = "Thanks \u2014 noted.";
+        function record(v) {
+          try {
+            const raw = localStorage.getItem(FEEDBACK_KEY);
+            const f = raw ? JSON.parse(raw) : { up: 0, down: 0 };
+            if (v === "up") f.up++; else f.down++;
+            f.updatedAt = Date.now();
+            localStorage.setItem(FEEDBACK_KEY, JSON.stringify(f));
+          } catch (e) {}
+          yes.disabled = no.disabled = true;
+          yes.style.display = no.style.display = "none";
+          thanks.style.display = "";
+        }
+        yes.addEventListener("click", () => record("up"));
+        no.addEventListener("click", () => record("down"));
+        fb.append(yes, no, thanks);
+        app.appendChild(fb);
       }
 
       if (meta.model) app.appendChild(el("p", "ip-ai-hint", "Analyzed with model: " + esc(meta.model) + "."));

@@ -1029,3 +1029,24 @@
   .or-pill, .ip-topic { border: 1px solid #999 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { font-size: 11pt; }
 }
+
+/* Chatbot "Sources" polish: make links obviously clickable + open-in-new-tab. */
+.kb-cites ul { margin: .3rem 0 0; padding-left: 1.1rem; }
+.kb-cites li { margin: .18rem 0; }
+.kb-cites a { text-decoration: none; font-weight: 600; }
+.kb-cites a:hover { text-decoration: underline; }
+.kb-cite-go { font-size: .8em; opacity: .7; }
+.kb-cites-hint { font-size: .72rem; opacity: .6; margin-top: .35rem; }
+
+/* "Was this analysis helpful?" feedback row on the Analyze result. */
+.or-feedback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  margin: .9rem 0 .25rem;
+  font-size: .9rem;
+}
+.or-feedback-q { font-weight: 600; margin-right: .2rem; }
+.or-feedback .ip-btn { margin: 0; padding: .3rem .7rem; font-size: .85rem; }
+.or-feedback-thanks { color: var(--kb-green, #22c07a); font-weight: 600; }
