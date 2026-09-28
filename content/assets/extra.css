@@ -1151,25 +1151,3 @@ a > .ig-feature.ig-link { text-decoration: none; color: inherit; }
 .ip-gaps { margin: .4rem 0 .2rem 1.1rem; }
 .ip-gaps li { margin: .15rem 0; font-size: .92rem; }
 
-/* ============================================================
-   Prominent value nav items: Practice · Interview Prep · Pricing
-   (tagged by brand.js as .or-nav-value on the top-level sidebar
-   links). These are the parts connected to product value, so they
-   get a subtle green marker + bolder label — same layout, more
-   visual weight. Mobile drawer uses the same class, so it carries
-   over to the hamburger menu too.
-   ============================================================ */
-.md-nav__link.or-nav-value {
-  font-weight: 700;
-  position: relative;
-  padding-left: .7rem;
-}
-/* Green left-marker so the eye lands on the value items first. */
-.md-nav__link.or-nav-value::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 50%; transform: translateY(-50%);
-  width: 3px; height: 1.05em;
-  background: var(--kb-green, #22c07a);
-  border-radius: 2px;
-}
