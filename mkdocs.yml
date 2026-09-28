@@ -47,11 +47,6 @@ theme:
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
-    # Render top-level sections as a horizontal tab bar so the product areas
-    # (Practice, Interview Prep, Pricing) read as prominent destinations, not
-    # buried sidebar rows. Sticky keeps them visible while scrolling.
-    - navigation.tabs
-    - navigation.tabs.sticky
     # Plain collapsible left-sidebar nav: groups start COLLAPSED and expand when
     # you click the chevron (no navigation.sections which broke drill-down, and
     # no navigation.expand which force-opened everything on every refresh).
