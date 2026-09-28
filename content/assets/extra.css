@@ -819,15 +819,19 @@
   height: 1.875rem;
   color: #fff;
 }
-/* Sit the wordmark right after the mark — remove the theme's own left
-   padding/margin so the gap is exactly the logo's margin-right above. */
+/* Sit the wordmark right after the mark. Material's default is
+   `.md-header__title{ padding:0 .8rem }` (≈12.8px) which — on top of the logo
+   button's own margin — created the large gap. Force the left padding/margin to
+   zero (with !important to beat the theme shorthand) so the only space between
+   the mark and the wordmark is the logo's 10px margin-right above. */
 .md-header__title {
-  margin-left: 0;
-  padding-left: 0;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
 }
-.md-header__title .md-header__topic {
-  padding-left: 0;
-  margin-left: 0;
+.md-header__title .md-header__topic,
+.md-header__title .md-header__topic .md-ellipsis {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
 }
 
 /* Hide page icons in the LEFT NAV only (e.g. the flag on "Start Here" and the
