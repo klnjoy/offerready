@@ -70,24 +70,30 @@ plugins:
   - search
 
 extra_css:
-  - assets/extra.css
+  # ?v=N cache-buster — bump when extra.css changes so browsers don't serve a
+  # stale cached stylesheet after a deploy.
+  - assets/extra.css?v=2
 
 extra_javascript:
   # Must load first: sets window.OFFERREADY_API_BASE + Supabase config for the
   # auth + feature scripts.
-  - assets/api-config.js
-  - assets/auth.js
-  - assets/progress-store.js
-  - assets/brand.js
-  - assets/mermaid-init.js
-  - assets/chatbot.js
-  - assets/practice.js
-  - assets/scenario.js
-  - assets/progress.js
-  - assets/why.js
-  - assets/analyze.js
-  - assets/simulator.js
-  - assets/walkthrough.js
+  # NOTE: the ?v=N query string is a cache-buster. GitHub Pages serves these
+  # assets with long cache lifetimes and stable filenames, so browsers reuse the
+  # old copy after a deploy. Bump N whenever a feature script/CSS changes so
+  # visitors always get the new version instead of a stale cached one.
+  - assets/api-config.js?v=2
+  - assets/auth.js?v=2
+  - assets/progress-store.js?v=2
+  - assets/brand.js?v=2
+  - assets/mermaid-init.js?v=2
+  - assets/chatbot.js?v=2
+  - assets/practice.js?v=2
+  - assets/scenario.js?v=2
+  - assets/progress.js?v=2
+  - assets/why.js?v=2
+  - assets/analyze.js?v=2
+  - assets/simulator.js?v=2
+  - assets/walkthrough.js?v=2
 
 markdown_extensions:
   - admonition
