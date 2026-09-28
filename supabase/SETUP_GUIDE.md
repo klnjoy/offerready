@@ -98,9 +98,9 @@ After CI rebuilds, the sign-in UI on the site becomes live.
 
 ---
 
-## Step 7 — Seed the scenario into the database
+## Step 7 — Seed the scenarios into the database
 
-Run this locally (needs Node 18+). It loads `supabase/premium/scenarios/*.json`
+Run this locally (needs Node 18+). It loads **every** `supabase/premium/scenarios/*.json`
 into the `premium_content` table using your service-role key. **Do not commit
 the key** — just set it for this one command:
 
@@ -110,9 +110,14 @@ $env:SUPABASE_URL="https://your-project-ref.supabase.co"
 $env:SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 node supabase/premium/seed_scenarios.js
 ```
-Expected: `upserted: fde-secure-rag` then `Done.`
+Expected: one `upserted: <slug>` line per scenario (currently **7**), then `Done.`:
+`ai-architect-multitenant-platform`, `ai-engineer-rag-feature`,
+`ai-security-prompt-injection`, `cloud-platform-incident`,
+`data-architect-snowflake-cortex`, `devsecops-multiagent-sdlc`, `fde-secure-rag`.
 
-Verify in Supabase **Table Editor → premium_content** — one row, `published = true`.
+Verify in Supabase **Table Editor → premium_content** — **7 rows**, each
+`published = true`. Re-running the seed is safe (it upserts by slug), so add a
+new scenario JSON later and just re-run this command.
 
 ---
 
@@ -121,12 +126,28 @@ Verify in Supabase **Table Editor → premium_content** — one row, `published 
 1. On the live site, use the sign-in form to **Create account** with a test
    email + password (Step 5.4 let you skip confirmation).
 2. Supabase → **Authentication → Users** → copy your new user's **UID**.
-3. Supabase → **SQL Editor** → run (paste your UID):
+3. Supabase → **SQL Editor** → run (paste your UID). Each scenario requires a
+   specific feature key, so grant the **full Pro bundle** to unlock all of them:
    ```sql
    insert into public.entitlements (user_id, feature, status)
-   values ('PASTE-USER-UID-HERE', 'fde_pro', 'active')
+   select 'PASTE-USER-UID-HERE', f.key, 'active'
+   from public.features f
    on conflict (user_id, feature) do update set status = 'active';
    ```
+   (To test the *upgrade gate* on a specific scenario instead, grant just one
+   key — e.g. `fde_pro` unlocks only the FDE scenario; the others stay gated.)
+
+Which scenario needs which feature:
+
+| Scenario | `required_entitlement` |
+|---|---|
+| FDE Secure RAG | `fde_pro` |
+| AI Engineer RAG feature | `interview_pro` |
+| AI Architect multi-tenant platform | `architecture_pro` |
+| AI Security prompt injection | `architecture_pro` |
+| DevSecOps multi-agent SDLC | `architecture_pro` |
+| Data Architect Snowflake Cortex | `system_design_pro` |
+| Cloud/Platform incident | `incident_pro` |
 
 This manually grants Pro to your test user — so you can verify the gate without
 any payment.
@@ -141,7 +162,7 @@ On the live site, open **Practice** (the scenarios page):
 |---|---|---|
 | **Signed out** | See the teaser + a "Sign in" gate; the full tree does NOT load | anon → 401, fail-closed |
 | **Signed in, WITHOUT the entitlement** (delete the row from Step 8, or use a 2nd account) | See teaser + "OfferReady Pro" upgrade gate; full tree does NOT load | authenticated → 403 |
-| **Signed in, WITH `fde_pro`** | The full scenario runs (Approach → Why → … → Reflection) | entitled → 200 |
+| **Signed in, WITH the matching entitlement** (e.g. the full bundle from Step 8) | The full scenario runs (Approach → Why → … → Reflection) | entitled → 200 |
 
 Extra checks (spec §29):
 - Open DevTools → Application → Local Storage and set a fake `isPro` flag →

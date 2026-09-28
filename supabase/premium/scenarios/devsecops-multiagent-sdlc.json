@@ -1,0 +1,118 @@
+{
+  "slug": "devsecops-multiagent-sdlc",
+  "title": "Secure a Multi-Agent AI Coding Pipeline (DevSecOps / Enterprise AI Architect)",
+  "role": "Enterprise AI Architect / DevSecOps",
+  "category": "ai-architect",
+  "required_entitlement": "architecture_pro",
+  "estimated_minutes": 30,
+  "teaser": {
+    "setup": "Your org wants autonomous AI coding agents (plan \u2192 write code \u2192 open PRs \u2192 deploy) wired into the SDLC. Security, compliance, and platform all need to sign off. Design the guardrails and defend the hard trade-offs \u2014 how do agents ship code without becoming your biggest attack surface?",
+    "you_will_practice": [
+      "Where agents get autonomy vs where a human gates the change",
+      "Securing the agent supply chain: prompts, tools, secrets, and models",
+      "DevSecOps controls in an agent-driven pipeline (SAST/DAST, policy-as-code)",
+      "Compliance evidence and audit for AI-authored changes",
+      "Responding to a prompt-injection-driven pipeline compromise"
+    ],
+    "node_titles": ["Approach", "Autonomy boundary", "Injection risk", "Supply chain", "Shift-left controls", "Secrets & least privilege", "Compliance evidence", "Incident", "Reflection", "Next"],
+    "sample_node": {
+      "id": "n2",
+      "kind": "choice",
+      "prompt": "How much autonomy does a coding agent get in the pipeline?",
+      "model": "Give agents autonomy to propose (write code, open a PR, run tests in a sandbox) but gate the state changes \u2014 merge to protected branches, prod deploy, IAM/policy edits \u2014 behind human approval and the same required checks a human PR faces. Autonomy scales the cheap, reversible work; a human (or a stricter policy gate) owns the irreversible, high-blast-radius steps. The boundary is drawn by reversibility and blast radius, not by trust in the model.",
+      "signals": ["separates propose from irreversible actions", "gates by reversibility / blast radius", "agent PRs face the same checks as humans"]
+    }
+  },
+  "start": "n1",
+  "nodes": {
+    "n1": {
+      "id": "n1", "kind": "decision",
+      "prompt": "Before any pipeline diagram: what do you clarify, and what's the shape of a secure agent-driven SDLC in a paragraph?",
+      "model": "Clarify: which SDLC steps agents touch (design, code, review, deploy?), what's regulated (SOX/change control, PII/HIPAA), the blast radius of a bad change, and who is accountable for an AI-authored change. Shape: agents run in a sandboxed, least-privilege execution environment; they can propose changes as PRs but every change flows through the same gated pipeline as human work \u2014 SAST/secret-scan/dependency-scan, required review, policy-as-code, signed artifacts \u2014 with full provenance that the change was AI-authored. A human or a hard policy gate owns merges to protected branches and prod. Treat the agent's tools, prompts, and retrieved context as an attack surface.",
+      "signals": ["clarifies regulated steps + accountability first", "agents propose, the gated pipeline enforces", "provenance that a change is AI-authored"],
+      "next": "n2"
+    },
+    "n2": {
+      "id": "n2", "kind": "choice",
+      "prompt": "How much autonomy does a coding agent get in the pipeline?",
+      "options": [
+        { "label": "Propose only: agent writes code + opens PRs, humans gate merges/deploys", "next": "n3", "note": "scales cheap work, humans own irreversible steps" },
+        { "label": "Fully autonomous: agent merges and deploys to prod on green tests", "next": "n2b", "note": "fast, but no gate on irreversible/high-blast-radius changes" },
+        { "label": "Agent has admin/CI credentials so it can 'fix things end to end'", "next": "n2b", "note": "dangerous \u2014 a compromised agent = compromised pipeline" }
+      ]
+    },
+    "n2b": {
+      "id": "n2b", "kind": "why",
+      "prompt": "Defend or correct that autonomy choice under a security review.",
+      "model": "Full autonomy to merge and deploy \u2014 or handing an agent standing admin/CI credentials \u2014 fails review: a single prompt-injection or model mistake now ships to prod, and the agent becomes the highest-value target in your estate. Correct it: agents get least-privilege, short-lived credentials scoped to propose-and-test in a sandbox; irreversible/high-blast-radius steps (protected-branch merge, prod deploy, IAM changes) stay behind human approval or a hard policy gate, with the same required checks a human faces. Draw the boundary by reversibility and blast radius, never by how much you trust the model.",
+      "signals": ["irreversible steps stay gated", "least-privilege, short-lived agent credentials", "boundary = reversibility/blast radius, not trust"],
+      "next": "n3"
+    },
+    "n3": {
+      "id": "n3", "kind": "constraint", "constraint_type": "security",
+      "prompt": "An agent reads an issue, a dependency's README, and CI logs as context. How do you stop a prompt-injection from turning the agent into an insider threat?",
+      "model": "Treat ALL retrieved/tool content (issues, repo files, dependency docs, logs, web) as untrusted data, never instructions \u2014 the classic injection defense. Keep the agent least-privilege so even a hijacked agent can only propose, not merge/deploy/exfiltrate. Constrain tools to an allowlist with typed, validated arguments; no arbitrary shell/network egress. Run the agent in an isolated sandbox with egress controls so it can't phone home with secrets. Scan agent-authored diffs for injected secrets/backdoors before they reach review. Log every tool call for audit.",
+      "signals": ["external content is data, not instructions", "least-privilege limits blast radius of a hijack", "tool allowlist + sandbox + egress control + audit"],
+      "next": "n4"
+    },
+    "n4": {
+      "id": "n4", "kind": "decision",
+      "prompt": "Security asks about the agent's own supply chain: prompts, tools, and the model. What do you lock down?",
+      "model": "Version and review system prompts and tool definitions like code (in git, PR-reviewed) \u2014 a prompt change is a security-relevant change. Pin and vet the models/providers behind a gateway; no team points an agent at an unvetted model. Pin tool and dependency versions; scan them (the agent shouldn't be able to add an arbitrary dependency without the same dependency-scan a human faces). Sign build artifacts and generate an SBOM so an AI-authored build is as traceable as any other. Rotate the agent's credentials and keep them short-lived.",
+      "signals": ["prompts + tool defs are versioned, reviewed code", "models pinned/vetted behind a gateway", "dependency scanning + SBOM + signed artifacts"],
+      "next": "n5"
+    },
+    "n5": {
+      "id": "n5", "kind": "constraint", "constraint_type": "production",
+      "prompt": "Where do you shift security left so a bad agent change is caught before prod, not after?",
+      "model": "Same gated pipeline for agent and human PRs: SAST + secret scanning + dependency/SCA scan on every diff, DAST against a staging deploy, and policy-as-code (OPA/Conftest, IaC scanning) so a change that violates a control is blocked automatically rather than caught in review. Required status checks + required reviewers on protected branches. Canary/progressive deploy with automated rollback so even an approved-but-bad change is limited and reversible. The controls are automated gates, not a reviewer's good intentions.",
+      "signals": ["SAST/secret/SCA + DAST in the pipeline", "policy-as-code blocks violations automatically", "canary + automated rollback limits a bad change"],
+      "next": "n6"
+    },
+    "n6": {
+      "id": "n6", "kind": "constraint", "constraint_type": "security",
+      "prompt": "How do you handle secrets and permissions so the agent never becomes a credential-harvesting machine?",
+      "model": "The agent never sees long-lived secrets: use short-lived, workload-scoped credentials (OIDC federation to CI, a secrets manager with just-in-time, narrowly-scoped tokens) issued per run and revoked after. Least privilege \u2014 the agent's identity can open a PR and run sandboxed tests, nothing more; deploy/IAM permissions belong to the gated deploy stage, not the agent. Secret-scan agent output so it can't embed a leaked key in a diff. Egress controls prevent exfiltration. Every credential use is audited.",
+      "signals": ["short-lived, scoped credentials (OIDC/JIT), no standing secrets", "agent identity is least-privilege (propose, not deploy)", "secret-scan output + egress control + audit"],
+      "next": "n7"
+    },
+    "n7": {
+      "id": "n7", "kind": "constraint", "constraint_type": "compliance",
+      "prompt": "Audit and compliance need to sign off on AI-authored changes (change control, SOX, regulated data). What evidence do you produce?",
+      "model": "Provenance on every change: who/what authored it (agent + version + prompt version), the model used, the inputs/context, the reviews and required checks that passed, and the approver of any gated step \u2014 an immutable, auditable trail. Change-control records treat an agent PR like any change: linked ticket, reviewer, test evidence, rollback plan. Data handling: agents working on regulated code/data run under the same classification, masking, and residency rules; retrieved context is logged. Human accountability is explicit \u2014 an approver owns the merge, so 'the AI did it' is never the answer. Map controls to the framework (SOX change control, SOC 2, etc.).",
+      "signals": ["immutable provenance + audit trail per change", "agent changes go through normal change-control", "explicit human accountability + framework mapping"],
+      "next": "n8"
+    },
+    "n8": {
+      "id": "n8", "kind": "constraint", "constraint_type": "production",
+      "prompt": "Incident: a poisoned dependency README injected instructions, an agent opened a PR that quietly weakened an auth check, and it slipped through into prod. Walk the response.",
+      "model": "Contain first: roll back the deploy (canary/automated rollback), revoke the agent's credentials, and freeze agent-authored merges. Assess blast radius: what shipped, what data/auth was exposed, which other agent PRs share the poisoned context. Eradicate: remove the poisoned dependency, patch the auth check, rotate any exposed secrets. Then the real fix is systemic, not 'tell the agent to be careful': the injection worked because external content was trusted and a bad change wasn't gated \u2014 so tighten tool/egress controls, add the missing policy-as-code check and required auth-path review, and add a regression test. Blameless postmortem, and update the threat model. Prevention is a control, not a prompt.",
+      "signals": ["contain (rollback + revoke) before root-causing", "systemic fix: gating/policy/controls, not 'prompt the agent better'", "blameless postmortem + updated threat model + regression test"],
+      "next": "n9"
+    },
+    "n9": {
+      "id": "n9", "kind": "reflection",
+      "prompt": "Where did you grant the agent power without naming the control that contains it, the trade-off, or how you'd prove it to an auditor?",
+      "checklist": [
+        "I drew the autonomy boundary by reversibility/blast radius, not model trust",
+        "I treated all retrieved/tool content as untrusted data, not instructions",
+        "I versioned and reviewed prompts + tool definitions like code",
+        "I gave the agent least-privilege, short-lived credentials only",
+        "I made security an automated gate (SAST/SCA/policy-as-code), not a hope",
+        "I produced an auditable provenance trail with explicit human accountability",
+        "I fixed the incident systemically, not by 'prompting the agent better'"
+      ],
+      "next": "n10"
+    },
+    "n10": {
+      "id": "n10", "kind": "next_drill",
+      "prompt": "Strong DevSecOps defense. Go deeper:",
+      "recommend": [
+        { "label": "AI Security \u2014 prompt injection scenario", "path": "Practice-Scenarios/index.html" },
+        { "label": "Enterprise & Security reference architectures", "path": "Enterprise/reference-architectures/index.html" },
+        { "label": "DevOps for AI \u2014 CI/CD, IaC, canary/rollback", "path": "GenAI-Topics/devops-ai/index.html" },
+        { "label": "Security & Governance guardrails", "path": "Enterprise/security-architecture/index.html" }
+      ]
+    }
+  }
+}
