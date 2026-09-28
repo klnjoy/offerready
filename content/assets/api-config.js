@@ -25,8 +25,8 @@
   // Row Level Security, so they are safe to ship to the browser. NEVER put the
   // service-role key here. Paste your project values, then commit + push to
   // turn on sign-in. Left as placeholders => auth UI stays in a disabled state.
-  var SUPABASE_URL = "https://your-project-ref.supabase.co";
-  var SUPABASE_ANON_KEY = "your-supabase-anon-publishable-key";
+  var SUPABASE_URL = "https://qelqtqgypwzduauiudbg.supabase.co";
+  var SUPABASE_ANON_KEY = "sb_publishable_J-_TcxztkDSld8jSqTcmMQ_cBniHoaT";
   if (/^https:\/\/.+\.supabase\.co/.test(SUPABASE_URL) &&
       SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.indexOf("your-") !== 0) {
     window.OFFERREADY_SUPABASE_URL = SUPABASE_URL.replace(/\/$/, "");
