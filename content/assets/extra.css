@@ -621,6 +621,7 @@
   border-radius: 0.6rem; background: color-mix(in srgb, var(--md-accent-fg-color) 6%, transparent);
 }
 .or-raterow .ip-ai-hint { margin: 0.6rem 0 0; }
+.ip-inprogress { color: var(--md-accent-fg-color); font-size: 0.78rem; font-weight: 600; }
 
 /* AI grade (local only) */
 .ip-ai { margin-top: 1rem; }

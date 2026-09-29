@@ -63,6 +63,37 @@
     },
 
     /**
+     * Record OR update a session in place, identified by `key`. Used for
+     * live/partial progress (e.g. a multi-step scenario) so leaving midway
+     * still shows on the dashboard and resuming updates the same row instead
+     * of piling up duplicates. Same shape as record() plus:
+     *   key:      stable identifier for this run (e.g. "scenario:<slug>")
+     *   partial:  true while in progress, false/absent when completed
+     */
+    upsert: function (s) {
+      if (!s || typeof s !== "object" || !s.key) return this.record(s);
+      var rec = {
+        key: s.key,
+        when: s.when || new Date().toLocaleString(),
+        mode: s.mode || "practice",
+        track: s.track || "",
+        topic: s.topic || "",
+        score: typeof s.score === "number" ? s.score : 0,
+        n: typeof s.n === "number" ? s.n : 0,
+        total: typeof s.total === "number" ? s.total : 0,
+        partial: !!s.partial,
+        topics: s.topics || {},
+      };
+      var h = readJSON(HISTORY_KEY, []);
+      var i = -1;
+      for (var j = 0; j < h.length; j++) { if (h[j] && h[j].key === rec.key) { i = j; break; } }
+      if (i >= 0) h.splice(i, 1);   // remove old copy of this run
+      h.unshift(rec);               // newest first
+      writeJSON(HISTORY_KEY, h.slice(0, MAX_HISTORY));
+      return rec;
+    },
+
+    /**
      * Log a non-scored activity (e.g. an Analyze run) so the dashboard can show
      * "you analyzed X — drill these" and recommend the next reps.
      * @param {object} e { type, label, role, gaps, when }

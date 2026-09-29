@@ -477,7 +477,31 @@
       return wrap;
     }
 
-    function advance(next) { state.current = next; if (!next) return renderSummary(); renderNode(); }
+    function advance(next) {
+      // Record live progress so a partly-finished scenario still shows on the
+      // dashboard (e.g. "4 of 10 defended") even if you leave before the end.
+      persistProgress(true);
+      state.current = next;
+      if (!next) return renderSummary();
+      renderNode();
+    }
+
+    // Write/refresh a single in-progress row for this run (keyed by slug).
+    function persistProgress(partial) {
+      try {
+        if (!window.OfferReadyProgress || !window.OfferReadyProgress.upsert) return;
+        var ratings = Object.keys(state.ratings).map(function (k) { return state.ratings[k]; });
+        if (!ratings.length) return;
+        var avg = ratings.reduce(function (a, b) { return a + b; }, 0) / ratings.length;
+        var pct = Math.round((avg / 5) * 100);
+        window.OfferReadyProgress.upsert({
+          key: "scenario:" + state.slug,
+          mode: "scenario", track: "Scenarios", topic: state.title || state.slug,
+          score: pct, n: ratings.length, total: state.total || 0, partial: !!partial,
+          topics: state.title ? { [state.title]: pct } : {},
+        });
+      } catch (e) {}
+    }
 
     // Return to the correct list depending on whether a backend is present.
     function goList() { if (API) renderList(); else renderOfflineList(); }
@@ -486,6 +510,7 @@
       var ratings = Object.keys(state.ratings).map(function (k) { return state.ratings[k]; });
       var avg = ratings.length ? ratings.reduce(function (a, b) { return a + b; }, 0) / ratings.length : 0;
       var pct = Math.round((avg / 5) * 100);
+      persistProgress(false);       // mark the dashboard row complete (in place)
       persistSession(pct, ratings.length);
       app.innerHTML = "";
       var wrap = el("div", "ip-card ip-summary");
@@ -509,16 +534,9 @@
     function persistSession(score, n) {
       var rec = { slug: state.slug, score: score, n: n, mode: "scenario",
                   category: state.slug, completed: true, when: new Date().toISOString() };
-      // Also record into the shared Progress store so scenario runs show on the
-      // dashboard alongside Practice + Why (reuse of the shared store).
-      try {
-        if (window.OfferReadyProgress) {
-          window.OfferReadyProgress.record({
-            mode: "scenario", track: "Scenarios", topic: state.title || state.slug,
-            score: score, n: n, topics: state.title ? { [state.title]: score } : {},
-          });
-        }
-      } catch (e) {}
+      // Note: the shared Progress dashboard row is written by persistProgress()
+      // (keyed upsert) so partial + completed runs share one row. This function
+      // only handles the durable backend write below.
       // Signed in -> Supabase practice_sessions (own row via RLS). Else local.
       if (window.OfferReadyAuth) {
         window.OfferReadyAuth.getAccessToken().then(function (tok) {

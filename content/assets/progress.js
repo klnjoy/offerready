@@ -85,7 +85,10 @@
       const MODE_LABEL = { practice: "Practice", flashcard: "Flashcards", exam: "Timed Exam", why: "Keep Asking Why", scenario: "Scenario" };
       h.slice(0, 15).forEach((s) => {
         const modeLbl = MODE_LABEL[s.mode] || (s.mode || "Practice");
-        t += `<tr><td>${esc(s.when || "")}</td><td>${esc(modeLbl)}</td><td>${esc(s.track || "")}</td><td>${esc(s.topic || "")}</td><td>${s.n || 0}</td><td>${s.score || 0}%</td></tr>`;
+        // Show "4 / 10" when we know the total, and flag runs still in progress.
+        const count = s.total ? `${s.n || 0} / ${s.total}` : (s.n || 0);
+        const topicCell = esc(s.topic || "") + (s.partial ? ' <span class="ip-inprogress">· in progress</span>' : "");
+        t += `<tr><td>${esc(s.when || "")}</td><td>${esc(modeLbl)}</td><td>${esc(s.track || "")}</td><td>${topicCell}</td><td>${count}</td><td>${s.score || 0}%</td></tr>`;
       });
       t += "</tbody></table>";
       root.appendChild(el("div", null, t));
