@@ -46,6 +46,34 @@
     } catch (e) {}
   }
 
+  // Map an analysis to the best-matching Defend scenario category (matches
+  // scenario.js CATEGORY_LABELS). Used to route the user from their analyzed
+  // job straight into the relevant defend-your-decision scenarios.
+  function inferScenarioCategory(analysis, role) {
+    var hay = ((role || "") + " " + ((analysis && analysis.seniority) || "") + " " +
+      ((analysis && analysis.roleSummary) || "") + " " +
+      (((analysis && analysis.coreSkills) || []).map(function (s) { return typeof s === "string" ? s : (s && s.name); }).join(" ")) + " " +
+      (((analysis && analysis.technologies) || []).join(" "))).toLowerCase();
+    // Order matters: most specific role signals first.
+    if (/\bsecurity|prompt injection|guardrail|threat|owasp|zero.?trust\b/.test(hay)) return "ai-security";
+    if (/\bforward deployed|forward-deployed|\bfde\b|customer-facing|client-facing|solutions engineer\b/.test(hay)) return "fde";
+    if (/\bdata architect|snowflake|databricks|warehouse|lakehouse|cortex|etl|data platform|analytics engineer\b/.test(hay)) return "data-architect";
+    if (/\bcloud|platform|devops|kubernetes|infrastructure|sre|reliability|terraform\b/.test(hay)) return "cloud-platform";
+    if (/\barchitect|architecture|system design|multi-tenant|enterprise\b/.test(hay)) return "ai-architect";
+    if (/\bai engineer|genai|ml engineer|rag|agent|llm|nlp\b/.test(hay)) return "ai-engineer";
+    return null; // no confident match → don't force a filter
+  }
+
+  // Persist a small "defend role" signal so the Defend page can auto-filter to
+  // the analyzed job. Only the category + a display role — no JD/resume text.
+  function saveDefendRole(category, role) {
+    try {
+      if (!category) return;
+      localStorage.setItem("offerready.defendRole.v1",
+        JSON.stringify({ category: category, role: role || "", when: Date.now() }));
+    } catch (e) {}
+  }
+
   // Unicode-safe base64 for the shareable hash.
   function b64encode(str) { return btoa(unescape(encodeURIComponent(str))); }
   function b64decode(str) { return decodeURIComponent(escape(atob(str))); }
@@ -190,6 +218,8 @@
         // Log an activity so the Progress dashboard can close the loop:
         // "you analyzed X — drill these gaps". No JD/resume text is stored.
         logAnalyzeActivity(d.analysis, payload.targetRole);
+        // Remember the matched Defend role so the Defend page filters to this job.
+        saveDefendRole(inferScenarioCategory(d.analysis, payload.targetRole), payload.targetRole || (d.analysis && d.analysis.seniority) || "");
         renderResult(d.analysis, { model: d.model, input: { targetRole: payload.targetRole, jobDescription: payload.jobDescription } });
       } catch (e) {
         stop && stop();
@@ -310,6 +340,29 @@
         });
       } else {
         section("Relevant OfferReady resources", () => el("p", "ip-ai-hint", "No matching OfferReady resource found for this role's skills."));
+      }
+
+      // DEFEND A DECISION FOR THIS ROLE — route the analyzed job straight into
+      // the matching defend-your-decision scenarios (the paid differentiator).
+      if (!meta.shared) {
+        const CAT_LABELS = {
+          "ai-engineer": "AI / GenAI Engineer", "ai-architect": "AI Architect",
+          "data-architect": "Data Architect", "cloud-platform": "Cloud / Platform",
+          "ai-security": "AI Security", "fde": "Forward Deployed",
+        };
+        const cat = inferScenarioCategory(a, (meta.input && meta.input.targetRole) || "");
+        section("Defend your decisions for this role", () => {
+          const w = el("div", "ip-model");
+          w.appendChild(el("p", null,
+            "The interview that decides the offer is where you <strong>defend</strong> your design under follow-ups. " +
+            (cat ? "We matched this job to the <strong>" + esc(CAT_LABELS[cat] || cat) + "</strong> scenarios." :
+                   "Pick a scenario for your target role.")));
+          const go = el("a", "ip-btn");
+          go.href = base + "Practice-Scenarios/index.html" + (cat ? "?role=" + encodeURIComponent(cat) : "");
+          go.textContent = cat ? "Defend a " + (CAT_LABELS[cat] || cat) + " scenario \u2192" : "Open Defend scenarios \u2192";
+          w.appendChild(go);
+          return w;
+        });
       }
 
       // NEXT STEP + CTA

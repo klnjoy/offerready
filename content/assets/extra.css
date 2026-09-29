@@ -1361,3 +1361,14 @@ a.ig-feature.ig-link .ig-d {
   border-color: var(--kb-green, #22c07a); font-weight: 600;
 }
 .or-onboard-go { display: inline-block; margin: .6rem 0 .2rem; }
+
+/* ============================================================
+   Defend page: "matched to your analyzed job" note (scenario.js)
+   ============================================================ */
+.or-scn-match {
+  border: 1px solid var(--kb-green, #22c07a);
+  background: rgba(34, 192, 122, .08);
+  border-radius: .5rem; padding: .55rem .8rem; margin: .25rem 0 .75rem;
+  font-size: .92rem;
+}
+.or-scn-match a.or-scn-clear { margin-left: .3rem; }

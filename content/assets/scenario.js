@@ -55,6 +55,42 @@
 
     var allScenarios = [];   // cached list for client-side filtering
     var activeCat = "all";
+    var matchedRole = null;  // role label when the list was auto-filtered to the analyzed job
+
+    // Job-first: if the user arrived from an analyzed job (Analyze page adds
+    // ?role=<category>, or stored offerready.defendRole.v1), pre-select that
+    // role's filter so Defend shows scenarios for THEIR job, not a generic list.
+    (function preselectRole() {
+      var role = null, roleTitle = null;
+      try {
+        var qs = new URLSearchParams(location.search || "");
+        role = qs.get("role");
+      } catch (e) {}
+      if (!role) {
+        try {
+          var saved = JSON.parse(localStorage.getItem("offerready.defendRole.v1") || "null");
+          if (saved && saved.category) { role = saved.category; roleTitle = saved.role || null; }
+        } catch (e) {}
+      }
+      if (role && CATEGORY_LABELS[role]) {
+        activeCat = role;
+        matchedRole = roleTitle || CATEGORY_LABELS[role];
+      }
+    })();
+
+    // Hint shown above the list when it's filtered to the analyzed job.
+    function matchNote() {
+      if (!matchedRole || activeCat === "all") return null;
+      var p = el("p", "or-scn-match",
+        "\uD83C\uDFAF Showing scenarios matched to your analyzed role: <strong>" + esc(matchedRole) +
+        "</strong>. <a href=\"#\" class=\"or-scn-clear\">Show all roles</a>");
+      var link = p.querySelector(".or-scn-clear");
+      if (link) link.addEventListener("click", function (e) {
+        e.preventDefault(); activeCat = "all"; matchedRole = null;
+        if (API) paintList(); else renderOfflineList();
+      });
+      return p;
+    }
 
     // ---- Bundled offline scenarios (no backend needed) ---------------------
     // Full defend-your-decision trees shipped in the static site so the page is
@@ -194,6 +230,8 @@
         "Practice the decisions senior AI, data, and cloud engineers defend under pressure. " +
         "Pick one, make the call, and hold your reasoning as the interviewer keeps pushing \u2014 why, trade-off, constraint, incident. Your ratings feed the Progress dashboard."));
 
+      var offNote = matchNote(); if (offNote) app.appendChild(offNote);
+
       var cats = ["all"].concat(uniqueCats(OFFLINE_SCENARIOS));
       var chips = el("div", "or-scn-filter");
       cats.forEach(function (c) {
@@ -245,6 +283,8 @@
       app.appendChild(el("h2", null, "Defend-your-decision scenarios"));
       app.appendChild(el("p", "ip-ai-hint",
         "Practice the decisions senior AI, data, and cloud engineers defend under pressure \u2014 across roles. Preview any scenario free; open the full tree with OfferReady Pro."));
+
+      var note = matchNote(); if (note) app.appendChild(note);
 
       // Role filter chips (built from the categories actually present).
       var cats = ["all"].concat(uniqueCats(allScenarios));
