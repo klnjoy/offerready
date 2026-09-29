@@ -1313,3 +1313,17 @@ a > .ig-feature.ig-link { text-decoration: none; color: inherit; }
 .or-job-date { color: var(--md-default-fg-color--light); font-size: .8rem; }
 .or-job-actions { display: flex; gap: .5rem; margin-top: .25rem; }
 .or-save-msg { display: block; margin-top: .5rem; font-size: .9rem; }
+
+/* ============================================================
+   Homepage "How it works" flow strip (write_index .or-flow)
+   ============================================================ */
+.or-flow {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .4rem;
+  font-size: .95rem; line-height: 1.9;
+}
+.or-flow span {
+  display: inline-block; padding: .2rem .6rem; border-radius: 999px;
+  background: var(--md-code-bg-color, #f2f4f8);
+  border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
+  font-weight: 600; white-space: nowrap;
+}

@@ -805,20 +805,18 @@ def write_index(md_catalog, modules) -> None:
         "",
         "# OfferReady",
         "",
-        '<p class="or-hero-eyebrow">Learn · Build · Defend · Interview</p>',
+        '<p class="or-hero-eyebrow">Job description &rarr; interview readiness</p>',
         "",
-        '<p class="home-hero"><strong>Production AI engineering interview '
-        "practice</strong> for people who need to <strong>defend real engineering "
-        "decisions</strong>. Stop just reading interview questions — practice the "
-        "decisions senior AI engineers are expected to defend under pressure. "
-        "OfferReady takes you <strong>Learn &rarr; Build &rarr; Defend &rarr; "
-        "Interview</strong>: learn the technology, build the system, defend your "
-        "decisions under follow-up questions, and master the interview.</p>",
+        '<p class="home-hero"><strong>Turn a job description into a personalized '
+        "interview preparation plan.</strong> Paste the role you\u2019re actually "
+        "applying for and OfferReady maps its requirements, finds your gaps, and "
+        "builds a plan to <strong>practice the skills and defend the technical "
+        "decisions</strong> that matter for that job.</p>",
         "",
         '<p class="home-cta" markdown>'
-        '[:material-sword-cross: Practice defending decisions](Personal-SourceCode/Interview_Why_Chains.md){ .md-button .md-button--primary }'
+        '[:material-clipboard-search-outline: Analyze My Job](#start-with-your-job){ .md-button .md-button--primary }'
         "&nbsp;"
-        "[:material-school: Start learning (free)](Start-Here/index.md){ .md-button }"
+        "[:material-briefcase-outline: My Jobs](My-Jobs/index.md){ .md-button }"
         "&nbsp;"
         "[:material-tag-outline: See Free vs Pro](assets/pricing.html){ .md-button }"
         "</p>",
@@ -831,12 +829,24 @@ def write_index(md_catalog, modules) -> None:
         "",
         "</div>",
         "",
-        "## Start with the job",
+        "## How OfferReady works",
         "",
-        "Most prep starts with content. **OfferReady starts with the job.** Paste a "
-        "job description below and get a role analysis, a readiness view, likely "
-        "gaps, and a preparation plan that links straight into the study material "
-        "— free, right here.",
+        "Most prep starts with generic content. OfferReady starts with **your "
+        "target job** and walks a single loop:",
+        "",
+        '<p class="or-flow">'
+        "<span>Paste job</span> &rarr; <span>Analyze role</span> &rarr; "
+        "<span>Find gaps</span> &rarr; <span>Prep plan</span> &rarr; "
+        "<span>Practice</span> &rarr; <span>Defend decisions</span> &rarr; "
+        "<span>Mock interview</span> &rarr; <span>Track progress</span>"
+        "</p>",
+        "",
+        "## Start with your job",
+        "",
+        "Paste a job description below and get a role analysis, a readiness view, "
+        "likely gaps, and a preparation plan that links straight into the study "
+        "material — free, right here. Save it to **[My Jobs](My-Jobs/index.md)** "
+        "to track your preparation over time.",
         "",
         '<div id="analyze-app" markdown="0">',
         '  <p><em>Loading the analyzer\u2026</em></p>',
