@@ -196,3 +196,58 @@ flow is **verified end-to-end** — the first true Pro verification.
 - "Confirm email" is off for testing — turn it back on before launch.
 - The existing flagship prose (Why-Chains, Incidents, Requirements→Production)
   is still public; converting it to gated scenarios is a later step.
+
+---
+
+## Phase 4 — Stripe subscriptions (make Pro self-serve)
+
+This turns the pricing page's **Upgrade to Pro** button into a real Stripe
+Checkout that grants the Pro entitlement bundle automatically via webhook. Use
+**test mode** first. Until you do this, the button gracefully falls back to the
+email waitlist, so nothing breaks.
+
+### 1 — Create the product + price (Stripe, test mode)
+1. Stripe Dashboard → toggle **Test mode** (top right).
+2. **Products → Add product** → name "OfferReady Pro" → add a **recurring**
+   monthly price. Save.
+3. Copy the **Price ID** (`price_...`).
+
+### 2 — Get your API keys
+Stripe → **Developers → API keys** (test): copy the **Secret key** (`sk_test_...`).
+(The publishable key isn't needed — Checkout is hosted by Stripe.)
+
+### 3 — Add the webhook endpoint
+1. Stripe → **Developers → Webhooks → Add endpoint**.
+2. Endpoint URL: `https://offerready-beta.vercel.app/api/billing/webhook`
+3. Events to send: `checkout.session.completed`,
+   `customer.subscription.created`, `customer.subscription.updated`,
+   `customer.subscription.deleted`.
+4. Add endpoint, then copy the **Signing secret** (`whsec_...`).
+
+### 4 — Add the env vars in Vercel (Production + Preview), then redeploy
+| Name | Value |
+|---|---|
+| `STRIPE_SECRET_KEY` | your `sk_test_...` |
+| `STRIPE_WEBHOOK_SECRET` | your `whsec_...` |
+| `STRIPE_PRO_MONTHLY_PRICE_ID` | your `price_...` |
+| `ACCESS_UNTIL_PERIOD_END` | `true` (keep access until the paid period ends) |
+
+Redeploy so the functions pick them up.
+
+### 5 — Test the full loop
+1. Sign in on the live site (from **My Jobs**).
+2. Open **Pricing** → click **Upgrade to Pro** → you're sent to Stripe Checkout.
+3. Pay with the test card `4242 4242 4242 4242`, any future expiry/CVC.
+4. Stripe fires `checkout.session.completed` → the webhook grants the Pro
+   feature bundle to your user in `entitlements` (verify in Supabase Table
+   Editor). Now the premium **Defend-Your-Decision** scenarios open, and Saved
+   Jobs is unlimited — all enforced server-side.
+5. Cancel from Stripe → `customer.subscription.deleted` → the webhook revokes
+   the bundle (or keeps it until period end if `ACCESS_UNTIL_PERIOD_END=true`).
+
+### Notes
+- Card data never touches our servers — Checkout is hosted by Stripe.
+- The webhook is signature-verified and idempotent (`webhook_events` ledger).
+- Access is by **feature entitlement**, never a raw plan flag — a tampered
+  client cannot unlock anything.
+- Go live: swap the test keys for live keys and re-add the webhook in live mode.
