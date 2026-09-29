@@ -181,7 +181,7 @@
         // Log an activity so the Progress dashboard can close the loop:
         // "you analyzed X — drill these gaps". No JD/resume text is stored.
         logAnalyzeActivity(d.analysis, payload.targetRole);
-        renderResult(d.analysis, { model: d.model });
+        renderResult(d.analysis, { model: d.model, input: { targetRole: payload.targetRole, jobDescription: payload.jobDescription } });
       } catch (e) {
         stop && stop();
         renderError("Couldn't reach the analysis service. Check your connection and try again.", payload);
@@ -322,6 +322,45 @@
         tools.appendChild(el("div", "or-field-label", "Save & share this plan"));
         const btnRow = el("div", "or-toolbar-row");
 
+        // Save to My Jobs (requires sign-in + backend). Persists this analysis
+        // to the user's account so it appears on the My Jobs dashboard.
+        const saveBtn = el("button", "ip-btn"); saveBtn.type = "button"; saveBtn.textContent = "\uD83D\uDCBE Save to My Jobs";
+        const saveMsg = el("span", "or-save-msg");
+        saveBtn.addEventListener("click", () => {
+          if (!API_BASE) { saveMsg.textContent = "Saving isn't enabled on this site yet."; return; }
+          if (!window.OfferReadyAuth) { saveMsg.textContent = "Sign-in isn't available yet."; return; }
+          saveBtn.disabled = true; saveMsg.textContent = "Saving\u2026";
+          window.OfferReadyAuth.getAccessToken().then((token) => {
+            if (!token) { saveBtn.disabled = false; saveMsg.innerHTML = 'Please <a href="' + base + 'My-Jobs/index.html">sign in</a> to save this job.'; return; }
+            const inp = meta.input || {};
+            const payload = {
+              analysis: a,
+              title: inp.targetRole || a.seniority || "",
+              jobDescription: inp.jobDescription || "",
+              model: meta.model || "",
+            };
+            fetch(API_BASE.replace(/\/$/, "") + "/api/jobs", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+              body: JSON.stringify(payload),
+            }).then((r) => r.json().catch(() => ({})).then((j) => ({ status: r.status, body: j })))
+              .then((res) => {
+                if (res.status === 201) {
+                  saveMsg.innerHTML = "Saved \u2713 \u2014 <a href='" + base + "My-Jobs/index.html'>View My Jobs</a>";
+                } else if (res.status === 403 && res.body && res.body.upgrade) {
+                  saveBtn.disabled = false;
+                  saveMsg.innerHTML = "Free includes one saved job. <a href='" + base + "assets/pricing.html'>Upgrade to Pro</a> to save more.";
+                } else if (res.status === 401) {
+                  saveBtn.disabled = false;
+                  saveMsg.innerHTML = 'Please <a href="' + base + 'My-Jobs/index.html">sign in</a> to save this job.';
+                } else {
+                  saveBtn.disabled = false;
+                  saveMsg.textContent = (res.body && res.body.error) || "Couldn't save this job. Please try again.";
+                }
+              }).catch(() => { saveBtn.disabled = false; saveMsg.textContent = "Couldn't reach the server. Please try again."; });
+          }).catch(() => { saveBtn.disabled = false; saveMsg.textContent = "Couldn't check your sign-in. Please try again."; });
+        });
+
         const copyBtn = el("button", "ip-btn ip-ghost"); copyBtn.type = "button"; copyBtn.textContent = "Copy plan (Markdown)";
         copyBtn.addEventListener("click", () => {
           const md = toMarkdown(a);
@@ -354,8 +393,9 @@
           else fallbackCopy(url, done);
         });
 
-        btnRow.append(copyBtn, dlBtn, printBtn, shareBtn);
+        btnRow.append(saveBtn, copyBtn, dlBtn, printBtn, shareBtn);
         tools.appendChild(btnRow);
+        tools.appendChild(saveMsg);
         tools.appendChild(el("p", "ip-ai-hint",
           meta.shared ? "You're viewing a shared plan. Nothing here is stored on a server."
                       : "Saved to this browser \u2014 it'll be here when you come back. The shareable link contains only the plan, not your resume."));

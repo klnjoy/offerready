@@ -1194,6 +1194,12 @@ def write_nav(md_catalog, modules) -> None:
     # mode, Keep Asking Why, and Progress. Grouping these (instead of scattering
     # them across the top level) makes the product core obvious and removes the
     # two-"practice" confusion. Sample Walkthrough is demoted into this group.
+    # ----- MY JOBS (job-centered dashboard; the product's spine) -------------
+    # Top-level so it sits alongside Practice as a primary destination
+    # (spec §5 "My Jobs"). Signed-out users see a sign-in prompt on the page.
+    if (DOCS_DIR / "My-Jobs" / "index.md").exists():
+        nav.append("  - My Jobs: My-Jobs/index.md")
+
     practice_children = []
     # Front-door overview page (bare entry = the Practice section's landing
     # page). Introduces the interactive tools and routes into each one.

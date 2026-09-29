@@ -1289,3 +1289,27 @@ a > .ig-feature.ig-link { text-decoration: none; color: inherit; }
 #walkthrough-app .wt-plan-check { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
 #walkthrough-app .wt-plan-why { margin: 0.3rem 0 0.2rem 1.6rem; font-size: 0.82rem; color: var(--md-default-fg-color--light); }
 #walkthrough-app .wt-plan-links { margin: 0 0 0 1.6rem; font-size: 0.82rem; }
+
+/* ============================================================
+   My Jobs dashboard (jobs.js) + Save-to-My-Jobs (analyze.js)
+   ============================================================ */
+.or-jobs-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .75rem; flex-wrap: wrap; margin: .25rem 0 1rem;
+}
+.or-jobs-head h2 { margin: 0; }
+.or-jobs-grid {
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+.or-job-card {
+  border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
+  border-radius: .6rem; padding: 1rem; background: var(--md-default-bg-color);
+  display: flex; flex-direction: column; gap: .5rem;
+}
+.or-job-card h3 { margin: 0; font-size: 1.05rem; }
+.or-job-meta { color: var(--md-default-fg-color--light); font-size: .85rem; }
+.or-job-stats { display: flex; flex-wrap: wrap; gap: .35rem; }
+.or-job-date { color: var(--md-default-fg-color--light); font-size: .8rem; }
+.or-job-actions { display: flex; gap: .5rem; margin-top: .25rem; }
+.or-save-msg { display: block; margin-top: .5rem; font-size: .9rem; }
