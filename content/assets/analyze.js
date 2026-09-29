@@ -77,7 +77,16 @@
     const shared = readSharedAnalysis();
     if (shared && shared.roleSummary) { renderResult(shared, { shared: true }); return; }
 
-    renderForm();
+    // Onboarding hand-off: /Analyze/?role=AI%20Engineer prefills the target role
+    // so the "pick a role → analyze" flow lands ready to paste a JD.
+    let onboardPrefill = null;
+    try {
+      const qs = new URLSearchParams(location.search || "");
+      const r = qs.get("role");
+      if (r) onboardPrefill = { targetRole: r.slice(0, 200) };
+    } catch (e) {}
+
+    renderForm(onboardPrefill);
 
     function renderForm(prefill) {
       app.innerHTML = "";

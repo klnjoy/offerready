@@ -1327,3 +1327,24 @@ a > .ig-feature.ig-link { text-decoration: none; color: inherit; }
   border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
   font-weight: 600; white-space: nowrap;
 }
+
+/* ============================================================
+   Onboarding card (onboarding.js) — job-first entry
+   ============================================================ */
+.or-onboard {
+  border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
+  border-radius: .7rem; padding: 1.1rem 1.2rem; margin: .5rem 0 1rem;
+  background: var(--md-code-bg-color, #f7f9fc);
+}
+.or-onboard-step { font-weight: 700; margin: .3rem 0 .5rem; }
+.or-onboard-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
+.or-onboard-chip {
+  padding: .35rem .8rem; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--md-default-fg-color--lighter, #cfcfcf);
+  background: var(--md-default-bg-color); font-size: .9rem;
+}
+.or-onboard-chip.on {
+  background: var(--kb-green, #22c07a); color: #fff;
+  border-color: var(--kb-green, #22c07a); font-weight: 600;
+}
+.or-onboard-go { display: inline-block; margin: .6rem 0 .2rem; }

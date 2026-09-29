@@ -2,10 +2,21 @@
 icon: material/flag-checkered
 ---
 
-# Start Here — Your Study Path
+# Start Here
 
-This is the one front door. The site is organized into four tabs across the top,
-each answering a different question:
+The fastest way to start: tell us the role and timeline, then paste the job —
+OfferReady maps its requirements, finds your gaps, and builds your prep plan.
+
+<div id="onboarding-app" markdown="0">
+  <p><em>Loading…</em></p>
+</div>
+
+---
+
+## Prefer to browse? Your study path
+
+The site is organized into tabs across the top, each answering a different
+question:
 
 | Tab | Use it when you want to… |
 |-----|--------------------------|
