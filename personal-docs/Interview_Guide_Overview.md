@@ -18,41 +18,41 @@ walk in ready.
 
 <div class="ig-features" markdown>
 
-[<div class="ig-feature ig-link" markdown>
-<div class="ig-ico">🎯</div>
-### Role-tailored tracks
-Curated study orders for Data, AI/GenAI, Forward-Deployed, and Delivery roles.
-</div>](#recommended-study-order)
+<a class="ig-feature ig-link" href="#recommended-study-order">
+  <span class="ig-ico">🎯</span>
+  <span class="ig-h">Role-tailored tracks</span>
+  <span class="ig-d">Curated study orders for Data, AI/GenAI, Forward-Deployed, and Delivery roles.</span>
+</a>
 
-[<div class="ig-feature ig-link" markdown>
-<div class="ig-ico">🧠</div>
-### Advanced, not basics
-Scenario-based questions with model answers, "simple then nuance," and pitfalls.
-</div>](#all-question-banks)
+<a class="ig-feature ig-link" href="#all-question-banks">
+  <span class="ig-ico">🧠</span>
+  <span class="ig-h">Advanced, not basics</span>
+  <span class="ig-d">Scenario-based questions with model answers, "simple then nuance," and pitfalls.</span>
+</a>
 
-[<div class="ig-feature ig-link" markdown>
-<div class="ig-ico">📝</div>
-### Interactive practice
-Question-by-question mock mode with self-scoring — right here in the browser.
-</div>](Interview_Practice.md)
+<a class="ig-feature ig-link" href="Interview_Practice.html">
+  <span class="ig-ico">📝</span>
+  <span class="ig-h">Interactive practice</span>
+  <span class="ig-d">Question-by-question mock mode with self-scoring — right here in the browser.</span>
+</a>
 
-[<div class="ig-feature ig-link" markdown>
-<div class="ig-ico">✅</div>
-### Self-quiz &amp; recall
-Practise recall the way interviews test it — flashcards and timed drills in Practice mode.
-</div>](Interview_Practice.md)
+<a class="ig-feature ig-link" href="Interview_Practice.html">
+  <span class="ig-ico">✅</span>
+  <span class="ig-h">Self-quiz &amp; recall</span>
+  <span class="ig-d">Practise recall the way interviews test it — flashcards and timed drills in Practice mode.</span>
+</a>
 
-[<div class="ig-feature ig-link" markdown>
-<div class="ig-ico">🗣️</div>
-### Behavioral ready
-A STAR story-bank builder so the non-technical round doesn't sink you.
-</div>](Behavioral_STAR_Interview_QA.md)
+<a class="ig-feature ig-link" href="Behavioral_STAR_Interview_QA.html">
+  <span class="ig-ico">🗣️</span>
+  <span class="ig-h">Behavioral ready</span>
+  <span class="ig-d">A STAR story-bank builder so the non-technical round doesn't sink you.</span>
+</a>
 
-[<div class="ig-feature ig-link" markdown>
-<div class="ig-ico">🗡️</div>
-### Defend your decisions
-Scenario trees that challenge every choice with "why?" — run the Defend-Your-Decision scenarios.
-</div>](../Practice-Scenarios/index.md)
+<a class="ig-feature ig-link" href="../Practice-Scenarios/index.html">
+  <span class="ig-ico">🗡️</span>
+  <span class="ig-h">Defend your decisions</span>
+  <span class="ig-d">Scenario trees that challenge every choice with "why?" — run the Defend-Your-Decision scenarios.</span>
+</a>
 
 </div>
 

@@ -1136,10 +1136,23 @@
 .or-check { display: block; margin: .3rem 0; font-size: .92rem; }
 .or-check input { margin-right: .5rem; }
 
-/* Interview-hub feature cards that are now links: keep the card look (no blue
-   underline), add a clear clickable affordance. The <a> wraps a .ig-feature. */
-a:has(> .ig-feature.ig-link),
-a > .ig-feature.ig-link { text-decoration: none; color: inherit; }
+/* Interview-hub feature cards are anchors (<a class="ig-feature ig-link">) so
+   the whole card is reliably clickable without fragile markdown link-wrapping.
+   The card content is span children: .ig-ico / .ig-h / .ig-d. */
+a.ig-feature.ig-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+a.ig-feature.ig-link .ig-ico { display: block; font-size: 1.5rem; line-height: 1; }
+a.ig-feature.ig-link .ig-h {
+  display: block; margin: 0.5rem 0 0.3rem; font-size: 0.98rem; font-weight: 700;
+  color: var(--md-default-fg-color);
+}
+a.ig-feature.ig-link .ig-d {
+  display: block; margin: 0; font-size: 0.85rem;
+  color: var(--md-default-fg-color--light);
+}
 .ig-feature.ig-link { cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
 .ig-feature.ig-link:hover {
   transform: translateY(-2px);
