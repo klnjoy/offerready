@@ -56,6 +56,7 @@
     var allScenarios = [];   // cached list for client-side filtering
     var activeCat = "all";
     var matchedRole = null;  // role label when the list was auto-filtered to the analyzed job
+    var jobContext = null;   // distilled analyzed-job signals used to personalize prompts
 
     // Job-first: if the user arrived from an analyzed job (Analyze page adds
     // ?role=<category>, or stored offerready.defendRole.v1), pre-select that
@@ -66,11 +67,20 @@
         var qs = new URLSearchParams(location.search || "");
         role = qs.get("role");
       } catch (e) {}
-      if (!role) {
-        try {
-          var saved = JSON.parse(localStorage.getItem("offerready.defendRole.v1") || "null");
-          if (saved && saved.category) { role = saved.category; roleTitle = saved.role || null; }
-        } catch (e) {}
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem("offerready.defendRole.v1") || "null"); } catch (e) {}
+      if (!role && saved && saved.category) { role = saved.category; roleTitle = saved.role || null; }
+      // Keep the distilled job signals (technologies + gaps) to personalize the
+      // scenario prompts to THIS user's analyzed job (Option A: tailor authored
+      // questions, no LLM). Only used when it matches the scenario's category.
+      if (saved && (saved.technologies || saved.gaps)) {
+        jobContext = {
+          category: saved.category || null,
+          role: saved.role || "",
+          seniority: saved.seniority || "",
+          technologies: (saved.technologies || []).filter(Boolean),
+          gaps: (saved.gaps || []).filter(Boolean),
+        };
       }
       if (role && CATEGORY_LABELS[role]) {
         activeCat = role;
@@ -394,8 +404,50 @@
       var nodes = scenario.content.nodes || {};
       state = { slug: scenario.slug, title: scenario.title, nodes: nodes,
                 current: scenario.content.start, answers: {}, ratings: {}, startedAt: Date.now(),
-                total: Object.keys(nodes).length, step: 0 };
+                total: Object.keys(nodes).length, step: 0,
+                // Personalize to the analyzed job only when it matches this
+                // scenario's role (avoids putting cloud tech into a security run).
+                personalize: personalizeFor(scenario) };
       renderNode();
+    }
+
+    // Return the distilled job context if it applies to this scenario, else null.
+    function personalizeFor(scenario) {
+      if (!jobContext) return null;
+      if (jobContext.category && scenario.category && jobContext.category !== scenario.category) return null;
+      if (!(jobContext.technologies || []).length && !(jobContext.gaps || []).length) return null;
+      return jobContext;
+    }
+
+    // A short, human line naming the user's target role + stack, shown once at
+    // the top of a personalized run so the authored questions read as "yours".
+    function personalizeBanner(p) {
+      var bits = [];
+      var who = p.role || (p.seniority ? p.seniority + " role" : "your target role");
+      var line = "Tailored to <strong>" + esc(who) + "</strong>";
+      if ((p.technologies || []).length) line += " \u00b7 stack: " + esc(p.technologies.slice(0, 5).join(", "));
+      bits.push(line);
+      var banner = el("div", "or-personalized", bits.join(""));
+      return banner;
+    }
+
+    // Per-node nudge that ties the authored question to a SPECIFIC technology or
+    // gap from the user's analyzed job. Rotates by step so successive questions
+    // reference different specifics (feels tailored, still deterministic).
+    function personalizeHint(node) {
+      var p = state.personalize;
+      if (!p) return null;
+      // Only on nodes where the user actually composes a defense.
+      if (node.kind === "next_drill" || node.kind === "reflection" || node.kind === "choice") return null;
+      var techs = p.technologies || [], gaps = p.gaps || [];
+      if (!techs.length && !gaps.length) return null;
+      var i = Math.max(0, (state.step || 1) - 1);
+      var parts = [];
+      if (techs.length) parts.push("using <strong>" + esc(techs[i % techs.length]) + "</strong>");
+      if (gaps.length) parts.push("and speak to <strong>" + esc(gaps[i % gaps.length]) + "</strong>");
+      if (!parts.length) return null;
+      return el("p", "ip-ai-hint or-pers-hint",
+        "\uD83C\uDFAF For your job: frame the answer " + parts.join(" ") + ".");
     }
 
     function renderNode() {
@@ -404,9 +456,12 @@
       if (!node) { return renderSummary(); }
       state.step = (state.step || 0) + 1;
       var card = el("div", "ip-card");
+      if (state.personalize && state.step === 1) card.appendChild(personalizeBanner(state.personalize));
       var stepLbl = state.total ? ("Step " + state.step + " of " + state.total + " \u00b7 ") : "";
       card.appendChild(el("div", "ip-progress", stepLbl + esc(state.title) + " \u00b7 " + esc(node.kind)));
       card.appendChild(el("div", "ip-q", esc(node.prompt)));
+      var pers = personalizeHint(node);
+      if (pers) card.appendChild(pers);
 
       if (node.kind === "choice") {
         (node.options || []).forEach(function (opt) {

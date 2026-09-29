@@ -65,12 +65,37 @@
   }
 
   // Persist a small "defend role" signal so the Defend page can auto-filter to
-  // the analyzed job. Only the category + a display role — no JD/resume text.
-  function saveDefendRole(category, role) {
+  // the analyzed job AND lightly personalize the scenario prompts to it.
+  // Stores only distilled signals (role, top technologies, top gaps) derived
+  // from the structured analysis — NOT the raw JD/resume text (spec: no JD text
+  // at rest).
+  function saveDefendRole(category, role, analysis) {
     try {
       if (!category) return;
+      var techs = [];
+      (analysis && analysis.technologies || []).forEach(function (t) {
+        if (typeof t === "string" && t.trim()) techs.push(t.trim());
+      });
+      (analysis && analysis.coreSkills || []).forEach(function (s) {
+        var name = typeof s === "string" ? s : (s && s.name);
+        if (name && techs.indexOf(name) === -1) techs.push(name);
+      });
+      var gaps = [];
+      (analysis && analysis.potentialGaps || []).forEach(function (g) {
+        if (g && g.requirement) gaps.push(g.requirement);
+      });
+      (analysis && analysis.preparationPlan || []).forEach(function (p) {
+        if (p && p.title && gaps.indexOf(p.title) === -1) gaps.push(p.title);
+      });
       localStorage.setItem("offerready.defendRole.v1",
-        JSON.stringify({ category: category, role: role || "", when: Date.now() }));
+        JSON.stringify({
+          category: category,
+          role: role || "",
+          seniority: (analysis && analysis.seniority) || "",
+          technologies: techs.slice(0, 8),
+          gaps: gaps.slice(0, 5),
+          when: Date.now(),
+        }));
     } catch (e) {}
   }
 
@@ -219,7 +244,7 @@
         // "you analyzed X — drill these gaps". No JD/resume text is stored.
         logAnalyzeActivity(d.analysis, payload.targetRole);
         // Remember the matched Defend role so the Defend page filters to this job.
-        saveDefendRole(inferScenarioCategory(d.analysis, payload.targetRole), payload.targetRole || (d.analysis && d.analysis.seniority) || "");
+        saveDefendRole(inferScenarioCategory(d.analysis, payload.targetRole), payload.targetRole || (d.analysis && d.analysis.seniority) || "", d.analysis);
         renderResult(d.analysis, { model: d.model, input: { targetRole: payload.targetRole, jobDescription: payload.jobDescription } });
       } catch (e) {
         stop && stop();
