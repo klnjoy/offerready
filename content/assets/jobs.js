@@ -190,4 +190,12 @@
   if (document.readyState !== "loading") safeInit();
   else document.addEventListener("DOMContentLoaded", safeInit);
   if (window.document$) { try { window.document$.subscribe(safeInit); } catch (e) {} }
+
+  // Belt-and-suspenders against a stuck "Loading your jobs…" placeholder.
+  function sweep() {
+    var app = document.getElementById("jobs-app");
+    if (app && !app.dataset.mounted) safeInit();
+  }
+  setTimeout(sweep, 800);
+  setTimeout(sweep, 2500);
 })();

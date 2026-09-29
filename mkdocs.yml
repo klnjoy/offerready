@@ -91,8 +91,8 @@ extra_javascript:
   - assets/scenario.js?v=3
   - assets/progress.js?v=3
   - assets/why.js?v=3
-  - assets/analyze.js?v=6
-  - assets/jobs.js?v=6
+  - assets/analyze.js?v=7
+  - assets/jobs.js?v=7
   - assets/onboarding.js?v=4
   - assets/simulator.js?v=3
   - assets/walkthrough.js?v=3

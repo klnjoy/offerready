@@ -598,4 +598,14 @@
   if (document.readyState !== "loading") safeInit();
   else document.addEventListener("DOMContentLoaded", safeInit);
   if (window.document$) { try { window.document$.subscribe(safeInit); } catch (e) {} }
+
+  // Belt-and-suspenders: if, for any timing/instant-nav reason, the placeholder
+  // is still on the page shortly after load, force the mount. This guarantees
+  // the user never sees an indefinite "Loading the analyzer…" state.
+  function sweep() {
+    var app = document.getElementById("analyze-app");
+    if (app && !app.dataset.mounted) safeInit();
+  }
+  setTimeout(sweep, 800);
+  setTimeout(sweep, 2500);
 })();
