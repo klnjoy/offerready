@@ -91,8 +91,8 @@ extra_javascript:
   - assets/scenario.js?v=3
   - assets/progress.js?v=3
   - assets/why.js?v=3
-  - assets/analyze.js?v=5
-  - assets/jobs.js?v=4
+  - assets/analyze.js?v=6
+  - assets/jobs.js?v=6
   - assets/onboarding.js?v=4
   - assets/simulator.js?v=3
   - assets/walkthrough.js?v=3
@@ -130,16 +130,16 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Start Here: Start-Here/index.md
+  - Analyze Job: Analyze/index.md
   - My Jobs: My-Jobs/index.md
+  - Defend: Practice-Scenarios/index.md
+  - Mock Interview: Personal-SourceCode/Interview_Master_Simulator.md
   - Practice:
       - Practice/index.md
-      - Analyze My Job: Analyze/index.md
-      - Defend-Your-Decision Scenarios: Practice-Scenarios/index.md
       - Practice Mode (Q&A drills): Personal-SourceCode/Interview_Practice.md
       - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md
-      - Master Interview Simulator: Personal-SourceCode/Interview_Master_Simulator.md
-      - Progress Dashboard: Personal-SourceCode/Interview_Progress.md
       - Sample Walkthrough: Sample-Walkthrough/index.md
+  - Progress: Personal-SourceCode/Interview_Progress.md
   - Learn:
       - Foundations (GenAI Topics):
           - Overview: GenAI-Topics/index.md

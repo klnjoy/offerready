@@ -1199,39 +1199,39 @@ def write_nav(md_catalog, modules) -> None:
     #   "          - Page"    (10 spaces) a page inside a section
     nav = ["nav:", "  - Home: index.md",
            "  - Start Here: Start-Here/index.md"]
-    # ----- PRACTICE (the interactive product core) ---------------------------
-    # One home for the monetizable capabilities: Analyze, Scenarios, Practice
-    # mode, Keep Asking Why, and Progress. Grouping these (instead of scattering
-    # them across the top level) makes the product core obvious and removes the
-    # two-"practice" confusion. Sample Walkthrough is demoted into this group.
-    # ----- MY JOBS (job-centered dashboard; the product's spine) -------------
-    # Top-level so it sits alongside Practice as a primary destination
-    # (spec §5 "My Jobs"). Signed-out users see a sign-in prompt on the page.
+    # ----- CORE PRODUCT LOOP (top-level, in workflow order) ------------------
+    # The spec wants the job-centered loop surfaced as first-class nav, not
+    # buried inside one "Practice" group: Analyze -> My Jobs -> Defend -> Mock
+    # Interview -> Practice drills -> Progress. Each is a real existing page;
+    # we're only changing where they appear in the nav (no pages moved/removed).
+    if (DOCS_DIR / "Analyze" / "index.md").exists():
+        nav.append("  - Analyze Job: Analyze/index.md")
     if (DOCS_DIR / "My-Jobs" / "index.md").exists():
         nav.append("  - My Jobs: My-Jobs/index.md")
-
-    practice_children = []
-    # Front-door overview page (bare entry = the Practice section's landing
-    # page). Introduces the interactive tools and routes into each one.
-    if (DOCS_DIR / "Practice" / "index.md").exists():
-        practice_children.append("      - Practice/index.md")
-    if (DOCS_DIR / "Analyze" / "index.md").exists():
-        practice_children.append("      - Analyze My Job: Analyze/index.md")
     if (DOCS_DIR / "Practice-Scenarios" / "index.md").exists():
-        practice_children.append("      - Defend-Your-Decision Scenarios: Practice-Scenarios/index.md")
+        nav.append("  - Defend: Practice-Scenarios/index.md")
+    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Master_Simulator.md").exists():
+        nav.append("  - Mock Interview: Personal-SourceCode/Interview_Master_Simulator.md")
+
+    # Practice — the remaining interactive drills grouped under one section.
+    # (Analyze / Defend / Mock Interview are now top-level above; the Practice
+    # overview page still introduces the whole loop.)
+    practice_children = []
+    if (DOCS_DIR / "Practice" / "index.md").exists():
+        practice_children.append("      - Practice/index.md")  # bare = section landing
     if (DOCS_DIR / "Personal-SourceCode" / "Interview_Practice.md").exists():
         practice_children.append("      - Practice Mode (Q&A drills): Personal-SourceCode/Interview_Practice.md")
     if (DOCS_DIR / "Personal-SourceCode" / "Interview_Why_Interactive.md").exists():
         practice_children.append("      - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md")
-    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Master_Simulator.md").exists():
-        practice_children.append("      - Master Interview Simulator: Personal-SourceCode/Interview_Master_Simulator.md")
-    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Progress.md").exists():
-        practice_children.append("      - Progress Dashboard: Personal-SourceCode/Interview_Progress.md")
     if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
         practice_children.append("      - Sample Walkthrough: Sample-Walkthrough/index.md")
     if practice_children:
         nav.append("  - Practice:")
         nav.extend(practice_children)
+
+    # Progress — top-level (the "what should I work on next?" dashboard).
+    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Progress.md").exists():
+        nav.append("  - Progress: Personal-SourceCode/Interview_Progress.md")
 
     # ----- LEARN --------------------------------------------------------------
     nav.append("  - Learn:")

@@ -576,7 +576,26 @@
     nextStep: "Start with: Amazon Bedrock + production agents (Priority 1).",
   };
 
-  if (document.readyState !== "loading") init();
-  else document.addEventListener("DOMContentLoaded", init);
-  if (window.document$) { try { window.document$.subscribe(init); } catch (e) {} }
+  // Never leave the user staring at "Loading the analyzer…": if init() throws
+  // for any reason, replace the placeholder with a clear, usable message and a
+  // reload action instead of an indefinite loading state.
+  function safeInit() {
+    try { init(); }
+    catch (e) {
+      var app = document.getElementById("analyze-app");
+      if (app && !app.dataset.mounted) {
+        app.dataset.mounted = "1";
+        app.innerHTML =
+          '<div class="ip-card">' +
+          '<div class="ip-q">The analyzer had trouble starting</div>' +
+          '<p>Please reload the page to try again. Your saved analyses are not affected.</p>' +
+          '<button class="ip-btn" type="button" onclick="location.reload()">Reload</button>' +
+          "</div>";
+      }
+    }
+  }
+
+  if (document.readyState !== "loading") safeInit();
+  else document.addEventListener("DOMContentLoaded", safeInit);
+  if (window.document$) { try { window.document$.subscribe(safeInit); } catch (e) {} }
 })();

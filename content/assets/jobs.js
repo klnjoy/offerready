@@ -171,7 +171,23 @@
     }
   }
 
-  if (document.readyState !== "loading") init();
-  else document.addEventListener("DOMContentLoaded", init);
-  if (window.document$) { try { window.document$.subscribe(init); } catch (e) {} }
+  // Never leave the user stuck on "Loading your jobs…": on any init error,
+  // show a clear reload prompt instead of an indefinite loading state.
+  function safeInit() {
+    try { init(); }
+    catch (e) {
+      var app = document.getElementById("jobs-app");
+      if (app && !app.dataset.mounted) {
+        app.dataset.mounted = "1";
+        app.innerHTML =
+          '<div class="ip-card"><div class="ip-q">Couldn\u2019t load My Jobs</div>' +
+          '<p>Please reload the page to try again.</p>' +
+          '<button class="ip-btn" type="button" onclick="location.reload()">Reload</button></div>';
+      }
+    }
+  }
+
+  if (document.readyState !== "loading") safeInit();
+  else document.addEventListener("DOMContentLoaded", safeInit);
+  if (window.document$) { try { window.document$.subscribe(safeInit); } catch (e) {} }
 })();
