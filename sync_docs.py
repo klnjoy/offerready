@@ -1480,6 +1480,11 @@ def write_nav(md_catalog, modules) -> None:
     if (DOCS_DIR / "assets" / "pricing.html").exists():
         nav.append("  - Pricing: assets/pricing.html")
 
+    # Account — the one obvious place to sign in / create an account (renders
+    # the auth form via #or-auth-slot). Top-level so sign-in is always findable.
+    if (DOCS_DIR / "Account" / "index.md").exists():
+        nav.append("  - Account: Account/index.md")
+
     # Legal / utility pages (Privacy, Terms, Disclaimer, Contact) are intentionally
     # NOT added to the top nav. They are surfaced in the site FOOTER instead, via
     # the Material theme override at overrides/partials/copyright.html (declutters
