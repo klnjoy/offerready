@@ -613,6 +613,15 @@
 }
 .ip-rate .ip-star.ip-on { background: var(--md-primary-fg-color); color: #fff; border-color: var(--md-primary-fg-color); }
 
+/* Rate-to-continue block: makes it obvious that picking a rating advances the
+   scenario to the next step (fixes "only one answer" confusion). */
+.or-raterow {
+  margin-top: 1rem; padding: 0.9rem 1.1rem;
+  border: 1px dashed var(--md-accent-fg-color);
+  border-radius: 0.6rem; background: color-mix(in srgb, var(--md-accent-fg-color) 6%, transparent);
+}
+.or-raterow .ip-ai-hint { margin: 0.6rem 0 0; }
+
 /* AI grade (local only) */
 .ip-ai { margin-top: 1rem; }
 .ip-ai-out {

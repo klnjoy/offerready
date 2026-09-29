@@ -391,8 +391,10 @@
 
     // ---- Run the tree ------------------------------------------------------
     function startRun(scenario) {
-      state = { slug: scenario.slug, title: scenario.title, nodes: scenario.content.nodes || {},
-                current: scenario.content.start, answers: {}, ratings: {}, startedAt: Date.now() };
+      var nodes = scenario.content.nodes || {};
+      state = { slug: scenario.slug, title: scenario.title, nodes: nodes,
+                current: scenario.content.start, answers: {}, ratings: {}, startedAt: Date.now(),
+                total: Object.keys(nodes).length, step: 0 };
       renderNode();
     }
 
@@ -400,8 +402,10 @@
       var node = state.nodes[state.current];
       app.innerHTML = "";
       if (!node) { return renderSummary(); }
+      state.step = (state.step || 0) + 1;
       var card = el("div", "ip-card");
-      card.appendChild(el("div", "ip-progress", esc(state.title) + " \u00b7 " + esc(node.kind)));
+      var stepLbl = state.total ? ("Step " + state.step + " of " + state.total + " \u00b7 ") : "";
+      card.appendChild(el("div", "ip-progress", stepLbl + esc(state.title) + " \u00b7 " + esc(node.kind)));
       card.appendChild(el("div", "ip-q", esc(node.prompt)));
 
       if (node.kind === "choice") {
@@ -445,7 +449,11 @@
             m.appendChild(s);
           }
           modelWrap.appendChild(m);
-          modelWrap.appendChild(rateRow(node));
+          var rr = rateRow(node);
+          modelWrap.appendChild(rr);
+          // Bring the rating controls into view so users don't think the
+          // scenario "stopped" after one node — rating is what advances it.
+          try { rr.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
         });
         card.appendChild(modelWrap);
       }
@@ -453,8 +461,10 @@
     }
 
     function rateRow(node) {
-      var wrap = el("div");
-      wrap.appendChild(el("div", "ip-progress", "How well did you defend it?"));
+      var wrap = el("div", "or-raterow");
+      var isLast = !node.next;
+      wrap.appendChild(el("div", "ip-progress",
+        "Rate how well you defended it \u2014 " + (isLast ? "this finishes the scenario:" : "this moves you to the next step:")));
       var rate = el("div", "ip-rate");
       ["1 \u00b7 hand-waved", "2", "3 \u00b7 partial", "4", "5 \u00b7 nailed it"].forEach(function (lab, i) {
         var b = el("button", "ip-star", esc(lab));
@@ -462,6 +472,8 @@
         rate.appendChild(b);
       });
       wrap.appendChild(rate);
+      wrap.appendChild(el("p", "ip-ai-hint",
+        isLast ? "Pick a rating to see your scenario summary." : "Pick a rating to continue \u2014 there are more decisions to defend."));
       return wrap;
     }
 
