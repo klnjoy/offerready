@@ -81,7 +81,7 @@ extra_javascript:
   # assets with long cache lifetimes and stable filenames, so browsers reuse the
   # old copy after a deploy. Bump N whenever a feature script/CSS changes so
   # visitors always get the new version instead of a stale cached one.
-  - assets/api-config.js?v=3
+  - assets/api-config.js?v=7
   - assets/auth.js?v=3
   - assets/progress-store.js?v=3
   - assets/brand.js?v=3
