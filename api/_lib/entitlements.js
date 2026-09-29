@@ -99,15 +99,7 @@ async function getPremiumContent(slug) {
 async function listPremiumTeasers() {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  // TEMP DIAGNOSTIC (safe: presence + lengths only, never values) — remove once verified.
-  console.log('listPremiumTeasers env:',
-    'urlSet=' + Boolean(url), 'urlLen=' + ((url || '').length),
-    'keySet=' + Boolean(key), 'keyLen=' + ((key || '').length),
-    'keyPrefix=' + ((key || '').slice(0, 3)));
-  if (!url || !key) {
-    console.error('listPremiumTeasers: missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in this deployment');
-    return [];
-  }
+  if (!url || !key) return [];
 
   const qs =
     `published=eq.true` +
@@ -121,20 +113,10 @@ async function listPremiumTeasers() {
       url.replace(/\/+$/, '') + '/rest/v1/premium_content?' + qs,
       { method: 'GET', headers: serviceHeaders(), signal: controller.signal }
     );
-    if (!resp.ok) {
-      // TEMP DIAGNOSTIC (safe: no key/secret logged) — remove once verified.
-      let body = '';
-      try { body = (await resp.text()).slice(0, 300); } catch (_) {}
-      console.error('listPremiumTeasers REST not-ok:', resp.status, body);
-      return [];
-    }
+    if (!resp.ok) return [];
     const rows = await resp.json();
-    // TEMP DIAGNOSTIC — remove once verified.
-    console.log('listPremiumTeasers ok rows=', Array.isArray(rows) ? rows.length : 'not-array');
     return Array.isArray(rows) ? rows : [];
-  } catch (err) {
-    // TEMP DIAGNOSTIC (safe: message only) — remove once verified.
-    console.error('listPremiumTeasers fetch error:', err && err.message, err && err.cause && err.cause.code);
+  } catch (_err) {
     return [];
   } finally {
     clearTimeout(timer);
