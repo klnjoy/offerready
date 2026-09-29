@@ -277,6 +277,28 @@
   var currentPlan = "Pro";
   var STORE = "offerready.waitlist.v1";
 
+  // Real checkout when billing is configured, else fall back to the waitlist.
+  var API_BASE = (window.OFFERREADY_API_BASE || "").replace(/\/$/, "");
+  function startCheckout(btn) {
+    if (!API_BASE || !window.OfferReadyAuth) return false; // not wired → waitlist
+    var orig = btn.textContent;
+    btn.disabled = true; btn.textContent = "Starting checkout\u2026";
+    function fail(msg) { btn.disabled = false; btn.textContent = orig; if (msg) alert(msg); }
+    window.OfferReadyAuth.getAccessToken().then(function (token) {
+      if (!token) { fail("Please sign in first (from My Jobs), then upgrade."); return; }
+      fetch(API_BASE + "/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, body: j }; }); })
+        .then(function (res) {
+          if (res.status === 200 && res.body && res.body.url) { window.location.href = res.body.url; return; }
+          if (res.status === 503) { btn.disabled = false; btn.textContent = orig; open(currentPlan); return; } // billing off → waitlist
+          fail((res.body && res.body.error) || "Couldn\u2019t start checkout.");
+        }).catch(function () { fail("Couldn\u2019t reach the billing service."); });
+    }).catch(function () { fail(); });
+    return true;
+  }
+
   function open(plan) {
     currentPlan = plan || "Pro";
     sub.textContent = "We'll email you when " + currentPlan + " opens. No spam, no charge until you choose to subscribe.";
@@ -288,7 +310,11 @@
   function close() { modal.hidden = true; }
 
   document.querySelectorAll("[data-notify]").forEach(function (b) {
-    b.addEventListener("click", function () { open(b.getAttribute("data-notify")); });
+    b.addEventListener("click", function () {
+      // Try a real Stripe checkout first; if billing isn't wired, open waitlist.
+      if (startCheckout(b)) return;
+      open(b.getAttribute("data-notify"));
+    });
   });
   closeX.addEventListener("click", close);
   modal.addEventListener("click", function (e) { if (e.target === modal) close(); });
