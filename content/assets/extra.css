@@ -1372,3 +1372,22 @@ a.ig-feature.ig-link .ig-d {
   font-size: .92rem;
 }
 .or-scn-match a.or-scn-clear { margin-left: .3rem; }
+
+/* ============================================================
+   OAuth (Google / GitHub) buttons on the sign-in form (auth.js)
+   ============================================================ */
+.or-oauth-row { display: flex; flex-direction: column; gap: .5rem; max-width: 22rem; }
+.or-oauth-btn {
+  display: block; width: 100%; padding: .55rem .8rem; cursor: pointer;
+  border: 1px solid var(--md-default-fg-color--lighter, #cfcfcf);
+  border-radius: .5rem; background: var(--md-default-bg-color);
+  font-size: .92rem; font-weight: 600; color: var(--md-default-fg-color);
+}
+.or-oauth-btn:hover { border-color: var(--kb-green, #22c07a); }
+.or-auth-divider {
+  display: flex; align-items: center; gap: .6rem; max-width: 22rem;
+  margin: .6rem 0; color: var(--md-default-fg-color--light); font-size: .8rem;
+}
+.or-auth-divider::before, .or-auth-divider::after {
+  content: ""; flex: 1; height: 1px; background: var(--md-default-fg-color--lightest, #e0e0e0);
+}

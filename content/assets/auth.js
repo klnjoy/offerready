@@ -103,6 +103,19 @@
       });
     },
 
+    // OAuth (Google / GitHub). Redirects to the provider, then back to the
+    // current page. Only works once the provider is enabled in Supabase
+    // (Authentication -> Providers) — otherwise Supabase returns an error which
+    // the form surfaces. `provider` is 'google' or 'github'.
+    signInWithProvider: function (provider) {
+      return guard().then(function (c) {
+        return c.auth.signInWithOAuth({
+          provider: provider,
+          options: { redirectTo: location.origin + location.pathname },
+        });
+      });
+    },
+
     signOut: function () {
       return guard().then(function (c) { return c.auth.signOut(); });
     },
@@ -161,6 +174,11 @@
       var form = document.createElement("form");
       form.className = "or-auth-form";
       form.innerHTML =
+        '<div class="or-oauth-row">' +
+        '<button type="button" class="or-oauth-btn" data-oauth="google">Continue with Google</button>' +
+        '<button type="button" class="or-oauth-btn" data-oauth="github">Continue with GitHub</button>' +
+        "</div>" +
+        '<div class="or-auth-divider"><span>or with email</span></div>' +
         '<input type="email" class="or-input" placeholder="you@email.com" autocomplete="email" required>' +
         '<input type="password" class="or-input" placeholder="Password" autocomplete="current-password" required>' +
         '<div class="or-auth-row">' +
@@ -190,6 +208,17 @@
         api.resetPassword(email.value.trim()).then(function () {
           show("If that email exists, a reset link is on its way.");
         }).catch(function (e2) { show(e2.message, true); });
+      });
+      // OAuth buttons (Google / GitHub). On success the browser redirects to the
+      // provider; on failure (e.g. provider not enabled) show the message.
+      form.querySelectorAll("[data-oauth]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var provider = btn.getAttribute("data-oauth");
+          show("Redirecting to " + (provider === "github" ? "GitHub" : "Google") + "\u2026");
+          api.signInWithProvider(provider).then(function (r) {
+            if (r && r.error) show(r.error.message, true);
+          }).catch(function (e2) { show(e2.message, true); });
+        });
       });
       slot.appendChild(form);
     }
