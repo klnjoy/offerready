@@ -12,9 +12,9 @@
 
 'use strict';
 
-const { setCors, send } = require('../../lib/http');
-const { listPremiumTeasers, hasEntitlement } = require('../../lib/entitlements');
-const { getUser } = require('../../lib/supabaseAuth');
+const { setCors, send } = require('../../_lib/http');
+const { listPremiumTeasers, hasEntitlement } = require('../../_lib/entitlements');
+const { getUser } = require('../../_lib/supabaseAuth');
 
 module.exports = async function handler(req, res) {
   setCors(res, req.headers && req.headers.origin);

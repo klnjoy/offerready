@@ -13,8 +13,8 @@
 
 'use strict';
 
-const { verifyWebhook, getSubscription } = require('../lib/stripe');
-const billing = require('../lib/billing');
+const { verifyWebhook, getSubscription } = require('../_lib/stripe');
+const billing = require('../_lib/billing');
 
 // Vercel: give us the raw body so the Stripe signature can be verified.
 module.exports.config = { api: { bodyParser: false } };

@@ -16,7 +16,7 @@
 
 'use strict';
 
-const { lookupResource } = require('./lib/skillMap');
+const { lookupResource } = require('./_lib/skillMap');
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';

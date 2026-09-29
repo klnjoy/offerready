@@ -11,8 +11,8 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-const { validateInput, safeParseModelJson, normalizeAnalysis, LIMITS } = require('../lib/validate');
-const { lookupResource, mapSkillsToResources } = require('../lib/skillMap');
+const { validateInput, safeParseModelJson, normalizeAnalysis, LIMITS } = require('../_lib/validate');
+const { lookupResource, mapSkillsToResources } = require('../_lib/skillMap');
 
 test('validateInput: missing job description is rejected', () => {
   const r = validateInput({});

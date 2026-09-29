@@ -18,9 +18,9 @@
 
 'use strict';
 
-const { SYSTEM_PROMPT, buildUserMessage } = require('./lib/prompt');
-const { validateInput, safeParseModelJson, normalizeAnalysis } = require('./lib/validate');
-const { mapSkillsToResources, lookupResource } = require('./lib/skillMap');
+const { SYSTEM_PROMPT, buildUserMessage } = require('./_lib/prompt');
+const { validateInput, safeParseModelJson, normalizeAnalysis } = require('./_lib/validate');
+const { mapSkillsToResources, lookupResource } = require('./_lib/skillMap');
 
 const DEFAULT_MODEL = 'gpt-4o-mini'; // cost-effective default; override via OPENAI_MODEL
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';

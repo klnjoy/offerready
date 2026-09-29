@@ -11,9 +11,9 @@
 
 'use strict';
 
-const { setCors, send } = require('../lib/http');
-const { getUser } = require('../lib/supabaseAuth');
-const { getJob, deleteJob } = require('../lib/jobs');
+const { setCors, send } = require('../_lib/http');
+const { getUser } = require('../_lib/supabaseAuth');
+const { getJob, deleteJob } = require('../_lib/jobs');
 
 module.exports = async function handler(req, res) {
   setCors(res, req.headers && req.headers.origin);

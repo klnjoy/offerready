@@ -14,10 +14,10 @@
 
 'use strict';
 
-const { setCors, send } = require('../lib/http');
-const { getUser } = require('../lib/supabaseAuth');
-const { hasEntitlement } = require('../lib/entitlements');
-const { listJobs, countJobs, insertJob } = require('../lib/jobs');
+const { setCors, send } = require('../_lib/http');
+const { getUser } = require('../_lib/supabaseAuth');
+const { hasEntitlement } = require('../_lib/entitlements');
+const { listJobs, countJobs, insertJob } = require('../_lib/jobs');
 
 // Free users may save this many jobs; Pro is effectively unlimited.
 const FREE_JOB_LIMIT = 1;
