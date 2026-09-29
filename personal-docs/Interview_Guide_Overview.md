@@ -39,7 +39,7 @@ Question-by-question mock mode with self-scoring — right here in the browser.
 [<div class="ig-feature ig-link" markdown>
 <div class="ig-ico">✅</div>
 ### Self-quiz &amp; recall
-Practise recall the way interviews test it — flashcards and timed drills in [Practice mode](Interview_Practice.md).
+Practise recall the way interviews test it — flashcards and timed drills in Practice mode.
 </div>](Interview_Practice.md)
 
 [<div class="ig-feature ig-link" markdown>
@@ -51,7 +51,7 @@ A STAR story-bank builder so the non-technical round doesn't sink you.
 [<div class="ig-feature ig-link" markdown>
 <div class="ig-ico">🗡️</div>
 ### Defend your decisions
-Scenario trees that challenge every choice with "why?" — the [Practice scenarios](../Practice-Scenarios/index.md).
+Scenario trees that challenge every choice with "why?" — run the Defend-Your-Decision scenarios.
 </div>](../Practice-Scenarios/index.md)
 
 </div>
