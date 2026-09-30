@@ -632,6 +632,11 @@
 }
 .or-pers-hint { margin: 0.5rem 0 0.75rem; }
 
+/* "Generate a scenario for my exact job" (Pro, per-JD LLM generation). */
+.or-scn-gen { margin-top: 0.6rem; }
+.or-scn-gen-hint { margin: 0.35rem 0 0; }
+.or-scn-fallback { margin: 0 0 0.75rem; }
+
 /* AI grade (local only) */
 .ip-ai { margin-top: 1rem; }
 .ip-ai-out {

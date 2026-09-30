@@ -91,7 +91,8 @@
     // Hint shown above the list when it's filtered to the analyzed job.
     function matchNote() {
       if (!matchedRole || activeCat === "all") return null;
-      var p = el("p", "or-scn-match",
+      var wrap = el("div", "or-scn-match");
+      var p = el("p", null,
         "\uD83C\uDFAF Showing scenarios matched to your analyzed role: <strong>" + esc(matchedRole) +
         "</strong>. <a href=\"#\" class=\"or-scn-clear\">Show all roles</a>");
       var link = p.querySelector(".or-scn-clear");
@@ -99,7 +100,98 @@
         e.preventDefault(); activeCat = "all"; matchedRole = null;
         if (API) paintList(); else renderOfflineList();
       });
-      return p;
+      wrap.appendChild(p);
+      // Pro: generate a scenario from THIS job so questions aren't identical to
+      // the authored one. Only offered when a backend + analyzed job exist.
+      if (API && getStoredAnalysis()) {
+        var gen = el("button", "ip-btn or-scn-gen", "\u2728 Generate a scenario for my exact job");
+        gen.addEventListener("click", function () { generateForJob(gen); });
+        wrap.appendChild(gen);
+        wrap.appendChild(el("p", "ip-ai-hint or-scn-gen-hint",
+          "Pro \u00b7 builds fresh defend questions from your analyzed job. Falls back to the standard scenario if unavailable."));
+      }
+      return wrap;
+    }
+
+    // The most recent analysis saved by the Analyze page (no raw JD is stored).
+    function getStoredAnalysis() {
+      try {
+        var rec = JSON.parse(localStorage.getItem("offerready.analysis.v1") || "null");
+        return rec && rec.analysis && rec.analysis.roleSummary ? rec : null;
+      } catch (e) { return null; }
+    }
+
+    // Stable cache key for a generated scenario so re-opening the same job is
+    // instant and free (no repeat LLM call). Hash of role + category + a digest
+    // of the analysis signals.
+    function genCacheKey(rec, category) {
+      var a = (rec && rec.analysis) || {};
+      var basis = [
+        (rec && rec.input && rec.input.targetRole) || a.seniority || "",
+        category || "",
+        (a.roleSummary || "").slice(0, 120),
+        ((a.technologies || []).join(",")),
+      ].join("|");
+      var h = 0;
+      for (var i = 0; i < basis.length; i++) { h = ((h << 5) - h + basis.charCodeAt(i)) | 0; }
+      return "offerready.genscenario.v1." + (h >>> 0).toString(36);
+    }
+
+    // Generate (or reuse a cached) per-job scenario, then run it.
+    function generateForJob(btn) {
+      var rec = getStoredAnalysis();
+      if (!rec) return;
+      var category = (jobContext && jobContext.category) || activeCat;
+      var cacheKey = genCacheKey(rec, category);
+      // Cached? Run it immediately — deterministic + free on repeat opens.
+      try {
+        var cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
+        if (cached && cached.content && cached.content.start) { startRun(cached); return; }
+      } catch (e) {}
+
+      var orig = btn ? btn.textContent : "";
+      if (btn) { btn.disabled = true; btn.textContent = "Generating\u2026"; }
+      var restore = function () { if (btn) { btn.disabled = false; btn.textContent = orig; } };
+
+      withHeaders(function (h) {
+        var headers = Object.assign({ "Content-Type": "application/json" }, h || {});
+        fetch(API + "/api/premium/scenarios/generate", {
+          method: "POST", headers: headers,
+          body: JSON.stringify({
+            targetRole: (rec.input && rec.input.targetRole) || "",
+            category: category || null,
+            analysis: rec.analysis,
+          }),
+        }).then(function (r) {
+          return r.json().then(function (d) { return { status: r.status, body: d }; });
+        }).then(function (res) {
+          restore();
+          if (res.status === 200 && res.body && res.body.scenario && res.body.scenario.content) {
+            try { localStorage.setItem(cacheKey, JSON.stringify(res.body.scenario)); } catch (e) {}
+            startRun(res.body.scenario);
+          } else if (res.status === 401) {
+            gate("sign-in", { title: "Generate a custom scenario" });
+          } else if (res.status === 403) {
+            gate("upgrade", { title: "Generate a custom scenario" }, res.body);
+          } else {
+            // 422/503/5xx -> fall back to the authored scenario for this role.
+            fallbackNote("Couldn't generate a custom scenario right now \u2014 opening the standard one for your role.");
+          }
+        }).catch(function () {
+          restore();
+          fallbackNote("Couldn't reach the generator \u2014 opening the standard one for your role.");
+        });
+      });
+    }
+
+    // Briefly tell the user we're falling back, then open the authored scenario
+    // that matches the current role filter (if any).
+    function fallbackNote(msg) {
+      var match = allScenarios.filter(function (s) {
+        return s.category === ((jobContext && jobContext.category) || activeCat);
+      })[0];
+      app.insertBefore(el("p", "or-scn-fallback ip-ai-hint", esc(msg)), app.firstChild);
+      if (match) setTimeout(function () { openScenario(match.slug, match); }, 900);
     }
 
     // ---- Bundled offline scenarios (no backend needed) ---------------------
