@@ -1204,10 +1204,16 @@ def write_nav(md_catalog, modules) -> None:
     # buried inside one "Practice" group: Analyze -> My Jobs -> Defend -> Mock
     # Interview -> Practice drills -> Progress. Each is a real existing page;
     # we're only changing where they appear in the nav (no pages moved/removed).
+    if (DOCS_DIR / "Dashboard" / "index.md").exists():
+        nav.append("  - Dashboard: Dashboard/index.md")
     if (DOCS_DIR / "Analyze" / "index.md").exists():
         nav.append("  - Analyze Job: Analyze/index.md")
     if (DOCS_DIR / "My-Jobs" / "index.md").exists():
         nav.append("  - My Jobs: My-Jobs/index.md")
+    if (DOCS_DIR / "Gap-Analysis" / "index.md").exists():
+        nav.append("  - Gap Analysis: Gap-Analysis/index.md")
+    if (DOCS_DIR / "Question-Bank" / "index.md").exists():
+        nav.append("  - Interview Questions: Question-Bank/index.md")
     if (DOCS_DIR / "Practice-Scenarios" / "index.md").exists():
         nav.append("  - Defend: Practice-Scenarios/index.md")
     if (DOCS_DIR / "Personal-SourceCode" / "Interview_Master_Simulator.md").exists():

@@ -1439,3 +1439,93 @@ a.ig-feature.ig-link .ig-d {
 .or-auth-divider::before, .or-auth-divider::after {
   content: ""; flex: 1; height: 1px; background: var(--md-default-fg-color--lightest, #e0e0e0);
 }
+
+/* ===========================================================================
+   Interview Readiness Platform — SaaS components (cards, bars, chips, stats).
+   Reused by Gap Analysis, Readiness Dashboard, and Question Generator.
+   Works in both light and Material "slate" dark scheme via theme variables.
+   =========================================================================== */
+.or-card {
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.8rem;
+  padding: 1.1rem 1.25rem;
+  margin: 0 0 1rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.or-card h2, .or-card h3 { margin-top: 0; }
+.or-muted { color: var(--md-default-fg-color--light); }
+.or-small { font-size: 0.82rem; }
+.or-error { color: #c62828; font-weight: 600; margin: 0.4rem 0; }
+
+/* Inputs */
+.or-input {
+  width: 100%; box-sizing: border-box;
+  border: 1px solid var(--md-default-fg-color--lighter);
+  border-radius: 0.5rem; padding: 0.55rem 0.7rem;
+  background: var(--md-default-bg-color); color: var(--md-default-fg-color);
+  font: inherit; margin: 0.15rem 0 0.8rem;
+}
+.or-textarea { resize: vertical; line-height: 1.5; }
+.or-field-label { font-size: 0.8rem; font-weight: 700; color: var(--md-default-fg-color--light); text-transform: uppercase; letter-spacing: 0.03em; margin-top: 0.4rem; }
+.or-filerow { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin: 0.2rem 0 0.4rem; }
+.or-file { font: inherit; }
+
+/* Buttons */
+.or-btn {
+  display: inline-block; border: 1px solid var(--md-default-fg-color--lighter);
+  background: transparent; color: var(--md-default-fg-color);
+  border-radius: 0.55rem; padding: 0.5rem 1rem; cursor: pointer; font: inherit;
+  text-decoration: none; margin: 0.3rem 0.4rem 0.3rem 0;
+}
+.or-btn:hover { border-color: var(--md-primary-fg-color); }
+.or-btn-primary { background: var(--md-primary-fg-color); color: #fff; border-color: var(--md-primary-fg-color); }
+.or-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+
+/* Score header */
+.or-score-head { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.or-score-num { font-size: 2.6rem; font-weight: 800; line-height: 1; }
+.or-score-label { flex: 1; min-width: 200px; }
+.or-good { color: #2e7d32; }
+.or-mid  { color: #ed9a1c; }
+.or-weak { color: #c62828; }
+
+/* Progress bars */
+.or-bar-row { display: flex; align-items: center; gap: 0.7rem; margin: 0.5rem 0; }
+.or-bar-label { width: 110px; font-size: 0.85rem; font-weight: 600; }
+.or-bar-track { flex: 1; height: 10px; border-radius: 999px; background: var(--md-default-fg-color--lightest); overflow: hidden; }
+.or-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+.or-bar-fill.or-good { background: #2e7d32; }
+.or-bar-fill.or-mid  { background: #ed9a1c; }
+.or-bar-fill.or-weak { background: #c62828; }
+.or-bar-pct { width: 46px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.85rem; }
+
+/* Chips */
+.or-chips-block { margin: 0.6rem 0; }
+.or-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.3rem; }
+.or-chip { display: inline-block; padding: 0.28rem 0.6rem; border-radius: 999px; font-size: 0.82rem; border: 1px solid var(--md-default-fg-color--lighter); }
+.or-chip-ok { background: color-mix(in srgb, #2e7d32 12%, transparent); border-color: #2e7d32; }
+.or-chip-warn { background: color-mix(in srgb, #ed9a1c 14%, transparent); border-color: #ed9a1c; }
+
+/* Stat cards grid (dashboard) */
+.or-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.9rem; margin: 0 0 1rem; }
+.or-stat { background: var(--md-default-bg-color); border: 1px solid var(--md-default-fg-color--lightest); border-radius: 0.8rem; padding: 1rem 1.1rem; }
+.or-stat-num { font-size: 1.9rem; font-weight: 800; line-height: 1; }
+.or-stat-label { font-size: 0.8rem; color: var(--md-default-fg-color--light); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.03em; }
+
+@media (max-width: 480px) {
+  .or-score-num { font-size: 2rem; }
+  .or-bar-label { width: 88px; }
+}
+
+/* Question generator — categorized lists + difficulty badges. */
+.or-qlist { margin: 0.3rem 0 0; padding-left: 1.3rem; }
+.or-qitem { margin: 0.5rem 0; line-height: 1.5; }
+.or-diff {
+  display: inline-block; font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.04em; padding: 0.1rem 0.45rem; border-radius: 999px; margin-right: 0.4rem;
+  vertical-align: middle;
+}
+.or-diff-easy { background: color-mix(in srgb, #2e7d32 16%, transparent); color: #2e7d32; }
+.or-diff-med  { background: color-mix(in srgb, #ed9a1c 18%, transparent); color: #b6790f; }
+.or-diff-hard { background: color-mix(in srgb, #c62828 16%, transparent); color: #c62828; }

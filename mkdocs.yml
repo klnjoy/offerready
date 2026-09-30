@@ -72,7 +72,7 @@ plugins:
 extra_css:
   # ?v=N cache-buster — bump when extra.css changes so browsers don't serve a
   # stale cached stylesheet after a deploy.
-  - assets/extra.css?v=15
+  - assets/extra.css?v=17
 
 extra_javascript:
   # Must load first: sets window.OFFERREADY_API_BASE + Supabase config for the
@@ -92,6 +92,10 @@ extra_javascript:
   - assets/progress.js?v=4
   - assets/why.js?v=3
   - assets/analyze.js?v=9
+  - assets/resume-extract.js?v=1
+  - assets/readiness.js?v=1
+  - assets/gap.js?v=1
+  - assets/questions.js?v=1
   - assets/jobs.js?v=7
   - assets/onboarding.js?v=4
   - assets/simulator.js?v=3
@@ -130,8 +134,11 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Start Here: Start-Here/index.md
+  - Dashboard: Dashboard/index.md
   - Analyze Job: Analyze/index.md
   - My Jobs: My-Jobs/index.md
+  - Gap Analysis: Gap-Analysis/index.md
+  - Interview Questions: Question-Bank/index.md
   - Defend: Practice-Scenarios/index.md
   - Mock Interview: Personal-SourceCode/Interview_Master_Simulator.md
   - Practice:

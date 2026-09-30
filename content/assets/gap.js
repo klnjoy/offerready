@@ -1,0 +1,223 @@
+/* OfferReady — Resume ↔ JD Gap Analysis.
+ * ---------------------------------------------------------------------------
+ * Mounts on #gap-app. Flow:
+ *   paste JD  ->  upload resume (PDF/DOCX/TXT, extracted client-side)  ->
+ *   POST /api/ai { action: "gap_analysis" }  ->  render match score, strengths,
+ *   missing skills / keywords / experience, and 4 readiness bars.
+ *
+ * Privacy: the resume is parsed IN THE BROWSER (resume-extract.js). Only the
+ * extracted text is sent, transiently, for the single analysis call. Nothing
+ * (JD or resume) is stored server-side by this module. The distilled RESULT
+ * (scores + gaps, no resume text) is cached locally so the Readiness Dashboard
+ * can read it (window.OfferReadyReadiness).
+ *
+ * All client-side. Degrades gracefully when the backend/sign-in is unavailable.
+ */
+
+(function () {
+  "use strict";
+
+  var API = (typeof window !== "undefined" && window.OFFERREADY_API_BASE) || "";
+  var STORE_KEY = "offerready.readiness.v1";   // shared with readiness.js dashboard
+
+  function init() {
+    var app = document.getElementById("gap-app");
+    if (!app || app.dataset.mounted) return;
+    app.dataset.mounted = "1";
+
+    var el = function (t, c, h) { var n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
+    var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
+
+    var state = { jd: "", role: "", resumeText: "", resumeMeta: null };
+
+    renderForm();
+
+    function renderForm(note) {
+      app.innerHTML = "";
+      var card = el("div", "or-card");
+      card.appendChild(el("h2", null, "Resume \u2194 Job Gap Analysis"));
+      card.appendChild(el("p", "or-muted", "Paste the job description and upload your resume. We compare them and show your match score, strengths, and exactly what's missing. Your resume is read in your browser \u2014 the file is never uploaded or stored."));
+
+      if (note) card.appendChild(el("p", "or-error", esc(note)));
+
+      // Role (optional) + JD
+      var role = el("input", "or-input"); role.type = "text"; role.placeholder = "Target role (optional) \u2014 e.g. Senior Snowflake Architect";
+      role.value = state.role || "";
+      card.appendChild(el("label", "or-field-label", "Target role"));
+      card.appendChild(role);
+
+      var jd = el("textarea", "or-input or-textarea"); jd.rows = 9; jd.placeholder = "Paste the full job description here\u2026";
+      jd.value = state.jd || "";
+      card.appendChild(el("label", "or-field-label", "Job description"));
+      card.appendChild(jd);
+
+      // Resume upload
+      card.appendChild(el("label", "or-field-label", "Your resume (PDF, DOCX, or TXT)"));
+      var fileRow = el("div", "or-filerow");
+      var file = el("input"); file.type = "file"; file.accept = ".pdf,.docx,.doc,.txt,application/pdf";
+      file.className = "or-file";
+      var fileStatus = el("span", "or-muted", "No file selected.");
+      fileRow.appendChild(file); fileRow.appendChild(fileStatus);
+      card.appendChild(fileRow);
+      card.appendChild(el("p", "or-muted or-small", "Or skip the file and paste your resume text below."));
+      var resumeTa = el("textarea", "or-input or-textarea"); resumeTa.rows = 6; resumeTa.placeholder = "\u2026or paste your resume text here.";
+      resumeTa.value = state.resumeText && !state.resumeMeta ? state.resumeText : "";
+      card.appendChild(resumeTa);
+
+      file.addEventListener("change", function () {
+        var f = file.files && file.files[0];
+        if (!f) return;
+        if (!window.OfferReadyResume) { fileStatus.textContent = "Resume reader unavailable."; return; }
+        fileStatus.textContent = "Reading " + f.name + "\u2026";
+        window.OfferReadyResume.extract(f).then(function (res) {
+          state.resumeText = res.text; state.resumeMeta = res.meta;
+          fileStatus.innerHTML = "\u2713 " + esc(res.meta.fileName) + " \u00b7 " + res.meta.chars + " chars read";
+          resumeTa.value = ""; resumeTa.placeholder = "Resume loaded from file. (Paste here only to override.)";
+        }).catch(function (e) {
+          state.resumeText = ""; state.resumeMeta = null;
+          fileStatus.textContent = (e && e.message) || "Couldn't read that file.";
+        });
+      });
+
+      var go = el("button", "or-btn or-btn-primary", "Analyze gap");
+      go.addEventListener("click", function () {
+        state.role = role.value.trim();
+        state.jd = jd.value.trim();
+        // File text wins; else use pasted resume text.
+        if (!state.resumeMeta) state.resumeText = resumeTa.value.trim();
+        submit();
+      });
+      card.appendChild(go);
+      app.appendChild(card);
+    }
+
+    function submit() {
+      if (state.jd.length < 30) { renderForm("Please paste a fuller job description first."); return; }
+      if ((state.resumeText || "").length < 40) { renderForm("Add your resume (upload a file or paste the text) so we can compare."); return; }
+
+      app.innerHTML = "";
+      var loading = el("div", "or-card"); loading.appendChild(el("p", "or-muted", "Comparing your resume against the job\u2026"));
+      app.appendChild(loading);
+
+      resolveToken(function (headers) {
+        fetch(API + "/api/ai", {
+          method: "POST",
+          headers: Object.assign({ "Content-Type": "application/json" }, headers),
+          body: JSON.stringify({
+            action: "gap_analysis",
+            jobTitle: state.role, targetRole: state.role,
+            jobDescription: state.jd, resumeText: state.resumeText,
+          }),
+        }).then(function (r) {
+          return r.json().then(function (d) { return { status: r.status, body: d }; });
+        }).then(function (res) {
+          if (res.status === 200 && res.body && res.body.result) {
+            saveReadiness(res.body.result);
+            renderResult(res.body.result);
+          } else if (res.status === 401) {
+            renderForm("Sign in (top-right Account) to run gap analysis \u2014 then try again.");
+          } else if (res.status === 503) {
+            renderForm("Gap analysis isn't enabled on this deployment yet.");
+          } else {
+            renderForm((res.body && res.body.error) || "Couldn't complete the gap analysis. Please try again.");
+          }
+        }).catch(function () {
+          renderForm("Couldn't reach the analysis service. Check your connection and try again.");
+        });
+      });
+    }
+
+    function bar(label, pct) {
+      var band = pct >= 75 ? "or-good" : pct >= 50 ? "or-mid" : "or-weak";
+      var row = el("div", "or-bar-row");
+      row.appendChild(el("div", "or-bar-label", esc(label)));
+      var track = el("div", "or-bar-track");
+      var fill = el("div", "or-bar-fill " + band); fill.style.width = Math.max(3, pct) + "%";
+      track.appendChild(fill);
+      row.appendChild(track);
+      row.appendChild(el("div", "or-bar-pct", pct + "%"));
+      return row;
+    }
+
+    function chips(title, items, cls) {
+      if (!(items || []).length) return null;
+      var wrap = el("div", "or-chips-block");
+      wrap.appendChild(el("div", "or-field-label", title));
+      var chipwrap = el("div", "or-chips");
+      items.forEach(function (x) { chipwrap.appendChild(el("span", "or-chip " + (cls || ""), esc(x))); });
+      wrap.appendChild(chipwrap);
+      return wrap;
+    }
+
+    function renderResult(r) {
+      app.innerHTML = "";
+      var top = el("div", "or-card");
+      var score = r.matchScore || 0;
+      var band = score >= 75 ? "or-good" : score >= 50 ? "or-mid" : "or-weak";
+      var head = el("div", "or-score-head");
+      head.appendChild(el("div", "or-score-num " + band, score + "%"));
+      head.appendChild(el("div", "or-score-label", "<strong>Overall match</strong><br><span class=\"or-muted\">" + esc(r.summary || "") + "</span>"));
+      top.appendChild(head);
+      app.appendChild(top);
+
+      // Readiness bars
+      var bars = el("div", "or-card");
+      bars.appendChild(el("h3", null, "Readiness breakdown"));
+      bars.appendChild(bar("Technical", r.technicalScore || 0));
+      bars.appendChild(bar("Behavioral", r.behavioralScore || 0));
+      bars.appendChild(bar("Architecture", r.architectureScore || 0));
+      bars.appendChild(bar("Domain", r.domainScore || 0));
+      app.appendChild(bars);
+
+      // Strengths + gaps
+      var detail = el("div", "or-card");
+      var s = chips("\u2713 Strengths", r.strengths, "or-chip-ok"); if (s) detail.appendChild(s);
+      var ms = chips("\u26a0 Missing skills", r.missingSkills, "or-chip-warn"); if (ms) detail.appendChild(ms);
+      var mk = chips("\u26a0 Missing keywords", r.missingKeywords, "or-chip-warn"); if (mk) detail.appendChild(mk);
+      var me = chips("\u26a0 Missing experience signals", r.missingExperience, "or-chip-warn"); if (me) detail.appendChild(me);
+      app.appendChild(detail);
+
+      // Actions
+      var actions = el("div", "or-card or-actions");
+      var again = el("button", "or-btn", "Run another"); again.addEventListener("click", function () { renderForm(); });
+      actions.appendChild(again);
+      var dash = el("a", "or-btn or-btn-primary"); dash.textContent = "See readiness dashboard";
+      dash.href = "../Dashboard/index.html";
+      actions.appendChild(dash);
+      app.appendChild(actions);
+    }
+
+    // Persist the distilled result (NO resume text) for the dashboard.
+    function saveReadiness(r) {
+      try {
+        if (window.OfferReadyReadiness && window.OfferReadyReadiness.saveGap) {
+          window.OfferReadyReadiness.saveGap(r, { role: state.role });
+          return;
+        }
+        // Fallback: write the shared key directly.
+        var rec = {
+          when: new Date().toISOString(), role: state.role || "",
+          match: r.matchScore || 0,
+          technical: r.technicalScore || 0, behavioral: r.behavioralScore || 0,
+          architecture: r.architectureScore || 0, domain: r.domainScore || 0,
+          strengths: r.strengths || [], missingSkills: r.missingSkills || [],
+          missingKeywords: r.missingKeywords || [], missingExperience: r.missingExperience || [],
+        };
+        localStorage.setItem(STORE_KEY, JSON.stringify(rec));
+      } catch (e) {}
+    }
+
+    // Resolve a Supabase bearer token (or {}), then call back with headers.
+    function resolveToken(cb) {
+      if (window.OfferReadyAuth && window.OfferReadyAuth.getAccessToken) {
+        window.OfferReadyAuth.getAccessToken().then(function (tok) {
+          cb(tok ? { Authorization: "Bearer " + tok } : {});
+        }).catch(function () { cb({}); });
+      } else { cb({}); }
+    }
+  }
+
+  if (document.readyState !== "loading") init();
+  else document.addEventListener("DOMContentLoaded", init);
+  if (window.document$) { try { window.document$.subscribe(init); } catch (e) {} }
+})();
