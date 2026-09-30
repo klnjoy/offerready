@@ -57,7 +57,13 @@
       card.appendChild(el("h2", null, "Resume \u2194 Job Gap Analysis"));
       card.appendChild(el("p", "or-muted", "Compare your resume against a saved job. We show your match score, strengths, and exactly what's missing \u2014 and save the result to that job so it's on every device. Your resume is read in your browser; the file is never uploaded or stored."));
 
-      if (note) card.appendChild(el("p", "or-error", esc(note)));
+      // Persistent inline error slot. Validation errors update THIS element in
+      // place — we never re-render the whole form on an error (that used to wipe
+      // the selected resume file + JD text the user already entered).
+      var err = el("p", "or-error");
+      err.style.display = note ? "block" : "none";
+      if (note) err.textContent = note;
+      card.appendChild(err);
 
       // Job selector — gap analysis is job-rooted. If the user has jobs, they
       // pick one (and the JD prefills from it); otherwise they can still paste a
@@ -102,6 +108,10 @@
       var file = el("input"); file.type = "file"; file.accept = ".pdf,.docx,.doc,.txt,application/pdf";
       file.className = "or-file";
       var fileStatus = el("span", "or-muted", "No file selected.");
+      // Reflect an already-loaded resume so it visibly survives any re-render.
+      if (state.resumeMeta) {
+        fileStatus.innerHTML = "\u2713 " + esc(state.resumeMeta.fileName) + " \u00b7 " + state.resumeMeta.chars + " chars read (still loaded)";
+      }
       fileRow.appendChild(file); fileRow.appendChild(fileStatus);
       card.appendChild(fileRow);
       card.appendChild(el("p", "or-muted or-small", "Or skip the file and paste your resume text below."));
@@ -126,10 +136,20 @@
 
       var go = el("button", "or-btn or-btn-primary", "Analyze gap");
       go.addEventListener("click", function () {
+        // Sync current field values into state (so nothing is read from a
+        // stale render), then validate INLINE without rebuilding the form.
         state.role = role.value.trim();
         state.jd = jd.value.trim();
         // File text wins; else use pasted resume text.
         if (!state.resumeMeta) state.resumeText = resumeTa.value.trim();
+
+        function showErr(msg) {
+          err.textContent = msg; err.style.display = "block";
+          try { err.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
+        }
+        if (state.jd.length < 30) { showErr("Please paste a fuller job description first (or pick a saved job above to fill it in)."); return; }
+        if ((state.resumeText || "").length < 40) { showErr("Add your resume \u2014 upload a file or paste the text \u2014 so we can compare."); return; }
+        err.style.display = "none";
         submit();
       });
       card.appendChild(go);
@@ -137,9 +157,6 @@
     }
 
     function submit() {
-      if (state.jd.length < 30) { renderForm("Please paste a fuller job description first."); return; }
-      if ((state.resumeText || "").length < 40) { renderForm("Add your resume (upload a file or paste the text) so we can compare."); return; }
-
       app.innerHTML = "";
       var loading = el("div", "or-card"); loading.appendChild(el("p", "or-muted", "Comparing your resume against the job\u2026"));
       app.appendChild(loading);
