@@ -1202,8 +1202,7 @@ def write_nav(md_catalog, modules) -> None:
     #   "  - Tab:"            (2 spaces)  top-level tab / group
     #   "      - Section:"    (6 spaces)  a section inside a group
     #   "          - Page"    (10 spaces) a page inside a section
-    nav = ["nav:", "  - Home: index.md",
-           "  - Start Here: Start-Here/index.md"]
+    nav = ["nav:", "  - Home: index.md"]
     # ----- CORE PRODUCT LOOP (top-level) -------------------------------------
     # Simplified SaaS IA (Linear/Notion style): exactly four product nav items
     #   Dashboard · Jobs · Analysis · Practice
@@ -1256,9 +1255,16 @@ def write_nav(md_catalog, modules) -> None:
         practice_children.append("      - Sample Walkthrough: Sample-Walkthrough/index.md")
     if (DOCS_DIR / "Personal-SourceCode" / "Interview_Progress.md").exists():
         practice_children.append("      - Progress Detail: Personal-SourceCode/Interview_Progress.md")
-    if practice_children:
-        nav.append("  - Practice:")
-        nav.extend(practice_children)
+
+    # ----- STUDY & INTERVIEW LIBRARY (nested UNDER Practice) ------------------
+    # Simplified IA: the top nav is exactly Dashboard · Jobs · Analysis ·
+    # Practice · Account (+ Home/Pricing). Practice is the SINGLE interview-prep
+    # hub, so the former top-level Learn / Build / Interview Prep / Study Guide
+    # groups are built below at their normal 2/6/10/14-space levels, then sliced
+    # out of `nav` and re-indented +4 so they nest inside Practice as one
+    # collapsed "Study Library" section. No pages are deleted — only moved one
+    # level deeper, so there are no duplicate top-level journeys.
+    lib_start = len(nav)
 
     # ----- LEARN --------------------------------------------------------------
     nav.append("  - Learn:")
@@ -1501,6 +1507,23 @@ def write_nav(md_catalog, modules) -> None:
         nav.append(f"  - {name}:")
         for rel_dest, title in sorted(entries, key=lambda e: e[1].lower()):
             nav.append(f"      - {nav_label(title)}: {rel_dest}")
+
+    # ----- Nest the whole library UNDER Practice ------------------------------
+    # Slice the Learn/Build/Interview-Prep/Study-Guide/leftover lines out of nav,
+    # re-indent them +4 spaces (so former top-level groups become sections inside
+    # Practice), and append them under a single collapsed "Study Library" section
+    # of the Practice group. This keeps the top nav to exactly the product items
+    # while Practice remains the single interview-prep hub (no orphaned pages).
+    library = nav[lib_start:]
+    del nav[lib_start:]
+    if practice_children:
+        # Re-indent each library line +4 spaces so the former top-level groups
+        # (Learn / Build / Interview Prep / Study Guide) become sections nested
+        # directly inside the Practice group.
+        for line in library:
+            practice_children.append("    " + line)
+        nav.append("  - Practice:")
+        nav.extend(practice_children)
 
     # Pricing — standalone HTML landing page (chrome-free); kept top-level as a
     # conversion entry point.
