@@ -94,7 +94,7 @@ extra_javascript:
   - assets/analyze.js?v=10
   - assets/resume-extract.js?v=1
   - assets/readiness.js?v=3
-  - assets/gap.js?v=3
+  - assets/gap.js?v=4
   - assets/questions.js?v=2
   - assets/jobs.js?v=8
   - assets/onboarding.js?v=4

@@ -26,6 +26,7 @@
 
     var el = function (t, c, h) { var n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
     var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
+    var baseHref = function () { return (window.__md_scope && window.__md_scope.pathname ? window.__md_scope.pathname.replace(/[^/]*$/, "") : "/"); };
 
     var state = { jd: "", role: "", resumeText: "", resumeMeta: null, jobId: "", jobs: [] };
 
@@ -88,7 +89,13 @@
           renderForm();
         });
         card.appendChild(sel);
-        card.appendChild(el("p", "or-muted or-small", "No job here yet? <a href=\"" + (window.__md_scope && window.__md_scope.pathname ? window.__md_scope.pathname.replace(/[^/]*$/, "") : "/") + "Analyze/index.html\">Analyze &amp; save a job</a> first \u2014 then gap analysis attaches to it."));
+        card.appendChild(el("p", "or-muted or-small", "Pick a job to auto-fill its description below, or paste a job description manually. <a href=\"" + baseHref() + "Analyze/index.html\">Analyze &amp; save a new job</a>."));
+      } else {
+        // No saved jobs yet: gap analysis still works by pasting a JD, but the
+        // result won't attach to a job until one is saved. Make that explicit so
+        // the user isn't stuck expecting a dropdown that isn't here.
+        card.appendChild(el("p", "or-muted or-small",
+          "You don't have any saved jobs yet. Paste a job description below to run a one-off gap analysis, or <a href=\"" + baseHref() + "Analyze/index.html\">analyze &amp; save a job</a> first so the result is stored and tracked."));
       }
 
       // Role (optional) + JD
@@ -97,9 +104,9 @@
       card.appendChild(el("label", "or-field-label", "Target role"));
       card.appendChild(role);
 
-      var jd = el("textarea", "or-input or-textarea"); jd.rows = 9; jd.placeholder = "Paste the full job description here\u2026";
+      var jd = el("textarea", "or-input or-textarea"); jd.rows = 9; jd.placeholder = "Paste the full job description here\u2026 (required \u2014 gap analysis compares your resume against it)";
       jd.value = state.jd || "";
-      card.appendChild(el("label", "or-field-label", "Job description"));
+      card.appendChild(el("label", "or-field-label", "Job description (required)"));
       card.appendChild(jd);
 
       // Resume upload
