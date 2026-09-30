@@ -1529,3 +1529,6 @@ a.ig-feature.ig-link .ig-d {
 .or-diff-easy { background: color-mix(in srgb, #2e7d32 16%, transparent); color: #2e7d32; }
 .or-diff-med  { background: color-mix(in srgb, #ed9a1c 18%, transparent); color: #b6790f; }
 .or-diff-hard { background: color-mix(in srgb, #c62828 16%, transparent); color: #c62828; }
+
+/* Dashboard readiness-trend sparkline. */
+.or-spark { width: 100%; max-width: 260px; height: auto; display: block; margin-top: 0.3rem; }

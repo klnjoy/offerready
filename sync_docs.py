@@ -1199,45 +1199,61 @@ def write_nav(md_catalog, modules) -> None:
     #   "          - Page"    (10 spaces) a page inside a section
     nav = ["nav:", "  - Home: index.md",
            "  - Start Here: Start-Here/index.md"]
-    # ----- CORE PRODUCT LOOP (top-level, in workflow order) ------------------
-    # The spec wants the job-centered loop surfaced as first-class nav, not
-    # buried inside one "Practice" group: Analyze -> My Jobs -> Defend -> Mock
-    # Interview -> Practice drills -> Progress. Each is a real existing page;
-    # we're only changing where they appear in the nav (no pages moved/removed).
+    # ----- CORE PRODUCT LOOP (top-level) -------------------------------------
+    # Simplified SaaS IA (Linear/Notion style): exactly four product nav items
+    #   Dashboard · Jobs · Analysis · Practice
+    # so "how am I doing?" is answered in ONE place (Dashboard). Progress and
+    # Mock Interview are no longer competing top-level items — Progress metrics
+    # live as Dashboard widgets and its detail page nests under Practice; Mock
+    # Interview is an activity inside Practice. Analyze-Job folds into Analysis.
+    # No pages are deleted — only their placement in the nav changes, so every
+    # existing route/link keeps resolving.
+
+    # 1) Dashboard — the executive summary + progress widgets.
     if (DOCS_DIR / "Dashboard" / "index.md").exists():
         nav.append("  - Dashboard: Dashboard/index.md")
-    if (DOCS_DIR / "Analyze" / "index.md").exists():
-        nav.append("  - Analyze Job: Analyze/index.md")
-    if (DOCS_DIR / "My-Jobs" / "index.md").exists():
-        nav.append("  - My Jobs: My-Jobs/index.md")
-    if (DOCS_DIR / "Gap-Analysis" / "index.md").exists():
-        nav.append("  - Gap Analysis: Gap-Analysis/index.md")
-    if (DOCS_DIR / "Question-Bank" / "index.md").exists():
-        nav.append("  - Interview Questions: Question-Bank/index.md")
-    if (DOCS_DIR / "Practice-Scenarios" / "index.md").exists():
-        nav.append("  - Defend: Practice-Scenarios/index.md")
-    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Master_Simulator.md").exists():
-        nav.append("  - Mock Interview: Personal-SourceCode/Interview_Master_Simulator.md")
 
-    # Practice — the remaining interactive drills grouped under one section.
-    # (Analyze / Defend / Mock Interview are now top-level above; the Practice
-    # overview page still introduces the whole loop.)
+    # 2) Jobs — manage saved job descriptions.
+    if (DOCS_DIR / "My-Jobs" / "index.md").exists():
+        nav.append("  - Jobs: My-Jobs/index.md")
+
+    # 3) Analysis — resume vs JD gap analysis (Gap Analysis is the landing);
+    #    the JD-only role analyzer folds in beneath it.
+    analysis_children = []
+    if (DOCS_DIR / "Gap-Analysis" / "index.md").exists():
+        analysis_children.append("      - Gap-Analysis/index.md")  # bare = section landing
+    if (DOCS_DIR / "Analyze" / "index.md").exists():
+        analysis_children.append("      - Analyze a Job (role breakdown): Analyze/index.md")
+    if analysis_children:
+        nav.append("  - Analysis:")
+        nav.extend(analysis_children)
+    elif (DOCS_DIR / "Analyze" / "index.md").exists():
+        # Fallback: if Gap Analysis is absent, keep the analyzer reachable.
+        nav.append("  - Analysis: Analyze/index.md")
+
+    # 4) Practice — all interview preparation activities in one place:
+    #    Question Generator, Practice drills, Defend, Mock Interview,
+    #    Keep Asking Why, Sample Walkthrough, and the Progress detail page.
     practice_children = []
     if (DOCS_DIR / "Practice" / "index.md").exists():
         practice_children.append("      - Practice/index.md")  # bare = section landing
+    if (DOCS_DIR / "Question-Bank" / "index.md").exists():
+        practice_children.append("      - Question Generator: Question-Bank/index.md")
     if (DOCS_DIR / "Personal-SourceCode" / "Interview_Practice.md").exists():
         practice_children.append("      - Practice Mode (Q&A drills): Personal-SourceCode/Interview_Practice.md")
+    if (DOCS_DIR / "Practice-Scenarios" / "index.md").exists():
+        practice_children.append("      - Defend Your Decisions: Practice-Scenarios/index.md")
+    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Master_Simulator.md").exists():
+        practice_children.append("      - Mock Interview: Personal-SourceCode/Interview_Master_Simulator.md")
     if (DOCS_DIR / "Personal-SourceCode" / "Interview_Why_Interactive.md").exists():
         practice_children.append("      - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md")
     if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
         practice_children.append("      - Sample Walkthrough: Sample-Walkthrough/index.md")
+    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Progress.md").exists():
+        practice_children.append("      - Progress Detail: Personal-SourceCode/Interview_Progress.md")
     if practice_children:
         nav.append("  - Practice:")
         nav.extend(practice_children)
-
-    # Progress — top-level (the "what should I work on next?" dashboard).
-    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Progress.md").exists():
-        nav.append("  - Progress: Personal-SourceCode/Interview_Progress.md")
 
     # ----- LEARN --------------------------------------------------------------
     nav.append("  - Learn:")

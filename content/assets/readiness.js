@@ -25,6 +25,7 @@
   "use strict";
 
   var GAP_KEY = "offerready.readiness.v1";      // latest gap-analysis record
+  var GAP_HIST_KEY = "offerready.readiness.hist.v1"; // gap snapshots (skill-gap trend)
   var HISTORY_KEY = "ip_history_v1";            // practice history (shared w/ progress.js)
 
   function readJSON(key, fallback) {
@@ -56,10 +57,54 @@
         summary: result.summary || "",
       };
       try { localStorage.setItem(GAP_KEY, JSON.stringify(rec)); } catch (e) {}
+      // Append a compact snapshot for the skill-gap-reduction + readiness trend
+      // widgets (keep the last 20, newest last).
+      try {
+        var hist = readJSON(GAP_HIST_KEY, []);
+        hist.push({ when: rec.when, match: rec.match,
+                    gaps: (rec.missingSkills.length + rec.missingKeywords.length + rec.missingExperience.length) });
+        localStorage.setItem(GAP_HIST_KEY, JSON.stringify(hist.slice(-20)));
+      } catch (e) {}
       return rec;
     },
 
     latest: function () { return readJSON(GAP_KEY, null); },
+    gapHistory: function () { return readJSON(GAP_HIST_KEY, []); },
+
+    // This week's practice average vs last week's (percentage-point delta).
+    weeklyImprovement: function () {
+      var h = readJSON(HISTORY_KEY, []);
+      if (!Array.isArray(h) || !h.length) return null;
+      var now = Date.now(), WEEK = 7 * 24 * 3600 * 1000;
+      var thisWk = [], lastWk = [];
+      h.forEach(function (s) {
+        var t = Date.parse(s.when || "");
+        var sc = Number(s.score) || 0;
+        if (!isFinite(t)) return;
+        if (now - t <= WEEK) thisWk.push(sc);
+        else if (now - t <= 2 * WEEK) lastWk.push(sc);
+      });
+      if (!thisWk.length) return null;
+      var mean = function (a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : 0; };
+      var cur = Math.round(mean(thisWk));
+      if (!lastWk.length) return { current: cur, delta: null, sessions: thisWk.length };
+      return { current: cur, delta: Math.round(mean(thisWk) - mean(lastWk)), sessions: thisWk.length };
+    },
+
+    // Recent practice scores oldest->newest for a sparkline (max 12 points).
+    trend: function () {
+      var h = readJSON(HISTORY_KEY, []);
+      if (!Array.isArray(h) || !h.length) return [];
+      return h.slice(0, 12).reverse().map(function (s) { return Number(s.score) || 0; });
+    },
+
+    // Skill-gap reduction: how many gaps closed since the first snapshot.
+    gapReduction: function () {
+      var hist = readJSON(GAP_HIST_KEY, []);
+      if (hist.length < 2) return null;
+      var first = hist[0].gaps, last = hist[hist.length - 1].gaps;
+      return { first: first, last: last, closed: Math.max(0, first - last) };
+    },
 
     // Practice signal from the shared history store (practice/why/scenario).
     practiceStats: function () {
@@ -128,6 +173,20 @@
     function stat(num, label) {
       return el("div", "or-stat", '<div class="or-stat-num">' + esc(String(num)) + '</div><div class="or-stat-label">' + esc(label) + "</div>");
     }
+    // Tiny inline-SVG sparkline of recent scores (no chart lib).
+    function sparkline(scores) {
+      var W = 220, H = 46, P = 4, n = scores.length;
+      if (n < 2) return el("div", "or-muted or-small", "Practice a few sessions to see your trend.");
+      var x = function (i) { return P + (i * (W - 2 * P)) / (n - 1); };
+      var y = function (v) { return H - P - (v / 100) * (H - 2 * P); };
+      var pts = scores.map(function (v, i) { return x(i) + "," + y(v); }).join(" ");
+      var last = scores[n - 1];
+      var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="or-spark" role="img" aria-label="Readiness trend">' +
+        '<polyline points="' + pts + '" fill="none" stroke="var(--md-primary-fg-color)" stroke-width="2.5"></polyline>' +
+        '<circle cx="' + x(n - 1) + '" cy="' + y(last) + '" r="3.2" fill="var(--md-accent-fg-color)"></circle>' +
+        '</svg>';
+      return el("div", null, svg);
+    }
 
     function render() {
       root.innerHTML = "";
@@ -176,6 +235,30 @@
       grid.appendChild(stat(r.practice.avg + "%", "Avg practice score"));
       grid.appendChild(stat(r.gap ? r.gap.match + "%" : "\u2014", "Resume match"));
       root.appendChild(grid);
+
+      // ---- Progress widgets (these replace the standalone Progress page) ----
+      var wk = store.weeklyImprovement();
+      var red = store.gapReduction();
+      var tr = store.trend();
+      if (wk || red || tr.length) {
+        var prog = el("div", "or-card");
+        prog.appendChild(el("h3", null, "This week"));
+        var wgrid = el("div", "or-grid");
+        if (wk) {
+          var deltaTxt = wk.delta == null ? "\u2014"
+            : (wk.delta > 0 ? "+" + wk.delta + " pts" : wk.delta + " pts");
+          wgrid.appendChild(stat(wk.current + "%", "This week's avg"));
+          wgrid.appendChild(stat(deltaTxt, "Weekly improvement"));
+          wgrid.appendChild(stat(wk.sessions, "Sessions this week"));
+        }
+        if (red) wgrid.appendChild(stat(red.closed, "Skill gaps closed"));
+        prog.appendChild(wgrid);
+        if (tr.length) {
+          prog.appendChild(el("div", "or-field-label", "Readiness trend"));
+          prog.appendChild(sparkline(tr));
+        }
+        root.appendChild(prog);
+      }
 
       // Weakest / strongest area (from sub-scores)
       var areas = [["Technical", r.technical], ["Behavioral", r.behavioral], ["Architecture", r.architecture], ["Domain", r.domain]]
