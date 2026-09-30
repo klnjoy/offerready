@@ -816,7 +816,7 @@ def write_index(md_catalog, modules) -> None:
         '<p class="home-cta" markdown>'
         '[:material-clipboard-search-outline: Analyze My Job](#start-with-your-job){ .md-button .md-button--primary }'
         "&nbsp;"
-        "[:material-briefcase-outline: My Jobs](My-Jobs/index.md){ .md-button }"
+        "[:material-view-dashboard-outline: My Dashboard](Dashboard/index.md){ .md-button }"
         "&nbsp;"
         "[:material-tag-outline: See Free vs Pro](assets/pricing.html){ .md-button }"
         "</p>",
@@ -832,14 +832,19 @@ def write_index(md_catalog, modules) -> None:
         "## How OfferReady works",
         "",
         "Most prep starts with generic content. OfferReady starts with **your "
-        "target job** and walks a single loop:",
+        "target job** and moves through four simple steps:",
         "",
         '<p class="or-flow">'
-        "<span>Paste job</span> &rarr; <span>Analyze role</span> &rarr; "
-        "<span>Find gaps</span> &rarr; <span>Prep plan</span> &rarr; "
-        "<span>Practice</span> &rarr; <span>Defend decisions</span> &rarr; "
-        "<span>Mock interview</span> &rarr; <span>Track progress</span>"
+        "<span>1 · Add the job</span> &rarr; <span>2 · Analyze the gap</span> "
+        "&rarr; <span>3 · Practice &amp; defend</span> &rarr; "
+        "<span>4 · Track readiness</span>"
         "</p>",
+        "",
+        "That's the whole app: **[Jobs](My-Jobs/index.md)** holds your target "
+        "roles, **[Analysis](Gap-Analysis/index.md)** shows your resume-vs-job "
+        "gaps, **[Practice](Practice/index.md)** is where you rehearse and defend "
+        "your answers, and the **[Dashboard](Dashboard/index.md)** tracks how "
+        "ready you are — in one place.",
         "",
         "## Start with your job",
         "",
