@@ -5,20 +5,19 @@
  *   POST /api/ai { action: "gap_analysis" }  ->  render match score, strengths,
  *   missing skills / keywords / experience, and 4 readiness bars.
  *
- * Privacy: the resume is parsed IN THE BROWSER (resume-extract.js). Only the
- * extracted text is sent, transiently, for the single analysis call. Nothing
- * (JD or resume) is stored server-side by this module. The distilled RESULT
- * (scores + gaps, no resume text) is cached locally so the Readiness Dashboard
- * can read it (window.OfferReadyReadiness).
+ * Job-rooted + persistent: the user picks a saved job; the gap result is saved
+ * server-side to that job's gap_analysis row (source of truth) and shows on the
+ * Dashboard on any device. The distilled RESULT (scores + gaps) is persisted;
+ * the raw resume text is NEVER stored (parsed in-browser, sent transiently for
+ * the single analysis call).
  *
- * All client-side. Degrades gracefully when the backend/sign-in is unavailable.
+ * All client-side UI. Degrades gracefully when the backend/sign-in is unavailable.
  */
 
 (function () {
   "use strict";
 
   var API = (typeof window !== "undefined" && window.OFFERREADY_API_BASE) || "";
-  var STORE_KEY = "offerready.readiness.v1";   // shared with readiness.js dashboard
 
   function init() {
     var app = document.getElementById("gap-app");
@@ -28,17 +27,63 @@
     var el = function (t, c, h) { var n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
     var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
 
-    var state = { jd: "", role: "", resumeText: "", resumeMeta: null };
+    var state = { jd: "", role: "", resumeText: "", resumeMeta: null, jobId: "", jobs: [] };
 
-    renderForm();
+    // Load the user's jobs first so gap analysis can attach to one (job-rooted,
+    // persisted). If not signed in / no backend, fall back to a plain form.
+    loadJobsThen(renderForm);
+
+    function loadJobsThen(cb) {
+      if (!API || !window.OfferReadyAuth) { cb(); return; }
+      window.OfferReadyAuth.getAccessToken().then(function (tok) {
+        if (!tok) { cb(); return; }
+        fetch(API + "/api/jobs", { headers: { Authorization: "Bearer " + tok } })
+          .then(function (r) { return r.json().catch(function () { return {}; }); })
+          .then(function (j) {
+            state.jobs = (j && j.jobs) || [];
+            // Preselect the active job (from the dashboard) if present.
+            var active = window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob
+              ? window.OfferReadyReadiness.getActiveJob() : "";
+            if (active && state.jobs.some(function (x) { return x.id === active; })) state.jobId = active;
+            cb();
+          })
+          .catch(function () { cb(); });
+      }).catch(function () { cb(); });
+    }
 
     function renderForm(note) {
       app.innerHTML = "";
       var card = el("div", "or-card");
       card.appendChild(el("h2", null, "Resume \u2194 Job Gap Analysis"));
-      card.appendChild(el("p", "or-muted", "Paste the job description and upload your resume. We compare them and show your match score, strengths, and exactly what's missing. Your resume is read in your browser \u2014 the file is never uploaded or stored."));
+      card.appendChild(el("p", "or-muted", "Compare your resume against a saved job. We show your match score, strengths, and exactly what's missing \u2014 and save the result to that job so it's on every device. Your resume is read in your browser; the file is never uploaded or stored."));
 
       if (note) card.appendChild(el("p", "or-error", esc(note)));
+
+      // Job selector — gap analysis is job-rooted. If the user has jobs, they
+      // pick one (and the JD prefills from it); otherwise they can still paste a
+      // JD, but it won't be saved until they analyze/save a job first.
+      if (state.jobs.length) {
+        card.appendChild(el("label", "or-field-label", "Which job?"));
+        var sel = el("select", "or-input");
+        var ph = document.createElement("option"); ph.value = ""; ph.textContent = "\u2014 Select a saved job \u2014"; sel.appendChild(ph);
+        state.jobs.forEach(function (j) {
+          var o = document.createElement("option"); o.value = j.id;
+          o.textContent = j.title || "Untitled role"; if (j.id === state.jobId) o.selected = true;
+          sel.appendChild(o);
+        });
+        sel.addEventListener("change", function () {
+          state.jobId = sel.value;
+          var job = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
+          if (job) {
+            state.role = job.title || state.role;
+            if (job.job_description) state.jd = job.job_description;
+            else if (job.analysis && job.analysis.roleSummary) state.jd = job.analysis.roleSummary;
+          }
+          renderForm();
+        });
+        card.appendChild(sel);
+        card.appendChild(el("p", "or-muted or-small", "No job here yet? <a href=\"" + (window.__md_scope && window.__md_scope.pathname ? window.__md_scope.pathname.replace(/[^/]*$/, "") : "/") + "Analyze/index.html\">Analyze &amp; save a job</a> first \u2014 then gap analysis attaches to it."));
+      }
 
       // Role (optional) + JD
       var role = el("input", "or-input"); role.type = "text"; role.placeholder = "Target role (optional) \u2014 e.g. Senior Snowflake Architect";
@@ -105,6 +150,7 @@
           headers: Object.assign({ "Content-Type": "application/json" }, headers),
           body: JSON.stringify({
             action: "gap_analysis",
+            job_id: state.jobId || null,            // attach to the selected job (persist server-side)
             jobTitle: state.role, targetRole: state.role,
             jobDescription: state.jd, resumeText: state.resumeText,
           }),
@@ -112,8 +158,10 @@
           return r.json().then(function (d) { return { status: r.status, body: d }; });
         }).then(function (res) {
           if (res.status === 200 && res.body && res.body.result) {
-            saveReadiness(res.body.result);
-            renderResult(res.body.result);
+            // The DB is the source of truth. When a job was selected the result
+            // is already persisted server-side (res.body.saved); we do NOT write
+            // it to localStorage as an authority.
+            renderResult(res.body.result, res.body.saved);
           } else if (res.status === 401) {
             renderForm("Sign in (top-right Account) to run gap analysis \u2014 then try again.");
           } else if (res.status === 503) {
@@ -149,7 +197,7 @@
       return wrap;
     }
 
-    function renderResult(r) {
+    function renderResult(r, saved) {
       app.innerHTML = "";
       var top = el("div", "or-card");
       var score = r.matchScore || 0;
@@ -177,6 +225,13 @@
       var me = chips("\u26a0 Missing experience signals", r.missingExperience, "or-chip-warn"); if (me) detail.appendChild(me);
       app.appendChild(detail);
 
+      // Persistence status — the DB is the source of truth.
+      if (state.jobId && saved) {
+        app.appendChild(el("div", "or-card", '<p class="or-muted">\u2713 Saved to this job. It\u2019s on your <a href="../Dashboard/index.html">dashboard</a> and any device you sign in from.</p>'));
+      } else if (!state.jobId) {
+        app.appendChild(el("div", "or-card", '<p class="or-muted">This result isn\u2019t saved yet \u2014 <a href="../Analyze/index.html">analyze &amp; save a job</a>, then re-run gap analysis against it to keep it.</p>'));
+      }
+
       // Actions
       var actions = el("div", "or-card or-actions");
       var again = el("button", "or-btn", "Run another"); again.addEventListener("click", function () { renderForm(); });
@@ -185,26 +240,6 @@
       dash.href = "../Dashboard/index.html";
       actions.appendChild(dash);
       app.appendChild(actions);
-    }
-
-    // Persist the distilled result (NO resume text) for the dashboard.
-    function saveReadiness(r) {
-      try {
-        if (window.OfferReadyReadiness && window.OfferReadyReadiness.saveGap) {
-          window.OfferReadyReadiness.saveGap(r, { role: state.role });
-          return;
-        }
-        // Fallback: write the shared key directly.
-        var rec = {
-          when: new Date().toISOString(), role: state.role || "",
-          match: r.matchScore || 0,
-          technical: r.technicalScore || 0, behavioral: r.behavioralScore || 0,
-          architecture: r.architectureScore || 0, domain: r.domainScore || 0,
-          strengths: r.strengths || [], missingSkills: r.missingSkills || [],
-          missingKeywords: r.missingKeywords || [], missingExperience: r.missingExperience || [],
-        };
-        localStorage.setItem(STORE_KEY, JSON.stringify(rec));
-      } catch (e) {}
     }
 
     // Resolve a Supabase bearer token (or {}), then call back with headers.

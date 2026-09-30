@@ -14,6 +14,7 @@
 const { setCors, send } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
 const { getJob, deleteJob } = require('../_lib/jobs');
+const { getGapAnalysis, getQuestions, getProgress } = require('../_lib/readiness');
 
 module.exports = async function handler(req, res) {
   setCors(res, req.headers && req.headers.origin);
@@ -29,7 +30,15 @@ module.exports = async function handler(req, res) {
   if (req.method === 'GET') {
     const job = await getJob(user.id, id);
     if (!job) { send(res, 404, { error: 'Job not found.' }); return; }
-    send(res, 200, { ok: true, job });
+    // Restore the FULL job state from the database — analysis (on the job row),
+    // plus the persisted gap analysis, generated questions, and readiness/
+    // progress snapshots. This is what makes a job resumable on any device.
+    const [gap, questions, progress] = await Promise.all([
+      getGapAnalysis(user.id, id),
+      getQuestions(user.id, id),
+      getProgress(user.id, id, 30),
+    ]);
+    send(res, 200, { ok: true, job, gap: gap, questions: questions, progress: progress });
     return;
   }
 

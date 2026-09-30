@@ -1,5 +1,6 @@
 /* Analyze My Job — frontend for the OfferReady MVP.
-   Static (GitHub Pages). Calls the serverless API at API_BASE_URL/api/analyze-job.
+   Static (GitHub Pages). Calls the serverless AI router at API_BASE/api/ai
+   with { action: "analyze_jd" }.
    The API base is configurable (window.OFFERREADY_API_BASE) so it can change
    without touching logic. No API key ever lives here. If the API is missing or
    unconfigured, a clearly-labeled Sample Demo is shown instead of crashing.
@@ -225,8 +226,9 @@
     async function analyze(payload) {
       const stop = renderLoading();
       try {
-        const resp = await fetch(API_BASE.replace(/\/$/, "") + "/api/analyze-job", {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+        const resp = await fetch(API_BASE.replace(/\/$/, "") + "/api/ai", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(Object.assign({ action: "analyze_jd" }, payload)),
         });
         stop && stop();
         if (resp.status === 503) { const d = await safeJson(resp); renderResult(SAMPLE, { demo: true, note: "Live analysis isn't enabled on this deployment yet \u2014 showing a sample." }); return; }
@@ -433,7 +435,13 @@
             }).then((r) => r.json().catch(() => ({})).then((j) => ({ status: r.status, body: j })))
               .then((res) => {
                 if (res.status === 201) {
-                  saveMsg.innerHTML = "Saved \u2713 \u2014 <a href='" + base + "My-Jobs/index.html'>View My Jobs</a>";
+                  // Make this the active job so Gap Analysis / Questions /
+                  // Dashboard all operate on it (job-rooted, cross-device).
+                  var savedJob = res.body && res.body.job;
+                  if (savedJob && savedJob.id && window.OfferReadyReadiness && window.OfferReadyReadiness.setActiveJob) {
+                    window.OfferReadyReadiness.setActiveJob(savedJob.id);
+                  }
+                  saveMsg.innerHTML = "Saved \u2713 \u2014 next: <a href='" + base + "Gap-Analysis/index.html'>gap analysis</a> \u00b7 <a href='" + base + "Question-Bank/index.html'>questions</a> \u00b7 <a href='" + base + "My-Jobs/index.html'>My Jobs</a>";
                 } else if (res.status === 403 && res.body && res.body.upgrade) {
                   saveBtn.disabled = false;
                   saveMsg.innerHTML = "Free includes one saved job. <a href='" + base + "assets/pricing.html'>Upgrade to Pro</a> to save more.";

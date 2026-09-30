@@ -5,16 +5,16 @@
  *   Technical (10) · Behavioral (10) · System Design (5) · Leadership (5)
  * each with an Easy / Medium / Hard difficulty badge.
  *
- * Grouped by category with counts. A generated set is cached in localStorage
- * (keyed by a hash of the JD + role) so re-opening the same job is instant and
- * free. All client-side; requires sign-in (the endpoint enforces it).
+ * Job-rooted + persistent: the user picks a saved job and the generated set is
+ * saved server-side to that job's `questions` rows (source of truth), so it's
+ * available on any device. Grouped by category with difficulty badges.
+ * Requires sign-in (the endpoint enforces it).
  */
 
 (function () {
   "use strict";
 
   var API = (typeof window !== "undefined" && window.OFFERREADY_API_BASE) || "";
-  var CACHE_PREFIX = "offerready.questions.v1.";
 
   var CATEGORY_LABEL = {
     technical: "Technical",
@@ -32,22 +32,59 @@
     var el = function (t, c, h) { var n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
     var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
 
-    var state = { jd: "", role: "" };
-    renderForm();
+    var state = { jd: "", role: "", jobId: "", jobs: [] };
+    var base = (window.__md_scope && window.__md_scope.pathname ? window.__md_scope.pathname.replace(/[^/]*$/, "") : "/");
 
-    function cacheKey(jd, role) {
-      var basis = (role || "") + "|" + (jd || "").slice(0, 400);
-      var h = 0;
-      for (var i = 0; i < basis.length; i++) { h = ((h << 5) - h + basis.charCodeAt(i)) | 0; }
-      return CACHE_PREFIX + (h >>> 0).toString(36);
+    // Load the user's jobs so generated questions attach to one (job-rooted,
+    // persisted server-side). Falls back to a plain form if signed out.
+    loadJobsThen(renderForm);
+
+    function loadJobsThen(cb) {
+      if (!API || !window.OfferReadyAuth) { cb(); return; }
+      window.OfferReadyAuth.getAccessToken().then(function (tok) {
+        if (!tok) { cb(); return; }
+        fetch(API + "/api/jobs", { headers: { Authorization: "Bearer " + tok } })
+          .then(function (r) { return r.json().catch(function () { return {}; }); })
+          .then(function (j) {
+            state.jobs = (j && j.jobs) || [];
+            var active = window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob
+              ? window.OfferReadyReadiness.getActiveJob() : "";
+            if (active && state.jobs.some(function (x) { return x.id === active; })) state.jobId = active;
+            cb();
+          })
+          .catch(function () { cb(); });
+      }).catch(function () { cb(); });
     }
 
     function renderForm(note) {
       app.innerHTML = "";
       var card = el("div", "or-card");
       card.appendChild(el("h2", null, "Generate interview questions"));
-      card.appendChild(el("p", "or-muted", "Paste a job description and get a full, categorized question set \u2014 the questions you're actually likely to be asked for this role."));
+      card.appendChild(el("p", "or-muted", "Pick a saved job and get a full, categorized question set \u2014 saved to that job so it's on every device."));
       if (note) card.appendChild(el("p", "or-error", esc(note)));
+
+      if (state.jobs.length) {
+        card.appendChild(el("label", "or-field-label", "Which job?"));
+        var sel = el("select", "or-input");
+        var ph = document.createElement("option"); ph.value = ""; ph.textContent = "\u2014 Select a saved job \u2014"; sel.appendChild(ph);
+        state.jobs.forEach(function (j) {
+          var o = document.createElement("option"); o.value = j.id;
+          o.textContent = j.title || "Untitled role"; if (j.id === state.jobId) o.selected = true;
+          sel.appendChild(o);
+        });
+        sel.addEventListener("change", function () {
+          state.jobId = sel.value;
+          var job = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
+          if (job) {
+            state.role = job.title || state.role;
+            if (job.job_description) state.jd = job.job_description;
+            else if (job.analysis && job.analysis.roleSummary) state.jd = job.analysis.roleSummary;
+          }
+          renderForm();
+        });
+        card.appendChild(sel);
+        card.appendChild(el("p", "or-muted or-small", "No job here yet? <a href=\"" + base + "Analyze/index.html\">Analyze &amp; save a job</a> first."));
+      }
 
       var role = el("input", "or-input"); role.type = "text"; role.placeholder = "Target role (optional)"; role.value = state.role || "";
       card.appendChild(el("label", "or-field-label", "Target role")); card.appendChild(role);
@@ -65,16 +102,7 @@
     }
 
     function submit() {
-      if (state.jd.length < 30) { renderForm("Please paste a fuller job description first."); return; }
-
-      // Cache hit -> render instantly.
-      var key = cacheKey(state.jd, state.role);
-      try {
-        var cached = JSON.parse(localStorage.getItem(key) || "null");
-        if (cached && Array.isArray(cached.questions) && cached.questions.length) {
-          renderResult(cached.questions, cached.counts, true); return;
-        }
-      } catch (e) {}
+      if (state.jd.length < 30) { renderForm("Please paste a fuller job description first (or pick a saved job)."); return; }
 
       app.innerHTML = "";
       var loading = el("div", "or-card"); loading.appendChild(el("p", "or-muted", "Generating your question set\u2026"));
@@ -86,14 +114,16 @@
           headers: Object.assign({ "Content-Type": "application/json" }, headers),
           body: JSON.stringify({
             action: "generate_questions",
+            job_id: state.jobId || null,          // attach + persist to the selected job
             jobTitle: state.role, targetRole: state.role, jobDescription: state.jd,
           }),
         }).then(function (r) {
           return r.json().then(function (d) { return { status: r.status, body: d }; });
         }).then(function (res) {
           if (res.status === 200 && res.body && res.body.questions) {
-            try { localStorage.setItem(key, JSON.stringify({ questions: res.body.questions, counts: res.body.counts })); } catch (e) {}
-            renderResult(res.body.questions, res.body.counts, false);
+            // DB is source of truth; res.body.saved reflects server persistence
+            // when a job was selected. No localStorage cache-as-authority.
+            renderResult(res.body.questions, res.body.counts, res.body.saved);
           } else if (res.status === 401) {
             renderForm("Sign in (top-right Account) to generate questions \u2014 then try again.");
           } else if (res.status === 503) {
@@ -112,12 +142,13 @@
       return '<span class="or-diff ' + cls + '">' + esc(d || "medium") + "</span>";
     }
 
-    function renderResult(questions, counts, cached) {
+    function renderResult(questions, counts, saved) {
       app.innerHTML = "";
       var head = el("div", "or-card");
       head.appendChild(el("h2", null, "Your interview question set"));
       var total = questions.length;
-      head.appendChild(el("p", "or-muted", total + " questions generated" + (cached ? " (cached)" : "") + " \u00b7 answer them out loud, then practice defending your decisions."));
+      var savedNote = (saved && state.jobId) ? " \u00b7 \u2713 saved to this job" : (state.jobId ? "" : " \u00b7 not saved (pick a saved job to keep it)");
+      head.appendChild(el("p", "or-muted", total + " questions generated" + savedNote + " \u00b7 answer them out loud, then practice defending your decisions."));
       var again = el("button", "or-btn", "Generate for another job");
       again.addEventListener("click", function () { renderForm(); });
       head.appendChild(again);

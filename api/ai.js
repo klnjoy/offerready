@@ -30,6 +30,9 @@ const {
   GAP_SYSTEM_PROMPT, buildGapUserMessage, validateGap,
   QUESTIONS_SYSTEM_PROMPT, buildQuestionsUserMessage, validateQuestions,
 } = require('./_lib/readinessAi');
+const {
+  ownsJob, saveGapAnalysis, saveQuestions,
+} = require('./_lib/readiness');
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
@@ -66,7 +69,7 @@ async function callOpenAI(system, user, maxTokens, temperature) {
     const data = await resp.json();
     const content = data && data.choices && data.choices[0] && data.choices[0].message
       ? data.choices[0].message.content : '';
-    return { ok: true, content };
+    return { ok: true, content, model: (data && data.model) || (process.env.OPENAI_MODEL || DEFAULT_MODEL) };
   } catch (err) {
     if (err && err.name === 'AbortError') return { ok: false, status: 504, error: 'The AI request timed out. Please try again.' };
     console.error('ai router failure:', err && err.name);
@@ -103,7 +106,7 @@ async function handleAnalyzeJd(body, res) {
   send(res, 200, { ok: true, action: 'analyze_jd', analysis });
 }
 
-async function handleGapAnalysis(body, res) {
+async function handleGapAnalysis(body, res, user) {
   const jobDescription = String(body.jobDescription || '');
   if (jobDescription.trim().length < 30) { send(res, 400, { error: 'A job description is required for gap analysis.' }); return; }
   const out = await callOpenAI(
@@ -119,10 +122,19 @@ async function handleGapAnalysis(body, res) {
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const result = validateGap(safeParseModelJson(out.content));
   if (!result.ok) { send(res, 502, { error: 'Could not produce a gap analysis. Please try again.' }); return; }
-  send(res, 200, { ok: true, action: 'gap_analysis', result: result.result });
+
+  // Persist to the job when a job_id is supplied and owned by this user.
+  // Persistence is the source of truth; the client no longer keeps its own copy.
+  let saved = false;
+  const jobId = body.job_id || body.jobId;
+  if (jobId && (await ownsJob(user.id, jobId))) {
+    const row = await saveGapAnalysis(user.id, jobId, result.result, out.model || null);
+    saved = !!row;
+  }
+  send(res, 200, { ok: true, action: 'gap_analysis', result: result.result, job_id: jobId || null, saved: saved });
 }
 
-async function handleGenerateQuestions(body, res) {
+async function handleGenerateQuestions(body, res, user) {
   const jobDescription = String(body.jobDescription || '');
   if (jobDescription.trim().length < 30) { send(res, 400, { error: 'A job description is required to generate questions.' }); return; }
   const out = await callOpenAI(
@@ -137,7 +149,13 @@ async function handleGenerateQuestions(body, res) {
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const result = validateQuestions(safeParseModelJson(out.content));
   if (!result.ok) { send(res, 502, { error: 'Could not generate a full question set. Please try again.' }); return; }
-  send(res, 200, { ok: true, action: 'generate_questions', questions: result.questions, counts: result.counts });
+
+  let saved = 0;
+  const jobId = body.job_id || body.jobId;
+  if (jobId && (await ownsJob(user.id, jobId))) {
+    saved = await saveQuestions(user.id, jobId, result.questions);
+  }
+  send(res, 200, { ok: true, action: 'generate_questions', questions: result.questions, counts: result.counts, job_id: jobId || null, saved: saved });
 }
 
 module.exports = async function handler(req, res) {
@@ -166,8 +184,8 @@ module.exports = async function handler(req, res) {
   if (action === 'gap_analysis' || action === 'generate_questions') {
     const user = await getUser(req);
     if (!user) { send(res, 401, { error: 'Sign in to use this feature.' }); return; }
-    if (action === 'gap_analysis') { await handleGapAnalysis(body, res); return; }
-    await handleGenerateQuestions(body, res);
+    if (action === 'gap_analysis') { await handleGapAnalysis(body, res, user); return; }
+    await handleGenerateQuestions(body, res, user);
     return;
   }
 

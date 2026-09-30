@@ -124,17 +124,29 @@
 
     function openJob(id, token) {
       renderLoading();
+      // Remember which job is active so Gap Analysis / Questions / Dashboard
+      // all operate on the same job.
+      if (window.OfferReadyReadiness && window.OfferReadyReadiness.setActiveJob) {
+        window.OfferReadyReadiness.setActiveJob(id);
+      }
       fetch(API_BASE.replace(/\/$/, "") + "/api/jobs/" + encodeURIComponent(id), { headers: authHeaders(token) })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, body: j }; }); })
         .then(function (res) {
           if (res.status !== 200 || !res.body || !res.body.job) { renderNote("Couldn\u2019t open that job."); return; }
-          renderJob(res.body.job, token);
+          renderJob(res.body, token);
         })
         .catch(function () { renderNote("Couldn\u2019t reach the server."); });
     }
 
-    // Reuse the Analyze renderer if available; otherwise render a compact view.
-    function renderJob(job, token) {
+    // Render the FULL restored job state from the DB: analysis + persisted gap
+    // (match score), generated questions, and readiness/progress. This is what
+    // makes a job resumable on any device.
+    function renderJob(payload, token) {
+      var job = payload.job || payload;   // tolerate old {job} shape
+      var gap = payload.gap || null;
+      var questions = payload.questions || [];
+      var progress = payload.progress || [];
+
       app.innerHTML = "";
       var backBtn = el("button", "ip-btn ip-ghost"); backBtn.type = "button"; backBtn.textContent = "\u2190 Back to My Jobs";
       backBtn.addEventListener("click", function () { loadJobs(token); });
@@ -143,6 +155,38 @@
       var a = job.analysis || {};
       app.appendChild(el("h2", null, esc(job.title || a.seniority || "Saved job")));
       if (a.roleSummary) app.appendChild(el("p", null, esc(a.roleSummary)));
+
+      // Restored readiness snapshot (from persisted gap + progress).
+      var latest = progress[0] || null;
+      var overall = latest && latest.overall_readiness ? latest.overall_readiness
+        : (gap ? Math.round(0.5 * (gap.match_score || 0)) : null);
+      var statsGrid = el("div", "or-grid");
+      if (overall != null) statsGrid.appendChild(stat(overall + "%", "Readiness"));
+      if (gap) statsGrid.appendChild(stat((gap.match_score || 0) + "%", "Resume match"));
+      statsGrid.appendChild(stat(questions.length, "Questions ready"));
+      statsGrid.appendChild(stat((job.gaps_count || (a.potentialGaps || []).length || 0), "Gaps"));
+      app.appendChild(statsGrid);
+
+      // Continue-where-you-left-off actions (job stays active via setActiveJob).
+      var cont = el("div", "or-actions");
+      var gapBtn = el("a", "ip-btn"); gapBtn.href = base + "Gap-Analysis/index.html"; gapBtn.textContent = gap ? "Re-run gap analysis" : "Run gap analysis";
+      var qBtn = el("a", "ip-btn"); qBtn.href = base + "Question-Bank/index.html"; qBtn.textContent = questions.length ? "Review / regenerate questions" : "Generate questions";
+      var dashBtn = el("a", "ip-btn ip-ghost"); dashBtn.href = base + "Dashboard/index.html"; dashBtn.textContent = "Readiness dashboard";
+      cont.append(gapBtn, qBtn, dashBtn);
+      app.appendChild(cont);
+
+      // Persisted gap detail.
+      if (gap && gap.result) {
+        var gr = gap.result;
+        if ((gr.missingSkills || []).concat(gr.missingKeywords || []).length) {
+          app.appendChild(el("h3", null, "Gaps to close"));
+          var gwrap = el("div", "or-chips");
+          (gr.missingSkills || []).concat(gr.missingKeywords || []).slice(0, 14).forEach(function (x) {
+            gwrap.appendChild(el("span", "or-chip or-chip-warn", esc(x)));
+          });
+          app.appendChild(gwrap);
+        }
+      }
 
       if ((a.potentialGaps || []).length) {
         app.appendChild(el("h3", null, "Priority gaps"));
@@ -168,6 +212,11 @@
       }
 
       app.appendChild(el("p", "ip-ai-hint", "Preparation guidance only \u2014 not a prediction of interview or offer outcomes."));
+    }
+
+    // Small stat tile (matches the dashboard's or-stat).
+    function stat(num, label) {
+      return el("div", "or-stat", '<div class="or-stat-num">' + esc(String(num)) + '</div><div class="or-stat-label">' + esc(label) + "</div>");
     }
   }
 

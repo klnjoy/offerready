@@ -91,11 +91,11 @@ extra_javascript:
   - assets/scenario.js?v=13
   - assets/progress.js?v=4
   - assets/why.js?v=3
-  - assets/analyze.js?v=9
+  - assets/analyze.js?v=10
   - assets/resume-extract.js?v=1
-  - assets/readiness.js?v=2
-  - assets/gap.js?v=1
-  - assets/questions.js?v=1
+  - assets/readiness.js?v=3
+  - assets/gap.js?v=2
+  - assets/questions.js?v=2
   - assets/jobs.js?v=7
   - assets/onboarding.js?v=4
   - assets/simulator.js?v=3
