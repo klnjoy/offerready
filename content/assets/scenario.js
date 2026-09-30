@@ -580,12 +580,23 @@
         var cont = el("button", "ip-btn"); cont.textContent = "Continue"; cont.addEventListener("click", function () { advance(node.next); });
         card.appendChild(cont);
       } else {
-        // decision | why | tradeoff | constraint | incident: answer -> reveal -> rate
-        var ta = el("textarea", "ip-answerbox"); ta.placeholder = "Answer out loud, then type the gist and reveal the strong answer."; ta.rows = 5;
+        // decision | why | tradeoff | constraint | incident: answer -> (grade) -> reveal -> rate
+        var ta = el("textarea", "ip-answerbox"); ta.placeholder = "Answer out loud, then type the gist \u2014 get it graded, or reveal the strong answer."; ta.rows = 5;
         card.appendChild(ta);
-        var reveal = el("button", "ip-btn", "Reveal strong answer");
-        card.appendChild(reveal);
+        var actions = el("div", "ip-controls");
         var modelWrap = el("div");
+        var gradeWrap = el("div");
+        // "Grade my answer" — the AI-interviewer feature (Pro). Only offered when
+        // a backend exists; falls back to Reveal on any error.
+        if (API) {
+          var grade = el("button", "ip-btn", "\uD83E\uDDD1\u200D\u2696\uFE0F Grade my answer");
+          grade.addEventListener("click", function () { gradeAnswer(node, ta, grade, gradeWrap); });
+          actions.appendChild(grade);
+        }
+        var reveal = el("button", API ? "ip-btn ip-ghost" : "ip-btn", "Reveal strong answer");
+        actions.appendChild(reveal);
+        card.appendChild(actions);
+        card.appendChild(gradeWrap);
         reveal.addEventListener("click", function () {
           reveal.disabled = true;
           state.answers[node.id] = ta.value;
@@ -621,6 +632,81 @@
       wrap.appendChild(rate);
       wrap.appendChild(el("p", "ip-ai-hint",
         isLast ? "Pick a rating to see your scenario summary." : "Pick a rating to continue \u2014 there are more decisions to defend."));
+      return wrap;
+    }
+
+    // ---- AI answer feedback (Pro) ------------------------------------------
+    // Send the candidate's OWN answer + the node's signals to the backend and
+    // render an interviewer-style grade. Fails closed: on any error we nudge the
+    // user to reveal the strong answer instead (never fabricate feedback here).
+    function gradeAnswer(node, ta, btn, out) {
+      var answer = (ta && ta.value || "").trim();
+      out.innerHTML = "";
+      if (answer.length < 15) {
+        out.appendChild(el("p", "ip-ai-hint", "Type a few sentences first \u2014 then I'll grade it like an interviewer would."));
+        return;
+      }
+      state.answers[node.id] = answer;
+      var orig = btn.textContent;
+      btn.disabled = true; btn.textContent = "Grading\u2026";
+      var done = function () { btn.disabled = false; btn.textContent = orig; };
+
+      withHeaders(function (h) {
+        var headers = Object.assign({ "Content-Type": "application/json" }, h || {});
+        fetch(API + "/api/premium/grade-answer", {
+          method: "POST", headers: headers,
+          body: JSON.stringify({
+            prompt: node.prompt, signals: node.signals || [], model: node.model || "", answer: answer,
+          }),
+        }).then(function (r) {
+          return r.json().then(function (d) { return { status: r.status, body: d }; });
+        }).then(function (res) {
+          done();
+          if (res.status === 200 && res.body && res.body.feedback) {
+            out.innerHTML = "";
+            out.appendChild(renderFeedback(res.body.feedback));
+          } else if (res.status === 401) {
+            out.appendChild(el("p", "ip-ai-hint", "Sign in to have your answer graded. You can still reveal the strong answer below."));
+          } else if (res.status === 403) {
+            out.appendChild(el("p", "ip-ai-hint", "AI answer feedback is part of OfferReady Pro. Reveal the strong answer below, or upgrade for graded feedback."));
+          } else {
+            out.appendChild(el("p", "ip-ai-hint", "Couldn't grade that right now \u2014 reveal the strong answer below and self-rate."));
+          }
+        }).catch(function () {
+          done();
+          out.appendChild(el("p", "ip-ai-hint", "Couldn't reach the feedback service \u2014 reveal the strong answer below and self-rate."));
+        });
+      });
+    }
+
+    // Render the interviewer-style grade card.
+    function renderFeedback(f) {
+      var score = typeof f.score === "number" ? f.score : 0;
+      var band = score >= 80 ? "or-fb-strong" : score >= 55 ? "or-fb-mid" : "or-fb-weak";
+      var wrap = el("div", "or-feedback " + band);
+      var head = el("div", "or-fb-head");
+      head.appendChild(el("span", "or-fb-score", score + "%"));
+      head.appendChild(el("span", "or-fb-verdict", esc(f.verdict || "")));
+      wrap.appendChild(head);
+      if ((f.covered || []).length) {
+        wrap.appendChild(el("div", "or-field-label", "What held up"));
+        var okul = el("ul", "or-fb-ok");
+        f.covered.forEach(function (x) { okul.appendChild(el("li", null, esc(x))); });
+        wrap.appendChild(okul);
+      }
+      if ((f.missing || []).length) {
+        wrap.appendChild(el("div", "or-field-label", "What was missing"));
+        var mul = el("ul", "or-fb-miss");
+        f.missing.forEach(function (x) { mul.appendChild(el("li", null, esc(x))); });
+        wrap.appendChild(mul);
+      }
+      if (f.followup) {
+        var fu = el("div", "or-fb-followup");
+        fu.appendChild(el("div", "or-field-label", "The interviewer would push back"));
+        fu.appendChild(el("p", null, esc(f.followup)));
+        wrap.appendChild(fu);
+      }
+      wrap.appendChild(el("p", "ip-ai-hint", "Now reveal the strong answer to compare, then rate yourself to continue."));
       return wrap;
     }
 

@@ -637,6 +637,30 @@
 .or-scn-gen-hint { margin: 0.35rem 0 0; }
 .or-scn-fallback { margin: 0 0 0.75rem; }
 
+/* AI answer feedback — the interviewer grade on the user's OWN answer (Pro). */
+.or-feedback {
+  margin: 0.9rem 0; padding: 0.9rem 1.1rem; border-radius: 0.6rem;
+  border-left: 4px solid var(--md-primary-fg-color);
+  background: var(--md-code-bg-color, rgba(0,0,0,0.03));
+}
+.or-feedback.or-fb-strong { border-left-color: #2e7d32; }
+.or-feedback.or-fb-mid { border-left-color: #ed9a1c; }
+.or-feedback.or-fb-weak { border-left-color: #c62828; }
+.or-fb-head { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.or-fb-score { font-size: 1.35rem; font-weight: 800; }
+.or-fb-strong .or-fb-score { color: #2e7d32; }
+.or-fb-mid .or-fb-score { color: #ed9a1c; }
+.or-fb-weak .or-fb-score { color: #c62828; }
+.or-fb-verdict { font-weight: 600; }
+.or-feedback ul { margin: 0.2rem 0 0.6rem; }
+.or-fb-ok li { color: #2e7d32; }
+.or-fb-miss li { color: #c62828; }
+.or-fb-followup {
+  margin-top: 0.5rem; padding: 0.6rem 0.85rem; border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--md-primary-fg-color) 8%, transparent);
+}
+.or-fb-followup p { margin: 0.25rem 0 0; font-style: italic; }
+
 /* AI grade (local only) */
 .ip-ai { margin-top: 1rem; }
 .ip-ai-out {
