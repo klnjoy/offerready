@@ -2,14 +2,20 @@
 icon: material/chart-line
 ---
 
-# Progress Dashboard
+# Practice History
 
-Your practice history at a glance — scores over time, strength by topic, and
-recent sessions. Everything here is computed from data saved **locally in your
-browser** (nothing is uploaded), so it's private to this device.
+Your practice **session history** on this device — strength by topic and recent
+sessions, saved **locally in your browser** (nothing uploaded), so it's private
+to this device.
+
+!!! tip "Looking for your readiness score?"
+    Your overall readiness score and trend live on the
+    **[Readiness Dashboard](../Dashboard/index.html)** — that's the single place
+    OfferReady tracks how ready you are for each job. This page is just the
+    detailed practice log.
 
 <div id="ip-dash">
-  <p><em>Loading your progress…</em> If this is empty, complete a
+  <p><em>Loading your practice history…</em> If this is empty, complete a
   <a href="Interview_Practice.html">practice session</a> first.</p>
 </div>
 

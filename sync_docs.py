@@ -814,11 +814,13 @@ def write_index(md_catalog, modules) -> None:
         "decisions</strong> that matter for that job.</p>",
         "",
         '<p class="home-cta" markdown>'
-        '[:material-clipboard-search-outline: Analyze My Job](#start-with-your-job){ .md-button .md-button--primary }'
+        '[:material-clipboard-search-outline: Analyze Job](#start-with-your-job){ .md-button .md-button--primary }'
         "&nbsp;"
-        "[:material-view-dashboard-outline: My Dashboard](Dashboard/index.md){ .md-button }"
+        "[:material-file-upload-outline: Upload Resume](Gap-Analysis/index.md){ .md-button }"
         "&nbsp;"
-        "[:material-tag-outline: See Free vs Pro](assets/pricing.html){ .md-button }"
+        "[:material-view-dashboard-outline: Open Dashboard](Dashboard/index.md){ .md-button }"
+        "&nbsp;"
+        "[:material-rocket-launch-outline: Get Started](#start-with-your-job){ .md-button }"
         "</p>",
         "",
         '<p class="home-stats">'
@@ -1034,7 +1036,7 @@ def write_index(md_catalog, modules) -> None:
         "    ---",
         "",
         "    Justify your decisions in **[Keep Asking Why](Personal-SourceCode/Interview_Why_Interactive.md)**, "
-        "and watch your readiness build on the **[Progress dashboard](Personal-SourceCode/Interview_Progress.md)**.",
+        "and watch your readiness build on the **[Dashboard](Dashboard/index.md)**.",
         "",
         "</div>",
         "",
@@ -1042,7 +1044,7 @@ def write_index(md_catalog, modules) -> None:
         "    Advanced users can run the bundled retrieval agent locally to query "
         "this knowledge base with citations "
         "(`cd agent; python ask.py \"What is Cortex Analyst?\"`). It's local-only "
-        "and not required — see [Start Here](Start-Here/index.md).",
+        "and not required.",
         "",
         "## What's inside",
         "",
@@ -1254,7 +1256,7 @@ def write_nav(md_catalog, modules) -> None:
     if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
         practice_children.append("      - Sample Walkthrough: Sample-Walkthrough/index.md")
     if (DOCS_DIR / "Personal-SourceCode" / "Interview_Progress.md").exists():
-        practice_children.append("      - Progress Detail: Personal-SourceCode/Interview_Progress.md")
+        practice_children.append("      - Practice History: Personal-SourceCode/Interview_Progress.md")
 
     # ----- STUDY & INTERVIEW LIBRARY (nested UNDER Practice) ------------------
     # Simplified IA: the top nav is exactly Dashboard · Jobs · Analysis ·

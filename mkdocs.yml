@@ -89,14 +89,14 @@ extra_javascript:
   - assets/chatbot.js?v=3
   - assets/practice.js?v=3
   - assets/scenario.js?v=13
-  - assets/progress.js?v=4
+  - assets/progress.js?v=5
   - assets/why.js?v=3
   - assets/analyze.js?v=10
   - assets/resume-extract.js?v=1
   - assets/readiness.js?v=3
   - assets/gap.js?v=3
   - assets/questions.js?v=2
-  - assets/jobs.js?v=7
+  - assets/jobs.js?v=8
   - assets/onboarding.js?v=4
   - assets/simulator.js?v=3
   - assets/walkthrough.js?v=3
@@ -146,7 +146,7 @@ nav:
       - Mock Interview: Personal-SourceCode/Interview_Master_Simulator.md
       - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md
       - Sample Walkthrough: Sample-Walkthrough/index.md
-      - Progress Detail: Personal-SourceCode/Interview_Progress.md
+      - Practice History: Personal-SourceCode/Interview_Progress.md
       - Learn:
           - Foundations (GenAI Topics):
               - Overview: GenAI-Topics/index.md

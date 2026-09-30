@@ -156,10 +156,17 @@
       app.appendChild(el("h2", null, esc(job.title || a.seniority || "Saved job")));
       if (a.roleSummary) app.appendChild(el("p", null, esc(a.roleSummary)));
 
-      // Restored readiness snapshot (from persisted gap + progress).
+      // Restored readiness snapshot (from persisted gap + progress). Use the
+      // SINGLE shared readiness formula (window.OfferReadyReadiness.weightedOverall)
+      // so a job's score here is IDENTICAL to the Dashboard — no duplicate math.
       var latest = progress[0] || null;
-      var overall = latest && latest.overall_readiness ? latest.overall_readiness
-        : (gap ? Math.round(0.5 * (gap.match_score || 0)) : null);
+      var practiceAvg = latest ? (latest.avg_answer_score || 0) : 0;
+      var completion = Math.min((latest && latest.questions_practiced) || 0, 10) * 10;
+      var overall = latest && latest.overall_readiness
+        ? latest.overall_readiness
+        : (gap && window.OfferReadyReadiness && window.OfferReadyReadiness.weightedOverall
+            ? window.OfferReadyReadiness.weightedOverall(gap, practiceAvg, completion)
+            : null);
       var statsGrid = el("div", "or-grid");
       if (overall != null) statsGrid.appendChild(stat(overall + "%", "Readiness"));
       if (gap) statsGrid.appendChild(stat((gap.match_score || 0) + "%", "Resume match"));
