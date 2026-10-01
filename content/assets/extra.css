@@ -1613,13 +1613,28 @@ a.ig-feature.ig-link .ig-d {
   box-shadow: none !important;
   border-radius: 0.55rem;
 }
-.ip-btn:hover { filter: none !important; background: var(--or-navy-700) !important; }
-.ip-btn.ip-ghost {
+/* Force white label on the solid-navy button. Needed because many .ip-btn are
+   rendered as <a> (anchors), and Material's `.md-typeset a` link color would
+   otherwise win and paint navy text on the navy fill (invisible button). */
+.ip-btn,
+.md-typeset a.ip-btn,
+.ip-btn:visited { color: #fff !important; }
+.ip-btn:hover { filter: none !important; background: var(--or-navy-700) !important; color: #fff !important; }
+.ip-btn.ip-ghost,
+.md-typeset a.ip-btn.ip-ghost {
   background: transparent !important;
   color: var(--or-navy) !important;
   border: 1px solid var(--or-border) !important;
 }
 .ip-btn.ip-ghost:hover { border-color: var(--or-navy) !important; }
+
+/* Same anchor-vs-link-color guard for the or-* button family. A primary
+   or-btn is solid navy; when rendered as <a> it must keep white text (Material
+   link color would otherwise paint navy-on-navy). The outline or-btn keeps the
+   normal text color on a transparent background. */
+.md-typeset a.or-btn-primary,
+.or-btn-primary, .or-btn-primary:visited { color: #fff !important; }
+.md-typeset a.or-btn:not(.or-btn-primary) { color: var(--or-text) !important; }
 
 /* ---- 5. Progress bars + score chips: flat soft green, no gradient ---- */
 .ip-bar > div,
