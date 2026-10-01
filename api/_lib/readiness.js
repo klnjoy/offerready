@@ -349,6 +349,46 @@ function computeReadiness(gap, practiceSessions) {
   };
 }
 
+/**
+ * Atomic practice completion via the Postgres RPC public.complete_practice
+ * (added in migration 0006). Records the practice session AND the readiness
+ * snapshot in ONE transaction, so the "session saved but snapshot missing"
+ * partial state cannot occur. Returns { session, snapshot, readiness } on
+ * success, or null if the RPC is unavailable / errored (caller then falls back
+ * to the two-step savePracticeSession + saveProgressSnapshot path).
+ *
+ * Ownership is re-verified inside the function; we still pass the server-
+ * derived userId + the ownership-checked jobId (never client-trusted).
+ */
+async function completePracticeAtomic(userId, jobId, session) {
+  if (!userId || !jobId || !session || !session.sessionId) return null;
+  const args = {
+    p_user_id: userId,
+    p_job_id: jobId,
+    p_session_id: String(session.sessionId).slice(0, 200),
+    p_category: session.category ? String(session.category).slice(0, 60) : null,
+    p_mode: session.mode ? String(session.mode).slice(0, 40) : null,
+    p_content_slug: session.contentSlug ? String(session.contentSlug).slice(0, 200) : null,
+    p_score: clamp(session.score, 0, 100),
+    p_completed_at: session.completedAt || new Date().toISOString(),
+  };
+  try {
+    const resp = await restFetch('/rpc/complete_practice', {
+      method: 'POST',
+      headers: serviceHeaders({ Prefer: 'return=representation' }),
+      body: JSON.stringify(args),
+    });
+    if (!resp.ok) return null;  // 404 (fn absent) / 42501 (ownership) / other → fall back
+    const out = await resp.json();
+    // PostgREST returns the function's jsonb result (object), possibly wrapped.
+    const r = Array.isArray(out) ? out[0] : out;
+    if (!r || !r.session || !r.snapshot) return null;
+    return r;
+  } catch (_e) {
+    return null;
+  }
+}
+
 function int(v) {
   const n = Math.round(Number(v));
   return isFinite(n) ? n : 0;
@@ -360,4 +400,5 @@ module.exports = {
   saveQuestions, getQuestions,
   saveProgressSnapshot, getProgress,
   savePracticeSession, getPracticeSessions, computeReadiness,
+  completePracticeAtomic,
 };

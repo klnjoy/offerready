@@ -875,9 +875,14 @@
               // Session saved but snapshot didn't — report partial, not success.
               if (onDone) onDone({ saved: true, local: false, partial: true, readiness: res.body && res.body.readiness });
             } else {
+              // 404 => the active job was deleted/unowned: clear the stale
+              // pointer so later pages stop operating on a dead id.
+              if (res.status === 404 && window.OfferReadyReadiness && window.OfferReadyReadiness.clearActiveJob) {
+                window.OfferReadyReadiness.clearActiveJob();
+              }
               // Authoritative write failed: keep a local copy and surface retry.
               localSave(rec);
-              if (onDone) onDone({ saved: false, local: true, reason: "server", error: (res.body && res.body.error) });
+              if (onDone) onDone({ saved: false, local: true, reason: res.status === 404 ? "nojob" : "server", error: (res.body && res.body.error) });
             }
           }).catch(function () {
             localSave(rec);

@@ -17,6 +17,7 @@ const { getJob, deleteJob } = require('../_lib/jobs');
 const {
   getGapAnalysis, getQuestions, getProgress,
   getPracticeSessions, savePracticeSession, computeReadiness, saveProgressSnapshot,
+  completePracticeAtomic,
 } = require('../_lib/readiness');
 
 // Allowed enum-ish values for a practice completion (reject anything else).
@@ -116,6 +117,23 @@ module.exports = async function handler(req, res) {
     const v = validatePractice(body);
     if (!v.ok) { send(res, 400, { error: v.error }); return; }
 
+    // Preferred path: ONE atomic transaction (session + snapshot) via the
+    // complete_practice RPC (migration 0006). Both writes commit or neither
+    // does — no "saved but readiness missing" partial state.
+    const atomic = await completePracticeAtomic(user.id, id, v.value);
+    if (atomic && atomic.session && atomic.snapshot) {
+      send(res, 200, {
+        ok: true,
+        session: atomic.session,
+        snapshot: atomic.snapshot,
+        readiness: atomic.readiness || null,
+        atomic: true,
+      });
+      return;
+    }
+
+    // Fallback (RPC not yet applied, or RPC errored): two-step write. Session
+    // first; only snapshot if the session persisted. Explicit partial-failure.
     // 1) Persist the practice session (idempotent on user+job+session_id).
     const session = await savePracticeSession(user.id, id, v.value);
     if (!session) {

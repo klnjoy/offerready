@@ -42,6 +42,10 @@
     weightedOverall: weightedOverall,
     setActiveJob: function (id) { try { localStorage.setItem(ACTIVE_JOB_KEY, id || ""); } catch (e) {} },
     getActiveJob: function () { try { return localStorage.getItem(ACTIVE_JOB_KEY) || ""; } catch (e) { return ""; } },
+    // Clear the active-job pointer. Called when the pointer is found to be
+    // stale (deleted / unowned job) so other pages don't keep operating on a
+    // dead id. The pointer is a convenience cache, never the source of truth.
+    clearActiveJob: function () { try { localStorage.removeItem(ACTIVE_JOB_KEY); } catch (e) {} },
   };
 
   function init() {
@@ -130,8 +134,12 @@
           var jobs = res.body.jobs || [];
           if (!jobs.length) { emptyJobs(); return; }
           // Pick the active job: remembered id if still present, else newest.
+          // If the remembered id is stale (job deleted / not owned), clear the
+          // pointer so other pages stop operating on a dead id; loadJob() below
+          // then re-points it to the job we actually show.
           var activeId = window.OfferReadyReadiness.getActiveJob();
-          var active = jobs.filter(function (j) { return j.id === activeId; })[0] || jobs[0];
+          var active = jobs.filter(function (j) { return j.id === activeId; })[0];
+          if (!active) { if (activeId) window.OfferReadyReadiness.clearActiveJob(); active = jobs[0]; }
           loadJob(token, jobs, active.id);
         })
         .catch(function () { renderFromCache("Couldn\u2019t reach your account, so this is your last saved snapshot."); });
