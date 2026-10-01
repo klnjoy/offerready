@@ -170,7 +170,16 @@ async function getQuestions(userId, jobId) {
 // progress_metrics — append-only snapshots per job (for the readiness trend).
 // ---------------------------------------------------------------------------
 
-/** Insert a readiness snapshot for a job. Returns the row or null. */
+/**
+ * Insert a readiness snapshot for a job (append-only trend point).
+ * snap may carry:
+ *   - source: 'gap_analysis_completed' | 'practice_session_completed'
+ *   - dedupeKey: idempotency key. When present we upsert on
+ *     (user_id, job_id, dedupe_key) so retries never append a duplicate point.
+ * Returns the row or null. Requires the 0006 columns (source, dedupe_key) when
+ * a dedupeKey is supplied; without 0006 the on_conflict target won't exist and
+ * the write fails closed (null) rather than silently duplicating.
+ */
 async function saveProgressSnapshot(userId, jobId, snap) {
   if (!userId || !jobId || !snap) return null;
   const row = {
@@ -185,10 +194,21 @@ async function saveProgressSnapshot(userId, jobId, snap) {
     avg_answer_score: int(snap.avgAnswerScore),
     detail: snap.detail || {},
   };
+  if (snap.source) row.source = String(snap.source).slice(0, 60);
+  if (snap.dedupeKey) row.dedupe_key = String(snap.dedupeKey).slice(0, 200);
   try {
-    const resp = await restFetch('/progress_metrics', {
+    // With a dedupe key, resolve on the unique index (idempotent). The
+    // merge-duplicates preference means a retry updates the same trend point
+    // instead of creating a second one.
+    const path = snap.dedupeKey
+      ? '/progress_metrics?on_conflict=user_id,job_id,dedupe_key'
+      : '/progress_metrics';
+    const prefer = snap.dedupeKey
+      ? 'return=representation,resolution=merge-duplicates'
+      : 'return=representation';
+    const resp = await restFetch(path, {
       method: 'POST',
-      headers: serviceHeaders({ Prefer: 'return=representation' }),
+      headers: serviceHeaders({ Prefer: prefer }),
       body: JSON.stringify(row),
     });
     if (!resp.ok) return null;
@@ -214,6 +234,121 @@ async function getProgress(userId, jobId, limit) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// practice_sessions — job-scoped practice completions (Phase 1.5).
+// Writes go through the authenticated /api/jobs/:id endpoint; the user_id and
+// job_id are set from the verified JWT + ownership-checked route, never trusted
+// from the client. Idempotent on (user_id, job_id, session_id).
+// ---------------------------------------------------------------------------
+
+function clamp(n, lo, hi) {
+  const v = Math.round(Number(n));
+  if (!isFinite(v)) return lo;
+  return Math.max(lo, Math.min(hi, v));
+}
+
+/**
+ * Insert (or idempotently upsert) a completed practice session for a job.
+ * `session` fields are already validated by the caller. Returns the saved row
+ * or null. Requires the 0006 columns (job_id, session_id).
+ */
+async function savePracticeSession(userId, jobId, session) {
+  if (!userId || !jobId || !session) return null;
+  const row = {
+    user_id: userId,
+    job_id: jobId,
+    session_id: session.sessionId ? String(session.sessionId).slice(0, 200) : null,
+    content_slug: session.contentSlug ? String(session.contentSlug).slice(0, 200) : null,
+    category: session.category ? String(session.category).slice(0, 60) : null,
+    mode: session.mode ? String(session.mode).slice(0, 40) : null,
+    score: clamp(session.score, 0, 100),
+    completed: session.completed === false ? false : true,
+    completed_at: session.completedAt || new Date().toISOString(),
+  };
+  try {
+    const path = row.session_id
+      ? '/practice_sessions?on_conflict=user_id,job_id,session_id'
+      : '/practice_sessions';
+    const prefer = row.session_id
+      ? 'return=representation,resolution=merge-duplicates'
+      : 'return=representation';
+    const resp = await restFetch(path, {
+      method: 'POST',
+      headers: serviceHeaders({ Prefer: prefer }),
+      body: JSON.stringify(row),
+    });
+    if (!resp.ok) return null;
+    const rows = await resp.json();
+    return (Array.isArray(rows) && rows[0]) || null;
+  } catch (_e) {
+    return null;
+  }
+}
+
+/**
+ * Recent completed practice sessions for a job, newest first (capped).
+ * Scoped by user_id AND job_id — legacy null-job rows are naturally excluded
+ * because they don't match job_id=eq.<jobId>.
+ */
+async function getPracticeSessions(userId, jobId, limit) {
+  if (!userId || !jobId) return [];
+  try {
+    const qs = `job_id=eq.${enc(jobId)}&user_id=eq.${enc(userId)}` +
+      `&select=id,category,mode,content_slug,score,completed,completed_at` +
+      `&order=completed_at.desc&limit=${int(limit) || 10}`;
+    const resp = await restFetch('/practice_sessions?' + qs, { method: 'GET', headers: serviceHeaders() });
+    if (!resp.ok) return [];
+    const rows = await resp.json();
+    return Array.isArray(rows) ? rows : [];
+  } catch (_e) {
+    return [];
+  }
+}
+
+/**
+ * Compute the current readiness for a job from SERVER-LOADED records only
+ * (never from client-submitted scores). Mirrors the client weightedOverall():
+ *   overall = 0.5*match + 0.3*practiceAvg + 0.2*completion
+ * practiceAvg = mean score of completed practice sessions (0-100).
+ * completion  = min(sessions, 10) * 10  (reps-based completion proxy, 0-100).
+ * Sub-scores derive from the gap row, nudged by practiceAvg when present.
+ * Returns a snapshot-shaped object { overall, technical, behavioral,
+ * architecture, domain, questionsPracticed, avgAnswerScore, detail }.
+ */
+function computeReadiness(gap, practiceSessions) {
+  const sessions = Array.isArray(practiceSessions) ? practiceSessions : [];
+  const completedScores = sessions
+    .filter((s) => s && s.completed !== false && s.score != null)
+    .map((s) => clamp(s.score, 0, 100));
+  const practiceCount = completedScores.length;
+  const practiceAvg = practiceCount
+    ? Math.round(completedScores.reduce((a, b) => a + b, 0) / practiceCount)
+    : 0;
+  const completion = Math.min(practiceCount, 10) * 10;
+  const match = gap ? int(gap.match_score) : 0;
+
+  const overall = (!gap && !practiceAvg)
+    ? 0
+    : clamp(0.5 * match + 0.3 * practiceAvg + 0.2 * completion, 0, 100);
+
+  const sub = (base) => {
+    if (!gap && !practiceAvg) return 0;
+    const b = int(base);
+    return clamp(practiceAvg ? 0.7 * b + 0.3 * practiceAvg : b, 0, 100);
+  };
+
+  return {
+    overall,
+    technical: sub(gap && gap.technical_score),
+    behavioral: sub(gap && gap.behavioral_score),
+    architecture: sub(gap && gap.architecture_score),
+    domain: sub(gap && gap.domain_score),
+    questionsPracticed: practiceCount,
+    avgAnswerScore: practiceAvg,
+    detail: { match_score: match, practice_count: practiceCount },
+  };
+}
+
 function int(v) {
   const n = Math.round(Number(v));
   return isFinite(n) ? n : 0;
@@ -224,4 +359,5 @@ module.exports = {
   saveGapAnalysis, getGapAnalysis,
   saveQuestions, getQuestions,
   saveProgressSnapshot, getProgress,
+  savePracticeSession, getPracticeSessions, computeReadiness,
 };

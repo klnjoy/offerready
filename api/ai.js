@@ -32,6 +32,7 @@ const {
 } = require('./_lib/readinessAi');
 const {
   ownsJob, saveGapAnalysis, saveQuestions,
+  getPracticeSessions, computeReadiness, saveProgressSnapshot,
 } = require('./_lib/readiness');
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
@@ -130,6 +131,18 @@ async function handleGapAnalysis(body, res, user) {
   if (jobId && (await ownsJob(user.id, jobId))) {
     const row = await saveGapAnalysis(user.id, jobId, result.result, out.model || null);
     saved = !!row;
+    // Snapshot the readiness ONLY after the gap row is persisted. Compute from
+    // the saved gap + the job's existing practice (server records, never client
+    // scores). Idempotent per saved gap row so a retry can't double-append.
+    if (saved && row) {
+      try {
+        const practice = await getPracticeSessions(user.id, jobId, 50);
+        const snap = computeReadiness(row, practice);
+        snap.source = 'gap_analysis_completed';
+        snap.dedupeKey = 'gap:' + row.id;
+        await saveProgressSnapshot(user.id, jobId, snap);
+      } catch (_e) { /* snapshot is best-effort; gap save already succeeded */ }
+    }
   }
   send(res, 200, { ok: true, action: 'gap_analysis', result: result.result, job_id: jobId || null, saved: saved });
 }

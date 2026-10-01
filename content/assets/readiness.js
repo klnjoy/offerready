@@ -144,7 +144,8 @@
         .then(function (res) {
           if (res.status !== 200 || !res.body || !res.body.job) { note("Couldn\u2019t load that job\u2019s readiness."); return; }
           var payload = { jobs: jobs, job: res.body.job, gap: res.body.gap || null,
-                          questions: res.body.questions || [], progress: res.body.progress || [] };
+                          questions: res.body.questions || [], progress: res.body.progress || [],
+                          practice: res.body.practice || [] };
           cache(payload);
           renderDashboard(payload, token);
         })
@@ -157,6 +158,7 @@
         localStorage.setItem(CACHE_KEY, JSON.stringify({
           when: Date.now(), jobTitle: payload.job.title,
           gap: payload.gap, progress: payload.progress, questionCount: (payload.questions || []).length,
+          practice: (payload.practice || []).slice(0, 10),
         }));
       } catch (e) {}
     }
@@ -166,17 +168,18 @@
       if (!c) { signedOut(); return; }
       root.innerHTML = "";
       root.appendChild(el("div", "or-card", '<p class="or-muted">' + esc(reason) + "</p>"));
-      renderScoreBlocks(c.gap, c.progress, c.questionCount, c.jobTitle);
+      renderScoreBlocks(c.gap, c.progress, c.questionCount, c.jobTitle, c.practice || []);
     }
 
     // ---- dashboard --------------------------------------------------------
     function renderDashboard(p, token) {
       root.innerHTML = "";
 
-      // Job switcher (only if more than one job).
+      // Current Job banner — the active job that follows the user. When more
+      // than one job exists it doubles as the switcher.
+      var sw = el("div", "or-card or-jobswitch");
+      sw.appendChild(el("span", "or-jobbanner-label", "Current job"));
       if ((p.jobs || []).length > 1) {
-        var sw = el("div", "or-card or-jobswitch");
-        sw.appendChild(el("span", "or-field-label", "Readiness for"));
         var sel = el("select", "or-input");
         p.jobs.forEach(function (j) {
           var o = document.createElement("option"); o.value = j.id;
@@ -185,10 +188,12 @@
         });
         sel.addEventListener("change", function () { loadJob(token, p.jobs, sel.value); });
         sw.appendChild(sel);
-        root.appendChild(sw);
+      } else {
+        sw.appendChild(el("strong", null, esc(p.job.title || "Untitled role")));
       }
+      root.appendChild(sw);
 
-      renderScoreBlocks(p.gap, p.progress, (p.questions || []).length, p.job.title);
+      renderScoreBlocks(p.gap, p.progress, (p.questions || []).length, p.job.title, p.practice || []);
 
       // Next-step actions, job-aware.
       var actions = el("div", "or-card or-actions");
@@ -200,15 +205,21 @@
     }
 
     // Shared score UI used by both live + cached renders.
-    function renderScoreBlocks(gap, progress, questionCount, jobTitle) {
+    function renderScoreBlocks(gap, progress, questionCount, jobTitle, practice) {
       progress = progress || [];
+      practice = practice || [];
       // Latest snapshot (progress rows come newest-first from the API).
       var latest = progress[0] || null;
+
+      // Factor presence — distinguish "0 / low" from "not assessed yet".
+      var hasGap = !!gap;
+      var completedPractice = practice.filter(function (s) { return s && s.completed !== false && s.score != null; });
+      var hasPractice = completedPractice.length > 0;
+
       var practiceAvg = latest ? (latest.avg_answer_score || 0) : 0;
       var completion = Math.min((latest && latest.questions_practiced) || 0, 10) * 10;
       // Respect a persisted overall of 0 — only fall back to the computed score
-      // when there is genuinely no persisted value (null/undefined), not when
-      // the stored readiness legitimately rounds to 0.
+      // when there is genuinely no persisted value (null/undefined).
       var hasPersistedOverall = latest && latest.overall_readiness != null;
       var overall = hasPersistedOverall
         ? latest.overall_readiness
@@ -219,24 +230,57 @@
         var b = base || 0;
         return clampInt(practiceAvg ? 0.7 * b + 0.3 * practiceAvg : b, 0, 100);
       };
-      // Same presence check for each persisted sub-score (respect a stored 0).
       var has = function (v) { return v != null; };
       var technical = latest && has(latest.technical_score) ? latest.technical_score : sub(gap && gap.technical_score);
       var behavioral = latest && has(latest.behavioral_score) ? latest.behavioral_score : sub(gap && gap.behavioral_score);
       var architecture = latest && has(latest.architecture_score) ? latest.architecture_score : sub(gap && gap.architecture_score);
       var domain = latest && has(latest.domain_score) ? latest.domain_score : sub(gap && gap.domain_score);
 
-      // Header
+      // Header — Interview Readiness (the blended score).
       var band = overall >= 75 ? "or-good" : overall >= 50 ? "or-mid" : "or-weak";
       var head = el("div", "or-card");
       var hrow = el("div", "or-score-head");
       hrow.appendChild(el("div", "or-score-num " + band, overall + "%"));
-      var lbl = "<strong>Overall interview readiness</strong><br><span class=\"or-muted\">";
-      lbl += jobTitle ? "For: " + esc(jobTitle) + " \u00b7 " : "";
-      lbl += "Blend of resume match, practice, and completed reps.</span>";
+      var lbl = "<strong>Interview readiness</strong><br><span class=\"or-muted\">";
+      lbl += jobTitle ? "For: " + esc(jobTitle) + "</span>" : "A blended score</span>";
       hrow.appendChild(el("div", "or-score-label", lbl));
       head.appendChild(hrow);
+
+      // Explanation: WHAT the blended score is based on, with honest "Not
+      // assessed" states so a missing input never reads as a silent deduction.
+      var ex = el("div", "or-readiness-factors");
+      ex.appendChild(el("div", "or-field-label", "Based on"));
+      var factor = function (label, present, detailTxt) {
+        var mark = present ? "\u2713" : "\u2014";
+        var cls = present ? "or-factor-on" : "or-factor-off";
+        return el("div", "or-factor " + cls,
+          '<span class="or-factor-mark">' + mark + '</span> <strong>' + esc(label) + '</strong>' +
+          ' <span class="or-muted or-small">' + esc(detailTxt) + '</span>');
+      };
+      ex.appendChild(factor("Resume match", hasGap,
+        hasGap ? (gap.match_score + "% \u2014 how your resume lines up with the job") : "Not assessed \u2014 run a gap analysis"));
+      ex.appendChild(factor("Practice activity", hasPractice,
+        hasPractice ? (completedPractice.length + " completed \u00b7 avg " + practiceAvg + "%") : "Practice: Not assessed"));
+      ex.appendChild(factor("Preparation completion", (latest && (latest.questions_practiced || 0) > 0),
+        (latest && (latest.questions_practiced || 0) > 0) ? (completion + "% of a 10-rep target") : "Preparation completion: Not assessed"));
+      if (!hasPractice) {
+        ex.appendChild(el("p", "or-muted or-small",
+          "Practice hasn\u2019t been completed yet, so it isn\u2019t counting toward readiness. " +
+          "<a href=\"" + base + "Practice-Scenarios/index.html\">Start practice</a> to raise this score."));
+      }
+      head.appendChild(ex);
       root.appendChild(head);
+
+      // Resume Match vs Interview Readiness — stated side by side so the two
+      // numbers aren't confusing (addresses "80% match but 40% readiness").
+      var mm = el("div", "or-card");
+      var mrow = el("div", "or-grid");
+      mrow.appendChild(stat(hasGap ? gap.match_score + "%" : "\u2014", "Resume match"));
+      mrow.appendChild(stat(overall + "%", "Interview readiness"));
+      mm.appendChild(mrow);
+      mm.appendChild(el("p", "or-muted or-small",
+        "<strong>Resume match</strong> is resume-to-job alignment. <strong>Interview readiness</strong> blends that with your practice and completed reps \u2014 so it\u2019s normal for readiness to be lower until you practice."));
+      root.appendChild(mm);
 
       // Area bars
       var cards = el("div", "or-card");
@@ -252,29 +296,60 @@
       var g = el("div", "or-grid");
       g.appendChild(stat(gap ? gap.match_score + "%" : "\u2014", "Resume match"));
       g.appendChild(stat(questionCount || 0, "Questions ready"));
-      g.appendChild(stat(latest ? (latest.questions_practiced || 0) : 0, "Questions practiced"));
+      g.appendChild(stat(completedPractice.length, "Practice sessions"));
       g.appendChild(stat(progress.length, "Readiness snapshots"));
       root.appendChild(g);
 
-      // Trend (oldest->newest for the sparkline)
+      // Recent Practice — real persisted, job-scoped sessions (newest first).
+      var rp = el("div", "or-card");
+      rp.appendChild(el("h3", null, "Recent practice"));
+      if (!practice.length) {
+        rp.appendChild(el("p", "or-muted", "No completed practice yet."));
+        rp.appendChild(el("a", "or-btn or-btn-primary", "Start practice")).href = base + "Practice-Scenarios/index.html";
+      } else {
+        var tbl = '<table class="or-practice-table"><thead><tr><th>Activity</th><th>Mode</th><th>Score</th><th>When</th></tr></thead><tbody>';
+        practice.slice(0, 8).forEach(function (s) {
+          var when = s.completed_at ? new Date(s.completed_at) : null;
+          var whenTxt = (when && !isNaN(when.getTime())) ? when.toLocaleDateString() : "";
+          tbl += "<tr><td>" + esc(s.category || s.content_slug || "Practice") + "</td><td>" +
+            esc(s.mode || "") + "</td><td>" + (s.score != null ? esc(String(s.score)) + "%" : "\u2014") +
+            "</td><td>" + esc(whenTxt) + "</td></tr>";
+        });
+        tbl += "</tbody></table>";
+        rp.appendChild(el("div", null, tbl));
+      }
+      root.appendChild(rp);
+
+      // Trend — only with >= 2 real snapshots; otherwise a truthful message.
+      var tcard = el("div", "or-card");
+      tcard.appendChild(el("div", "or-field-label", "Readiness trend"));
       if (progress.length > 1) {
         var trend = progress.slice().reverse().map(function (s) { return s.overall_readiness || 0; });
-        var tcard = el("div", "or-card");
-        tcard.appendChild(el("div", "or-field-label", "Readiness trend"));
         tcard.appendChild(sparkline(trend));
-        root.appendChild(tcard);
+      } else {
+        tcard.appendChild(el("p", "or-muted or-small", "Complete more readiness activities to build your trend."));
       }
+      root.appendChild(tcard);
 
       // Gaps recap (from the persisted gap result)
       var res = gap && gap.result ? gap.result : null;
       if (res && ((res.missingSkills || []).length || (res.missingKeywords || []).length)) {
         var gaps = el("div", "or-card");
-        gaps.appendChild(el("h3", null, "Close these gaps"));
+        gaps.appendChild(el("h3", null, "Top skill gaps"));
         var list = (res.missingSkills || []).concat(res.missingKeywords || []).slice(0, 12);
         var wrap = el("div", "or-chips");
         list.forEach(function (x) { wrap.appendChild(el("span", "or-chip or-chip-warn", esc(x))); });
         gaps.appendChild(wrap);
         root.appendChild(gaps);
+      }
+
+      // Last Updated — the most recent of the persisted signals we have.
+      var lastTs = null;
+      if (latest && latest.recorded_at) lastTs = new Date(latest.recorded_at);
+      else if (practice[0] && practice[0].completed_at) lastTs = new Date(practice[0].completed_at);
+      else if (gap && gap.created_at) lastTs = new Date(gap.created_at);
+      if (lastTs && !isNaN(lastTs.getTime())) {
+        root.appendChild(el("p", "or-muted or-small", "Last updated " + lastTs.toLocaleString()));
       }
     }
 

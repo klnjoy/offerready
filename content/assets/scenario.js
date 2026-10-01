@@ -57,6 +57,49 @@
     var activeCat = "all";
     var matchedRole = null;  // role label when the list was auto-filtered to the analyzed job
     var jobContext = null;   // distilled analyzed-job signals used to personalize prompts
+    var activeJobTitleCache = null;  // resolved title for the Current Job banner
+
+    // Resolve + cache the active job's title (best-effort) so the banner can
+    // show "Current job: <title>". Fetches /api/jobs once; repaints on arrival.
+    function ensureActiveJobTitle(repaint) {
+      var id = (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob)
+        ? window.OfferReadyReadiness.getActiveJob() : "";
+      if (!id || !API || !window.OfferReadyAuth) { return; }
+      if (activeJobTitleCache && activeJobTitleCache.id === id) { return; }
+      window.OfferReadyAuth.getAccessToken().then(function (tok) {
+        if (!tok) return;
+        fetch(API.replace(/\/$/, "") + "/api/jobs", { headers: { Authorization: "Bearer " + tok } })
+          .then(function (r) { return r.json().catch(function () { return {}; }); })
+          .then(function (j) {
+            var jobs = (j && j.jobs) || [];
+            var job = jobs.filter(function (x) { return x.id === id; })[0];
+            // If the pointer references a missing/unauthorized job, clear it.
+            if (!job) { activeJobTitleCache = { id: id, title: "" }; return; }
+            activeJobTitleCache = { id: id, title: job.title || "Untitled role" };
+            if (repaint) repaint();
+          })
+          .catch(function () {});
+      }).catch(function () {});
+    }
+
+    function currentJobBanner() {
+      ensureActiveJobTitle(paintList);
+      var id = (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob)
+        ? window.OfferReadyReadiness.getActiveJob() : "";
+      var banner = el("div", "or-jobbanner");
+      var title = (activeJobTitleCache && activeJobTitleCache.id === id) ? activeJobTitleCache.title : "";
+      if (id && title) {
+        banner.innerHTML = '<span class="or-jobbanner-label">Current job</span> <strong>' + esc(title) +
+          '</strong> \u00b7 <span class="or-small">completed practice counts toward this job\u2019s readiness</span>';
+      } else if (id) {
+        banner.innerHTML = '<span class="or-jobbanner-label">Current job</span> <span class="or-small">practice will be saved to your active job</span>';
+      } else {
+        banner.innerHTML = '<span class="or-jobbanner-label">No active job selected</span> ' +
+          '<a class="or-btn or-btn-small" href="' + base + 'My-Jobs/index.html">Choose a job</a> ' +
+          '<span class="or-small">\u2014 practice is saved locally until you pick one</span>';
+      }
+      return banner;
+    }
 
     // Job-first: if the user arrived from an analyzed job (Analyze page adds
     // ?role=<category>, or stored offerready.defendRole.v1), pre-select that
@@ -382,6 +425,7 @@
     function paintList() {
       app.innerHTML = "";
       if (!allScenarios.length) { app.appendChild(el("p", "ip-ai-hint", "No scenarios published yet.")); return; }
+      app.appendChild(currentJobBanner());
       app.appendChild(el("h2", null, "Defend-your-decision scenarios"));
       app.appendChild(el("p", "ip-ai-hint",
         "Practice the decisions senior AI, data, and cloud engineers defend under pressure \u2014 across roles. Preview any scenario free; open the full tree with OfferReady Pro."));
@@ -496,6 +540,9 @@
       var nodes = scenario.content.nodes || {};
       state = { slug: scenario.slug, title: scenario.title, nodes: nodes,
                 current: scenario.content.start, answers: {}, ratings: {}, startedAt: Date.now(),
+                // Stable per-run id -> idempotency key for the authoritative
+                // practice write (a double-submit/retry maps to the same row).
+                runId: (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
                 total: Object.keys(nodes).length, step: 0,
                 // Personalize to the analyzed job only when it matches this
                 // scenario's role (avoids putting cloud tech into a security run).
@@ -743,8 +790,7 @@
       var ratings = Object.keys(state.ratings).map(function (k) { return state.ratings[k]; });
       var avg = ratings.length ? ratings.reduce(function (a, b) { return a + b; }, 0) / ratings.length : 0;
       var pct = Math.round((avg / 5) * 100);
-      persistProgress(false);       // mark the dashboard row complete (in place)
-      persistSession(pct, ratings.length);
+      persistProgress(false);       // local dashboard row (per-browser history)
       app.innerHTML = "";
       var wrap = el("div", "ip-card ip-summary");
       wrap.appendChild(el("div", "ip-score", (ratings.length ? pct + "%" : "\u2713")));
@@ -752,10 +798,32 @@
       wrap.appendChild(el("p", null, pct >= 80 ? "Strong \u2014 you held the line under follow-ups."
         : pct >= 60 ? "Solid. Revisit the ones you rated low and run it again."
         : "Good start. Re-read the strong answers, then rerun."));
+
+      // Persistence status line — reflects the ACTUAL authoritative write, not
+      // an optimistic assumption. Starts as "saving", updated by the callback.
+      var statusEl = el("p", "or-muted or-small", "Saving your result\u2026");
+      wrap.appendChild(statusEl);
+
       var again = el("button", "ip-btn", "All scenarios");
       again.addEventListener("click", goList);
       wrap.appendChild(again);
       app.appendChild(wrap);
+
+      // Authoritative server write (records session + readiness snapshot).
+      persistSession(pct, ratings.length, function (r) {
+        if (r && r.saved && !r.partial) {
+          var ov = r.readiness && typeof r.readiness.overall === "number" ? (" Your readiness is now " + r.readiness.overall + "%.") : "";
+          statusEl.textContent = "\u2713 Saved to this job \u2014 it counts toward your Interview Readiness." + ov;
+        } else if (r && r.saved && r.partial) {
+          statusEl.textContent = "\u2713 Practice saved. Readiness will update on your next activity.";
+        } else if (r && r.local && r.reason === "nojob") {
+          statusEl.innerHTML = "Saved to this browser only. <a href=\"" + base + "Dashboard/index.html\">Choose an active job</a> so practice counts toward that job\u2019s readiness.";
+        } else if (r && r.local && r.reason === "signedout") {
+          statusEl.innerHTML = "Saved to this browser only \u2014 <a href=\"" + base + "My-Jobs/index.html\">sign in</a> so your practice is saved to your job and every device.";
+        } else {
+          statusEl.textContent = "Couldn\u2019t save to your job just now (kept a local copy). Re-run when you\u2019re back online to record it.";
+        }
+      });
     }
 
     function backToList() {
@@ -764,30 +832,63 @@
     }
 
     // ---- persistence -------------------------------------------------------
-    function persistSession(score, n) {
+    // Authoritative path (Phase 1.5): when the user is signed in AND has an
+    // active (owned) job, a completed scenario is sent to the AUTHENTICATED
+    // server endpoint /api/jobs/:id { action:"complete_practice" }. The server
+    // records the practice_sessions row AND the readiness snapshot, scoped to
+    // the job, and recomputes readiness from server records. We do NOT
+    // fire-and-forget and we do NOT fall back to an unscoped DB write.
+    //
+    // If there's no active job or no sign-in, we keep a clearly LOCAL-only
+    // history entry (per-browser) and the summary says so — it does not claim
+    // cross-device save and does not affect job readiness.
+    function persistSession(score, n, onDone) {
+      var sessionId = state.slug + ":" + (state.runId || "");
       var rec = { slug: state.slug, score: score, n: n, mode: "scenario",
                   category: state.slug, completed: true, when: new Date().toISOString() };
-      // Note: the shared Progress dashboard row is written by persistProgress()
-      // (keyed upsert) so partial + completed runs share one row. This function
-      // only handles the durable backend write below.
-      // Signed in -> Supabase practice_sessions (own row via RLS). Else local.
-      if (window.OfferReadyAuth) {
+
+      var activeJob = (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob)
+        ? window.OfferReadyReadiness.getActiveJob() : "";
+
+      if (API && window.OfferReadyAuth && activeJob) {
         window.OfferReadyAuth.getAccessToken().then(function (tok) {
-          if (!tok || !window.OFFERREADY_SUPABASE_URL) { localSave(rec); return; }
-          fetch(window.OFFERREADY_SUPABASE_URL + "/rest/v1/practice_sessions", {
+          if (!tok) { localSave(rec); if (onDone) onDone({ saved: false, local: true, reason: "signedout" }); return; }
+          fetch(API.replace(/\/$/, "") + "/api/jobs/" + encodeURIComponent(activeJob), {
             method: "POST",
-            headers: {
-              apikey: window.OFFERREADY_SUPABASE_ANON_KEY,
-              Authorization: "Bearer " + tok,
-              "Content-Type": "application/json",
-              Prefer: "return=minimal",
-            },
-            body: JSON.stringify({ content_slug: rec.slug, category: rec.category,
-                                   mode: "scenario", score: score, completed: true,
-                                   completed_at: rec.when }),
-          }).catch(function () { localSave(rec); });
-        }).catch(function () { localSave(rec); });
-      } else { localSave(rec); }
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok },
+            body: JSON.stringify({
+              action: "complete_practice",
+              sessionId: sessionId,
+              category: rec.category,
+              mode: "scenario",
+              contentSlug: rec.slug,
+              score: score,
+              completed: true,
+              completedAt: rec.when,
+            }),
+          }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; });
+          }).then(function (res) {
+            if (res.status === 200 && res.body && res.body.ok) {
+              if (onDone) onDone({ saved: true, local: false, readiness: res.body.readiness });
+            } else if (res.status === 207) {
+              // Session saved but snapshot didn't — report partial, not success.
+              if (onDone) onDone({ saved: true, local: false, partial: true, readiness: res.body && res.body.readiness });
+            } else {
+              // Authoritative write failed: keep a local copy and surface retry.
+              localSave(rec);
+              if (onDone) onDone({ saved: false, local: true, reason: "server", error: (res.body && res.body.error) });
+            }
+          }).catch(function () {
+            localSave(rec);
+            if (onDone) onDone({ saved: false, local: true, reason: "network" });
+          });
+        }).catch(function () { localSave(rec); if (onDone) onDone({ saved: false, local: true, reason: "token" }); });
+      } else {
+        // No active job or not signed in → local-only history (not job readiness).
+        localSave(rec);
+        if (onDone) onDone({ saved: false, local: true, reason: activeJob ? "signedout" : "nojob" });
+      }
     }
     function localSave(rec) {
       try { var h = JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); h.unshift(rec);

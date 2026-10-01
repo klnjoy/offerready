@@ -52,9 +52,30 @@
       }).catch(function () { cb(); });
     }
 
+    function activeJobTitle() {
+      var j = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
+      return j ? (j.title || "Untitled role") : "";
+    }
+    function currentJobBanner() {
+      // "Current Job: <title>" header so the active job visibly follows the
+      // user. If none is selected, prompt to choose one.
+      var banner = el("div", "or-jobbanner");
+      var title = activeJobTitle();
+      if (title) {
+        banner.innerHTML = '<span class="or-jobbanner-label">Current job</span> <strong>' + esc(title) + '</strong>';
+      } else if (state.jobs.length) {
+        banner.innerHTML = '<span class="or-jobbanner-label">No active job selected</span> \u2014 pick one below.';
+      } else {
+        banner.innerHTML = '<span class="or-jobbanner-label">No active job selected</span> ' +
+          '<a class="or-btn or-btn-small" href="' + baseHref() + 'Analyze/index.html">Choose a job</a>';
+      }
+      return banner;
+    }
+
     function renderForm(note) {
       app.innerHTML = "";
       var card = el("div", "or-card");
+      card.appendChild(currentJobBanner());
       card.appendChild(el("h2", null, "Resume \u2194 Job Gap Analysis"));
       card.appendChild(el("p", "or-muted", "Compare your resume against a saved job. We show your match score, strengths, and exactly what's missing \u2014 and save the result to that job so it's on every device. Your resume is read in your browser; the file is never uploaded or stored."));
 
@@ -258,6 +279,21 @@
         app.appendChild(el("div", "or-card", '<p class="or-muted">\u2713 Saved to this job. It\u2019s on your <a href="../Dashboard/index.html">dashboard</a> and any device you sign in from.</p>'));
       } else if (!state.jobId) {
         app.appendChild(el("div", "or-card", '<p class="or-muted">This result isn\u2019t saved yet \u2014 <a href="../Analyze/index.html">analyze &amp; save a job</a>, then re-run gap analysis against it to keep it.</p>'));
+      }
+
+      // Next recommended step — guide the user into Practice instead of making
+      // them discover it. The active job is already set, so these destinations
+      // operate on the same job (no re-selection).
+      if (saved && state.jobId) {
+        var next = el("div", "or-card or-next");
+        next.appendChild(el("div", "or-field-label", "Next recommended step"));
+        next.appendChild(el("p", "or-muted or-small", "Turn these gaps into practice. Your job stays selected \u2014 no need to pick it again."));
+        var nrow = el("div", "or-actions");
+        nrow.innerHTML =
+          '<a class="or-btn or-btn-primary" href="' + baseHref() + 'Question-Bank/index.html">\u2753 Generate interview questions</a>' +
+          '<a class="or-btn" href="' + baseHref() + 'Practice-Scenarios/index.html">\uD83D\uDDE1\ufe0f Start practice</a>';
+        next.appendChild(nrow);
+        app.appendChild(next);
       }
 
       // Actions

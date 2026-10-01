@@ -56,9 +56,28 @@
       }).catch(function () { cb(); });
     }
 
+    function activeJobTitle() {
+      var j = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
+      return j ? (j.title || "Untitled role") : "";
+    }
+    function currentJobBanner() {
+      var banner = el("div", "or-jobbanner");
+      var title = activeJobTitle();
+      if (title) {
+        banner.innerHTML = '<span class="or-jobbanner-label">Current job</span> <strong>' + esc(title) + '</strong>';
+      } else if (state.jobs.length) {
+        banner.innerHTML = '<span class="or-jobbanner-label">No active job selected</span> \u2014 pick one below.';
+      } else {
+        banner.innerHTML = '<span class="or-jobbanner-label">No active job selected</span> ' +
+          '<a class="or-btn or-btn-small" href="' + base + 'Analyze/index.html">Choose a job</a>';
+      }
+      return banner;
+    }
+
     function renderForm(note) {
       app.innerHTML = "";
       var card = el("div", "or-card");
+      card.appendChild(currentJobBanner());
       card.appendChild(el("h2", null, "Generate interview questions"));
       card.appendChild(el("p", "or-muted", "Pick a saved job and get a full, categorized question set \u2014 saved to that job so it's on every device."));
       if (note) card.appendChild(el("p", "or-error", esc(note)));
