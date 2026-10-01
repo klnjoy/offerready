@@ -807,8 +807,8 @@ def write_index(md_catalog, modules) -> None:
         '<p class="or-hero-eyebrow">Job description &rarr; interview readiness</p>',
         "",
         '<p class="home-hero"><strong>Interview readiness for the job you\u2019re '
-        "actually applying for.</strong> Paste a job description. Understand the "
-        "role. Identify your gaps. Practice what matters.</p>",
+        "actually applying for.</strong> Paste a job description, see your gaps, "
+        "and practice what matters.</p>",
         "",
         # ONE primary action (Analyze a Job) + one optional secondary that
         # points at the existing Sample Walkthrough. The old Upload Resume /
@@ -825,8 +825,7 @@ def write_index(md_catalog, modules) -> None:
         "",
         "## How OfferReady works",
         "",
-        "Most prep starts with generic content. OfferReady starts with **your "
-        "target job** and moves through four simple steps:",
+        "Start with the job you\u2019re targeting and move through four steps:",
         "",
         '<p class="or-flow">'
         "<span>1 · Add the job</span> &rarr; <span>2 · Analyze the gap</span> "
@@ -834,18 +833,11 @@ def write_index(md_catalog, modules) -> None:
         "<span>4 · Track readiness</span>"
         "</p>",
         "",
-        "That's the whole app: **[Jobs](My-Jobs/index.md)** holds your target "
-        "roles, **[Analysis](Gap-Analysis/index.md)** shows your resume-vs-job "
-        "gaps, **[Practice](Practice/index.md)** is where you rehearse and defend "
-        "your answers, and the **[Dashboard](Dashboard/index.md)** tracks how "
-        "ready you are — in one place.",
-        "",
         "## Start with your job",
         "",
-        "Paste a job description below and get a role analysis, a readiness view, "
-        "likely gaps, and a preparation plan that links straight into the study "
-        "material — free, right here. Save it to **[My Jobs](My-Jobs/index.md)** "
-        "to track your preparation over time.",
+        "Paste a job description below to see your gaps and a preparation plan \u2014 "
+        "free, right here. Save it to **[My Jobs](My-Jobs/index.md)** to track "
+        "your progress over time.",
         "",
         '<div id="analyze-app" markdown="0">',
         '  <p><em>Loading the analyzer\u2026</em></p>',
@@ -853,8 +845,8 @@ def write_index(md_catalog, modules) -> None:
         "",
         "## See a worked example",
         "",
-        "Want to see the full flow before pasting your own role? The sample "
-        "walkthrough maps a real job to a focused preparation plan, end to end.",
+        "Prefer to see it first? The sample walkthrough maps a real job to a "
+        "preparation plan, end to end.",
         "",
         '<p class="home-cta" markdown>'
         '[:material-clipboard-check-outline: See a sample walkthrough](Sample-Walkthrough/index.md){ .md-button .md-button--primary }'
