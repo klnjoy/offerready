@@ -162,7 +162,10 @@
       var latest = progress[0] || null;
       var practiceAvg = latest ? (latest.avg_answer_score || 0) : 0;
       var completion = Math.min((latest && latest.questions_practiced) || 0, 10) * 10;
-      var overall = latest && latest.overall_readiness
+      // Respect a persisted overall of 0 (presence check, not truthiness) so a
+      // legitimate zero readiness isn't replaced by the computed fallback.
+      var hasPersistedOverall = latest && latest.overall_readiness != null;
+      var overall = hasPersistedOverall
         ? latest.overall_readiness
         : (gap && window.OfferReadyReadiness && window.OfferReadyReadiness.weightedOverall
             ? window.OfferReadyReadiness.weightedOverall(gap, practiceAvg, completion)

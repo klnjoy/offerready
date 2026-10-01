@@ -4,9 +4,16 @@ icon: material/scale-balance
 
 # Gap Analysis
 
-See exactly how your resume stacks up against a specific job — your match
-score, your strengths, and the skills, keywords, and experience the role wants
-that your resume doesn't show yet.
+Compare your resume against a **saved job** and see your **Resume Match** — your
+strengths, the evidence found in your resume, and the skills, keywords, and
+experience the role asks for that **weren't found in your resume** yet.
+
+!!! info "Job Match vs Interview Readiness"
+    **Resume Match** here measures how well your resume's evidence lines up with
+    this job's requirements. Your **Interview Readiness** on the
+    [Dashboard](../Dashboard/index.html) is a *blended* score — it combines that
+    match with your practice and completed reps — so the two numbers are
+    measuring different things and won't always be the same.
 
 !!! info "Your resume stays private"
     Your resume is read **in your browser**. The file is never uploaded or
@@ -19,6 +26,7 @@ that your resume doesn't show yet.
 
 ---
 
-Once you've seen your gaps, head to the
-[Readiness Dashboard](../Dashboard/index.html) to track your overall readiness,
-or [Analyze the job](../Analyze/index.md) in more depth.
+A missing item means that evidence **wasn't found in your uploaded resume** — it
+isn't a judgment of your actual ability. Once you've seen your gaps, head to the
+[Readiness Dashboard](../Dashboard/index.html) to track your blended Interview
+Readiness, or [Analyze another job](../Analyze/index.md).

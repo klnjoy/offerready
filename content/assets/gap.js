@@ -228,25 +228,29 @@
       var band = score >= 75 ? "or-good" : score >= 50 ? "or-mid" : "or-weak";
       var head = el("div", "or-score-head");
       head.appendChild(el("div", "or-score-num " + band, score + "%"));
-      head.appendChild(el("div", "or-score-label", "<strong>Overall match</strong><br><span class=\"or-muted\">" + esc(r.summary || "") + "</span>"));
+      head.appendChild(el("div", "or-score-label", "<strong>Resume match</strong><br><span class=\"or-muted\">" + esc(r.summary || "") + "</span>"));
       top.appendChild(head);
       app.appendChild(top);
 
-      // Readiness bars
+      // Match-by-dimension bars. These show resume-to-job match per area; the
+      // blended Interview Readiness score lives on the Dashboard.
       var bars = el("div", "or-card");
-      bars.appendChild(el("h3", null, "Readiness breakdown"));
+      bars.appendChild(el("h3", null, "Match by area"));
       bars.appendChild(bar("Technical", r.technicalScore || 0));
       bars.appendChild(bar("Behavioral", r.behavioralScore || 0));
       bars.appendChild(bar("Architecture", r.architectureScore || 0));
       bars.appendChild(bar("Domain", r.domainScore || 0));
       app.appendChild(bars);
 
-      // Strengths + gaps
+      // Evidence found + evidence not found in the resume. Careful wording: a
+      // "not found" item means the resume didn't show it — NOT that the
+      // candidate lacks the ability.
       var detail = el("div", "or-card");
-      var s = chips("\u2713 Strengths", r.strengths, "or-chip-ok"); if (s) detail.appendChild(s);
-      var ms = chips("\u26a0 Missing skills", r.missingSkills, "or-chip-warn"); if (ms) detail.appendChild(ms);
-      var mk = chips("\u26a0 Missing keywords", r.missingKeywords, "or-chip-warn"); if (mk) detail.appendChild(mk);
-      var me = chips("\u26a0 Missing experience signals", r.missingExperience, "or-chip-warn"); if (me) detail.appendChild(me);
+      var s = chips("\u2713 Evidence found in your resume", r.strengths, "or-chip-ok"); if (s) detail.appendChild(s);
+      var ms = chips("\u26a0 Skills not found in your resume", r.missingSkills, "or-chip-warn"); if (ms) detail.appendChild(ms);
+      var mk = chips("\u26a0 Keywords not found in your resume", r.missingKeywords, "or-chip-warn"); if (mk) detail.appendChild(mk);
+      var me = chips("\u26a0 Experience not evidenced in your resume", r.missingExperience, "or-chip-warn"); if (me) detail.appendChild(me);
+      detail.appendChild(el("p", "or-muted or-small", "\u201cNot found\u201d means this wasn\u2019t shown in your uploaded resume \u2014 it isn\u2019t a judgment of your ability. Treat these as recommended preparation areas."));
       app.appendChild(detail);
 
       // Persistence status — the DB is the source of truth.

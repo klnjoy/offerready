@@ -295,18 +295,22 @@
         return w;
       });
 
-      // YOUR ALIGNMENT (only if resume provided)
+      // INITIAL ALIGNMENT (only if resume provided). This is a first-pass,
+      // resume-optional view on the Analyze page. The blended "Interview
+      // Readiness" lives on the Dashboard; Resume Match lives in Gap Analysis.
       if (a.resumeProvided && (a.alignment || []).length) {
-        section("Your alignment", () => tableRows(
-          ["Requirement", "Status", "Evidence"],
+        section("Initial alignment", () => tableRows(
+          ["Requirement", "Status", "Evidence in resume"],
           a.alignment.map((r) => [esc(r.requirement), statusPill(r.status), esc(r.evidence)])
         ));
       }
 
-      // READINESS
+      // ROLE EXPECTATIONS BY DIMENSION (not a readiness score — Analyze explains
+      // what the role expects across the four dimensions; it does not blend a
+      // readiness number here).
       if ((a.readiness || []).length) {
-        section("Your readiness", () => tableRows(
-          ["Dimension", "Status", "Role requires", "You have", "Gap"],
+        section("What the role expects", () => tableRows(
+          ["Dimension", "Status", "Role requires", "Found in resume", "Gap"],
           a.readiness.map((r) => [esc(r.dimension), statusPill(r.status), esc(r.roleRequires), esc(r.candidateHas), esc(r.gap)])
         ));
       }

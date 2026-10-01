@@ -206,7 +206,11 @@
       var latest = progress[0] || null;
       var practiceAvg = latest ? (latest.avg_answer_score || 0) : 0;
       var completion = Math.min((latest && latest.questions_practiced) || 0, 10) * 10;
-      var overall = latest && latest.overall_readiness
+      // Respect a persisted overall of 0 — only fall back to the computed score
+      // when there is genuinely no persisted value (null/undefined), not when
+      // the stored readiness legitimately rounds to 0.
+      var hasPersistedOverall = latest && latest.overall_readiness != null;
+      var overall = hasPersistedOverall
         ? latest.overall_readiness
         : weightedOverall(gap, practiceAvg, completion);
 
@@ -215,10 +219,12 @@
         var b = base || 0;
         return clampInt(practiceAvg ? 0.7 * b + 0.3 * practiceAvg : b, 0, 100);
       };
-      var technical = latest && latest.technical_score ? latest.technical_score : sub(gap && gap.technical_score);
-      var behavioral = latest && latest.behavioral_score ? latest.behavioral_score : sub(gap && gap.behavioral_score);
-      var architecture = latest && latest.architecture_score ? latest.architecture_score : sub(gap && gap.architecture_score);
-      var domain = latest && latest.domain_score ? latest.domain_score : sub(gap && gap.domain_score);
+      // Same presence check for each persisted sub-score (respect a stored 0).
+      var has = function (v) { return v != null; };
+      var technical = latest && has(latest.technical_score) ? latest.technical_score : sub(gap && gap.technical_score);
+      var behavioral = latest && has(latest.behavioral_score) ? latest.behavioral_score : sub(gap && gap.behavioral_score);
+      var architecture = latest && has(latest.architecture_score) ? latest.architecture_score : sub(gap && gap.architecture_score);
+      var domain = latest && has(latest.domain_score) ? latest.domain_score : sub(gap && gap.domain_score);
 
       // Header
       var band = overall >= 75 ? "or-good" : overall >= 50 ? "or-mid" : "or-weak";

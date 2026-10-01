@@ -2,6 +2,12 @@
 icon: material/flag-checkered
 ---
 
+<!-- LEGACY (not in product navigation as of Batch 1). This page is retained only
+     so older/external links to /Start-Here/ keep resolving on the static host
+     (no server redirect is available on GitHub Pages). The current onboarding
+     entry point is Analyze a Job (../Analyze/index.md). Do not add this page
+     back to the product nav or to product CTAs. -->
+
 # Start Here
 
 The fastest way to start: tell us the role and timeline, then paste the job —
@@ -10,6 +16,8 @@ OfferReady maps its requirements, finds your gaps, and builds your prep plan.
 <div id="onboarding-app" markdown="0">
   <p><em>Loading…</em></p>
 </div>
+
+[Analyze a job now →](../Analyze/index.md){ .md-button .md-button--primary }
 
 ---
 
