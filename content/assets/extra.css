@@ -3,13 +3,30 @@
    ============================================================ */
 
 :root {
-  /* OfferReady brand: deep navy -> teal -> green (matches the logo). */
+  /* OfferReady brand. Calm/minimal refactor: the palette is navy + slate +
+     white + soft green only (no gradients, no neon). The --kb-grad-* aliases
+     are intentionally repointed to navy so any legacy
+     `linear-gradient(--kb-grad-1, --kb-grad-2)` now renders as a near-solid
+     navy fill instead of a navy->blue gradient. New work should use the
+     --or-* tokens below. */
   --kb-navy: #16305c;      /* deep navy   */
-  --kb-blue: #1f6fb2;      /* mid blue    */
-  --kb-green: #22c07a;     /* brand green */
-  --kb-grad-1: var(--kb-navy);
-  --kb-grad-2: var(--kb-blue);
-  --kb-grad-3: var(--kb-green);
+  --kb-blue: #1f6fb2;      /* mid blue (legacy; used sparingly for links) */
+  --kb-green: #1f9d63;     /* brand green (calmer than the old #22c07a) */
+  --kb-grad-1: #16305c;
+  --kb-grad-2: #1a3760;    /* was mid-blue; now a hair off navy => flat look */
+  --kb-grad-3: #16305c;    /* was green; now navy => flat look */
+
+  /* Calm design tokens (Clera/Linear/Vercel direction). */
+  --or-navy: #16305c;
+  --or-navy-700: #0f2547;
+  --or-text: #16233b;            /* text-primary  */
+  --or-text-secondary: #5b6b85;  /* slate         */
+  --or-bg: #ffffff;              /* background     */
+  --or-surface: #f7f9fc;         /* subtle panel   */
+  --or-border: #e5e9f0;          /* hairline       */
+  --or-green: #1f9d63;           /* soft green accent */
+  --or-green-soft: rgba(31, 157, 99, 0.10);
+  --or-shadow: 0 1px 2px rgba(16, 35, 59, 0.05);  /* the only shadow we use */
 }
 
 /* Brand the Material primary (header/links) navy and the accent green so the
@@ -1532,3 +1549,224 @@ a.ig-feature.ig-link .ig-d {
 
 /* Dashboard readiness-trend sparkline. */
 .or-spark { width: 100%; max-width: 260px; height: auto; display: block; margin-top: 0.3rem; }
+
+
+/* ============================================================
+   CALM REFACTOR (design-system pass) — appended last so it wins.
+   Philosophy: calm, minimal, editorial, focused (Clera/Linear/Vercel).
+   - No gradients on functional surfaces (navy or green flat fills).
+   - No off-palette indigo shadows; one subtle neutral shadow only.
+   - No lift-on-hover transforms (border/opacity feedback instead).
+   - More whitespace; typography before containers.
+   Class names are unchanged so no JS references break.
+   ============================================================ */
+
+/* ---- 1. Kill off-palette indigo shadows + lift transforms globally ---- */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid > .card,
+.ip-track, .pr-tier, .ig-feature.ig-link {
+  transition: border-color 140ms ease, background 140ms ease !important;
+}
+.md-typeset .grid.cards > ul > li:hover,
+.ip-track:hover, .pr-tier:hover, .ig-feature.ig-link:hover {
+  transform: none !important;
+  box-shadow: var(--or-shadow) !important;
+  border-color: var(--or-green) !important;
+}
+.pr-tier.pr-featured { box-shadow: var(--or-shadow) !important; }
+
+/* ---- 2. Flatten the hero: solid navy, no glow, no gradient rail ---- */
+.md-typeset .or-hero {
+  background: var(--or-navy) !important;
+  box-shadow: none !important;
+  border: 1px solid var(--or-navy-700);
+  border-radius: 14px;
+  padding: 2.6rem 2.4rem;
+}
+.md-typeset .or-hero::before { display: none !important; }
+.md-typeset .or-hero h1 { font-size: clamp(2.4rem, 5vw, 3.2rem); letter-spacing: -0.02em; }
+.md-typeset .or-hero .home-stats > span {
+  background: rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+/* ---- 3. Flatten home stat pills + "how it works" flow into calm chips ---- */
+.home-stats > span,
+.or-flow span {
+  background: var(--or-surface) !important;
+  color: var(--or-text) !important;
+  border: 1px solid var(--or-border) !important;
+  box-shadow: none !important;
+  font-weight: 600;
+}
+.home-cta .md-button--primary {
+  box-shadow: none !important;
+  background: var(--or-navy);
+  border-color: var(--or-navy);
+}
+
+/* ---- 4. Buttons: flat, no gradient, no glow ---- */
+.ip-btn {
+  background: var(--or-navy) !important;
+  box-shadow: none !important;
+  border-radius: 0.55rem;
+}
+.ip-btn:hover { filter: none !important; background: var(--or-navy-700) !important; }
+.ip-btn.ip-ghost {
+  background: transparent !important;
+  color: var(--or-navy) !important;
+  border: 1px solid var(--or-border) !important;
+}
+.ip-btn.ip-ghost:hover { border-color: var(--or-navy) !important; }
+
+/* ---- 5. Progress bars + score chips: flat soft green, no gradient ---- */
+.ip-bar > div,
+.ip-score,
+.ip-stat-v,
+.or-bar-fill.or-good { background: var(--or-green) !important; }
+.ip-score {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background-clip: border-box !important;
+}
+.ip-stat-v {
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: var(--or-navy) !important;
+  -webkit-text-fill-color: var(--or-navy) !important;
+  background: none !important;
+}
+
+/* ---- 6. Cards: hairline border, barely-there shadow ---- */
+.md-typeset .grid.cards > ul > li,
+.ip-card, .or-scn-card {
+  box-shadow: var(--or-shadow) !important;
+  border-color: var(--or-border) !important;
+}
+
+/* ---- 7. Footer: solid navy, no gradient ---- */
+.md-footer-meta { background: var(--or-navy) !important; }
+
+/* ---- 8. Section headings: lighter rule + more air (editorial rhythm) ---- */
+.md-typeset h2 {
+  border-bottom: 1px solid var(--or-border);
+  margin-top: 2.8rem;
+  font-size: clamp(1.5rem, 2.6vw, 1.9rem);
+  letter-spacing: -0.01em;
+}
+.md-typeset h3 { margin-top: 1.8rem; }
+
+/* ---- 9. Unified chip/pill language (one look, many classes) ---------------
+   Rounded, 1px border, no shadow, small type. Variants carry meaning via a
+   soft tint; the default is neutral slate. */
+.or-chip, .or-pill, .or-tag, .or-scn-chip, .or-onboard-chip, .ip-topic {
+  box-shadow: none !important;
+  font-weight: 600;
+}
+/* The inline brand chip previously used a navy gradient + white text; calm it. */
+.or-chip {
+  background: var(--or-surface);
+  color: var(--or-text);
+  border: 1px solid var(--or-border);
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+}
+.or-chip.or-chip-ok   { background: var(--or-green-soft); border-color: var(--or-green); color: #15663f; }
+.or-chip.or-chip-warn { background: rgba(237,154,28,0.12); border-color: #e0a53a; color: #8a5a00; }
+/* Status pills: softer tints instead of saturated solid blocks. */
+.or-pill.or-ok   { background: var(--or-green-soft); color: #15663f; }
+.or-pill.or-warn { background: rgba(237,154,28,0.14); color: #8a5a00; }
+.or-pill.or-gap  { background: rgba(198,40,40,0.12); color: #a62121; }
+
+/* ---- 10. Whitespace: let the readiness UI breathe ---- */
+#dashboard-app .or-card,
+#jobs-app .or-job-card,
+#gap-app .or-card,
+#questions-app .or-card {
+  padding: 1.4rem 1.5rem;
+  margin-bottom: 1.4rem;
+  box-shadow: var(--or-shadow);
+}
+
+/* ============================================================
+   Phase 1.5 components that had no styles yet — add them calm.
+   (Current Job banner, readiness factor list, recent-practice table,
+    small button, next-step block.)
+   ============================================================ */
+
+/* Current Job banner — context before metrics. Reads as an editorial header,
+   not a card: a soft rule under a small label + the job title. */
+.or-jobbanner {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;
+  padding: 0 0 0.9rem;
+  margin: 0 0 1.4rem;
+  border-bottom: 1px solid var(--or-border);
+  font-size: 1.05rem;
+}
+.or-jobbanner strong { color: var(--or-text); font-weight: 700; }
+.or-jobbanner-label {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--or-text-secondary);
+}
+.or-jobbanner .or-small, .or-small { font-size: 0.82rem; color: var(--or-text-secondary); }
+
+/* Small inline button (used in the banner's "Choose a job"). */
+.or-btn-small { padding: 0.25rem 0.7rem; font-size: 0.82rem; margin: 0 0 0 0.2rem; }
+
+/* "Based on" readiness factor list — typography-first, no card-in-card. */
+.or-readiness-factors { margin: 1rem 0 0.4rem; }
+.or-factor {
+  display: flex; align-items: baseline; gap: 0.5rem;
+  padding: 0.4rem 0; font-size: 0.95rem;
+  border-top: 1px solid var(--or-border);
+}
+.or-factor:first-of-type { border-top: 0; }
+.or-factor-mark { font-weight: 800; width: 1.1rem; display: inline-block; text-align: center; }
+.or-factor.or-factor-on  .or-factor-mark { color: var(--or-green); }
+.or-factor.or-factor-off .or-factor-mark { color: var(--or-text-secondary); }
+.or-factor.or-factor-off { color: var(--or-text-secondary); }
+
+/* Recent-practice table — minimal, hairline rows, generous cells. */
+.or-practice-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.or-practice-table th {
+  text-align: left; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--or-text-secondary);
+  padding: 0.35rem 0.6rem 0.35rem 0; border-bottom: 1px solid var(--or-border);
+}
+.or-practice-table td {
+  padding: 0.55rem 0.6rem 0.55rem 0; border-bottom: 1px solid var(--or-border);
+  color: var(--or-text);
+}
+.or-practice-table tr:last-child td { border-bottom: 0; }
+
+/* Next-step block after a gap analysis — quiet, directional. */
+.or-next { margin-top: 1.4rem; }
+.or-next .or-field-label { color: var(--or-text-secondary); }
+
+/* Context chips row on the dashboard header (added in readiness.js). */
+.or-contextchips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0 0 1.4rem; }
+.or-contextchips .or-chip { font-size: 0.8rem; }
+
+/* Soften the two accent score colors toward the calm palette. */
+.or-score-num.or-good, .or-bar-pct { color: var(--or-green); }
+
+
+/* ---- 11. OfferReady Help widget (chatbot): flat navy, calm shadow ---- */
+#kb-fab {
+  background: var(--or-navy) !important;
+  box-shadow: var(--or-shadow) !important;
+}
+#kb-fab:hover { filter: none !important; background: var(--or-navy-700) !important; }
+#kb-panel { box-shadow: 0 8px 30px rgba(16, 35, 59, 0.18) !important; }
+#kb-head {
+  background: var(--or-navy) !important;
+  align-items: baseline;
+}
+/* Title + quiet subtitle ("General product help"). */
+#kb-head-title { display: flex; flex-direction: column; line-height: 1.2; }
+#kb-head-title small {
+  font-size: 0.68rem; font-weight: 500; opacity: 0.75; letter-spacing: 0.02em;
+}

@@ -116,7 +116,7 @@
         // result won't attach to a job until one is saved. Make that explicit so
         // the user isn't stuck expecting a dropdown that isn't here.
         card.appendChild(el("p", "or-muted or-small",
-          "You don't have any saved jobs yet. Paste a job description below to run a one-off gap analysis, or <a href=\"" + baseHref() + "Analyze/index.html\">analyze &amp; save a job</a> first so the result is stored and tracked."));
+          "No saved jobs yet. Paste a job description below to run a one-off gap analysis, or <a href=\"" + baseHref() + "Analyze/index.html\">analyze &amp; save a job</a> first so the result is stored and tracked."));
       }
 
       // Role (optional) + JD

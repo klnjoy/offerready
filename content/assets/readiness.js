@@ -193,15 +193,44 @@
       }
       root.appendChild(sw);
 
+      // Context before metrics: a quiet row of status chips that answers
+      // "where am I in the workflow?" before any score is shown.
+      var qCount = (p.questions || []).length;
+      var completedPractice = (p.practice || []).filter(function (s) { return s && s.completed !== false && s.score != null; });
+      var chips = el("div", "or-contextchips");
+      var chip = function (txt, on) {
+        var c = el("span", "or-chip" + (on ? " or-chip-ok" : ""));
+        c.textContent = (on ? "\u2713 " : "") + txt;
+        return c;
+      };
+      if (p.gap) chips.appendChild(chip((p.gap.match_score || 0) + "% match", true));
+      else chips.appendChild(chip("No gap analysis yet", false));
+      chips.appendChild(chip(qCount ? qCount + " questions ready" : "No questions yet", qCount > 0));
+      chips.appendChild(chip(completedPractice.length ? completedPractice.length + " practice done" : "Practice not started", completedPractice.length > 0));
+      root.appendChild(chips);
+
+      // One primary next action (not a wall of buttons). Pick the next
+      // uncompleted step in Job -> Analysis -> Practice -> Readiness.
+      var nextHref, nextLabel;
+      if (!p.gap) { nextHref = "Gap-Analysis/index.html"; nextLabel = "Run gap analysis"; }
+      else if (!qCount) { nextHref = "Question-Bank/index.html"; nextLabel = "Generate questions"; }
+      else { nextHref = "Practice-Scenarios/index.html"; nextLabel = completedPractice.length ? "Continue practice" : "Start practice"; }
+      var ctaWrap = el("div", "or-actions");
+      ctaWrap.style.margin = "0 0 1.6rem";
+      var cta = el("a", "or-btn or-btn-primary"); cta.href = base + nextHref; cta.textContent = nextLabel;
+      ctaWrap.appendChild(cta);
+      root.appendChild(ctaWrap);
+
       renderScoreBlocks(p.gap, p.progress, (p.questions || []).length, p.job.title, p.practice || []);
 
-      // Next-step actions, job-aware.
-      var actions = el("div", "or-card or-actions");
-      actions.innerHTML =
-        '<a class="or-btn or-btn-primary" href="' + base + 'Gap-Analysis/index.html">\u2696\ufe0f ' + (p.gap ? "Re-run gap analysis" : "Run gap analysis") + '</a>' +
-        '<a class="or-btn" href="' + base + 'Question-Bank/index.html">\u2753 ' + ((p.questions || []).length ? "Regenerate questions" : "Generate questions") + '</a>' +
-        '<a class="or-btn" href="' + base + 'Practice-Scenarios/index.html">\uD83D\uDDE1\ufe0f Practice &amp; defend</a>';
-      root.appendChild(actions);
+      // Secondary paths, de-emphasized (the ONE primary action is the CTA at
+      // the top of the page). Quiet text links, not a wall of buttons.
+      var more = el("div", "or-actions");
+      more.style.marginTop = "0.4rem";
+      more.innerHTML =
+        '<a class="or-btn" href="' + base + 'Gap-Analysis/index.html">' + (p.gap ? "Re-run gap analysis" : "Run gap analysis") + '</a>' +
+        '<a class="or-btn" href="' + base + 'Question-Bank/index.html">' + ((p.questions || []).length ? "Review questions" : "Generate questions") + '</a>';
+      root.appendChild(more);
     }
 
     // Shared score UI used by both live + cached renders.

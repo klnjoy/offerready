@@ -48,34 +48,33 @@
   const btn = document.createElement("button");
   btn.id = "kb-fab";
   btn.type = "button";
-  btn.title = "Ask the knowledge base";
-  btn.innerHTML = "🤖 Ask";
+  btn.title = "OfferReady Help";
+  btn.innerHTML = "💬 Help";
 
   const panel = document.createElement("div");
   panel.id = "kb-panel";
   panel.style.display = "none";
   panel.innerHTML = `
     <div id="kb-head">
-      <span>🤖 Ask the Knowledge Base</span>
+      <span id="kb-head-title">OfferReady Help <small>General product help</small></span>
       <select id="kb-area" title="Filter by area">
         <option value="all">All areas</option>
       </select>
       <button id="kb-close" type="button" title="Close">✕</button>
     </div>
     <div id="kb-log">
-      <div class="kb-msg kb-bot">Hi! Ask me anything about the GenAI &amp; data
-      content on this site. I answer from the knowledge base and cite sources.</div>
+      <div class="kb-msg kb-bot">Hi! I can help you use OfferReady and understand
+      how it works. Ask me anything about getting interview-ready.</div>
       <div id="kb-chips">
-        <button type="button" class="kb-chip">What is RAG?</button>
-        <button type="button" class="kb-chip">How do I build my first agent?</button>
-        <button type="button" class="kb-chip">Prompt engineering best practices</button>
-        <button type="button" class="kb-chip">How to set up a vector database?</button>
-        <button type="button" class="kb-chip">What is Snowflake Cortex?</button>
+        <button type="button" class="kb-chip">How is Resume Match calculated?</button>
+        <button type="button" class="kb-chip">What's the difference between Analysis and Practice?</button>
+        <button type="button" class="kb-chip">How do I improve readiness?</button>
+        <button type="button" class="kb-chip">What should I do next?</button>
       </div>
     </div>
     <form id="kb-form" autocomplete="off">
       <input id="kb-input" type="text" autocomplete="off"
-             placeholder="e.g. What is Cortex Analyst?" />
+             placeholder="e.g. How do I improve my readiness?" />
       <button type="submit" id="kb-send">Send</button>
     </form>
     <div id="kb-status"></div>
