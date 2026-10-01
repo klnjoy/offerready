@@ -791,11 +791,10 @@ def _section(title_with_icon: str, intro: str, cards: list[str]) -> list[str]:
 
 
 def write_index(md_catalog, modules) -> None:
-    buckets = _bucketize(md_catalog)
-    total_docs = len(md_catalog)
-    total_modules = len(modules)
-
-    total_areas = len(TECHNOLOGIES) + len(TOPICS)
+    # Homepage is a focused, single-path landing: hero (one primary CTA) ->
+    # workflow strip -> Start with your job (analyzer) -> one worked example.
+    # Deep catalog content (Technologies, GenAI Topics, Setup Guides, Docs,
+    # Enterprise, Study Guide, Projects) lives in the left-nav tabs, not here.
     lines = [
         # Hero banner: branded panel wrapping the title, tagline, CTAs, and stat
         # pills so the top of the home page reads as a product hero, not loose text.
@@ -807,26 +806,19 @@ def write_index(md_catalog, modules) -> None:
         "",
         '<p class="or-hero-eyebrow">Job description &rarr; interview readiness</p>',
         "",
-        '<p class="home-hero"><strong>Turn a job description into a personalized '
-        "interview preparation plan.</strong> Paste the role you\u2019re actually "
-        "applying for and OfferReady maps its requirements, finds your gaps, and "
-        "builds a plan to <strong>practice the skills and defend the technical "
-        "decisions</strong> that matter for that job.</p>",
+        '<p class="home-hero"><strong>Interview readiness for the job you\u2019re '
+        "actually applying for.</strong> Paste a job description. Understand the "
+        "role. Identify your gaps. Practice what matters.</p>",
         "",
+        # ONE primary action (Analyze a Job) + one optional secondary that
+        # points at the existing Sample Walkthrough. The old Upload Resume /
+        # Open Dashboard / Get Started buttons and the role-marketing chips were
+        # removed: they didn't move a new visitor through Job -> Analysis ->
+        # Practice -> Readiness and created decision paralysis.
         '<p class="home-cta" markdown>'
-        '[:material-clipboard-search-outline: Analyze Job](#start-with-your-job){ .md-button .md-button--primary }'
+        '[:material-clipboard-search-outline: Analyze a Job](#start-with-your-job){ .md-button .md-button--primary }'
         "&nbsp;"
-        "[:material-file-upload-outline: Upload Resume](Gap-Analysis/index.md){ .md-button }"
-        "&nbsp;"
-        "[:material-view-dashboard-outline: Open Dashboard](Dashboard/index.md){ .md-button }"
-        "&nbsp;"
-        "[:material-rocket-launch-outline: Get Started](#start-with-your-job){ .md-button }"
-        "</p>",
-        "",
-        '<p class="home-stats">'
-        "<span>🧠 <strong>Senior · Staff · Principal</strong></span>"
-        "<span>🏛️ <strong>AI Architect</strong></span>"
-        "<span>✈️ <strong>Forward Deployed</strong></span>"
+        "[See Example](Sample-Walkthrough/index.md){ .md-button }"
         "</p>",
         "",
         "</div>",
@@ -859,127 +851,6 @@ def write_index(md_catalog, modules) -> None:
         '  <p><em>Loading the analyzer\u2026</em></p>',
         "</div>",
         "",
-        "## Choose your target role",
-        "",
-        "OfferReady prepares you for the senior technical roles building and "
-        "shipping production AI — each path routes you through the right depth, "
-        "in the right order.",
-        "",
-        "**Core tracks**",
-        "",
-        '<div class="grid cards" markdown>',
-        "",
-        "-   :material-account-tie:{ .lg .middle } __AI / GenAI Engineer__",
-        "",
-        "    ---",
-        "",
-        "    Build and ship LLM apps — RAG, agents, evaluation. Follow the "
-        "[AI / GenAI Engineer path](Personal-SourceCode/Path_AI_Engineer.md).",
-        "",
-        "-   :material-stairs-up:{ .lg .middle } __Senior / Staff / Principal AI Engineer__",
-        "",
-        "    ---",
-        "",
-        "    Own design, trade-offs, and economics at scale. Follow the "
-        "[Staff / Principal path](Personal-SourceCode/Path_Staff_Principal_Architect.md).",
-        "",
-        "-   :material-sitemap:{ .lg .middle } __AI Architect / Solutions Architect__",
-        "",
-        "    ---",
-        "",
-        "    End-to-end architecture and defensible design decisions. Work "
-        "[Requirements &rarr; Production](Personal-SourceCode/Interview_Requirements_to_Production.md).",
-        "",
-        "-   :material-airplane-takeoff:{ .lg .middle } __Forward Deployed Engineer__",
-        "",
-        "    ---",
-        "",
-        "    Customer-facing build + delivery under ambiguity — a deep OfferReady "
-        "specialization. Follow the "
-        "[Forward Deployed Engineer path](Personal-SourceCode/Path_FDE.md).",
-        "",
-        "</div>",
-        "",
-        "**Supporting tracks**",
-        "",
-        '<div class="grid cards" markdown>',
-        "",
-        "-   :material-database-cog:{ .lg .middle } __AI Platform / Data Engineer__",
-        "",
-        "    ---",
-        "",
-        "    The data/cloud platform side — warehouses, pipelines, governance. "
-        "Follow the [Data & AI / Platform path](Personal-SourceCode/Path_Data_Platform.md).",
-        "",
-        "-   :material-infinity:{ .lg .middle } __Cloud / DevOps for AI__",
-        "",
-        "    ---",
-        "",
-        "    Serving, CI/CD, IaC, and reliability for AI systems. See "
-        "[DevOps for AI](GenAI-Topics/devops-ai/index.md) and "
-        "[LLMOps](GenAI-Topics/llmops/index.md).",
-        "",
-        "</div>",
-        "",
-        "## What makes OfferReady different",
-        "",
-        "Most prep sites stop at *what is X?*. OfferReady trains the full arc an "
-        "interviewer actually probes:",
-        "",
-        "- **Learn the technology** — every topic page ends with an *Interview deep dive*.",
-        "- **Build the system** — setup guides, projects, and hands-on labs.",
-        "- **Defend the architecture** — [Requirements &rarr; Production](Personal-SourceCode/Interview_Requirements_to_Production.md) and system-design walkthroughs.",
-        "- **Handle the production incident** — [Production Incident Interviews](Personal-SourceCode/Interview_Production_Incidents.md).",
-        "- **Answer the follow-up \u201cwhy?\u201d** — [The Interviewer Keeps Asking Why](Personal-SourceCode/Interview_Why_Chains.md).",
-        "",
-        "## Practice defending a decision",
-        "",
-        "This is what the interview actually feels like — and what OfferReady "
-        "trains. One decision, challenged until it holds:",
-        "",
-        "!!! quote \"Scenario &rarr; Decision &rarr; Why &rarr; Trade-off &rarr; Production challenge\"",
-        "    **Scenario:** *\u201cDesign a secure enterprise RAG assistant over internal docs.\u201d*",
-        "",
-        "    **You:** Hybrid retrieval + reranker, per-user ACL at retrieval, answer only from context with citations.",
-        "",
-        "    **Interviewer:** *Why hybrid and not pure vector search?* \u2192 *Why a reranker on top?* \u2192 *Why that top-k?*",
-        "",
-        "    **Trade-off:** *What does the reranker cost you in latency, and when is it not worth it?*",
-        "",
-        "    **Production challenge:** *The documents change daily \u2014 how do you keep retrieval fresh without a full re-index? A customer refuses to share production credentials \u2014 now what?*",
-        "",
-        "    Full why-chains, incidents, and Requirements &rarr; Production live in "
-        "[Interview Prep](Personal-SourceCode/Interview_Guide_Overview.md).",
-        "",
-        "## Free vs Pro",
-        "",
-        "The reason to go Pro isn't *more to read* — it's **practice defending the "
-        "decisions senior AI engineers make under pressure.**",
-        "",
-        '<div class="grid cards" markdown>',
-        "",
-        "-   :material-book-open-variant:{ .lg .middle } __Free \u2014 Learn &amp; sample__",
-        "",
-        "    ---",
-        "",
-        "    Foundational GenAI, RAG and agent concepts, selected system design, "
-        "interview Q&amp;A banks, and a **sample** of every flagship: one why-chain, "
-        "one production incident, one FDE scenario. Enough to see the quality.",
-        "",
-        "-   :material-sword-cross:{ .lg .middle } __Pro \u2014 Practice &amp; defend__",
-        "",
-        "    ---",
-        "",
-        "    The full interview simulator, complete why-chains, Requirements &rarr; "
-        "Production, production-incident interviews, and advanced FDE customer "
-        "scenarios \u2014 with progress tracking and weak-area drills.",
-        "",
-        "</div>",
-        "",
-        '<p class="home-cta" markdown>'
-        '[:material-tag-outline: See Free vs Pro](assets/pricing.html){ .md-button .md-button--primary }'
-        "</p>",
-        "",
         "## See a worked example",
         "",
         "Want to see the full flow before pasting your own role? The sample "
@@ -987,65 +858,18 @@ def write_index(md_catalog, modules) -> None:
         "",
         '<p class="home-cta" markdown>'
         '[:material-clipboard-check-outline: See a sample walkthrough](Sample-Walkthrough/index.md){ .md-button .md-button--primary }'
-        "&nbsp;"
-        "[:material-clipboard-search-outline: Open the full Analyze page](Analyze/index.md){ .md-button }"
         "</p>",
         "",
-        "## Architecture at a glance",
-        "",
-        "How a modern GenAI application flows end to end — every box links to a "
-        "page that explains it in depth.",
-        "",
-        "```mermaid",
-        "flowchart LR",
-        "    U([User]) --> APP[App / API - FastAPI]",
-        "    APP --> CTX[Prompt + Context Engineering]",
-        "    CTX --> RET{Retrieval}",
-        "    RET --> VDB[(Vector DB)]",
-        "    RET --> GDB[(Graph DB)]",
-        "    CTX --> ORCH[Orchestration - LangChain / LangGraph]",
-        "    ORCH --> TOOLS[Tools via MCP]",
-        "    ORCH --> AGENT[Agent - plan / act / observe]",
-        "    AGENT --> LLM[LLM - Bedrock]",
-        "    LLM --> GUARD[Guardrails]",
-        "    GUARD --> OUT([Grounded answer])",
-        "    OBS[Observability &amp; Eval] -.monitors.-> ORCH",
-        "    OPS[LLMOps] -.serves.-> LLM",
-        "```",
-        "",
-        "## How it works",
-        "",
-        '<div class="grid cards" markdown>',
-        "",
-        "-   :material-numeric-1-circle:{ .lg .middle } __Choose your target__",
-        "",
-        "    ---",
-        "",
-        "    Pick the role you're interviewing for — AI Engineer, Staff/Principal, "
-        "FDE, or Data/Platform — and get a focused study path.",
-        "",
-        "-   :material-numeric-2-circle:{ .lg .middle } __Learn &amp; practice__",
-        "",
-        "    ---",
-        "",
-        "    Work the topic pages and question banks, then answer under pressure in "
-        "**[Practice mode](Personal-SourceCode/Interview_Practice.md)**.",
-        "",
-        "-   :material-numeric-3-circle:{ .lg .middle } __Defend &amp; track__",
-        "",
-        "    ---",
-        "",
-        "    Justify your decisions in **[Keep Asking Why](Personal-SourceCode/Interview_Why_Interactive.md)**, "
-        "and watch your readiness build on the **[Dashboard](Dashboard/index.md)**.",
-        "",
-        "</div>",
-        "",
-        "!!! tip \"Optional: ask the local agent\"",
-        "    Advanced users can run the bundled retrieval agent locally to query "
-        "this knowledge base with citations "
-        "(`cd agent; python ask.py \"What is Cortex Analyst?\"`). It's local-only "
-        "and not required.",
-        "",
+    ]
+
+    (DOCS_DIR / "index.md").write_text("\n".join(lines), encoding="utf-8")
+
+
+def _retired_homepage_sections_unused():
+    """Retired homepage content (removed from the home path in the homepage
+    cleanup). This content remains reachable via the left-nav tabs; it is kept
+    here only for reference and is never rendered. Not called anywhere."""
+    return [
         "## What's inside",
         "",
         "The left menu follows the study journey. Pick the section that matches "
@@ -1081,112 +905,6 @@ def write_index(md_catalog, modules) -> None:
         "    - \"Design an Oracle → Snowflake migration with CDC.\"",
         "",
     ]
-
-    # Technologies
-    cards = [
-        _card(icon, display, f"Technologies/{slug}/index.md", desc)
-        for slug, display, icon, desc in TECHNOLOGIES
-    ]
-    lines += _section(
-        ":material-chip: Technologies",
-        "Notes and references for the platforms I build on.",
-        cards,
-    )
-
-    # GenAI Topics
-    cards = [
-        _card(icon, display, f"GenAI-Topics/{slug}/index.md", desc)
-        for slug, display, icon, desc in TOPICS
-    ]
-    lines += _section(
-        ":material-robot-outline: GenAI Topics",
-        "The building blocks of Generative & Agentic AI. Each links to its course module.",
-        cards,
-    )
-
-    # Setup Guides
-    cards = [
-        _card(icon, display, f"Setup-Guides/{slug}/index.md", desc)
-        for slug, display, icon, desc in SETUP_GUIDES
-    ]
-    lines += _section(
-        ":material-rocket-launch-outline: Setup Guides",
-        "Hands-on: stand up an LLM, a vector DB, your first RAG app and agent.",
-        cards,
-    )
-
-    # Documentation
-    cards = [
-        _card(icon, display, f"Documentation/{slug}/index.md", desc)
-        for slug, display, icon, desc in DOCUMENTATION
-    ]
-    lines += _section(
-        ":material-book-open-variant: Documentation",
-        "Cross-cutting guides: architecture, workflows, and decision guides.",
-        cards,
-    )
-
-    # Enterprise
-    cards = [
-        _card(icon, display, f"Enterprise/{slug}/index.md", desc)
-        for slug, display, icon, desc in ENTERPRISE
-    ]
-    lines += _section(
-        ":material-office-building: Enterprise",
-        "Security, governance, monitoring, and cloud reference architectures.",
-        cards,
-    )
-
-    # Study Guide — the original OfferReady end-to-end study guide.
-    cards = []
-    for rel_dest, title in sorted(buckets.get("Study Guide", []), key=lambda e: e[1].lower()):
-        cards.append(_card(":material-book-open-page-variant:", title, rel_dest,
-                           "The original OfferReady study guide, fundamentals to production."))
-    if cards:
-        lines += _section(
-            ":material-book-open-variant: Study Guide",
-            "One structured path from fundamentals to shipping production GenAI.",
-            cards,
-        )
-
-    # Remaining purpose categories
-    intros = {
-        "Interview Guide": "Question banks and prep notes for interviews.",
-        "Projects & POCs": "End-to-end builds and architecture write-ups.",
-        "Setup & Infrastructure": "Deployment and environment setup guides.",
-        "More": "Everything else.",
-    }
-    for name, icon, _kw in CATEGORIES:
-        if name == "Study Guide":
-            continue
-        entries = buckets.get(name, [])
-        authored = PROJECTS_AUTHORED if name == "Projects & POCs" else []
-        if not entries and not authored:
-            continue
-        cards = [
-            _card(a_icon, display, f"Projects/{slug}/index.md", desc)
-            for slug, display, a_icon, desc in authored
-        ]
-        if name == "Projects & POCs":
-            cards += [
-                _card(c_icon, c_disp, f"Projects/{c_slug}/index.md", c_desc)
-                for c_slug, c_disp, c_icon, c_desc, _f, _p in CODE_PROJECTS
-            ]
-        def _card_key(e):
-            base = Path(e[0]).name
-            ov = NAV_LABEL_OVERRIDES.get(base)
-            return (0, ov[0], "") if ov else (1, 0, e[1].lower())
-
-        for rel_dest, title in sorted(entries, key=_card_key):
-            base = Path(rel_dest).name
-            ov = NAV_LABEL_OVERRIDES.get(base)
-            display_title = ov[1] if ov else title
-            cards.append(_card(":material-file-document-outline:",
-                               display_title, rel_dest))
-        lines += _section(f"{icon} {name}", intros.get(name, ""), cards)
-
-    (DOCS_DIR / "index.md").write_text("\n".join(lines), encoding="utf-8")
-
 
 # ---------------------------------------------------------------------------
 # Nav (rewrites mkdocs.yml between markers), with section icons

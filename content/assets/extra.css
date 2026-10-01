@@ -1770,3 +1770,29 @@ a.ig-feature.ig-link .ig-d {
 #kb-head-title small {
   font-size: 0.68rem; font-weight: 500; opacity: 0.75; letter-spacing: 0.02em;
 }
+
+
+/* ---- 12. Homepage: more whitespace, typography-first, single path ----
+   The home page is now hero -> workflow strip -> Start with your job ->
+   one worked example. Give each section room so the one primary action is
+   obvious and the page feels calm (fewer elements, more air). */
+.md-typeset .or-hero { margin-bottom: 3rem; padding: 3rem 2.6rem; }
+.md-typeset .or-hero .home-hero { font-size: 1.15rem; line-height: 1.6; max-width: 42rem; }
+.md-typeset .or-hero .home-cta { margin: 1.4rem 0 0; }
+
+/* Breathing room between the home sections. */
+#analyze-app { margin-top: 0.5rem; }
+.md-typeset h2 + .or-flow { margin-top: 0.6rem; }
+
+/* Workflow strip: the strongest section — make it legible and roomy. */
+.or-flow {
+  gap: 0.5rem 0.6rem;
+  font-size: 1rem;
+  margin: 0.6rem 0 1rem;
+}
+.or-flow span {
+  padding: 0.3rem 0.8rem;
+  background: var(--or-surface);
+  border: 1px solid var(--or-border);
+  color: var(--or-text);
+}
