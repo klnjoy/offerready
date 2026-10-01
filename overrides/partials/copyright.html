@@ -26,3 +26,54 @@
     <a href="{{ base_url }}/Contact/">Contact</a>
   </nav>
 </div>
+
+{#-
+  Decorative editorial footer band. Original, calm line-art in the OfferReady
+  navy/slate palette (NOT a copy of any third-party artwork). Purely visual —
+  aria-hidden so it adds no content and no workflow noise.
+-#}
+<div class="or-footer-scene" aria-hidden="true">
+  <svg viewBox="0 0 1024 220" preserveAspectRatio="xMidYMax slice" role="presentation" focusable="false">
+    <defs>
+      <linearGradient id="orSky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffffff"/>
+        <stop offset="1" stop-color="#eef2f7"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="1024" height="220" fill="url(#orSky)"/>
+    <!-- distant hills -->
+    <path d="M0 150 C 150 120, 300 135, 460 128 S 760 115, 1024 138 L1024 220 L0 220 Z"
+          fill="#dbe3ee"/>
+    <path d="M0 168 C 180 150, 360 160, 540 152 S 860 150, 1024 162 L1024 220 L0 220 Z"
+          fill="#cdd8e6"/>
+    <!-- waterline hint -->
+    <path d="M300 150 q 60 -8 120 0 q 60 8 120 0" fill="none" stroke="#aebccf" stroke-width="1.2" opacity="0.6"/>
+    <!-- town rooftops (simple line-art) -->
+    <g stroke="#16305c" stroke-width="1.4" fill="none" opacity="0.55">
+      <path d="M70 185 L70 160 L104 160 L104 185"/>
+      <path d="M60 160 L87 146 L114 160"/>
+      <path d="M150 186 L150 158 L190 158 L190 186"/>
+      <path d="M140 158 L170 142 L200 158"/>
+      <path d="M250 187 L250 164 L286 164 L286 187"/>
+      <path d="M243 164 L268 150 L293 164"/>
+    </g>
+    <!-- right-side building with warm windows (muted) -->
+    <g opacity="0.85">
+      <rect x="820" y="96" width="168" height="104" fill="#f4f6fa" stroke="#16305c" stroke-width="1.4"/>
+      <line x1="874" y1="96" x2="874" y2="200" stroke="#16305c" stroke-width="1"/>
+      <line x1="934" y1="96" x2="934" y2="200" stroke="#16305c" stroke-width="1"/>
+      <rect x="886" y="120" width="36" height="30" fill="#1f9d63" opacity="0.18"/>
+      <rect x="946" y="120" width="30" height="30" fill="#1f9d63" opacity="0.18"/>
+    </g>
+    <!-- foreground trees -->
+    <g fill="#c4d2c4" opacity="0.9">
+      <ellipse cx="40" cy="150" rx="52" ry="46"/>
+      <ellipse cx="700" cy="150" rx="40" ry="40"/>
+    </g>
+    <g fill="#b2c3b2" opacity="0.9">
+      <ellipse cx="760" cy="186" rx="60" ry="38"/>
+    </g>
+    <!-- terrace line -->
+    <path d="M0 200 L1024 200" stroke="#aebccf" stroke-width="1" opacity="0.5"/>
+  </svg>
+</div>

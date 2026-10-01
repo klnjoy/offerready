@@ -1796,3 +1796,24 @@ a.ig-feature.ig-link .ig-d {
   border: 1px solid var(--or-border);
   color: var(--or-text);
 }
+
+
+/* ---- 13. Decorative editorial footer band (global, aria-hidden) ----
+   Calm muted line-art scene under the footer copyright/links row. Purely
+   visual; original artwork in the OfferReady palette. Full-bleed, capped
+   height, hidden on print and for reduced-motion/compact contexts. */
+.or-footer-scene {
+  width: 100%;
+  margin-top: 1rem;
+  line-height: 0;
+  overflow: hidden;
+  opacity: 0.9;
+}
+.or-footer-scene svg {
+  display: block;
+  width: 100%;
+  height: clamp(120px, 16vw, 220px);
+}
+@media print {
+  .or-footer-scene { display: none !important; }
+}
