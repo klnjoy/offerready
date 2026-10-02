@@ -1,7 +1,7 @@
 site_name: OfferReady
 site_description: OfferReady — production AI engineering interview practice for people who need to defend real engineering decisions. Learn, build, defend, and master the interview across Senior/Staff/Principal AI Engineer, AI Architect, Forward Deployed Engineer, and AI Platform roles.
 site_url: https://klnjoy.github.io/offerready/
-copyright: © 2026 OfferReady · Learn. Build. Defend. Interview.
+copyright: © 2026 OfferReady · Built for technical interviews — software engineering, AI, data, cloud, platform, architecture, and technical leadership.
 
 # All markdown is copied into docs/ by sync_docs.py before building.
 docs_dir: docs
@@ -72,7 +72,7 @@ plugins:
 extra_css:
   # ?v=N cache-buster — bump when extra.css changes so browsers don't serve a
   # stale cached stylesheet after a deploy.
-  - assets/extra.css?v=27
+  - assets/extra.css?v=28
 
 extra_javascript:
   # Must load first: sets window.OFFERREADY_API_BASE + Supabase config for the
