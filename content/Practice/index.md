@@ -75,10 +75,10 @@ next drill.
 
     ---
 
-    One view across Analyze, Scenarios, Practice, and Why — sessions, weak
-    areas, and what to do next.
+    Your recent practice sessions and per-topic strength on this device. For
+    overall readiness and your next step, see the Dashboard.
 
-    [:octicons-arrow-right-24: See your progress](../Personal-SourceCode/Interview_Progress.md)
+    [:octicons-arrow-right-24: See your history](../Personal-SourceCode/Interview_Progress.md)
 
 </div>
 

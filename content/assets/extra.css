@@ -1832,3 +1832,57 @@ a.ig-feature.ig-link .ig-d {
 @media print {
   .or-footer-scene { display: none !important; }
 }
+
+
+/* ============================================================
+   Sidebar visual hierarchy — Workflow primary, Resources secondary.
+   IA is unchanged; this is presentation only. In the primary left nav the
+   7 Practice activities sit at nesting level 2 (direct children of Practice);
+   the entire knowledge library lives under the collapsed "Resources" group,
+   i.e. level 3 and deeper. We give the deep library a lighter, denser,
+   secondary treatment so Practice reads as primary and Resources feels
+   optional — without touching structure, URLs, or page order.
+   ============================================================ */
+
+/* Top-level workflow items (Dashboard, Jobs, Analysis, Practice, Account) and
+   Practice's direct activity children: confident weight. */
+.md-nav--primary .md-nav__item > .md-nav__link {
+  font-weight: 600;
+}
+
+/* The Resources group + everything inside it (level 3+) = secondary.
+   Material renders nested sections as <nav class="md-nav" data-md-level="N">.
+   Level >= 3 is only ever reached through Resources, so this cleanly scopes
+   the whole library without needing a name hook. */
+.md-nav--primary .md-nav[data-md-level="3"],
+.md-nav--primary .md-nav[data-md-level="4"],
+.md-nav--primary .md-nav[data-md-level="5"],
+.md-nav--primary .md-nav[data-md-level="6"] {
+  font-size: 0.82rem;              /* smaller than workflow items */
+  opacity: 0.78;                   /* visually recede */
+}
+.md-nav--primary .md-nav[data-md-level="3"] .md-nav__link,
+.md-nav--primary .md-nav[data-md-level="4"] .md-nav__link,
+.md-nav--primary .md-nav[data-md-level="5"] .md-nav__link,
+.md-nav--primary .md-nav[data-md-level="6"] .md-nav__link {
+  font-weight: 400;                /* library = normal weight, not bold */
+  color: var(--or-text-secondary); /* muted slate */
+  padding-top: 0.18rem;            /* tighter vertical rhythm = less density */
+  padding-bottom: 0.18rem;
+}
+/* The active library page still gets a clear highlight (don't mute the one
+   you're on). */
+.md-nav--primary .md-nav[data-md-level="3"] .md-nav__link--active,
+.md-nav--primary .md-nav[data-md-level="4"] .md-nav__link--active,
+.md-nav--primary .md-nav[data-md-level="5"] .md-nav__link--active,
+.md-nav--primary .md-nav[data-md-level="6"] .md-nav__link--active {
+  color: var(--md-primary-fg-color);
+  opacity: 1;
+}
+
+/* Section toggle labels (Analysis, Practice, Learn, Build, …) read as calm
+   group headers, not competing links. */
+.md-nav--primary .md-nav__item--nested > label.md-nav__link {
+  color: var(--or-text);
+  font-weight: 600;
+}
