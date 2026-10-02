@@ -4,8 +4,8 @@ icon: material/account-circle-outline
 
 # Account
 
-Sign in to save your work and continue your preparation on any device. Free to
-create — no card required.
+Your OfferReady account saves your work and keeps your preparation in sync across
+devices. Free to create — no card required.
 
 <div id="or-auth-slot" markdown="0">
   <p><em>Loading sign-in…</em></p>
