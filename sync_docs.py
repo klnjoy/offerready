@@ -827,10 +827,13 @@ def write_index(md_catalog, modules) -> None:
         "",
         "Start with the job you\u2019re targeting and move through four steps:",
         "",
+        # Four-step flow. Each step + its trailing connector are wrapped in a
+        # non-breaking .or-step so an arrow never orphans at the start of a line.
         '<p class="or-flow">'
-        "<span>1 · Add the job</span> &rarr; <span>2 · Analyze the gap</span> "
-        "&rarr; <span>3 · Practice &amp; defend</span> &rarr; "
-        "<span>4 · Track readiness</span>"
+        '<span class="or-step"><span>1 \u00b7 Add the job</span><i class="or-arrow" aria-hidden="true">\u2192</i></span>'
+        '<span class="or-step"><span>2 \u00b7 Analyze the gap</span><i class="or-arrow" aria-hidden="true">\u2192</i></span>'
+        '<span class="or-step"><span>3 \u00b7 Practice &amp; defend</span><i class="or-arrow" aria-hidden="true">\u2192</i></span>'
+        '<span class="or-step"><span>4 \u00b7 Track readiness</span></span>'
         "</p>",
         "",
         "## Start with your job",

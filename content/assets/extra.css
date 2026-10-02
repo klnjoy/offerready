@@ -1802,16 +1802,55 @@ a.ig-feature.ig-link .ig-d {
 .md-typeset h2 + .or-flow { margin-top: 0.6rem; }
 
 /* Workflow strip: the strongest section — make it legible and roomy. */
+/* Beautified flow strip. Markup: .or-flow > .or-step(> span.pill + i.or-arrow).
+   Each .or-step keeps its pill + connector together so arrows never orphan. */
 .or-flow {
-  gap: 0.5rem 0.6rem;
+  gap: 0.55rem 0.3rem;
   font-size: 1rem;
-  margin: 0.6rem 0 1rem;
+  margin: 0.9rem 0 1.3rem;
+  align-items: center;
 }
-.or-flow span {
-  padding: 0.3rem 0.8rem;
+/* Wrapper: pill + arrow stay on one line together. */
+.md-typeset .or-flow .or-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+  white-space: nowrap;
+}
+/* The pill itself. */
+.md-typeset .or-flow .or-step > span {
+  display: inline-block;
+  padding: 0.46rem 0.95rem;
   background: var(--or-surface);
   border: 1px solid var(--or-border);
   color: var(--or-text);
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  box-shadow: 0 1px 2px rgba(15, 35, 66, 0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.md-typeset .or-flow .or-step > span:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(15, 35, 66, 0.10);
+  border-color: var(--kb-green, #1f9d63);
+}
+/* Final step is the destination — tint it brand green so the eye lands there. */
+.md-typeset .or-flow .or-step:last-child > span {
+  background: rgba(31, 157, 99, 0.10);
+  border-color: rgba(31, 157, 99, 0.45);
+  color: #0f6b43;
+}
+/* Muted connector between steps. */
+.md-typeset .or-flow .or-arrow {
+  color: var(--or-muted, #6b7a90);
+  font-style: normal;
+  font-size: 1.05rem;
+  opacity: 0.7;
 }
 
 
