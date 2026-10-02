@@ -1853,6 +1853,61 @@ a.ig-feature.ig-link .ig-d {
   opacity: 0.7;
 }
 
+/* ---- "How it works" as a four-step CARD GRID (replaces the pill strip) ---- */
+.or-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+  margin: 1rem 0 1.4rem;
+}
+@media screen and (max-width: 59.9em) {
+  .or-steps { grid-template-columns: repeat(2, 1fr); }
+}
+@media screen and (max-width: 29.9em) {
+  .or-steps { grid-template-columns: 1fr; }
+}
+.md-typeset .or-stepcard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem 1.05rem 1.1rem;
+  background: var(--or-surface, #f6f8fb);
+  border: 1px solid var(--or-border, #e2e8f1);
+  border-radius: 0.7rem;
+  box-shadow: 0 1px 2px rgba(15, 35, 66, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.md-typeset .or-stepcard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 35, 66, 0.10);
+  border-color: var(--kb-green, #1f9d63);
+}
+.md-typeset .or-stepnum {
+  font-family: var(--md-code-font, monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--or-muted, #6b7a90);
+}
+.md-typeset .or-steptitle {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--or-text, #16305c);
+  letter-spacing: -0.01em;
+}
+.md-typeset .or-stepdesc {
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--or-muted, #51607a);
+}
+/* Final step is the destination — tinted brand green. */
+.md-typeset .or-stepcard-goal {
+  background: rgba(31, 157, 99, 0.08);
+  border-color: rgba(31, 157, 99, 0.40);
+}
+.md-typeset .or-stepcard-goal .or-steptitle { color: #0f6b43; }
+.md-typeset .or-stepcard-goal .or-stepnum { color: #1f9d63; }
+
 
 /* ---- 13. Decorative editorial footer band (global, aria-hidden) ----
    Calm muted line-art scene under the footer copyright/links row. Purely

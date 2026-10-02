@@ -827,14 +827,22 @@ def write_index(md_catalog, modules) -> None:
         "",
         "Start with the job you\u2019re targeting and move through four steps:",
         "",
-        # Four-step flow. Each step + its trailing connector are wrapped in a
-        # non-breaking .or-step so an arrow never orphans at the start of a line.
-        '<p class="or-flow">'
-        '<span class="or-step"><span>1 \u00b7 Add the job</span><i class="or-arrow" aria-hidden="true">\u2192</i></span>'
-        '<span class="or-step"><span>2 \u00b7 Analyze the gap</span><i class="or-arrow" aria-hidden="true">\u2192</i></span>'
-        '<span class="or-step"><span>3 \u00b7 Practice &amp; defend</span><i class="or-arrow" aria-hidden="true">\u2192</i></span>'
-        '<span class="or-step"><span>4 \u00b7 Track readiness</span></span>'
-        "</p>",
+        # Four-step workflow as a card grid (numbered step + short description).
+        # Clearer and more legible than the old inline pill strip.
+        '<div class="or-steps" markdown="0">'
+        '<div class="or-stepcard"><span class="or-stepnum">01</span>'
+        '<span class="or-steptitle">Add the job</span>'
+        '<span class="or-stepdesc">Paste the job description.</span></div>'
+        '<div class="or-stepcard"><span class="or-stepnum">02</span>'
+        '<span class="or-steptitle">Analyze the gap</span>'
+        '<span class="or-stepdesc">See what the role expects and where you fall short.</span></div>'
+        '<div class="or-stepcard"><span class="or-stepnum">03</span>'
+        '<span class="or-steptitle">Practice &amp; defend</span>'
+        '<span class="or-stepdesc">Defend your decisions as the interviewer keeps asking why.</span></div>'
+        '<div class="or-stepcard or-stepcard-goal"><span class="or-stepnum">04</span>'
+        '<span class="or-steptitle">Track readiness</span>'
+        '<span class="or-stepdesc">Watch your readiness build, with your next drill.</span></div>'
+        "</div>",
         "",
         "## Start with your job",
         "",
