@@ -31,12 +31,20 @@
       // Be explicit: these are LOCAL practice sessions (this browser only) and
       // do NOT update Interview Readiness. Job-scoped readiness activity lives
       // on the Dashboard — keep the two visibly separate.
+      // Practice activity falls into two distinct buckets. Name both so the
+      // user knows which is which and where each lives:
+      //   • Readiness Activity — job-scoped, persisted, affects readiness (Dashboard)
+      //   • Local Practice     — this browser only, does NOT affect readiness (here)
       root.appendChild(el("div", "ip-card",
-        '<p>This is your <strong>local practice history</strong> \u2014 the sessions on this ' +
-        'device (Practice Mode, Keep Asking Why, Mock Interview). ' +
-        '<strong>Local Practice does not currently update Interview Readiness.</strong></p>' +
-        '<p class="ip-ai-hint">Your job-scoped readiness activity and overall score live on the ' +
-        '<a href="../Dashboard/index.html">Readiness Dashboard</a>.</p>'));
+        '<p><strong>Two kinds of practice are tracked separately:</strong></p>' +
+        '<ul>' +
+        '<li><strong>Readiness Activity</strong> \u2014 job-scoped and saved to your account ' +
+        '(Defend Your Decisions). It <strong>affects Interview Readiness</strong> and appears on the ' +
+        '<a href="../Dashboard/index.html">Readiness Dashboard</a>.</li>' +
+        '<li><strong>Local Practice</strong> \u2014 this browser only (Practice Mode, Keep Asking Why, ' +
+        'Mock Interview). It <strong>does not currently update Interview Readiness</strong>.</li>' +
+        '</ul>' +
+        '<p class="ip-ai-hint">The sessions below are your <strong>Local Practice</strong> on this device.</p>'));
 
       if (!h.length) {
         root.appendChild(el("div", "ip-card",
@@ -58,7 +66,7 @@
         .map(([t, arr]) => [t, Math.round(arr.reduce((a, b) => a + b, 0) / arr.length), arr.length])
         .sort((a, b) => a[1] - b[1]); // weakest first
       if (rows.length) {
-        root.appendChild(el("h2", null, "Strength by topic"));
+        root.appendChild(el("h2", null, "Local Practice \u2014 strength by topic"));
         const wrap = el("div", "ip-topics");
         rows.forEach(([t, pct, n]) => {
           const cls = pct >= 80 ? "ip-good" : pct >= 60 ? "ip-mid" : "ip-weak";
@@ -75,8 +83,8 @@
         }
       }
 
-      // ---- recent sessions table ----
-      root.appendChild(el("h2", null, "Recent sessions"));
+      // ---- recent sessions table (Local Practice only) ----
+      root.appendChild(el("h2", null, "Local Practice \u2014 recent sessions"));
       let t = '<table><thead><tr><th>When</th><th>Mode</th><th>Track</th><th>Topic</th><th>Q</th><th>Score</th></tr></thead><tbody>';
       const MODE_LABEL = { practice: "Practice", flashcard: "Flashcards", exam: "Timed Exam", why: "Keep Asking Why", scenario: "Scenario" };
       h.slice(0, 15).forEach((s) => {

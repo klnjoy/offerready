@@ -1536,6 +1536,8 @@ a.ig-feature.ig-link .ig-d {
 }
 
 /* Question generator — categorized lists + difficulty badges. */
+/* Restored-set count line: prominent so "already generated" reads at a glance. */
+.md-typeset .or-qcount { margin: 0.2rem 0 0.1rem; font-weight: 700; font-size: 1.05rem; }
 .or-qlist { margin: 0.3rem 0 0; padding-left: 1.3rem; }
 .or-qitem { margin: 0.5rem 0; line-height: 1.5; }
 .or-diff {

@@ -215,26 +215,57 @@
       app.appendChild(foot);
     }
 
-    // Restored view — this job already has a saved question set. Show it first;
-    // Regenerate is an explicit, secondary action (it replaces the saved set).
+    // Format the "Last generated" timestamp from the saved rows. All rows in a
+    // set share created_at (saveQuestions replaces the whole set), so the first
+    // row's created_at is the generation time. Degrades gracefully if absent.
+    function lastGenerated(questions) {
+      var ts = null;
+      questions.forEach(function (q) { if (q && q.created_at && (!ts || q.created_at > ts)) ts = q.created_at; });
+      if (!ts) return "";
+      try {
+        var d = new Date(ts);
+        if (isNaN(d.getTime())) return "";
+        return d.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      } catch (e) { return ""; }
+    }
+
+    // Restored view — this job already has a saved question set. The saved set
+    // is shown first; the primary action is Continue Practice. Regenerate is a
+    // secondary action that REPLACES the set, so it requires explicit
+    // confirmation (never a silent overwrite).
+    function restartGeneration() {
+      var job = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
+      if (job) {
+        state.role = job.title || state.role;
+        if (job.job_description) state.jd = job.job_description;
+        else if (job.analysis && job.analysis.roleSummary) state.jd = job.analysis.roleSummary;
+      }
+      renderForm("Regenerating replaces your saved questions for this job. Review the job description, then generate to confirm the replacement.");
+    }
+
     function renderRestored(questions) {
       app.innerHTML = "";
       var head = el("div", "or-card");
       head.appendChild(currentJobBanner());
-      head.appendChild(el("h2", null, "Saved interview questions"));
-      head.appendChild(el("p", "or-muted", questions.length + " saved questions for this job \u00b7 restored from your account. Answer them out loud, then practice defending your decisions."));
-      var regen = el("button", "or-btn", "Regenerate questions");
+      head.appendChild(el("h2", null, "Questions already generated"));
+      head.appendChild(el("p", "or-qcount", questions.length + " saved questions for this job"));
+      var when = lastGenerated(questions);
+      if (when) head.appendChild(el("p", "or-muted or-small", "Last generated: " + esc(when)));
+      head.appendChild(el("p", "or-muted or-small", "Restored from your account \u2014 available on any device. Continue practicing, or regenerate to replace this set."));
+
+      var actions = el("div", "or-actions");
+      var cont = el("a", "or-btn or-btn-primary", "Continue Practice");
+      cont.href = "../Practice-Scenarios/index.html";
+      actions.appendChild(cont);
+      var regen = el("button", "or-btn", "Regenerate");
       regen.addEventListener("click", function () {
-        var job = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
-        if (job) {
-          state.role = job.title || state.role;
-          if (job.job_description) state.jd = job.job_description;
-          else if (job.analysis && job.analysis.roleSummary) state.jd = job.analysis.roleSummary;
-        }
-        renderForm("Regenerating replaces the saved set below. Review the job description, then generate.");
+        var ok = window.confirm(
+          "Regenerate interview questions?\n\nThis replaces your " + questions.length +
+          " saved questions for this job. This can\u2019t be undone.");
+        if (ok) restartGeneration();
       });
-      head.appendChild(regen);
-      head.appendChild(el("p", "or-muted or-small", "Regenerating replaces this saved set."));
+      actions.appendChild(regen);
+      head.appendChild(actions);
       app.appendChild(head);
 
       renderQuestionCards(questions);

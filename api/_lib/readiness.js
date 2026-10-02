@@ -156,7 +156,7 @@ async function getQuestions(userId, jobId) {
   if (!userId || !jobId) return [];
   try {
     const qs = `job_id=eq.${enc(jobId)}&user_id=eq.${enc(userId)}` +
-      `&select=category,difficulty,prompt,model_answer,signals,sort_order&order=sort_order.asc`;
+      `&select=category,difficulty,prompt,model_answer,signals,sort_order,created_at&order=sort_order.asc`;
     const resp = await restFetch('/questions?' + qs, { method: 'GET', headers: serviceHeaders() });
     if (!resp.ok) return [];
     const rows = await resp.json();

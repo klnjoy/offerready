@@ -61,10 +61,10 @@ next drill.
 
     ---
 
-    **Follow-up defense drill.** Give an answer and the interviewer keeps asking
-    *why* — the chain that separates a memorized answer from a real one.
+    **Follow-up challenge drill.** Give an answer and the interviewer keeps
+    asking *why* — the chain that separates a memorized answer from a real one.
 
-    *Local Practice, does not currently update Interview Readiness.*
+    *Related to Defend Your Decisions. Local Practice, does not currently update Interview Readiness.*
 
     [:octicons-arrow-right-24: Practice the why-chain](../Personal-SourceCode/Interview_Why_Interactive.md)
 
@@ -72,10 +72,10 @@ next drill.
 
     ---
 
-    **End-to-end simulation.** A full simulated interview in one sitting — mixed
-    questions, follow-ups, and pressure.
+    **Full interview simulation** — mixed questions, follow-ups, and pressure in
+    one sitting.
 
-    *Local Practice, does not currently update Interview Readiness.*
+    *Preview. Local Practice, does not currently update Interview Readiness.*
 
     [:octicons-arrow-right-24: Run a simulation](../Personal-SourceCode/Interview_Master_Simulator.md)
 

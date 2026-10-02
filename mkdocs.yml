@@ -72,7 +72,7 @@ plugins:
 extra_css:
   # ?v=N cache-buster — bump when extra.css changes so browsers don't serve a
   # stale cached stylesheet after a deploy.
-  - assets/extra.css?v=24
+  - assets/extra.css?v=25
 
 extra_javascript:
   # Must load first: sets window.OFFERREADY_API_BASE + Supabase config for the
@@ -95,7 +95,7 @@ extra_javascript:
   - assets/resume-extract.js?v=1
   - assets/readiness.js?v=7
   - assets/gap.js?v=7
-  - assets/questions.js?v=4
+  - assets/questions.js?v=5
   - assets/jobs.js?v=9
   - assets/onboarding.js?v=4
   - assets/simulator.js?v=3

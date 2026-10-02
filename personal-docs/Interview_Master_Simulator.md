@@ -4,11 +4,17 @@ icon: material/av-timer
 
 # Master Interview Simulator
 
+!!! note "Preview · Local Practice"
+    The Mock Interview is a **preview**. It runs in your browser and records to
+    your local [Practice History](Interview_Progress.md) on this device — it does
+    **not** currently update your job-scoped Interview Readiness. For readiness,
+    use [Defend Your Decisions](../Practice-Scenarios/index.md) against a saved job.
+
 Run a **mock loop** that mimics a real onsite: questions jump between AI, data,
 cloud, security, and system design at different levels. For each, you answer out
 loud and timed, then reveal what's tested, the strong vs weak patterns, and the
-expected depth — rate yourself, then face the follow-up. Your scores feed the
-[Progress dashboard](Interview_Progress.md).
+expected depth — rate yourself, then face the follow-up. Your scores feed your
+local [Practice History](Interview_Progress.md).
 
 !!! abstract "The universal strong-answer shape"
     **Clarify → claim → mechanism → trade-off → how I'd verify.** Weak answers skip
