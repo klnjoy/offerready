@@ -1220,20 +1220,27 @@ def write_nav(md_catalog, modules) -> None:
         for rel_dest, title in sorted(entries, key=lambda e: e[1].lower()):
             nav.append(f"      - {nav_label(title)}: {rel_dest}")
 
-    # ----- Nest the whole library UNDER Practice ------------------------------
-    # Slice the Learn/Build/Interview-Prep/Study-Guide/leftover lines out of nav,
-    # re-indent them +4 spaces (so former top-level groups become sections inside
-    # Practice), and append them under a single collapsed "Study Library" section
-    # of the Practice group. This keeps the top nav to exactly the product items
-    # while Practice remains the single interview-prep hub (no orphaned pages).
+    # ----- Nest the whole library UNDER Practice > Resources ------------------
+    # Slice the Learn/Build/Interview-Prep/Study-Guide/leftover lines out of nav
+    # and tuck them inside Practice under a SINGLE collapsed "Resources" group,
+    # so Practice's own activities (Question Generator, Practice Mode, Defend,
+    # Mock Interview, Keep Asking Why, Sample Walkthrough, Practice History) are
+    # the visible children and the knowledge library sits one level deeper,
+    # collapsed by default. IA:
+    #     Practice
+    #       ├ <activities>
+    #       └ Resources            (collapsed)
+    #           ├ Learn ├ Build ├ Interview Prep └ Study Guide
+    # No pages are removed, no URLs change — only visibility/hierarchy. The
+    # former top-level groups were emitted at 2-space indent; +8 makes them
+    # sections INSIDE the Resources group (which itself sits at 4 under Practice).
     library = nav[lib_start:]
     del nav[lib_start:]
     if practice_children:
-        # Re-indent each library line +4 spaces so the former top-level groups
-        # (Learn / Build / Interview Prep / Study Guide) become sections nested
-        # directly inside the Practice group.
-        for line in library:
-            practice_children.append("    " + line)
+        if library:
+            practice_children.append("      - Resources:")
+            for line in library:
+                practice_children.append("        " + line)
         nav.append("  - Practice:")
         nav.extend(practice_children)
 
