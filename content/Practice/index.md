@@ -12,7 +12,7 @@ it's the one thing you can't get from reading.
 
 !!! tip "New here? Start with two steps"
     1. **[Analyze My Job](../Analyze/index.md)** — paste a job description and get a focused prep plan.
-    2. **[Defend-Your-Decision Scenarios](../Practice-Scenarios/index.md)** — run a scenario for your target role.
+    2. **[Defend Your Decisions](../Practice-Scenarios/index.md)** — run a decision-defense scenario for your target role (contributes to Interview Readiness).
 
 ## The practice loop
 
@@ -34,22 +34,26 @@ next drill.
 
 <div class="grid cards" markdown>
 
--   :material-sword-cross:{ .lg .middle } __Defend-Your-Decision Scenarios__
+-   :material-sword-cross:{ .lg .middle } __Defend Your Decisions__
 
     ---
 
-    The core experience, across roles — AI/GenAI Engineer, AI Architect, Data
-    Architect, AI Security, Cloud/Platform, Forward Deployed. Decide, then
-    defend it branch by branch.
+    **Decision-defense scenarios.** Across roles — AI/GenAI Engineer, AI
+    Architect, Data Architect, AI Security, Cloud/Platform, Forward Deployed.
+    Decide, then defend it branch by branch against a saved job.
+
+    *Contributes to Interview Readiness.*
 
     [:octicons-arrow-right-24: Open scenarios](../Practice-Scenarios/index.md)
 
--   :material-cards-outline:{ .lg .middle } __Practice Mode (Q&A drills)__
+-   :material-cards-outline:{ .lg .middle } __Practice Mode__
 
     ---
 
-    Flashcards and timed exams over the full question library. A fast, free
-    warm-up before you defend a full scenario.
+    **Focused drills.** Flashcards and timed exams over the question library — a
+    fast warm-up before you defend a full scenario.
+
+    *Local Practice, does not currently update Interview Readiness.*
 
     [:octicons-arrow-right-24: Start drilling](../Personal-SourceCode/Interview_Practice.md)
 
@@ -57,8 +61,10 @@ next drill.
 
     ---
 
-    Give an answer and the interviewer keeps asking *why* — the follow-up chain
-    that separates a memorized answer from a real one.
+    **Follow-up defense drill.** Give an answer and the interviewer keeps asking
+    *why* — the chain that separates a memorized answer from a real one.
+
+    *Local Practice, does not currently update Interview Readiness.*
 
     [:octicons-arrow-right-24: Practice the why-chain](../Personal-SourceCode/Interview_Why_Interactive.md)
 
@@ -66,8 +72,10 @@ next drill.
 
     ---
 
-    A full simulated interview end to end — mixed questions, follow-ups, and
-    pressure, in one sitting.
+    **End-to-end simulation.** A full simulated interview in one sitting — mixed
+    questions, follow-ups, and pressure.
+
+    *Local Practice, does not currently update Interview Readiness.*
 
     [:octicons-arrow-right-24: Run a simulation](../Personal-SourceCode/Interview_Master_Simulator.md)
 
@@ -75,8 +83,8 @@ next drill.
 
     ---
 
-    Your recent practice sessions and per-topic strength on this device. For
-    overall readiness and your next step, see the Dashboard.
+    **Completed activity.** Your recent practice sessions and per-topic strength
+    on this device. For your overall readiness and next step, see the Dashboard.
 
     [:octicons-arrow-right-24: See your history](../Personal-SourceCode/Interview_Progress.md)
 

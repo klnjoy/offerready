@@ -28,9 +28,14 @@
       root.innerHTML = "";
 
       // Point users at the single readiness dashboard for their score/trend.
+      // Be explicit: these are LOCAL practice sessions (this browser only) and
+      // do NOT update Interview Readiness. Job-scoped readiness activity lives
+      // on the Dashboard — keep the two visibly separate.
       root.appendChild(el("div", "ip-card",
-        '<p>This is your <strong>practice session history</strong> on this device. ' +
-        'For your overall readiness score and trend, see the ' +
+        '<p>This is your <strong>local practice history</strong> \u2014 the sessions on this ' +
+        'device (Practice Mode, Keep Asking Why, Mock Interview). ' +
+        '<strong>Local Practice does not currently update Interview Readiness.</strong></p>' +
+        '<p class="ip-ai-hint">Your job-scoped readiness activity and overall score live on the ' +
         '<a href="../Dashboard/index.html">Readiness Dashboard</a>.</p>'));
 
       if (!h.length) {

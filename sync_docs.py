@@ -816,7 +816,7 @@ def write_index(md_catalog, modules) -> None:
         # removed: they didn't move a new visitor through Job -> Analysis ->
         # Practice -> Readiness and created decision paralysis.
         '<p class="home-cta" markdown>'
-        '[:material-clipboard-search-outline: Analyze a Job](#start-with-your-job){ .md-button .md-button--primary }'
+        '[:material-clipboard-search-outline: Analyze a Job](Analyze/index.md){ .md-button .md-button--primary }'
         "&nbsp;"
         "[See Example](Sample-Walkthrough/index.md){ .md-button }"
         "</p>",
@@ -835,13 +835,15 @@ def write_index(md_catalog, modules) -> None:
         "",
         "## Start with your job",
         "",
-        "Paste a job description below to see your gaps and a preparation plan \u2014 "
-        "free, right here. Save it to **[My Jobs](My-Jobs/index.md)** to track "
-        "your progress over time.",
+        "Begin on **[Analyze a Job](Analyze/index.md)**: paste a job description "
+        "to see the role requirements, likely gaps, and a preparation plan \u2014 "
+        "free. Save it to **[My Jobs](My-Jobs/index.md)** to track your readiness "
+        "over time. The analyzer lives on that one screen, so there\u2019s a single "
+        "place to run and resume it.",
         "",
-        '<div id="analyze-app" markdown="0">',
-        '  <p><em>Loading the analyzer\u2026</em></p>',
-        "</div>",
+        '<p class="home-cta" markdown>'
+        '[:material-clipboard-search-outline: Start on Analyze a Job](Analyze/index.md){ .md-button .md-button--primary }'
+        "</p>",
         "",
         "## See a worked example",
         "",

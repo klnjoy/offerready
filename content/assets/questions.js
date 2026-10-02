@@ -37,7 +37,9 @@
 
     // Load the user's jobs so generated questions attach to one (job-rooted,
     // persisted server-side). Falls back to a plain form if signed out.
-    loadJobsThen(renderForm);
+    // If the preselected job already has a saved set, we RESTORE it first
+    // (regenerate is then an explicit choice) rather than forcing a new run.
+    loadJobsThen(function () { restoreOrForm(); });
 
     function loadJobsThen(cb) {
       if (!API || !window.OfferReadyAuth) { cb(); return; }
@@ -54,6 +56,28 @@
           })
           .catch(function () { cb(); });
       }).catch(function () { cb(); });
+    }
+
+    // Restore any saved question set for the selected job before offering a
+    // (re)generation. The DB is the source of truth: GET /api/jobs/:id returns
+    // the job's existing `questions`. If a set exists, show it with a
+    // Regenerate option; otherwise fall back to the generate form.
+    function restoreOrForm() {
+      if (!state.jobId || !API || !window.OfferReadyAuth) { renderForm(); return; }
+      app.innerHTML = "";
+      var loading = el("div", "or-card"); loading.appendChild(el("p", "or-muted", "Loading this job\u2019s saved questions\u2026"));
+      app.appendChild(loading);
+      window.OfferReadyAuth.getAccessToken().then(function (tok) {
+        if (!tok) { renderForm(); return; }
+        fetch(API + "/api/jobs/" + encodeURIComponent(state.jobId), { headers: { Authorization: "Bearer " + tok } })
+          .then(function (r) { return r.json().catch(function () { return {}; }); })
+          .then(function (j) {
+            var existing = (j && Array.isArray(j.questions)) ? j.questions : [];
+            if (existing.length) renderRestored(existing);
+            else renderForm();
+          })
+          .catch(function () { renderForm(); });
+      }).catch(function () { renderForm(); });
     }
 
     function activeJobTitle() {
@@ -99,7 +123,9 @@
             if (job.job_description) state.jd = job.job_description;
             else if (job.analysis && job.analysis.roleSummary) state.jd = job.analysis.roleSummary;
           }
-          renderForm();
+          // Picking a job restores its saved set first (if any); regenerate
+          // stays an explicit action.
+          if (state.jobId) restoreOrForm(); else renderForm();
         });
         card.appendChild(sel);
         card.appendChild(el("p", "or-muted or-small", "No job here yet? <a href=\"" + base + "Analyze/index.html\">Analyze &amp; save a job</a> first."));
@@ -161,18 +187,9 @@
       return '<span class="or-diff ' + cls + '">' + esc(d || "medium") + "</span>";
     }
 
-    function renderResult(questions, counts, saved) {
-      app.innerHTML = "";
-      var head = el("div", "or-card");
-      head.appendChild(el("h2", null, "Your interview question set"));
-      var total = questions.length;
-      var savedNote = (saved && state.jobId) ? " \u00b7 \u2713 saved to this job" : (state.jobId ? "" : " \u00b7 not saved (pick a saved job to keep it)");
-      head.appendChild(el("p", "or-muted", total + " questions generated" + savedNote + " \u00b7 answer them out loud, then practice defending your decisions."));
-      var again = el("button", "or-btn", "Generate for another job");
-      again.addEventListener("click", function () { renderForm(); });
-      head.appendChild(again);
-      app.appendChild(head);
-
+    // Shared: render the categorized question cards + the Practice/Dashboard
+    // footer. Used by both the freshly-generated and the restored views.
+    function renderQuestionCards(questions) {
       var byCat = {};
       questions.forEach(function (q) { (byCat[q.category] = byCat[q.category] || []).push(q); });
 
@@ -196,6 +213,46 @@
         '<a class="or-btn or-btn-primary" href="../Practice-Scenarios/index.html">\uD83D\uDDE1\ufe0f Practice & defend answers</a>' +
         '<a class="or-btn" href="../Dashboard/index.html">\uD83D\uDCCA Readiness dashboard</a>';
       app.appendChild(foot);
+    }
+
+    // Restored view — this job already has a saved question set. Show it first;
+    // Regenerate is an explicit, secondary action (it replaces the saved set).
+    function renderRestored(questions) {
+      app.innerHTML = "";
+      var head = el("div", "or-card");
+      head.appendChild(currentJobBanner());
+      head.appendChild(el("h2", null, "Saved interview questions"));
+      head.appendChild(el("p", "or-muted", questions.length + " saved questions for this job \u00b7 restored from your account. Answer them out loud, then practice defending your decisions."));
+      var regen = el("button", "or-btn", "Regenerate questions");
+      regen.addEventListener("click", function () {
+        var job = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
+        if (job) {
+          state.role = job.title || state.role;
+          if (job.job_description) state.jd = job.job_description;
+          else if (job.analysis && job.analysis.roleSummary) state.jd = job.analysis.roleSummary;
+        }
+        renderForm("Regenerating replaces the saved set below. Review the job description, then generate.");
+      });
+      head.appendChild(regen);
+      head.appendChild(el("p", "or-muted or-small", "Regenerating replaces this saved set."));
+      app.appendChild(head);
+
+      renderQuestionCards(questions);
+    }
+
+    function renderResult(questions, counts, saved) {
+      app.innerHTML = "";
+      var head = el("div", "or-card");
+      head.appendChild(el("h2", null, "Your interview question set"));
+      var total = questions.length;
+      var savedNote = (saved && state.jobId) ? " \u00b7 \u2713 saved to this job" : (state.jobId ? "" : " \u00b7 not saved (pick a saved job to keep it)");
+      head.appendChild(el("p", "or-muted", total + " questions generated" + savedNote + " \u00b7 answer them out loud, then practice defending your decisions."));
+      var again = el("button", "or-btn", "Generate for another job");
+      again.addEventListener("click", function () { renderForm(); });
+      head.appendChild(again);
+      app.appendChild(head);
+
+      renderQuestionCards(questions);
     }
 
     function resolveToken(cb) {
