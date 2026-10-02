@@ -1827,7 +1827,7 @@ a.ig-feature.ig-link .ig-d {
 .or-footer-scene svg {
   display: block;
   width: 100%;
-  height: clamp(120px, 16vw, 220px);
+  height: clamp(96px, 12vw, 170px);
 }
 @media print {
   .or-footer-scene { display: none !important; }

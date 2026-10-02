@@ -33,47 +33,64 @@
   aria-hidden so it adds no content and no workflow noise.
 -#}
 <div class="or-footer-scene" aria-hidden="true">
-  <svg viewBox="0 0 1024 220" preserveAspectRatio="xMidYMax slice" role="presentation" focusable="false">
+  <svg viewBox="0 0 1024 180" preserveAspectRatio="xMidYMax slice" role="presentation" focusable="false">
     <defs>
       <linearGradient id="orSky" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#ffffff"/>
-        <stop offset="1" stop-color="#eef2f7"/>
+        <stop offset="1" stop-color="#e9eef5"/>
       </linearGradient>
+      <linearGradient id="orTrend" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0" stop-color="#1f9d63"/>
+        <stop offset="0.6" stop-color="#25b374"/>
+        <stop offset="1" stop-color="#2fd389"/>
+      </linearGradient>
+      <linearGradient id="orTrendFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#2fd389" stop-opacity="0.22"/>
+        <stop offset="1" stop-color="#2fd389" stop-opacity="0"/>
+      </linearGradient>
+      <radialGradient id="orGlow" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#2fd389" stop-opacity="0.55"/>
+        <stop offset="1" stop-color="#2fd389" stop-opacity="0"/>
+      </radialGradient>
     </defs>
-    <rect x="0" y="0" width="1024" height="220" fill="url(#orSky)"/>
-    <!-- distant hills -->
-    <path d="M0 150 C 150 120, 300 135, 460 128 S 760 115, 1024 138 L1024 220 L0 220 Z"
-          fill="#dbe3ee"/>
-    <path d="M0 168 C 180 150, 360 160, 540 152 S 860 150, 1024 162 L1024 220 L0 220 Z"
-          fill="#cdd8e6"/>
-    <!-- waterline hint -->
-    <path d="M300 150 q 60 -8 120 0 q 60 8 120 0" fill="none" stroke="#aebccf" stroke-width="1.2" opacity="0.6"/>
-    <!-- town rooftops (simple line-art) -->
-    <g stroke="#16305c" stroke-width="1.4" fill="none" opacity="0.55">
-      <path d="M70 185 L70 160 L104 160 L104 185"/>
-      <path d="M60 160 L87 146 L114 160"/>
-      <path d="M150 186 L150 158 L190 158 L190 186"/>
-      <path d="M140 158 L170 142 L200 158"/>
-      <path d="M250 187 L250 164 L286 164 L286 187"/>
-      <path d="M243 164 L268 150 L293 164"/>
+    <rect x="0" y="0" width="1024" height="180" fill="url(#orSky)"/>
+    <!-- layered haze for depth -->
+    <path d="M0 128 C 220 118, 420 124, 640 118 S 920 112, 1024 118 L1024 180 L0 180 Z" fill="#dde4ee" opacity="0.6"/>
+    <path d="M0 146 C 240 140, 440 146, 680 140 S 940 138, 1024 142 L1024 180 L0 180 Z" fill="#cfd9e7" opacity="0.6"/>
+    <!-- measurement gridlines, like a readiness chart -->
+    <g stroke="#aebccf" stroke-width="1" opacity="0.28">
+      <line x1="0" y1="66" x2="1024" y2="66"/>
+      <line x1="0" y1="104" x2="1024" y2="104"/>
+      <line x1="0" y1="142" x2="1024" y2="142"/>
     </g>
-    <!-- right-side building with warm windows (muted) -->
-    <g opacity="0.85">
-      <rect x="820" y="96" width="168" height="104" fill="#f4f6fa" stroke="#16305c" stroke-width="1.4"/>
-      <line x1="874" y1="96" x2="874" y2="200" stroke="#16305c" stroke-width="1"/>
-      <line x1="934" y1="96" x2="934" y2="200" stroke="#16305c" stroke-width="1"/>
-      <rect x="886" y="120" width="36" height="30" fill="#1f9d63" opacity="0.18"/>
-      <rect x="946" y="120" width="30" height="30" fill="#1f9d63" opacity="0.18"/>
+    <!-- muted, varied skyline -->
+    <g stroke="#16305c" stroke-width="1.3" fill="none" opacity="0.16">
+      <path d="M60 158 L60 132 L92 132 L92 158"/>
+      <path d="M120 158 L120 120 L150 120 L150 158"/>
+      <path d="M180 158 L180 138 L206 138 L206 158"/>
+      <path d="M236 158 L236 126 L272 126 L272 158"/>
+      <path d="M300 158 L300 144 L324 144 L324 158"/>
     </g>
-    <!-- foreground trees -->
-    <g fill="#c4d2c4" opacity="0.9">
-      <ellipse cx="40" cy="150" rx="52" ry="46"/>
-      <ellipse cx="700" cy="150" rx="40" ry="40"/>
+    <!-- soft area under the rising readiness line -->
+    <path d="M0 148 C 220 140, 380 122, 560 102 S 880 64, 1024 50 L1024 180 L0 180 Z" fill="url(#orTrendFill)"/>
+    <!-- the rising readiness line (echoes the Dashboard trend) -->
+    <path d="M0 148 C 220 140, 380 122, 560 102 S 880 64, 1024 50"
+          fill="none" stroke="url(#orTrend)" stroke-width="3" stroke-linecap="round"/>
+    <!-- milestone dots with soft halos -->
+    <g>
+      <circle cx="220" cy="139" r="9" fill="url(#orGlow)"/>
+      <circle cx="220" cy="139" r="3.2" fill="#16305c"/>
+      <circle cx="560" cy="102" r="9" fill="url(#orGlow)"/>
+      <circle cx="560" cy="102" r="3.2" fill="#16305c"/>
+      <circle cx="880" cy="64" r="9" fill="url(#orGlow)"/>
+      <circle cx="880" cy="64" r="3.2" fill="#16305c"/>
     </g>
-    <g fill="#b2c3b2" opacity="0.9">
-      <ellipse cx="760" cy="186" rx="60" ry="38"/>
-    </g>
+    <!-- "now" peak marker + glowing endpoint -->
+    <line x1="1004" y1="50" x2="1004" y2="152" stroke="#1f9d63" stroke-width="1" opacity="0.25"/>
+    <circle cx="1004" cy="50" r="16" fill="url(#orGlow)"/>
+    <circle cx="1004" cy="50" r="5.5" fill="#1f9d63"/>
+    <circle cx="1004" cy="50" r="2" fill="#ffffff"/>
     <!-- terrace line -->
-    <path d="M0 200 L1024 200" stroke="#aebccf" stroke-width="1" opacity="0.5"/>
+    <path d="M0 152 L1024 152" stroke="#aebccf" stroke-width="1" opacity="0.5"/>
   </svg>
 </div>
