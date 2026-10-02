@@ -34,15 +34,6 @@ next drill.
 
 <div class="grid cards" markdown>
 
--   :material-clipboard-search-outline:{ .lg .middle } __Analyze My Job__
-
-    ---
-
-    Paste a job description (and optionally your resume). Get a role analysis,
-    a readiness view, likely gaps, and a prep plan that links to real material.
-
-    [:octicons-arrow-right-24: Analyze a role](../Analyze/index.md)
-
 -   :material-sword-cross:{ .lg .middle } __Defend-Your-Decision Scenarios__
 
     ---
@@ -71,7 +62,7 @@ next drill.
 
     [:octicons-arrow-right-24: Practice the why-chain](../Personal-SourceCode/Interview_Why_Interactive.md)
 
--   :material-account-voice:{ .lg .middle } __Master Interview Simulator__
+-   :material-account-voice:{ .lg .middle } __Mock Interview__
 
     ---
 
@@ -80,7 +71,7 @@ next drill.
 
     [:octicons-arrow-right-24: Run a simulation](../Personal-SourceCode/Interview_Master_Simulator.md)
 
--   :material-chart-line:{ .lg .middle } __Progress Dashboard__
+-   :material-chart-line:{ .lg .middle } __Practice History__
 
     ---
 
