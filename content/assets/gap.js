@@ -52,9 +52,12 @@
               state.jobId = active;
               // Auto-populate Target Role + JD from the preselected job so Check
               // My Fit opens ready to run (only the resume is still required).
-              // Without this, preselect set jobId but left the role/JD fields
-              // blank until the user manually re-picked the same job.
+              // prefillFromJob sets the role immediately; hydrateJobDescription
+              // fetches the saved JD (not in the light list row) and THEN runs
+              // the first render so Job Description is already populated.
               prefillFromJob(state.jobId);
+              hydrateJobDescription(state.jobId, cb);
+              return;
             } else if (active && window.OfferReadyReadiness && window.OfferReadyReadiness.clearActiveJob) {
               window.OfferReadyReadiness.clearActiveJob();
             }
@@ -71,12 +74,61 @@
     // Populate Target Role + JD into state from a saved job. Used both when the
     // active job is preselected on load AND when the user picks one from the
     // dropdown, so the two paths stay identical.
+    //
+    // NOTE: the list endpoint (/api/jobs) returns LIGHT rows — title but NOT
+    // job_description or analysis. So this fills Target Role immediately, and
+    // the JD only if it happens to already be on the row (e.g. hydrated by a
+    // prior fetch). hydrateJobDescription() does the real JD restore.
     function prefillFromJob(jobId) {
       var job = state.jobs.filter(function (x) { return x.id === jobId; })[0];
       if (!job) return;
       state.role = job.title || state.role;
       if (job.job_description) state.jd = job.job_description;
       else if (job.analysis && job.analysis.roleSummary) state.jd = job.analysis.roleSummary;
+    }
+
+    // Restore the saved Job Description for a job. The /api/jobs LIST response
+    // omits the JD (kept light for the dashboard), which is why selecting a job
+    // populated Target Role but left Job Description empty. We fetch the FULL
+    // job (/api/jobs/:id) which includes job_description + analysis, cache it
+    // back onto the in-memory row (so we only fetch once), set state.jd, then
+    // re-render. If the JD is already present we skip the network call.
+    function hydrateJobDescription(jobId, done) {
+      var job = state.jobs.filter(function (x) { return x.id === jobId; })[0];
+      if (!job) { if (done) done(); return; }
+      // Already have a usable JD on the row — nothing to fetch.
+      if (job.job_description) { state.jd = job.job_description; if (done) done(); return; }
+      if (!API || !window.OfferReadyAuth) {
+        // No backend — fall back to the role summary if we somehow have it.
+        if (job.analysis && job.analysis.roleSummary) state.jd = job.analysis.roleSummary;
+        if (done) done();
+        return;
+      }
+      window.OfferReadyAuth.getAccessToken().then(function (tok) {
+        if (!tok) { if (done) done(); return; }
+        fetch(API + "/api/jobs/" + encodeURIComponent(jobId), {
+          headers: { Authorization: "Bearer " + tok },
+        })
+          .then(function (r) { return r.json().catch(function () { return {}; }); })
+          .then(function (d) {
+            var full = d && d.job;
+            if (full) {
+              // Cache the heavy fields back so re-selecting is instant.
+              job.job_description = full.job_description || "";
+              job.analysis = full.analysis || job.analysis;
+              if (!job.title && full.title) job.title = full.title;
+              // Only overwrite state if THIS job is still the selected one
+              // (guards against a race if the user switched jobs mid-fetch).
+              if (state.jobId === jobId) {
+                if (full.title) state.role = full.title;
+                if (full.job_description) state.jd = full.job_description;
+                else if (full.analysis && full.analysis.roleSummary) state.jd = full.analysis.roleSummary;
+              }
+            }
+            if (done) done();
+          })
+          .catch(function () { if (done) done(); });
+      }).catch(function () { if (done) done(); });
     }
     function currentJobBanner() {
       // "Current Job: <title>" header so the active job visibly follows the
@@ -124,7 +176,10 @@
         sel.addEventListener("change", function () {
           state.jobId = sel.value;
           prefillFromJob(state.jobId);
-          renderForm();
+          // Fetch + restore the saved JD (not present on the light list row),
+          // then re-render so Job Description auto-fills on selection.
+          if (state.jobId) hydrateJobDescription(state.jobId, function () { renderForm(); });
+          else renderForm();
         });
         card.appendChild(sel);
         card.appendChild(el("p", "or-muted or-small", "Pick a job to auto-fill its description below, or paste a job description manually. <a href=\"" + baseHref() + "Analyze/index.html\">Analyze &amp; save a new job</a>."));

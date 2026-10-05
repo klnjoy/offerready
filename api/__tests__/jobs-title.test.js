@@ -13,7 +13,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-const { deriveJobTitle, cleanTitle } = require('../_lib/jobs');
+const { deriveJobTitle, cleanTitle, restoreJobContext, GAP_MIN_JD } = require('../_lib/jobs');
 
 test('cleanTitle: trims and keeps a real title', () => {
   assert.equal(cleanTitle('  Senior AI Engineer  '), 'Senior AI Engineer');
@@ -90,4 +90,97 @@ test('deriveJobTitle: title is capped (never an unbounded paragraph)', () => {
   const long = 'A'.repeat(500);
   const t = deriveJobTitle({ title: long }, {});
   assert.ok(t.length <= 200, 'explicit title capped to 200');
+});
+
+// ---------------------------------------------------------------------------
+// restoreJobContext — what a saved job restores into the Check My Fit (Gap
+// Analysis) form. This is the server-testable mirror of the gap.js prefill +
+// job-description hydration. Covers the Save Job -> Check My Fit restore bug
+// where Target Role filled but Job Description stayed empty.
+// ---------------------------------------------------------------------------
+
+// A realistic FULL job row (as returned by GET /api/jobs/:id, which includes
+// job_description + analysis — unlike the light list rows from GET /api/jobs).
+function fullJob(overrides) {
+  return Object.assign({
+    id: 'job-1',
+    title: 'Senior Snowflake Architect',
+    job_description: 'We are hiring a Senior Snowflake Architect to design and own our cloud data warehouse, ETL/ELT pipelines, and BI layer across the org.',
+    analysis: { roleSummary: 'Owns the Snowflake platform and BI.', seniority: 'Senior' },
+  }, overrides || {});
+}
+
+test('restoreJobContext: saved job restores the job description', () => {
+  const ctx = restoreJobContext(fullJob());
+  assert.equal(ctx.jd, fullJob().job_description);
+  assert.ok(ctx.jd.length >= GAP_MIN_JD);
+});
+
+test('restoreJobContext: saved job restores the title (into role)', () => {
+  const ctx = restoreJobContext(fullJob());
+  assert.equal(ctx.title, 'Senior Snowflake Architect');
+  assert.equal(ctx.role, 'Senior Snowflake Architect');
+});
+
+test('restoreJobContext: selected job auto-populates the gap form (role + jd)', () => {
+  const ctx = restoreJobContext(fullJob());
+  assert.ok(ctx.role, 'Target Role is populated');
+  assert.ok(ctx.jd, 'Job Description is populated');
+});
+
+test('restoreJobContext: analyze gap can run from saved job (only resume needed)', () => {
+  const ctx = restoreJobContext(fullJob());
+  assert.equal(ctx.canAnalyze, true,
+    'with a saved JD present, the user should only need to add a resume');
+});
+
+test('restoreJobContext: falls back to analysis.roleSummary when no job_description', () => {
+  const ctx = restoreJobContext(fullJob({
+    job_description: '',
+    analysis: { roleSummary: 'A'.repeat(40) },
+  }));
+  assert.equal(ctx.jd, 'A'.repeat(40));
+  assert.equal(ctx.canAnalyze, true);
+});
+
+test('restoreJobContext: validation blocks only when no saved description exists', () => {
+  // No JD and no usable role summary -> cannot analyze from saved context,
+  // so the "paste a fuller job description" validation legitimately applies.
+  const empty = restoreJobContext(fullJob({ job_description: '', analysis: {} }));
+  assert.equal(empty.jd, '');
+  assert.equal(empty.canAnalyze, false);
+
+  // Too-short saved JD is also not enough on its own.
+  const tooShort = restoreJobContext(fullJob({ job_description: 'short', analysis: {} }));
+  assert.equal(tooShort.canAnalyze, false);
+
+  // A real saved JD does NOT trigger validation.
+  const ok = restoreJobContext(fullJob());
+  assert.equal(ok.canAnalyze, true);
+});
+
+test('restoreJobContext: Save Job -> Check My Fit restores the SAME job context', () => {
+  // Simulate the handoff: a job saved via /api/jobs with a derived title, then
+  // reopened in Check My Fit. The restored context must match what was saved.
+  const savedTitle = deriveJobTitle(
+    { title: '', targetRole: 'Staff Data Engineer' },
+    { seniority: 'Not specified', roleSummary: 'Builds pipelines.' }
+  );
+  const jd = 'Staff Data Engineer owning batch + streaming pipelines, data quality, and the semantic layer for analytics.';
+  const saved = fullJob({ title: savedTitle, job_description: jd, analysis: { roleSummary: 'Builds pipelines.' } });
+
+  const ctx = restoreJobContext(saved);
+  assert.equal(ctx.title, 'Staff Data Engineer');   // title survives the round-trip
+  assert.equal(ctx.role, 'Staff Data Engineer');
+  assert.equal(ctx.jd, jd);                          // JD restored verbatim
+  assert.equal(ctx.canAnalyze, true);                // only the resume is still needed
+});
+
+test('restoreJobContext: null/garbage job does not throw and blocks analyze', () => {
+  const a = restoreJobContext(null);
+  assert.equal(a.jd, '');
+  assert.equal(a.canAnalyze, false);
+  const b = restoreJobContext({});
+  assert.equal(b.jd, '');
+  assert.equal(b.canAnalyze, false);
 });

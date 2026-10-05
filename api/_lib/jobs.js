@@ -70,6 +70,46 @@ function deriveJobTitle(body, analysis) {
   return 'Untitled role';
 }
 
+// Minimum JD length the Gap form requires before "Analyze Gap" will run.
+// Mirrors the client-side guard in content/assets/gap.js so the restore
+// contract is testable in one place.
+const GAP_MIN_JD = 30;
+
+/**
+ * Compute what a saved job restores into the Check My Fit (Gap Analysis) form.
+ * Pure + side-effect free so the restore contract is unit-testable without a
+ * browser. The client (gap.js) mirrors this: Target Role from the title, Job
+ * Description from the stored job_description (falling back to the analysis
+ * role summary), and whether "Analyze Gap" can run from the saved context
+ * alone (JD long enough) — meaning the user only needs to add a resume.
+ *
+ * IMPORTANT: the /api/jobs LIST rows are light (no job_description/analysis),
+ * so a full job (from /api/jobs/:id) must be passed here to restore the JD.
+ *
+ * @param {object} job - a FULL saved-job row (title, job_description, analysis)
+ * @returns {{title:string, role:string, jd:string, canAnalyze:boolean}}
+ */
+function restoreJobContext(job) {
+  const j = job || {};
+  const title = cleanTitle(j.title) || (j.title ? String(j.title) : '');
+  const role = title;
+
+  let jd = '';
+  if (j.job_description != null && String(j.job_description).trim()) {
+    jd = String(j.job_description).trim();
+  } else if (j.analysis && j.analysis.roleSummary != null && String(j.analysis.roleSummary).trim()) {
+    jd = String(j.analysis.roleSummary).trim();
+  }
+
+  return {
+    title: title,
+    role: role,
+    jd: jd,
+    // Only the resume is still required when this is true.
+    canAnalyze: jd.length >= GAP_MIN_JD,
+  };
+}
+
 function serviceHeaders(extra) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   return Object.assign(
@@ -172,4 +212,7 @@ async function deleteJob(userId, id) {
   return resp.ok;
 }
 
-module.exports = { listJobs, countJobs, getJob, insertJob, deleteJob, deriveJobTitle, cleanTitle };
+module.exports = {
+  listJobs, countJobs, getJob, insertJob, deleteJob,
+  deriveJobTitle, cleanTitle, restoreJobContext, GAP_MIN_JD,
+};
