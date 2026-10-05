@@ -9,9 +9,11 @@ of OfferReady is making an engineering decision and **defending it** while an
 interviewer keeps pushing — that's what actually decides a senior offer, and
 it's the one thing you can't get from reading.
 
-!!! tip "New here? Start with two steps"
-    1. **[Analyze a Job](../Analyze/index.md)** — paste a job description to understand the role and your gaps.
-    2. **[Defend Your Decisions](../Practice-Scenarios/index.md)** — practice defending your reasoning for that role (updates Interview Readiness).
+!!! tip "New here? This is the full journey"
+    1. **[Understand the role](../Analyze/index.md)** — paste a job description to see what it expects.
+    2. **[Check your fit](../Gap-Analysis/index.md)** — compare your resume to find your gaps.
+    3. **[Defend your decisions](../Practice-Scenarios/index.md)** — practice defending your reasoning (updates Interview Readiness).
+    4. **[Measure readiness](../Dashboard/index.md)** — see your blended Interview Readiness and what to do next.
 
 ## The practice loop
 
