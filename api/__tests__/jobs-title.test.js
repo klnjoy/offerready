@@ -13,7 +13,9 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-const { deriveJobTitle, cleanTitle, restoreJobContext, GAP_MIN_JD } = require('../_lib/jobs');
+const {
+  deriveJobTitle, cleanTitle, restoreJobContext, GAP_MIN_JD, extractRoleFromSummary,
+} = require('../_lib/jobs');
 
 test('cleanTitle: trims and keeps a real title', () => {
   assert.equal(cleanTitle('  Senior AI Engineer  '), 'Senior AI Engineer');
@@ -47,12 +49,13 @@ test('deriveJobTitle (b): falls back to analysis.seniority when it is real', () 
   assert.equal(t, 'Principal Engineer');
 });
 
-test('deriveJobTitle (c): skips "Not specified" seniority -> role-summary clause', () => {
+test('deriveJobTitle (c): skips "Not specified" seniority -> role extracted from summary', () => {
   const t = deriveJobTitle(
     {},
     { seniority: 'Not specified', roleSummary: 'Senior AI Engineer who builds RAG systems on AWS Bedrock.' }
   );
-  assert.equal(t, 'Senior AI Engineer who builds RAG systems on AWS Bedrock');
+  // Extracts the role phrase (qualifiers + role noun), not the whole clause.
+  assert.equal(t, 'Senior AI Engineer');
 });
 
 test('deriveJobTitle (c): role-summary clause is cut at the first boundary', () => {
@@ -271,12 +274,12 @@ test('defend role: real seniority is used when no target role (Data Engineer)', 
   assert.equal(r, 'Data Engineer');
 });
 
-test('defend role: role summary clause used when seniority is "Not specified" (Databricks Engineer)', () => {
+test('defend role: role extracted from summary when seniority is "Not specified" (Databricks Engineer)', () => {
   const r = deriveJobTitle(
     {},
     { seniority: 'Not specified', roleSummary: 'Databricks Engineer building lakehouse ETL on Azure.' }
   );
-  assert.equal(r, 'Databricks Engineer building lakehouse ETL on Azure');
+  assert.equal(r, 'Databricks Engineer');
 });
 
 test('defend role: never resolves to the "Not specified" placeholder', () => {
@@ -304,4 +307,61 @@ test('defend role: saved-job title (deriveJobTitle) survives Analyze -> Save -> 
   const ctx = restoreJobContext({ title: title, job_description: 'x'.repeat(40), analysis: {} });
   assert.notEqual(title.toLowerCase(), 'not specified');
   assert.equal(ctx.role, title); // Defend reads this role identity from the saved job
+});
+
+// ---------------------------------------------------------------------------
+// extractRoleFromSummary / deriveJobTitle company-blurb guard (Bug 3).
+// The analysis.roleSummary is a paragraph that often OPENS with a company
+// description. The old first-clause split produced titles like
+// "Datavations is a data and AI software company...". These lock in that a
+// real role phrase is extracted and company prose is skipped.
+// ---------------------------------------------------------------------------
+
+test('extractRoleFromSummary: skips company blurb, finds the role phrase', () => {
+  const s = 'Datavations is a data and AI software company seeking an Azure Data Engineer '
+    + 'to build Databricks pipelines.';
+  assert.equal(extractRoleFromSummary(s), 'Azure Data Engineer');
+});
+
+test('extractRoleFromSummary: plain role sentence', () => {
+  assert.equal(
+    extractRoleFromSummary('Senior Databricks Engineer owning the lakehouse.'),
+    'Senior Databricks Engineer'
+  );
+});
+
+test('extractRoleFromSummary: returns "" when there is no role noun', () => {
+  assert.equal(extractRoleFromSummary('We value curiosity and ownership.'), '');
+  assert.equal(extractRoleFromSummary(''), '');
+  assert.equal(extractRoleFromSummary(null), '');
+});
+
+test('deriveJobTitle: company-first roleSummary yields a role, not the company blurb', () => {
+  const title = deriveJobTitle(
+    {},
+    {
+      seniority: 'Not specified',
+      roleSummary: 'Datavations is a data and AI software company. The Azure Data Engineer '
+        + 'will build and operate Databricks ETL across the business.',
+    }
+  );
+  assert.equal(title, 'Azure Data Engineer');
+  assert.ok(!/company/i.test(title));
+  assert.ok(!/datavations/i.test(title));
+});
+
+test('deriveJobTitle: explicit targetRole still wins over summary extraction', () => {
+  const title = deriveJobTitle(
+    { targetRole: 'Data Engineer' },
+    { roleSummary: 'Acme is a startup. Looking for a Databricks Architect.' }
+  );
+  assert.equal(title, 'Data Engineer');
+});
+
+test('deriveJobTitle: no role noun anywhere falls back to "Untitled role" (never a blurb)', () => {
+  const title = deriveJobTitle(
+    {},
+    { seniority: 'Not specified', roleSummary: 'A fast-growing company with a great culture.' }
+  );
+  assert.equal(title, 'Untitled role');
 });

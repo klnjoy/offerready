@@ -794,8 +794,17 @@
     }
 
     // Write/refresh a single in-progress row for this run (keyed by slug).
+    // Scenarios are authoritatively tracked SERVER-SIDE (job-scoped) when a
+    // backend + sign-in exist — persistSession records them and the Readiness
+    // Dashboard shows them. In that case we must NOT also write a job-agnostic
+    // copy into the local practice history (ip_history_v1): doing so duplicated
+    // the session and leaked stale cross-role rows (e.g. an old "Senior
+    // Snowflake Architect" scenario showing while practicing a Data role). We
+    // only keep the local history for the offline / signed-out case, where the
+    // server can't record anything and the local widget is the sole record.
     function persistProgress(partial) {
       try {
+        if (API && window.OfferReadyAuth) return; // server is the source of truth
         if (!window.OfferReadyProgress || !window.OfferReadyProgress.upsert) return;
         var ratings = Object.keys(state.ratings).map(function (k) { return state.ratings[k]; });
         if (!ratings.length) return;
@@ -874,53 +883,98 @@
       var rec = { slug: state.slug, score: score, n: n, mode: "scenario",
                   category: state.slug, completed: true, when: new Date().toISOString() };
 
-      var activeJob = (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob)
-        ? window.OfferReadyReadiness.getActiveJob() : "";
-
-      if (API && window.OfferReadyAuth && activeJob) {
-        window.OfferReadyAuth.getAccessToken().then(function (tok) {
-          if (!tok) { localSave(rec); if (onDone) onDone({ saved: false, local: true, reason: "signedout" }); return; }
-          fetch(API.replace(/\/$/, "") + "/api/jobs/" + encodeURIComponent(activeJob), {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok },
-            body: JSON.stringify({
-              action: "complete_practice",
-              sessionId: sessionId,
-              category: rec.category,
-              mode: "scenario",
-              contentSlug: rec.slug,
-              score: score,
-              completed: true,
-              completedAt: rec.when,
-            }),
-          }).then(function (r) {
-            return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; });
-          }).then(function (res) {
-            if (res.status === 200 && res.body && res.body.ok) {
-              if (onDone) onDone({ saved: true, local: false, readiness: res.body.readiness });
-            } else if (res.status === 207) {
-              // Session saved but snapshot didn't — report partial, not success.
-              if (onDone) onDone({ saved: true, local: false, partial: true, readiness: res.body && res.body.readiness });
-            } else {
-              // 404 => the active job was deleted/unowned: clear the stale
-              // pointer so later pages stop operating on a dead id.
-              if (res.status === 404 && window.OfferReadyReadiness && window.OfferReadyReadiness.clearActiveJob) {
-                window.OfferReadyReadiness.clearActiveJob();
-              }
-              // Authoritative write failed: keep a local copy and surface retry.
-              localSave(rec);
-              if (onDone) onDone({ saved: false, local: true, reason: res.status === 404 ? "nojob" : "server", error: (res.body && res.body.error) });
-            }
-          }).catch(function () {
-            localSave(rec);
-            if (onDone) onDone({ saved: false, local: true, reason: "network" });
-          });
-        }).catch(function () { localSave(rec); if (onDone) onDone({ saved: false, local: true, reason: "token" }); });
-      } else {
-        // No active job or not signed in → local-only history (not job readiness).
+      // Not signed in / no backend → local-only history (never job readiness).
+      if (!API || !window.OfferReadyAuth) {
         localSave(rec);
-        if (onDone) onDone({ saved: false, local: true, reason: activeJob ? "signedout" : "nojob" });
+        if (onDone) onDone({ saved: false, local: true, reason: "signedout" });
+        return;
       }
+
+      window.OfferReadyAuth.getAccessToken().then(function (tok) {
+        if (!tok) { localSave(rec); if (onDone) onDone({ saved: false, local: true, reason: "signedout" }); return; }
+        // Resolve the job this practice belongs to. The Defend page is often
+        // reached via the analyzed-role signal (offerready.defendRole.v1) WITHOUT
+        // an active-job pointer being set — previously that meant a completed
+        // scenario was saved locally only and never reached the dashboard. Now
+        // we adopt the user's relevant saved job (preferring the active pointer,
+        // else the newest owned job matching the analyzed role) so practice
+        // always counts toward a job's readiness when the user has one.
+        resolveActiveJob(tok, function (jobId) {
+          if (!jobId) {
+            // Signed in but no saved jobs to attach to → local-only.
+            localSave(rec);
+            if (onDone) onDone({ saved: false, local: true, reason: "nojob" });
+            return;
+          }
+          writeToJob(jobId, tok, rec, sessionId, score, onDone);
+        });
+      }).catch(function () { localSave(rec); if (onDone) onDone({ saved: false, local: true, reason: "token" }); });
+    }
+
+    // Resolve the job to attach practice to: the active-job pointer if present,
+    // otherwise fetch the user's jobs and adopt the best match (newest job in
+    // the analyzed role's category, else the newest job overall), setting it as
+    // the active job so the rest of the app stays consistent. Calls back with a
+    // job id or "" when the user has no saved jobs.
+    function resolveActiveJob(tok, cb) {
+      var active = (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob)
+        ? window.OfferReadyReadiness.getActiveJob() : "";
+      if (active) { cb(active); return; }
+      fetch(API.replace(/\/$/, "") + "/api/jobs", { headers: { Authorization: "Bearer " + tok } })
+        .then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (j) {
+          var jobs = (j && j.jobs) || [];
+          if (!jobs.length) { cb(""); return; }
+          // Take the newest job (the list is returned newest-first), which in
+          // the Analyze -> Save -> Defend flow is the job the user just saved.
+          // (The light list rows carry no scenario-category column, so there's
+          // nothing finer to match on here; newest is the correct choice.)
+          var pick = jobs[0];
+          var id = pick && pick.id;
+          if (id && window.OfferReadyReadiness && window.OfferReadyReadiness.setActiveJob) {
+            window.OfferReadyReadiness.setActiveJob(id);
+          }
+          cb(id || "");
+        })
+        .catch(function () { cb(""); });
+    }
+
+    // POST the completed scenario to the authoritative endpoint for a job.
+    function writeToJob(jobId, tok, rec, sessionId, score, onDone) {
+      fetch(API.replace(/\/$/, "") + "/api/jobs/" + encodeURIComponent(jobId), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok },
+        body: JSON.stringify({
+          action: "complete_practice",
+          sessionId: sessionId,
+          category: rec.category,
+          mode: "scenario",
+          contentSlug: rec.slug,
+          score: score,
+          completed: true,
+          completedAt: rec.when,
+        }),
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; });
+      }).then(function (res) {
+        if (res.status === 200 && res.body && res.body.ok) {
+          if (onDone) onDone({ saved: true, local: false, readiness: res.body.readiness });
+        } else if (res.status === 207) {
+          // Session saved but snapshot didn't — report partial, not success.
+          if (onDone) onDone({ saved: true, local: false, partial: true, readiness: res.body && res.body.readiness });
+        } else {
+          // 404 => the job was deleted/unowned: clear the stale pointer so later
+          // pages stop operating on a dead id.
+          if (res.status === 404 && window.OfferReadyReadiness && window.OfferReadyReadiness.clearActiveJob) {
+            window.OfferReadyReadiness.clearActiveJob();
+          }
+          localSave(rec);
+          if (onDone) onDone({ saved: false, local: true, reason: res.status === 404 ? "nojob" : "server", error: (res.body && res.body.error) });
+        }
+      }).catch(function () {
+        localSave(rec);
+        if (onDone) onDone({ saved: false, local: true, reason: "network" });
+      });
     }
     function localSave(rec) {
       try { var h = JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); h.unshift(rec);

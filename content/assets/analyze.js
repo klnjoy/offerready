@@ -79,11 +79,75 @@
     return JUNK_ROLES[s.toLowerCase()] ? "" : s;
   }
 
+  // Role-noun vocabulary + company-description hint, mirroring the server's
+  // extractRoleFromSummary (api/_lib/jobs.js). The analysis.roleSummary is a
+  // paragraph that often OPENS with a company blurb ("Datavations is a data and
+  // AI software company..."), so we extract an actual role phrase instead of
+  // blindly taking the first clause.
+  var ROLE_NOUNS_SET = {
+    engineer: 1, architect: 1, developer: 1, scientist: 1, analyst: 1,
+    administrator: 1, consultant: 1, designer: 1, specialist: 1, manager: 1,
+    lead: 1, director: 1, programmer: 1, strategist: 1, researcher: 1,
+  };
+  var COMPANY_HINT = /\b(is a|is an|we are|we're|company|startup|founded|headquarter|our mission|our team|about us|organization|organisation)\b/i;
+  var ROLE_STOP = {
+    a: 1, an: 1, the: 1, our: 1, their: 1, your: 1, this: 1, that: 1, for: 1,
+    of: 1, to: 1, and: 1, or: 1, as: 1, with: 1, is: 1, are: 1, be: 1,
+    seeking: 1, hiring: 1, seeks: 1, looking: 1, need: 1, needs: 1, wants: 1,
+    want: 1, join: 1, company: 1, startup: 1, team: 1, role: 1, position: 1,
+    who: 1, experienced: 1, strong: 1,
+  };
+  var SENIORITY_WORDS = { senior: 1, junior: 1, staff: 1, principal: 1, lead: 1, head: 1, chief: 1, mid: 1 };
+  function isQualifier(tok) {
+    if (!tok) return false;
+    var bare = tok.replace(/[^A-Za-z0-9+/.#-]/g, "");
+    if (!bare) return false;
+    if (ROLE_STOP[bare.toLowerCase()]) return false;
+    if (/^[A-Z]/.test(bare)) return true;
+    if (SENIORITY_WORDS[bare.toLowerCase()]) return true;
+    return false;
+  }
+  // Mirror of the server extractRoleFromSummary (api/_lib/jobs.js): find a role
+  // noun, walk LEFT over qualifier tokens, stop at articles/verbs/company words.
+  function extractRoleFromSummary(summary) {
+    var text = (summary == null ? "" : String(summary)).trim();
+    if (!text) return "";
+    function fromClause(clause) {
+      var raw = clause.trim();
+      if (!raw) return "";
+      var tokens = raw.split(/\s+/);
+      for (var i = 0; i < tokens.length; i++) {
+        var bare = tokens[i].replace(/[^A-Za-z]/g, "").toLowerCase();
+        var singular = bare.replace(/s$/, "");
+        if (ROLE_NOUNS_SET[bare] || ROLE_NOUNS_SET[singular]) {
+          var start = i;
+          while (start - 1 >= 0 && isQualifier(tokens[start - 1])) start--;
+          if (start === i) continue;
+          var phrase = tokens.slice(start, i + 1).join(" ").replace(/[^A-Za-z0-9+/.#\- ]/g, "").trim();
+          var cand = cleanRole(phrase);
+          if (cand) return cand.slice(0, 120);
+        }
+      }
+      return "";
+    }
+    var clauses = text.split(/[.;:\n\u2014]|,\s(?=[A-Z])/);
+    for (var j = 0; j < clauses.length; j++) {
+      if (COMPANY_HINT.test(clauses[j])) continue;
+      var r = fromClause(clauses[j]);
+      if (r) return r;
+    }
+    for (var k = 0; k < clauses.length; k++) {
+      var r2 = fromClause(clauses[k]);
+      if (r2) return r2;
+    }
+    return "";
+  }
+
   // Derive a meaningful role title, mirroring the server's deriveJobTitle
   // (api/_lib/jobs.js) priority so the Defend page and the saved job agree:
   //   a. explicit targetRole the candidate provided
   //   b. real analysis.seniority (skipped if it's a junk placeholder)
-  //   c. first clause of analysis.roleSummary (AI-derived)
+  //   c. a role phrase extracted from analysis.roleSummary (not a company blurb)
   //   d. "" (caller decides the final fallback) — never "Not specified"
   function deriveRoleTitle(targetRole, analysis) {
     var a = analysis || {};
@@ -91,12 +155,8 @@
     if (explicit) return explicit.slice(0, 200);
     var parsed = cleanRole(a.seniority);
     if (parsed) return parsed.slice(0, 200);
-    var summary = cleanRole(a.roleSummary);
-    if (summary) {
-      var firstClause = summary.split(/[.;:\n\u2014\-]/)[0].trim();
-      var candidate = firstClause || summary;
-      if (candidate && !JUNK_ROLES[candidate.toLowerCase()]) return candidate.slice(0, 120);
-    }
+    var role = extractRoleFromSummary(a.roleSummary);
+    if (role) return role.slice(0, 120);
     return "";
   }
 

@@ -33,6 +33,99 @@ function cleanTitle(v) {
   return s;
 }
 
+// Role-noun vocabulary used to pull an actual job title out of a free-form
+// role summary. The AI's roleSummary is a paragraph that frequently OPENS with
+// a company description ("Datavations is a data and AI software company ...").
+// Taking the first clause of that produced company-blurb "titles", so instead
+// we look for a role phrase anywhere in the text.
+const ROLE_NOUNS = [
+  'engineer', 'architect', 'developer', 'scientist', 'analyst', 'administrator',
+  'consultant', 'designer', 'specialist', 'manager', 'lead', 'director',
+  'programmer', 'strategist', 'researcher',
+];
+const ROLE_NOUNS_SET = new Set(ROLE_NOUNS);
+// Phrases that signal a clause is describing the COMPANY, not the role.
+const COMPANY_HINT = /\b(is a|is an|we are|we're|company|startup|founded|headquarter|our mission|our team|about us|organization|organisation)\b/i;
+// Lowercase words that may NOT lead a role title (articles, verbs, connectors,
+// company-ish nouns). The qualifier walk stops when it hits one of these.
+const ROLE_STOP = new Set([
+  'a', 'an', 'the', 'our', 'their', 'your', 'this', 'that', 'for', 'of', 'to',
+  'and', 'or', 'as', 'with', 'is', 'are', 'be', 'seeking', 'hiring', 'seeks',
+  'looking', 'need', 'needs', 'wants', 'want', 'join', 'join', 'company',
+  'startup', 'team', 'role', 'position', 'who', 'that', 'experienced', 'strong',
+]);
+
+// A token is a usable role QUALIFIER if it starts uppercase (Azure, Databricks,
+// Data, Senior, Staff) or is a known seniority/level word. We build the title
+// from the role noun walking left over such qualifiers, stopping at a stop-word
+// or a non-qualifier token so we get "Azure Data Engineer", not
+// "company seeking an Azure Data Engineer" or "The Azure Data Engineer".
+const SENIORITY_WORDS = new Set([
+  'senior', 'junior', 'staff', 'principal', 'lead', 'head', 'chief', 'mid',
+]);
+function isQualifier(tok) {
+  if (!tok) return false;
+  const bare = tok.replace(/[^A-Za-z0-9+/.#-]/g, '');
+  if (!bare) return false;
+  if (ROLE_STOP.has(bare.toLowerCase())) return false;
+  if (/^[A-Z]/.test(bare)) return true;             // capitalized: Azure, Data, Databricks
+  if (SENIORITY_WORDS.has(bare.toLowerCase())) return true;
+  return false;
+}
+
+/**
+ * Try to extract a concise role TITLE from a free-form role summary.
+ * Returns '' when no confident role phrase is found. Pure/side-effect free.
+ *
+ * Approach: tokenize, find a role noun (engineer/architect/...), then walk LEFT
+ * collecting immediately-preceding qualifier tokens (capitalized words or
+ * seniority words), stopping at a stop-word/article. This yields
+ * "Senior Azure Data Engineer" and strips leading "The"/"company seeking an".
+ * Clauses that read as a company description are tried last.
+ */
+function extractRoleFromSummary(summary) {
+  const text = (summary == null ? '' : String(summary)).trim();
+  if (!text) return '';
+
+  function fromClause(clause) {
+    const raw = clause.trim();
+    if (!raw) return '';
+    const tokens = raw.split(/\s+/);
+    for (let i = 0; i < tokens.length; i++) {
+      const bare = tokens[i].replace(/[^A-Za-z]/g, '').toLowerCase();
+      const singular = bare.replace(/s$/, '');
+      if (ROLE_NOUNS_SET.has(bare) || ROLE_NOUNS_SET.has(singular)) {
+        // Walk left over qualifier tokens.
+        let start = i;
+        while (start - 1 >= 0 && isQualifier(tokens[start - 1])) start--;
+        // Require at least one qualifier so a bare "engineer" (too generic)
+        // isn't returned on its own.
+        if (start === i) continue;
+        const phrase = tokens.slice(start, i + 1).join(' ')
+          .replace(/[^A-Za-z0-9+/.#\- ]/g, '').trim();
+        const cand = cleanTitle(phrase);
+        if (cand) return cand.slice(0, 120);
+      }
+    }
+    return '';
+  }
+
+  // Prefer clauses that are NOT company descriptions.
+  const clauses = text.split(/[.;:\n\u2014]|,\s(?=[A-Z])/);
+  for (const clause of clauses) {
+    if (COMPANY_HINT.test(clause)) continue;
+    const r = fromClause(clause);
+    if (r) return r;
+  }
+  // Last resort: allow company-ish clauses too (the role noun + qualifiers walk
+  // already strips the "company seeking an" lead-in).
+  for (const clause of clauses) {
+    const r = fromClause(clause);
+    if (r) return r;
+  }
+  return '';
+}
+
 /**
  * Derive a meaningful job title, in priority order (spec):
  *   a. Explicit role title the user provided (body.title / body.targetRole)
@@ -54,19 +147,16 @@ function deriveJobTitle(body, analysis) {
   const parsed = cleanTitle(a.seniority);
   if (parsed) return parsed.slice(0, 200);
 
-  // c) AI-derived role title from the role summary — take the first clause
-  //    (up to a sentence/clause boundary) so we get a short title, not a
-  //    paragraph. e.g. "Senior AI Engineer who builds RAG systems..." -> title.
-  const summary = cleanTitle(a.roleSummary);
-  if (summary) {
-    const firstClause = summary.split(/[.;:\n\u2014\-]/)[0].trim();
-    const candidate = firstClause || summary;
-    if (candidate && !JUNK_TITLES.has(candidate.toLowerCase())) {
-      return candidate.slice(0, 120);
-    }
-  }
+  // c) AI-derived role title from the role summary. The summary is a paragraph
+  //    that often OPENS with a company description, so we extract an actual
+  //    role phrase (e.g. "Azure Data Engineer") rather than blindly taking the
+  //    first clause (which produced company-blurb titles like
+  //    "Datavations is a data and AI software company...").
+  const role = extractRoleFromSummary(a.roleSummary);
+  if (role) return role.slice(0, 120);
 
-  // d) fallback — never a placeholder like "Not specified"
+  // d) fallback — never a placeholder like "Not specified" and never a
+  //    company-description sentence.
   return 'Untitled role';
 }
 
@@ -215,4 +305,5 @@ async function deleteJob(userId, id) {
 module.exports = {
   listJobs, countJobs, getJob, insertJob, deleteJob,
   deriveJobTitle, cleanTitle, restoreJobContext, GAP_MIN_JD,
+  extractRoleFromSummary,
 };
