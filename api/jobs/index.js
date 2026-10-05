@@ -17,7 +17,7 @@
 const { setCors, send } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
 const { hasEntitlement } = require('../_lib/entitlements');
-const { listJobs, countJobs, insertJob } = require('../_lib/jobs');
+const { listJobs, countJobs, insertJob, deriveJobTitle } = require('../_lib/jobs');
 
 // Free users may save this many jobs; Pro is effectively unlimited.
 const FREE_JOB_LIMIT = 1;
@@ -90,7 +90,10 @@ module.exports = async function handler(req, res) {
 
     const { skillsCount, gapsCount } = summarize(analysis);
     const row = {
-      title: str(body.title, 200) || str(body.targetRole, 200) || str(analysis.seniority, 200) || 'Untitled role',
+      // Derive a meaningful title (priority: explicit -> analysis seniority ->
+      // role-summary clause -> 'Untitled role'); never store placeholders like
+      // "Not specified". See deriveJobTitle in _lib/jobs.js.
+      title: deriveJobTitle(body, analysis),
       company: str(body.company, 200),
       seniority: str(analysis.seniority, 200),
       skills_count: skillsCount,

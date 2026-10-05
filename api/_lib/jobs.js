@@ -18,6 +18,58 @@
 
 const TIMEOUT_MS = 8000;
 
+// Placeholder/junk title values that must NEVER be stored as a job title.
+// The AI may return "Not specified"/"Unspecified" for seniority when it can't
+// determine a level; passing that straight through produced jobs titled
+// "Not specified". We treat these (case-insensitive) as empty.
+const JUNK_TITLES = new Set([
+  '', 'not specified', 'unspecified', 'n/a', 'na', 'none', 'unknown', 'untitled',
+]);
+
+function cleanTitle(v) {
+  const s = (v == null ? '' : String(v)).trim();
+  if (!s) return '';
+  if (JUNK_TITLES.has(s.toLowerCase())) return '';
+  return s;
+}
+
+/**
+ * Derive a meaningful job title, in priority order (spec):
+ *   a. Explicit role title the user provided (body.title / body.targetRole)
+ *   b. Parsed role title from the analysis (analysis.seniority) — if real
+ *   c. AI-derived role title from the analysis role summary (first clause)
+ *   d. Fallback "Untitled role" (never "Not specified")
+ * Pure + side-effect free so it can be unit-tested. Junk/placeholder values at
+ * any level are skipped rather than stored.
+ */
+function deriveJobTitle(body, analysis) {
+  const b = body || {};
+  const a = analysis || {};
+
+  // a) explicit role title from the request (candidate-provided)
+  const explicit = cleanTitle(b.title) || cleanTitle(b.targetRole);
+  if (explicit) return explicit.slice(0, 200);
+
+  // b) parsed role title from analysis (seniority often holds the role/level)
+  const parsed = cleanTitle(a.seniority);
+  if (parsed) return parsed.slice(0, 200);
+
+  // c) AI-derived role title from the role summary — take the first clause
+  //    (up to a sentence/clause boundary) so we get a short title, not a
+  //    paragraph. e.g. "Senior AI Engineer who builds RAG systems..." -> title.
+  const summary = cleanTitle(a.roleSummary);
+  if (summary) {
+    const firstClause = summary.split(/[.;:\n\u2014\-]/)[0].trim();
+    const candidate = firstClause || summary;
+    if (candidate && !JUNK_TITLES.has(candidate.toLowerCase())) {
+      return candidate.slice(0, 120);
+    }
+  }
+
+  // d) fallback — never a placeholder like "Not specified"
+  return 'Untitled role';
+}
+
 function serviceHeaders(extra) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   return Object.assign(
@@ -120,4 +172,4 @@ async function deleteJob(userId, id) {
   return resp.ok;
 }
 
-module.exports = { listJobs, countJobs, getJob, insertJob, deleteJob };
+module.exports = { listJobs, countJobs, getJob, insertJob, deleteJob, deriveJobTitle, cleanTitle };

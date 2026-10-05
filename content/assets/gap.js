@@ -42,10 +42,22 @@
           .then(function (r) { return r.json().catch(function () { return {}; }); })
           .then(function (j) {
             state.jobs = (j && j.jobs) || [];
-            // Preselect the active job (from the dashboard) if present.
+            // Preselect the active job (from the dashboard / a just-saved job) if
+            // present AND still owned by the user. If the pointer is stale
+            // (job deleted, different account), clear it so we don't preselect a
+            // phantom.
             var active = window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob
               ? window.OfferReadyReadiness.getActiveJob() : "";
-            if (active && state.jobs.some(function (x) { return x.id === active; })) state.jobId = active;
+            if (active && state.jobs.some(function (x) { return x.id === active; })) {
+              state.jobId = active;
+              // Auto-populate Target Role + JD from the preselected job so Check
+              // My Fit opens ready to run (only the resume is still required).
+              // Without this, preselect set jobId but left the role/JD fields
+              // blank until the user manually re-picked the same job.
+              prefillFromJob(state.jobId);
+            } else if (active && window.OfferReadyReadiness && window.OfferReadyReadiness.clearActiveJob) {
+              window.OfferReadyReadiness.clearActiveJob();
+            }
             cb();
           })
           .catch(function () { cb(); });
@@ -55,6 +67,16 @@
     function activeJobTitle() {
       var j = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
       return j ? (j.title || "Untitled role") : "";
+    }
+    // Populate Target Role + JD into state from a saved job. Used both when the
+    // active job is preselected on load AND when the user picks one from the
+    // dropdown, so the two paths stay identical.
+    function prefillFromJob(jobId) {
+      var job = state.jobs.filter(function (x) { return x.id === jobId; })[0];
+      if (!job) return;
+      state.role = job.title || state.role;
+      if (job.job_description) state.jd = job.job_description;
+      else if (job.analysis && job.analysis.roleSummary) state.jd = job.analysis.roleSummary;
     }
     function currentJobBanner() {
       // "Current Job: <title>" header so the active job visibly follows the
@@ -101,12 +123,7 @@
         });
         sel.addEventListener("change", function () {
           state.jobId = sel.value;
-          var job = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
-          if (job) {
-            state.role = job.title || state.role;
-            if (job.job_description) state.jd = job.job_description;
-            else if (job.analysis && job.analysis.roleSummary) state.jd = job.analysis.roleSummary;
-          }
+          prefillFromJob(state.jobId);
           renderForm();
         });
         card.appendChild(sel);
