@@ -4,9 +4,10 @@ icon: material/scale-balance
 
 # Gap Analysis
 
-Compare your resume against a **saved job** and see your **Resume Match** — your
-strengths, the evidence found in your resume, and the skills, keywords, and
-experience the role asks for that **weren't found in your resume** yet.
+**Check my fit:** compare your resume evidence with this saved role. You'll see
+your **Resume Match** — your strengths, the evidence found in your resume, and
+the skills, keywords, and experience the role asks for that **weren't found in
+your resume** yet.
 
 !!! info "Job Match vs Interview Readiness"
     **Resume Match** here measures how well your resume's evidence lines up with

@@ -951,7 +951,10 @@ def write_nav(md_catalog, modules) -> None:
     if (DOCS_DIR / "Analyze" / "index.md").exists():
         prepare_children.append("      - Analyze a Job: Analyze/index.md")
     if (DOCS_DIR / "Gap-Analysis" / "index.md").exists():
-        prepare_children.append("      - Gap Analysis: Gap-Analysis/index.md")
+        # Visible action/destination label is "Check My Fit"; the page itself
+        # keeps the "Gap Analysis" heading to describe the resulting analysis.
+        # URL/route/identifier (Gap-Analysis/) are unchanged.
+        prepare_children.append("      - Check My Fit: Gap-Analysis/index.md")
     if (DOCS_DIR / "My-Jobs" / "index.md").exists():
         prepare_children.append("      - My Jobs: My-Jobs/index.md")
 

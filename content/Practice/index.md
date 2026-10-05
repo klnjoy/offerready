@@ -4,16 +4,15 @@ icon: material/target
 
 # Prepare for This Interview
 
-Choose the type of preparation that matches what you need to improve. The core
-of OfferReady is making an engineering decision and **defending it** while an
-interviewer keeps pushing — that's what actually decides a senior offer, and
-it's the one thing you can't get from reading.
+Choose the type of preparation that matches what you need to improve. Technical
+interviews often evaluate more than knowledge — they test how you reason through
+tradeoffs, explain decisions, and respond to follow-up questions.
 
-!!! tip "New here? This is the full journey"
-    1. **[Understand the role](../Analyze/index.md)** — paste a job description to see what it expects.
-    2. **[Check your fit](../Gap-Analysis/index.md)** — compare your resume to find your gaps.
-    3. **[Defend your decisions](../Practice-Scenarios/index.md)** — practice defending your reasoning (updates Interview Readiness).
-    4. **[Measure readiness](../Dashboard/index.md)** — see your blended Interview Readiness and what to do next.
+!!! tip "New here? Follow the full journey"
+    1. **[Understand the role](../Analyze/index.md)** — paste a job description to see what the role expects.
+    2. **[Check your fit](../Gap-Analysis/index.md)** — compare your resume evidence with the role requirements.
+    3. **[Defend your decisions](../Practice-Scenarios/index.md)** — practice explaining your reasoning, alternatives, and tradeoffs.
+    4. **[Measure readiness](../Dashboard/index.md)** — review readiness inputs and identify the next area to improve.
 
 ## The practice loop
 
@@ -35,12 +34,12 @@ next drill.
 
 <div class="grid cards" markdown>
 
--   :material-sword-cross:{ .lg .middle } __Defend Your Decisions__
+-   :material-sword-cross:{ .lg .middle } __Defend Your Decisions__ · **Recommended**
 
     ---
 
-    Practice explaining technical choices, tradeoffs, alternatives, cost,
-    scale, and failure modes — branch by branch against a saved job.
+    Practice explaining technical choices, alternatives, tradeoffs, cost,
+    scale, reliability, and failure modes — branch by branch against a saved job.
 
     *Updates Interview Readiness.*
 
@@ -54,37 +53,38 @@ next drill.
 
     *Local Practice Only — saved on this device and does not currently update Interview Readiness.*
 
-    [:octicons-arrow-right-24: Start drills](../Personal-SourceCode/Interview_Practice.md)
+    [:octicons-arrow-right-24: Start Drills](../Personal-SourceCode/Interview_Practice.md)
 
 -   :material-comment-question-outline:{ .lg .middle } __Keep Asking Why__
 
     ---
 
     **Follow-up defense drill.** Practice responding when an interviewer
-    repeatedly challenges your reasoning.
+    repeatedly challenges your reasoning. *Related to Defend Your Decisions.*
 
     *Local Practice Only — saved on this device and does not currently update Interview Readiness.*
 
-    [:octicons-arrow-right-24: Practice the follow-up chain](../Personal-SourceCode/Interview_Why_Interactive.md)
+    [:octicons-arrow-right-24: Practice the Follow-up Chain](../Personal-SourceCode/Interview_Why_Interactive.md)
 
 -   :material-account-voice:{ .lg .middle } __Mock Interview__
 
     ---
 
-    Rehearse a complete interview flow from opening question to follow-up.
+    Rehearse a complete interview flow from the opening question through
+    follow-up questions.
 
     *Preview · Local Practice Only — saved on this device and does not currently update Interview Readiness.*
 
     [:octicons-arrow-right-24: Start Mock Interview](../Personal-SourceCode/Interview_Master_Simulator.md)
 
--   :material-chart-line:{ .lg .middle } __Review Practice Activity__
+-   :material-chart-line:{ .lg .middle } __View My Progress__
 
     ---
 
-    See completed readiness activity and local practice. For your overall
-    readiness and next step, see the Dashboard.
+    Review completed readiness activity and local practice, then see the
+    Dashboard for overall readiness and the next recommended action.
 
-    [:octicons-arrow-right-24: Review Practice Activity](../Personal-SourceCode/Interview_Progress.md)
+    [:octicons-arrow-right-24: View My Progress](../Personal-SourceCode/Interview_Progress.md)
 
 </div>
 
@@ -92,11 +92,12 @@ next drill.
 
 ## Free vs Pro
 
-The reason to go Pro isn't *more to read* — it's **practice defending the
-decisions senior engineers make under pressure**. Analyze, one scenario per
-role (preview), Practice mode, Keep Asking Why, and basic progress are **free**.
-Pro unlocks the **complete** scenario trees, the full simulator, and deeper
-progress analytics. See [Free vs Pro](../assets/pricing.html).
+Free includes role analysis and local practice — understand the role, check your
+fit, and warm up with local drills. **Pro** unlocks the complete supported
+readiness practice: the full defend-your-decision scenario library and deeper
+progress. Only verified, job-scoped activities (like Defend Your Decisions)
+update your Interview Readiness; local practice stays on this device. See
+[Free vs Pro](../assets/pricing.html).
 
 Prefer to watch it work first? Walk through the
 [Sample Readiness Walkthrough](../Sample-Walkthrough/index.md) — a fully worked
