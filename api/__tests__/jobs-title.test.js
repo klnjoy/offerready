@@ -184,3 +184,69 @@ test('restoreJobContext: null/garbage job does not throw and blocks analyze', ()
   assert.equal(b.jd, '');
   assert.equal(b.canAnalyze, false);
 });
+
+// ---------------------------------------------------------------------------
+// Question Generator (Interview Questions page) saved-job restoration.
+// questions.js reuses the SAME restoreJobContext contract + 30-char JD
+// threshold as Check My Fit, and the server validates generate_questions with
+// LIMITS.JD_MIN = 30 (api/_lib/validate.js). These tests lock in that the
+// Question Generator restores job context and gates generation identically,
+// so a saved job no longer opens with an empty Job Description.
+// ---------------------------------------------------------------------------
+
+const { LIMITS } = require('../_lib/validate');
+
+function savedJobForQuestions(overrides) {
+  return Object.assign({
+    id: 'job-q1',
+    title: 'Lead Platform Engineer',
+    job_description: 'Lead Platform Engineer owning our Kubernetes platform, CI/CD, observability, and developer experience across multiple product teams.',
+    analysis: { roleSummary: 'Owns the internal platform.', seniority: 'Lead' },
+  }, overrides || {});
+}
+
+test('questions: the client JD threshold matches the server JD_MIN (30)', () => {
+  // The gap/questions forms guard on jd.length < 30; the server rejects JDs
+  // shorter than LIMITS.JD_MIN. If these drift, a restored job could pass the
+  // client yet fail the server (or vice-versa). Keep them equal.
+  assert.equal(GAP_MIN_JD, LIMITS.JD_MIN);
+  assert.equal(GAP_MIN_JD, 30);
+});
+
+test('questions: saved job restores the job description', () => {
+  const ctx = restoreJobContext(savedJobForQuestions());
+  assert.equal(ctx.jd, savedJobForQuestions().job_description);
+});
+
+test('questions: saved job restores the title', () => {
+  const ctx = restoreJobContext(savedJobForQuestions());
+  assert.equal(ctx.title, 'Lead Platform Engineer');
+  assert.equal(ctx.role, 'Lead Platform Engineer');
+});
+
+test('questions: generation succeeds with a saved job (JD passes server JD_MIN)', () => {
+  const ctx = restoreJobContext(savedJobForQuestions());
+  assert.equal(ctx.canAnalyze, true);
+  // The restored JD is what the client sends as jobDescription; it must clear
+  // the server minimum so "Prepare Practice Questions" actually generates.
+  assert.ok(ctx.jd.length >= LIMITS.JD_MIN);
+});
+
+test('questions: validation appears only when no saved description exists', () => {
+  const none = restoreJobContext(savedJobForQuestions({ job_description: '', analysis: {} }));
+  assert.equal(none.canAnalyze, false); // "Please paste a fuller job description" is legitimate
+
+  const restored = restoreJobContext(savedJobForQuestions());
+  assert.equal(restored.canAnalyze, true); // real saved JD -> no validation
+});
+
+test('questions: active job restoration works on refresh (full job rehydrates context)', () => {
+  // On refresh, loadJobsThen preselects the active job id, then restoreOrForm
+  // fetches the FULL job (GET /api/jobs/:id) and rehydrates role + JD. Simulate
+  // that full-job payload restoring the generate-ready context.
+  const full = savedJobForQuestions();
+  const ctx = restoreJobContext(full);
+  assert.equal(ctx.role, full.title);
+  assert.equal(ctx.jd, full.job_description);
+  assert.equal(ctx.canAnalyze, true);
+});

@@ -49,19 +49,50 @@
           .then(function (r) { return r.json().catch(function () { return {}; }); })
           .then(function (j) {
             state.jobs = (j && j.jobs) || [];
+            // Preselect the active job (set by the dashboard / Check My Fit /
+            // the Analyze -> Save flow) if it is still owned. A stale pointer
+            // (deleted job, different account) is cleared so we don't preselect
+            // a phantom. restoreOrForm() then hydrates the saved JD + role.
             var active = window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob
               ? window.OfferReadyReadiness.getActiveJob() : "";
-            if (active && state.jobs.some(function (x) { return x.id === active; })) state.jobId = active;
+            if (active && state.jobs.some(function (x) { return x.id === active; })) {
+              state.jobId = active;
+            } else if (active && window.OfferReadyReadiness && window.OfferReadyReadiness.clearActiveJob) {
+              window.OfferReadyReadiness.clearActiveJob();
+            }
             cb();
           })
           .catch(function () { cb(); });
       }).catch(function () { cb(); });
     }
 
-    // Restore any saved question set for the selected job before offering a
+    // Populate Target Role + Job Description into state from a FULL saved-job
+    // row (as returned by GET /api/jobs/:id — which, unlike the light list rows
+    // from GET /api/jobs, includes job_description + analysis). Also caches the
+    // heavy fields back onto the in-memory list row so later selections are
+    // instant. This is the Question Generator's mirror of the Check My Fit
+    // (gap.js) restore contract, so the saved-job workflow behaves the same.
+    function hydrateFromFullJob(full) {
+      if (!full) return;
+      var row = state.jobs.filter(function (x) { return x.id === full.id; })[0];
+      if (row) {
+        row.job_description = full.job_description || row.job_description || "";
+        row.analysis = full.analysis || row.analysis;
+        if (!row.title && full.title) row.title = full.title;
+      }
+      // Only overwrite the live form state if this is still the selected job.
+      if (state.jobId && full.id && state.jobId !== full.id) return;
+      if (full.title) state.role = full.title;
+      if (full.job_description) state.jd = full.job_description;
+      else if (full.analysis && full.analysis.roleSummary) state.jd = full.analysis.roleSummary;
+    }
+
+    // Restore the saved context for the selected job before offering a
     // (re)generation. The DB is the source of truth: GET /api/jobs/:id returns
-    // the job's existing `questions`. If a set exists, show it with a
-    // Regenerate option; otherwise fall back to the generate form.
+    // BOTH the full job (with job_description + analysis) AND its existing
+    // `questions`. We restore the Job Description / Target Role from the job so
+    // the form is ready, then: if a question set exists, show it with a
+    // Regenerate option; otherwise fall back to the (now prefilled) form.
     function restoreOrForm() {
       if (!state.jobId || !API || !window.OfferReadyAuth) { renderForm(); return; }
       app.innerHTML = "";
@@ -72,6 +103,9 @@
         fetch(API + "/api/jobs/" + encodeURIComponent(state.jobId), { headers: { Authorization: "Bearer " + tok } })
           .then(function (r) { return r.json().catch(function () { return {}; }); })
           .then(function (j) {
+            // Restore the saved JD + role from the full job row FIRST so both
+            // the restored view and the generate form have job context.
+            if (j && j.job) hydrateFromFullJob(j.job);
             var existing = (j && Array.isArray(j.questions)) ? j.questions : [];
             if (existing.length) renderRestored(existing);
             else renderForm();
