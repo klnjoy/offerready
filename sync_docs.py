@@ -928,58 +928,50 @@ def write_nav(md_catalog, modules) -> None:
     #   "      - Section:"    (6 spaces)  a section inside a group
     #   "          - Page"    (10 spaces) a page inside a section
     nav = ["nav:", "  - Home: index.md"]
-    # ----- CORE PRODUCT LOOP (top-level) -------------------------------------
-    # Simplified SaaS IA (Linear/Notion style): exactly four product nav items
-    #   Dashboard · Jobs · Analysis · Practice
-    # so "how am I doing?" is answered in ONE place (Dashboard). Progress and
-    # Mock Interview are no longer competing top-level items — Progress metrics
-    # live as Dashboard widgets and its detail page nests under Practice; Mock
-    # Interview is an activity inside Practice. Analyze-Job folds into Analysis.
-    # No pages are deleted — only their placement in the nav changes, so every
-    # existing route/link keeps resolving.
+    # ----- ONE INTERVIEW-PREP JOURNEY (top-level) ----------------------------
+    # The product is a single journey, not a toolbox. Top-level reads:
+    #   Home · Dashboard · Prepare for My Job · Progress · Pricing · Account
+    # "Prepare for My Job" is an intent group that holds the ordered journey:
+    #   Analyze a Job -> Gap Analysis -> My Jobs -> Practice(workspace).
+    # Inside Practice the VISIBLE children are the primary activities (Defend
+    # Your Decisions, Mock Interview); supporting capabilities (Question
+    # Generator, Practice Mode, Keep Asking Why) and the knowledge library are
+    # demoted into a collapsed "Resources" group so they don't read as rival
+    # destinations. Progress holds Practice History (readiness lives on the
+    # Dashboard). NO pages are deleted and NO URLs change — only grouping,
+    # labels, and nesting.
 
-    # 1) Dashboard — the executive summary + progress widgets.
+    # 1) Dashboard — the executive summary + readiness.
     if (DOCS_DIR / "Dashboard" / "index.md").exists():
         nav.append("  - Dashboard: Dashboard/index.md")
 
-    # 2) Jobs — manage saved job descriptions.
-    if (DOCS_DIR / "My-Jobs" / "index.md").exists():
-        nav.append("  - Jobs: My-Jobs/index.md")
-
-    # 3) Analysis — resume vs JD gap analysis (Gap Analysis is the landing);
-    #    the JD-only role analyzer folds in beneath it.
-    analysis_children = []
-    if (DOCS_DIR / "Gap-Analysis" / "index.md").exists():
-        analysis_children.append("      - Gap-Analysis/index.md")  # bare = section landing
+    # 2) Prepare for My Job — the ordered journey, grouped so the sequence reads
+    #    as one flow rather than separate products.
+    prepare_children = []
     if (DOCS_DIR / "Analyze" / "index.md").exists():
-        analysis_children.append("      - Analyze a Job (role breakdown): Analyze/index.md")
-    if analysis_children:
-        nav.append("  - Analysis:")
-        nav.extend(analysis_children)
-    elif (DOCS_DIR / "Analyze" / "index.md").exists():
-        # Fallback: if Gap Analysis is absent, keep the analyzer reachable.
-        nav.append("  - Analysis: Analyze/index.md")
+        prepare_children.append("      - Analyze a Job: Analyze/index.md")
+    if (DOCS_DIR / "Gap-Analysis" / "index.md").exists():
+        prepare_children.append("      - Gap Analysis: Gap-Analysis/index.md")
+    if (DOCS_DIR / "My-Jobs" / "index.md").exists():
+        prepare_children.append("      - My Jobs: My-Jobs/index.md")
 
-    # 4) Practice — all interview preparation activities in one place:
-    #    Question Generator, Practice drills, Defend, Mock Interview,
-    #    Keep Asking Why, Sample Walkthrough, and the Progress detail page.
+    # Practice workspace — primary activities visible; supporting tools nested
+    # under Resources (built later and tucked in).
     practice_children = []
     if (DOCS_DIR / "Practice" / "index.md").exists():
-        practice_children.append("      - Practice/index.md")  # bare = section landing
-    if (DOCS_DIR / "Question-Bank" / "index.md").exists():
-        practice_children.append("      - Question Generator: Question-Bank/index.md")
-    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Practice.md").exists():
-        practice_children.append("      - Practice Mode (Q&A drills): Personal-SourceCode/Interview_Practice.md")
+        practice_children.append("          - Practice/index.md")  # bare = section landing
     if (DOCS_DIR / "Practice-Scenarios" / "index.md").exists():
-        practice_children.append("      - Defend Your Decisions: Practice-Scenarios/index.md")
+        practice_children.append("          - Defend Your Decisions: Practice-Scenarios/index.md")
     if (DOCS_DIR / "Personal-SourceCode" / "Interview_Master_Simulator.md").exists():
-        practice_children.append("      - Mock Interview: Personal-SourceCode/Interview_Master_Simulator.md")
+        practice_children.append("          - Mock Interview: Personal-SourceCode/Interview_Master_Simulator.md")
+    # Supporting capabilities — demoted so they don't look like rival journeys.
+    practice_support = []
+    if (DOCS_DIR / "Question-Bank" / "index.md").exists():
+        practice_support.append("              - Question Generator: Question-Bank/index.md")
+    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Practice.md").exists():
+        practice_support.append("              - Practice Mode (Q&A drills): Personal-SourceCode/Interview_Practice.md")
     if (DOCS_DIR / "Personal-SourceCode" / "Interview_Why_Interactive.md").exists():
-        practice_children.append("      - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md")
-    if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
-        practice_children.append("      - Sample Walkthrough: Sample-Walkthrough/index.md")
-    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Progress.md").exists():
-        practice_children.append("      - Practice History: Personal-SourceCode/Interview_Progress.md")
+        practice_support.append("              - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md")
 
     # ----- STUDY & INTERVIEW LIBRARY (nested UNDER Practice) ------------------
     # Simplified IA: the top nav is exactly Dashboard · Jobs · Analysis ·
@@ -1233,29 +1225,54 @@ def write_nav(md_catalog, modules) -> None:
         for rel_dest, title in sorted(entries, key=lambda e: e[1].lower()):
             nav.append(f"      - {nav_label(title)}: {rel_dest}")
 
-    # ----- Nest the whole library UNDER Practice > Resources ------------------
-    # Slice the Learn/Build/Interview-Prep/Study-Guide/leftover lines out of nav
-    # and tuck them inside Practice under a SINGLE collapsed "Resources" group,
-    # so Practice's own activities (Question Generator, Practice Mode, Defend,
-    # Mock Interview, Keep Asking Why, Sample Walkthrough, Practice History) are
-    # the visible children and the knowledge library sits one level deeper,
-    # collapsed by default. IA:
-    #     Practice
-    #       ├ <activities>
-    #       └ Resources            (collapsed)
-    #           ├ Learn ├ Build ├ Interview Prep └ Study Guide
-    # No pages are removed, no URLs change — only visibility/hierarchy. The
-    # former top-level groups were emitted at 2-space indent; +8 makes them
-    # sections INSIDE the Resources group (which itself sits at 4 under Practice).
+    # ----- Assemble: Prepare for My Job > Practice > Resources ----------------
+    # Slice the Learn/Build/Interview-Prep/Study-Guide/leftover library lines out
+    # of nav. They, plus the supporting Practice tools and Sample Walkthrough,
+    # nest inside Practice's collapsed "Resources" group. Final IA:
+    #   Prepare for My Job
+    #     ├ Analyze a Job ├ Gap Analysis ├ My Jobs
+    #     └ Practice
+    #         ├ (landing) ├ Defend Your Decisions ├ Mock Interview
+    #         └ Resources (collapsed)
+    #             ├ Question Generator ├ Practice Mode ├ Keep Asking Why
+    #             ├ Sample Walkthrough
+    #             └ Learn ├ Build ├ Interview Prep └ Study Guide
+    #   Progress
+    #     └ Practice History
+    # No pages removed, no URLs changed — only grouping/visibility/labels.
     library = nav[lib_start:]
     del nav[lib_start:]
+
+    # Build the Practice sub-tree (sits two levels deep, under Prepare for My Job).
     if practice_children:
+        resources = []
+        resources.extend(practice_support)
+        if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
+            resources.append("              - Sample Walkthrough: Sample-Walkthrough/index.md")
         if library:
-            practice_children.append("      - Resources:")
+            # library lines were emitted at 2-space indent; +12 nests them as
+            # sections inside Resources (which sits at 10 under Practice).
             for line in library:
-                practice_children.append("        " + line)
-        nav.append("  - Practice:")
-        nav.extend(practice_children)
+                resources.append("            " + line)
+        nav_practice = ["      - Practice:"]
+        nav_practice.extend(practice_children)
+        if resources:
+            nav_practice.append("          - Resources:")
+            nav_practice.extend(resources)
+        prepare_children.extend(nav_practice)
+
+    if prepare_children:
+        nav.append("  - Prepare for My Job:")
+        nav.extend(prepare_children)
+
+    # Progress — where "how am I doing?" detail lives (readiness summary is on
+    # the Dashboard; this holds the local practice history detail page).
+    progress_children = []
+    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Progress.md").exists():
+        progress_children.append("      - Practice History: Personal-SourceCode/Interview_Progress.md")
+    if progress_children:
+        nav.append("  - Progress:")
+        nav.extend(progress_children)
 
     # Pricing — standalone HTML landing page (chrome-free); kept top-level as a
     # conversion entry point.

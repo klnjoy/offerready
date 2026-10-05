@@ -83,6 +83,7 @@ extra_javascript:
   # visitors always get the new version instead of a stale cached one.
   - assets/api-config.js?v=7
   - assets/auth.js?v=9
+  - assets/upgrade.js?v=1
   - assets/progress-store.js?v=4
   - assets/brand.js?v=3
   - assets/mermaid-init.js?v=3
@@ -134,141 +135,142 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Dashboard: Dashboard/index.md
-  - Jobs: My-Jobs/index.md
-  - Analysis:
-      - Gap-Analysis/index.md
-      - Analyze a Job (role breakdown): Analyze/index.md
-  - Practice:
-      - Practice/index.md
-      - Question Generator: Question-Bank/index.md
-      - Practice Mode (Q&A drills): Personal-SourceCode/Interview_Practice.md
-      - Defend Your Decisions: Practice-Scenarios/index.md
-      - Mock Interview: Personal-SourceCode/Interview_Master_Simulator.md
-      - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md
-      - Sample Walkthrough: Sample-Walkthrough/index.md
+  - Prepare for My Job:
+      - Analyze a Job: Analyze/index.md
+      - Gap Analysis: Gap-Analysis/index.md
+      - My Jobs: My-Jobs/index.md
+      - Practice:
+          - Practice/index.md
+          - Defend Your Decisions: Practice-Scenarios/index.md
+          - Mock Interview: Personal-SourceCode/Interview_Master_Simulator.md
+          - Resources:
+              - Question Generator: Question-Bank/index.md
+              - Practice Mode (Q&A drills): Personal-SourceCode/Interview_Practice.md
+              - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md
+              - Sample Walkthrough: Sample-Walkthrough/index.md
+              - Learn:
+                  - Foundations (GenAI Topics):
+                      - Overview: GenAI-Topics/index.md
+                      - LLM Fundamentals: GenAI-Topics/llm-fundamentals/index.md
+                      - Prompt Engineering: GenAI-Topics/prompt-engineering/index.md
+                      - Context Engineering: GenAI-Topics/context-engineering/index.md
+                      - RAG: GenAI-Topics/rag/index.md
+                      - Retrieval Tuning: GenAI-Topics/retrieval-tuning/index.md
+                      - Embedding Models: GenAI-Topics/embeddings/index.md
+                      - Vector DB: GenAI-Topics/vector-db/index.md
+                      - Graph DB: GenAI-Topics/graph-db/index.md
+                      - LangChain: GenAI-Topics/langchain/index.md
+                      - LangGraph: GenAI-Topics/langgraph/index.md
+                      - MCP: GenAI-Topics/mcp/index.md
+                      - Agent Engineering: GenAI-Topics/agent-engineering/index.md
+                      - Building Agents — Deep Dive: GenAI-Topics/agent-principles/index.md
+                      - A2A Communication: GenAI-Topics/a2a/index.md
+                      - AgentCore: GenAI-Topics/agentcore/index.md
+                      - Bedrock: GenAI-Topics/bedrock/index.md
+                      - "Observability & Eval": GenAI-Topics/observability/index.md
+                      - "Reliability & Distributed Systems": GenAI-Topics/reliability/index.md
+                      - LLMOps / Deployment: GenAI-Topics/llmops/index.md
+                      - "Kubernetes & Containers": GenAI-Topics/kubernetes/index.md
+                      - DevOps for AI: GenAI-Topics/devops-ai/index.md
+                      - Cost Optimization: GenAI-Topics/cost-optimization/index.md
+                      - "Trends & Market (2026)": GenAI-Topics/trends/index.md
+                  - Data & Cloud Tech (Technologies):
+                      - Overview: Technologies/index.md
+                      - Snowflake: Technologies/snowflake/index.md
+                      - Databricks: Technologies/databricks/index.md
+                      - dbt: Technologies/dbt/index.md
+                      - FastAPI: Technologies/fastapi/index.md
+                  - Snowflake Cortex:
+                      - Snowflake-Cortex/index.md
+                      - Cortex Agents — Deep Dive: Snowflake-Cortex/agents.md
+                      - "Analyst, Semantic Models & Search (RAG)": Snowflake-Cortex/analyst-search-rag.md
+                      - "AISQL Functions & Agents API (reference)": Snowflake-Cortex/aisql-functions-api.md
+                      - "Security, Cost & Observability": Snowflake-Cortex/governance-cost-observability.md
+                      - System Design + Mock Interview: Snowflake-Cortex/system-design-mock.md
+                      - Cheat Sheet + 30-Day Ramp: Snowflake-Cortex/cheat-sheet-30-day.md
+                  - Reference Docs:
+                      - Overview: Documentation/index.md
+                      - Architecture Overview: Documentation/architecture-overview/index.md
+                      - RAG Flow: Documentation/rag-flow/index.md
+                      - Agent Workflow: Documentation/agent-workflow/index.md
+                      - Model Selection Guide: Documentation/model-selection/index.md
+                      - Prompt Best Practices: Documentation/prompt-best-practices/index.md
+                      - "Security & Governance": Documentation/security-governance/index.md
+                      - Troubleshooting: Documentation/troubleshooting/index.md
+                      - FAQ: Documentation/faq/index.md
+                  - Enterprise & Security:
+                      - Overview: Enterprise/index.md
+                      - Security Architecture: Enterprise/security-architecture/index.md
+                      - RBAC Model: Enterprise/rbac/index.md
+                      - Audit Logging: Enterprise/audit-logging/index.md
+                      - "Monitoring & Observability": Enterprise/monitoring/index.md
+                      - Compliance: Enterprise/compliance/index.md
+                      - Reference Architectures: Enterprise/reference-architectures/index.md
+                      - AI Security:
+                          - AI Security (LLM/Agent threats): AI-Security/index.md
+                          - "Enterprise Identity & API Security (OAuth/OIDC/SAML)": AI-Security/identity-api-security.md
+                          - "AgentCore Identity & Gateway": AI-Security/agentcore-identity-gateway.md
+              - Build:
+                  - Setup Guides:
+                      - Overview: Setup-Guides/index.md
+                      - Local Environment: Setup-Guides/local-environment/index.md
+                      - LLM Access: Setup-Guides/llm-access/index.md
+                      - Vector DB Setup: Setup-Guides/vector-db-setup/index.md
+                      - First RAG App: Setup-Guides/first-rag/index.md
+                      - First Agent: Setup-Guides/first-agent/index.md
+                  - Projects & POCs:
+                      - Data Migration (Oracle to Snowflake): Projects/data-migration/index.md
+                      - "GenAI POC (LangChain & LangGraph)": Projects/genai-poc/index.md
+                      - GenAI Procurement Audit Bot — Architecture: Personal-SourceCode/genai-procurement-architecture.md
+                  - Case Studies:
+                      - Case-Studies/index.md
+                  - Hands-on Labs:
+                      - Labs/index.md
+                  - Practice Labs:
+                      - Personal-SourceCode/Lab_Scenario_Drills.md
+                      - Live-Coding Drills: Personal-SourceCode/Lab_LiveCoding_Drills.md
+                      - Hackathon Build Challenges: Personal-SourceCode/Lab_Hackathon_Builds.md
+              - Interview Prep:
+                  - Personal-SourceCode/Interview_Guide_Overview.md
+                  - Choose Your Path:
+                      - AI / GenAI Engineer: Personal-SourceCode/Path_AI_Engineer.md
+                      - Staff / Principal Architect: Personal-SourceCode/Path_Staff_Principal_Architect.md
+                      - Forward Deployed Engineer: Personal-SourceCode/Path_FDE.md
+                      - "Data & AI / Platform Engineer": Personal-SourceCode/Path_Data_Platform.md
+                  - By Level & Role:
+                      - Senior / Staff / Principal / FDE: Personal-SourceCode/Interview_Level_Comparison.md
+                      - AI Engineer: Personal-SourceCode/AI_Engineer_Interview_QA.md
+                      - Forward Deployed Engineer (FDE): Personal-SourceCode/Forward_Deployed_Engineer_Interview_QA.md
+                      - Cloud Delivery Lead: Personal-SourceCode/Interview_Prep_Google_Cloud_Delivery_Lead.md
+                  - Technical Deep Dive:
+                      - GenAI: Personal-SourceCode/GenAI_Interview_QA.md
+                      - Agentic AI / Agents: Personal-SourceCode/Agents_Interview_QA.md
+                      - LangChain / LangGraph: Personal-SourceCode/LangChain_LangGraph_Interview_QA.md
+                      - MCP: Personal-SourceCode/MCP_Interview_QA.md
+                      - SQL: Personal-SourceCode/SQL_Interview_QA.md
+                      - Data Engineering: Personal-SourceCode/DataEngineering_Interview_QA.md
+                      - Snowflake: Personal-SourceCode/Snowflake_Interview_QA.md
+                      - Databricks: Personal-SourceCode/Databricks_Interview_QA.md
+                      - dbt: Personal-SourceCode/dbt_Interview_QA.md
+                      - Python: Personal-SourceCode/Python_Interview_QA.md
+                      - AWS: Personal-SourceCode/AWS_Interview_QA.md
+                      - DevOps: Personal-SourceCode/DevOps_Interview_QA.md
+                  - System Design & Scenarios:
+                      - Requirements → Production: Personal-SourceCode/Interview_Requirements_to_Production.md
+                      - Production Incident Interviews: Personal-SourceCode/Interview_Production_Incidents.md
+                      - The Interviewer Keeps Asking Why: Personal-SourceCode/Interview_Why_Chains.md
+                  - Coding:
+                      - FDE Coding Prep: Personal-SourceCode/FDE_Coding_Interview_Prep.md
+                      - "Live-Coding & Scenarios": Personal-SourceCode/FDE_LiveCoding_Scenarios_Prep.md
+                  - Behavioral:
+                      - Behavioral / STAR: Personal-SourceCode/Behavioral_STAR_Interview_QA.md
+                  - Plans:
+                      - Master Cheat Sheets: Personal-SourceCode/Interview_Cheat_Sheets.md
+                      - 30-Day Prep Plan: Personal-SourceCode/Interview_30_Day_Plan.md
+              - Study Guide:
+                  - Personal-SourceCode/OfferReady-Complete-Study-Guide.md
+  - Progress:
       - Practice History: Personal-SourceCode/Interview_Progress.md
-      - Resources:
-          - Learn:
-              - Foundations (GenAI Topics):
-                  - Overview: GenAI-Topics/index.md
-                  - LLM Fundamentals: GenAI-Topics/llm-fundamentals/index.md
-                  - Prompt Engineering: GenAI-Topics/prompt-engineering/index.md
-                  - Context Engineering: GenAI-Topics/context-engineering/index.md
-                  - RAG: GenAI-Topics/rag/index.md
-                  - Retrieval Tuning: GenAI-Topics/retrieval-tuning/index.md
-                  - Embedding Models: GenAI-Topics/embeddings/index.md
-                  - Vector DB: GenAI-Topics/vector-db/index.md
-                  - Graph DB: GenAI-Topics/graph-db/index.md
-                  - LangChain: GenAI-Topics/langchain/index.md
-                  - LangGraph: GenAI-Topics/langgraph/index.md
-                  - MCP: GenAI-Topics/mcp/index.md
-                  - Agent Engineering: GenAI-Topics/agent-engineering/index.md
-                  - Building Agents — Deep Dive: GenAI-Topics/agent-principles/index.md
-                  - A2A Communication: GenAI-Topics/a2a/index.md
-                  - AgentCore: GenAI-Topics/agentcore/index.md
-                  - Bedrock: GenAI-Topics/bedrock/index.md
-                  - "Observability & Eval": GenAI-Topics/observability/index.md
-                  - "Reliability & Distributed Systems": GenAI-Topics/reliability/index.md
-                  - LLMOps / Deployment: GenAI-Topics/llmops/index.md
-                  - "Kubernetes & Containers": GenAI-Topics/kubernetes/index.md
-                  - DevOps for AI: GenAI-Topics/devops-ai/index.md
-                  - Cost Optimization: GenAI-Topics/cost-optimization/index.md
-                  - "Trends & Market (2026)": GenAI-Topics/trends/index.md
-              - Data & Cloud Tech (Technologies):
-                  - Overview: Technologies/index.md
-                  - Snowflake: Technologies/snowflake/index.md
-                  - Databricks: Technologies/databricks/index.md
-                  - dbt: Technologies/dbt/index.md
-                  - FastAPI: Technologies/fastapi/index.md
-              - Snowflake Cortex:
-                  - Snowflake-Cortex/index.md
-                  - Cortex Agents — Deep Dive: Snowflake-Cortex/agents.md
-                  - "Analyst, Semantic Models & Search (RAG)": Snowflake-Cortex/analyst-search-rag.md
-                  - "AISQL Functions & Agents API (reference)": Snowflake-Cortex/aisql-functions-api.md
-                  - "Security, Cost & Observability": Snowflake-Cortex/governance-cost-observability.md
-                  - System Design + Mock Interview: Snowflake-Cortex/system-design-mock.md
-                  - Cheat Sheet + 30-Day Ramp: Snowflake-Cortex/cheat-sheet-30-day.md
-              - Reference Docs:
-                  - Overview: Documentation/index.md
-                  - Architecture Overview: Documentation/architecture-overview/index.md
-                  - RAG Flow: Documentation/rag-flow/index.md
-                  - Agent Workflow: Documentation/agent-workflow/index.md
-                  - Model Selection Guide: Documentation/model-selection/index.md
-                  - Prompt Best Practices: Documentation/prompt-best-practices/index.md
-                  - "Security & Governance": Documentation/security-governance/index.md
-                  - Troubleshooting: Documentation/troubleshooting/index.md
-                  - FAQ: Documentation/faq/index.md
-              - Enterprise & Security:
-                  - Overview: Enterprise/index.md
-                  - Security Architecture: Enterprise/security-architecture/index.md
-                  - RBAC Model: Enterprise/rbac/index.md
-                  - Audit Logging: Enterprise/audit-logging/index.md
-                  - "Monitoring & Observability": Enterprise/monitoring/index.md
-                  - Compliance: Enterprise/compliance/index.md
-                  - Reference Architectures: Enterprise/reference-architectures/index.md
-                  - AI Security:
-                      - AI Security (LLM/Agent threats): AI-Security/index.md
-                      - "Enterprise Identity & API Security (OAuth/OIDC/SAML)": AI-Security/identity-api-security.md
-                      - "AgentCore Identity & Gateway": AI-Security/agentcore-identity-gateway.md
-          - Build:
-              - Setup Guides:
-                  - Overview: Setup-Guides/index.md
-                  - Local Environment: Setup-Guides/local-environment/index.md
-                  - LLM Access: Setup-Guides/llm-access/index.md
-                  - Vector DB Setup: Setup-Guides/vector-db-setup/index.md
-                  - First RAG App: Setup-Guides/first-rag/index.md
-                  - First Agent: Setup-Guides/first-agent/index.md
-              - Projects & POCs:
-                  - Data Migration (Oracle to Snowflake): Projects/data-migration/index.md
-                  - "GenAI POC (LangChain & LangGraph)": Projects/genai-poc/index.md
-                  - GenAI Procurement Audit Bot — Architecture: Personal-SourceCode/genai-procurement-architecture.md
-              - Case Studies:
-                  - Case-Studies/index.md
-              - Hands-on Labs:
-                  - Labs/index.md
-              - Practice Labs:
-                  - Personal-SourceCode/Lab_Scenario_Drills.md
-                  - Live-Coding Drills: Personal-SourceCode/Lab_LiveCoding_Drills.md
-                  - Hackathon Build Challenges: Personal-SourceCode/Lab_Hackathon_Builds.md
-          - Interview Prep:
-              - Personal-SourceCode/Interview_Guide_Overview.md
-              - Choose Your Path:
-                  - AI / GenAI Engineer: Personal-SourceCode/Path_AI_Engineer.md
-                  - Staff / Principal Architect: Personal-SourceCode/Path_Staff_Principal_Architect.md
-                  - Forward Deployed Engineer: Personal-SourceCode/Path_FDE.md
-                  - "Data & AI / Platform Engineer": Personal-SourceCode/Path_Data_Platform.md
-              - By Level & Role:
-                  - Senior / Staff / Principal / FDE: Personal-SourceCode/Interview_Level_Comparison.md
-                  - AI Engineer: Personal-SourceCode/AI_Engineer_Interview_QA.md
-                  - Forward Deployed Engineer (FDE): Personal-SourceCode/Forward_Deployed_Engineer_Interview_QA.md
-                  - Cloud Delivery Lead: Personal-SourceCode/Interview_Prep_Google_Cloud_Delivery_Lead.md
-              - Technical Deep Dive:
-                  - GenAI: Personal-SourceCode/GenAI_Interview_QA.md
-                  - Agentic AI / Agents: Personal-SourceCode/Agents_Interview_QA.md
-                  - LangChain / LangGraph: Personal-SourceCode/LangChain_LangGraph_Interview_QA.md
-                  - MCP: Personal-SourceCode/MCP_Interview_QA.md
-                  - SQL: Personal-SourceCode/SQL_Interview_QA.md
-                  - Data Engineering: Personal-SourceCode/DataEngineering_Interview_QA.md
-                  - Snowflake: Personal-SourceCode/Snowflake_Interview_QA.md
-                  - Databricks: Personal-SourceCode/Databricks_Interview_QA.md
-                  - dbt: Personal-SourceCode/dbt_Interview_QA.md
-                  - Python: Personal-SourceCode/Python_Interview_QA.md
-                  - AWS: Personal-SourceCode/AWS_Interview_QA.md
-                  - DevOps: Personal-SourceCode/DevOps_Interview_QA.md
-              - System Design & Scenarios:
-                  - Requirements → Production: Personal-SourceCode/Interview_Requirements_to_Production.md
-                  - Production Incident Interviews: Personal-SourceCode/Interview_Production_Incidents.md
-                  - The Interviewer Keeps Asking Why: Personal-SourceCode/Interview_Why_Chains.md
-              - Coding:
-                  - FDE Coding Prep: Personal-SourceCode/FDE_Coding_Interview_Prep.md
-                  - "Live-Coding & Scenarios": Personal-SourceCode/FDE_LiveCoding_Scenarios_Prep.md
-              - Behavioral:
-                  - Behavioral / STAR: Personal-SourceCode/Behavioral_STAR_Interview_QA.md
-              - Plans:
-                  - Master Cheat Sheets: Personal-SourceCode/Interview_Cheat_Sheets.md
-                  - 30-Day Prep Plan: Personal-SourceCode/Interview_30_Day_Plan.md
-          - Study Guide:
-              - Personal-SourceCode/OfferReady-Complete-Study-Guide.md
   - Pricing: assets/pricing.html
   - Account: Account/index.md
 # NAV:END
