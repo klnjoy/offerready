@@ -15,10 +15,3 @@ preparation progress. Open a job to pick up where you left off.
 <div id="jobs-app" markdown="0">
   <p><em>Loading your jobs…</em></p>
 </div>
-
----
-
-New here? Start by analyzing a job description — you'll get a role breakdown,
-skill gaps, and a preparation plan, then save it here to track your prep.
-
-[:material-clipboard-search-outline: Analyze My Job](../Analyze/index.md){ .md-button .md-button--primary }

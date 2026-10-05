@@ -64,21 +64,29 @@
 
     function renderList(jobs, token) {
       app.innerHTML = "";
-      var head = el("div", "or-jobs-head");
-      head.appendChild(el("h2", null, "My Jobs"));
-      var add = el("a", "ip-btn"); add.href = base + "Analyze/index.html"; add.textContent = "+ Analyze a new job";
-      head.appendChild(add);
-      app.appendChild(head);
 
+      // Empty state: ONE primary CTA, no competing buttons (no header "+ Analyze
+      // New Job" here — that secondary action only makes sense once jobs exist).
       if (!jobs.length) {
+        var head0 = el("div", "or-jobs-head");
+        head0.appendChild(el("h2", null, "My Jobs"));
+        app.appendChild(head0);
         var empty = el("div", "ip-card");
         empty.appendChild(el("div", "ip-q", "No saved jobs yet"));
-        empty.appendChild(el("p", null, "Analyze a job description, then save it here to track your preparation."));
-        var go = el("a", "ip-btn"); go.href = base + "Analyze/index.html"; go.textContent = "Analyze My Job";
+        empty.appendChild(el("p", null, "Analyze a job description to create your first preparation plan."));
+        var go = el("a", "ip-btn"); go.href = base + "Analyze/index.html"; go.textContent = "Analyze a Job";
         empty.appendChild(go);
         app.appendChild(empty);
         return;
       }
+
+      // Non-empty state: job list is primary; "+ Analyze New Job" is the single
+      // secondary creation action, in the header.
+      var head = el("div", "or-jobs-head");
+      head.appendChild(el("h2", null, "My Jobs"));
+      var add = el("a", "ip-btn ip-ghost"); add.href = base + "Analyze/index.html"; add.textContent = "+ Analyze New Job";
+      head.appendChild(add);
+      app.appendChild(head);
 
       var grid = el("div", "or-jobs-grid");
       jobs.forEach(function (j) { grid.appendChild(card(j, token)); });

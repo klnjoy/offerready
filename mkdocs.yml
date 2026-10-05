@@ -97,7 +97,7 @@ extra_javascript:
   - assets/readiness.js?v=7
   - assets/gap.js?v=7
   - assets/questions.js?v=5
-  - assets/jobs.js?v=9
+  - assets/jobs.js?v=10
   - assets/onboarding.js?v=4
   - assets/simulator.js?v=3
   - assets/walkthrough.js?v=3
