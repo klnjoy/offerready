@@ -285,15 +285,20 @@
       // them discover it. The active job is already set, so these destinations
       // operate on the same job (no re-selection).
       if (saved && state.jobId) {
-        var next = el("div", "or-card or-next");
-        next.appendChild(el("div", "or-field-label", "Next recommended step"));
-        next.appendChild(el("p", "or-muted or-small", "Turn these gaps into practice. Your job stays selected \u2014 no need to pick it again."));
+        var focus = el("div", "or-card or-next");
+        focus.appendChild(el("div", "or-field-label", "Your preparation focus"));
+        focus.appendChild(el("p", "or-muted or-small", "Use the gaps identified for this job to focus your interview preparation. Your job stays selected \u2014 no need to pick it again."));
+
+        focus.appendChild(el("div", "or-field-label", "Recommended next step"));
         var nrow = el("div", "or-actions");
         nrow.innerHTML =
-          '<a class="or-btn or-btn-primary" href="' + baseHref() + 'Question-Bank/index.html">\u2753 Generate interview questions</a>' +
-          '<a class="or-btn" href="' + baseHref() + 'Practice-Scenarios/index.html">\uD83D\uDDE1\ufe0f Start practice</a>';
-        next.appendChild(nrow);
-        app.appendChild(next);
+          '<a class="or-btn or-btn-primary" href="' + baseHref() + 'Question-Bank/index.html">Prepare Practice Questions</a>' +
+          '<a class="or-btn" href="' + baseHref() + 'Practice-Scenarios/index.html">Practice Decision Defense</a>';
+        focus.appendChild(nrow);
+        focus.appendChild(el("p", "or-muted or-small",
+          "<strong>Prepare Practice Questions</strong> creates role-specific questions from this job and your identified gaps. " +
+          "<strong>Practice Decision Defense</strong> practices explaining tradeoffs, alternatives, cost, scale, and failure modes."));
+        app.appendChild(focus);
       }
 
       // Actions

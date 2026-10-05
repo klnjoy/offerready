@@ -102,8 +102,8 @@
       app.innerHTML = "";
       var card = el("div", "or-card");
       card.appendChild(currentJobBanner());
-      card.appendChild(el("h2", null, "Generate interview questions"));
-      card.appendChild(el("p", "or-muted", "Pick a saved job and get a full, categorized question set \u2014 saved to that job so it's on every device."));
+      card.appendChild(el("h2", null, "Practice Questions"));
+      card.appendChild(el("p", "or-muted", "Prepare role-specific interview questions based on the current job and its identified gaps \u2014 saved to that job so they're on every device."));
       if (note) card.appendChild(el("p", "or-error", esc(note)));
 
       if (state.jobs.length) {
@@ -137,7 +137,7 @@
       var jd = el("textarea", "or-input or-textarea"); jd.rows = 9; jd.placeholder = "Paste the full job description here\u2026"; jd.value = state.jd || "";
       card.appendChild(el("label", "or-field-label", "Job description")); card.appendChild(jd);
 
-      var go = el("button", "or-btn or-btn-primary", "Generate questions");
+      var go = el("button", "or-btn or-btn-primary", "Prepare Practice Questions");
       go.addEventListener("click", function () {
         state.role = role.value.trim(); state.jd = jd.value.trim();
         submit();
@@ -247,21 +247,20 @@
       app.innerHTML = "";
       var head = el("div", "or-card");
       head.appendChild(currentJobBanner());
-      head.appendChild(el("h2", null, "Questions already generated"));
+      head.appendChild(el("h2", null, "Your practice questions are ready"));
       head.appendChild(el("p", "or-qcount", questions.length + " saved questions for this job"));
       var when = lastGenerated(questions);
       if (when) head.appendChild(el("p", "or-muted or-small", "Last generated: " + esc(when)));
-      head.appendChild(el("p", "or-muted or-small", "Restored from your account \u2014 available on any device. Continue practicing, or regenerate to replace this set."));
+      head.appendChild(el("p", "or-muted or-small", "Continue preparing with the saved questions for this job \u2014 available on any device."));
 
       var actions = el("div", "or-actions");
       var cont = el("a", "or-btn or-btn-primary", "Continue Practice");
       cont.href = "../Practice-Scenarios/index.html";
       actions.appendChild(cont);
-      var regen = el("button", "or-btn", "Regenerate");
+      var regen = el("button", "or-btn", "Regenerate Questions");
       regen.addEventListener("click", function () {
         var ok = window.confirm(
-          "Regenerate interview questions?\n\nThis replaces your " + questions.length +
-          " saved questions for this job. This can\u2019t be undone.");
+          "Regenerating will replace the current saved question set for this job.\n\nThis can\u2019t be undone.");
         if (ok) restartGeneration();
       });
       actions.appendChild(regen);

@@ -220,9 +220,9 @@
       // One primary next action (not a wall of buttons). Pick the next
       // uncompleted step in Job -> Analysis -> Practice -> Readiness.
       var nextHref, nextLabel;
-      if (!p.gap) { nextHref = "Gap-Analysis/index.html"; nextLabel = "Run gap analysis"; }
-      else if (!qCount) { nextHref = "Question-Bank/index.html"; nextLabel = "Generate questions"; }
-      else { nextHref = "Practice-Scenarios/index.html"; nextLabel = completedPractice.length ? "Continue practice" : "Start practice"; }
+      if (!p.gap) { nextHref = "Gap-Analysis/index.html"; nextLabel = "Check My Fit"; }
+      else if (!qCount) { nextHref = "Question-Bank/index.html"; nextLabel = "Prepare Practice Questions"; }
+      else { nextHref = "Practice-Scenarios/index.html"; nextLabel = completedPractice.length ? "Continue Practice" : "Practice Decision Defense"; }
       var ctaWrap = el("div", "or-actions");
       ctaWrap.style.margin = "0 0 1.6rem";
       var cta = el("a", "or-btn or-btn-primary"); cta.href = base + nextHref; cta.textContent = nextLabel;
@@ -236,8 +236,8 @@
       var more = el("div", "or-actions");
       more.style.marginTop = "0.4rem";
       more.innerHTML =
-        '<a class="or-btn" href="' + base + 'Gap-Analysis/index.html">' + (p.gap ? "Re-run gap analysis" : "Run gap analysis") + '</a>' +
-        '<a class="or-btn" href="' + base + 'Question-Bank/index.html">' + ((p.questions || []).length ? "Review questions" : "Generate questions") + '</a>';
+        '<a class="or-btn" href="' + base + 'Gap-Analysis/index.html">' + (p.gap ? "Re-check my fit" : "Check my fit") + '</a>' +
+        '<a class="or-btn" href="' + base + 'Question-Bank/index.html">' + ((p.questions || []).length ? "Review questions" : "Prepare questions") + '</a>';
       root.appendChild(more);
     }
 
@@ -316,7 +316,9 @@
       mrow.appendChild(stat(overall + "%", "Interview readiness"));
       mm.appendChild(mrow);
       mm.appendChild(el("p", "or-muted or-small",
-        "<strong>Resume match</strong> is resume-to-job alignment. <strong>Interview readiness</strong> blends that with your practice and completed reps \u2014 so it\u2019s normal for readiness to be lower until you practice."));
+        "<strong>Resume match</strong> is how closely the evidence in your resume aligns with this job. " +
+        "<strong>Interview readiness</strong> is a blended measure based on the preparation inputs currently available for this job. " +
+        "Interview readiness can differ from resume match because it also reflects supported practice and preparation activity."));
       root.appendChild(mm);
 
       // Area bars

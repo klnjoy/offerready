@@ -2,17 +2,16 @@
 icon: material/target
 ---
 
-# Practice
+# Prepare for This Interview
 
-Practice is the core of OfferReady. Everything else — the topic pages, the
-question banks, the reference architectures — is there to get you ready for
-**this**: making an engineering decision and **defending it** while an
-interviewer keeps pushing. That is what actually decides a senior offer, and
+Choose the type of preparation that matches what you need to improve. The core
+of OfferReady is making an engineering decision and **defending it** while an
+interviewer keeps pushing — that's what actually decides a senior offer, and
 it's the one thing you can't get from reading.
 
 !!! tip "New here? Start with two steps"
-    1. **[Analyze My Job](../Analyze/index.md)** — paste a job description and get a focused prep plan.
-    2. **[Defend Your Decisions](../Practice-Scenarios/index.md)** — run a decision-defense scenario for your target role (contributes to Interview Readiness).
+    1. **[Analyze a Job](../Analyze/index.md)** — paste a job description to understand the role and your gaps.
+    2. **[Defend Your Decisions](../Practice-Scenarios/index.md)** — practice defending your reasoning for that role (updates Interview Readiness).
 
 ## The practice loop
 
@@ -38,55 +37,52 @@ next drill.
 
     ---
 
-    **Decision-defense scenarios.** Across roles — AI/GenAI Engineer, AI
-    Architect, Data Architect, AI Security, Cloud/Platform, Forward Deployed.
-    Decide, then defend it branch by branch against a saved job.
+    Practice explaining technical choices, tradeoffs, alternatives, cost,
+    scale, and failure modes — branch by branch against a saved job.
 
-    *Contributes to Interview Readiness.*
+    *Updates Interview Readiness.*
 
-    [:octicons-arrow-right-24: Open scenarios](../Practice-Scenarios/index.md)
+    [:octicons-arrow-right-24: Practice Decision Defense](../Practice-Scenarios/index.md)
 
 -   :material-cards-outline:{ .lg .middle } __Practice Mode__
 
     ---
 
-    **Focused drills.** Flashcards and timed exams over the question library — a
-    fast warm-up before you defend a full scenario.
+    Complete focused warm-up drills for individual questions and topics.
 
-    *Local Practice, does not currently update Interview Readiness.*
+    *Local Practice Only — saved on this device and does not currently update Interview Readiness.*
 
-    [:octicons-arrow-right-24: Start drilling](../Personal-SourceCode/Interview_Practice.md)
+    [:octicons-arrow-right-24: Start drills](../Personal-SourceCode/Interview_Practice.md)
 
 -   :material-comment-question-outline:{ .lg .middle } __Keep Asking Why__
 
     ---
 
-    **Follow-up challenge drill.** Give an answer and the interviewer keeps
-    asking *why* — the chain that separates a memorized answer from a real one.
+    **Follow-up defense drill.** Practice responding when an interviewer
+    repeatedly challenges your reasoning.
 
-    *Related to Defend Your Decisions. Local Practice, does not currently update Interview Readiness.*
+    *Local Practice Only — saved on this device and does not currently update Interview Readiness.*
 
-    [:octicons-arrow-right-24: Practice the why-chain](../Personal-SourceCode/Interview_Why_Interactive.md)
+    [:octicons-arrow-right-24: Practice the follow-up chain](../Personal-SourceCode/Interview_Why_Interactive.md)
 
 -   :material-account-voice:{ .lg .middle } __Mock Interview__
 
     ---
 
-    **Full interview simulation** — mixed questions, follow-ups, and pressure in
-    one sitting.
+    Rehearse a complete interview flow from opening question to follow-up.
 
-    *Preview. Local Practice, does not currently update Interview Readiness.*
+    *Preview · Local Practice Only — saved on this device and does not currently update Interview Readiness.*
 
-    [:octicons-arrow-right-24: Run a simulation](../Personal-SourceCode/Interview_Master_Simulator.md)
+    [:octicons-arrow-right-24: Start Mock Interview](../Personal-SourceCode/Interview_Master_Simulator.md)
 
--   :material-chart-line:{ .lg .middle } __Practice History__
+-   :material-chart-line:{ .lg .middle } __Review Practice Activity__
 
     ---
 
-    **Completed activity.** Your recent practice sessions and per-topic strength
-    on this device. For your overall readiness and next step, see the Dashboard.
+    See completed readiness activity and local practice. For your overall
+    readiness and next step, see the Dashboard.
 
-    [:octicons-arrow-right-24: See your history](../Personal-SourceCode/Interview_Progress.md)
+    [:octicons-arrow-right-24: Review Practice Activity](../Personal-SourceCode/Interview_Progress.md)
 
 </div>
 
