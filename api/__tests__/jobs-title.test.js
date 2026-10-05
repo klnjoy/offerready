@@ -250,3 +250,58 @@ test('questions: active job restoration works on refresh (full job rehydrates co
   assert.equal(ctx.jd, full.job_description);
   assert.equal(ctx.canAnalyze, true);
 });
+
+// ---------------------------------------------------------------------------
+// Defend Your Decisions (scenario.js) role identity.
+// The Analyze page now derives the "defend role" via the SAME priority as the
+// server's deriveJobTitle (explicit targetRole -> real seniority -> roleSummary
+// clause), and both the Analyze and Defend pages reject junk placeholders so
+// the matched role is NEVER shown as "Not specified". These tests lock in that
+// contract against deriveJobTitle (the authoritative, exported implementation
+// the client mirrors).
+// ---------------------------------------------------------------------------
+
+test('defend role: explicit target role is used (Azure Data Engineer)', () => {
+  const r = deriveJobTitle({ targetRole: 'Azure Data Engineer' }, { seniority: 'Not specified' });
+  assert.equal(r, 'Azure Data Engineer');
+});
+
+test('defend role: real seniority is used when no target role (Data Engineer)', () => {
+  const r = deriveJobTitle({}, { seniority: 'Data Engineer', roleSummary: 'Builds pipelines.' });
+  assert.equal(r, 'Data Engineer');
+});
+
+test('defend role: role summary clause used when seniority is "Not specified" (Databricks Engineer)', () => {
+  const r = deriveJobTitle(
+    {},
+    { seniority: 'Not specified', roleSummary: 'Databricks Engineer building lakehouse ETL on Azure.' }
+  );
+  assert.equal(r, 'Databricks Engineer building lakehouse ETL on Azure');
+});
+
+test('defend role: never resolves to the "Not specified" placeholder', () => {
+  const cases = [
+    [{ targetRole: '' }, { seniority: 'Not specified' }],
+    [{ targetRole: 'Not specified' }, { seniority: 'unspecified' }],
+    [{}, { seniority: 'Not specified', roleSummary: '' }],
+    [{}, {}],
+  ];
+  cases.forEach(function (c) {
+    const r = deriveJobTitle(c[0], c[1]);
+    assert.notEqual((r || '').toLowerCase(), 'not specified');
+    assert.ok(r && r.length > 0);
+  });
+});
+
+test('defend role: saved-job title (deriveJobTitle) survives Analyze -> Save -> Check My Fit', () => {
+  // The saved job's title is the authoritative role identity the Defend page
+  // upgrades to. It must be a real role even when the user typed nothing and
+  // the model could not determine seniority.
+  const title = deriveJobTitle(
+    { title: '', targetRole: '' },
+    { seniority: 'Not specified', roleSummary: 'Senior Azure Data Engineer, Synapse + Databricks.' }
+  );
+  const ctx = restoreJobContext({ title: title, job_description: 'x'.repeat(40), analysis: {} });
+  assert.notEqual(title.toLowerCase(), 'not specified');
+  assert.equal(ctx.role, title); // Defend reads this role identity from the saved job
+});

@@ -65,6 +65,41 @@
     return null; // no confident match → don't force a filter
   }
 
+  // Placeholder/junk role values that must NEVER be shown as the analyzed role.
+  // The AI returns "Not specified"/"Unspecified" for seniority when it can't
+  // determine a level; passing that through made the Defend page show
+  // "Showing scenarios matched to your analyzed role: Not specified".
+  var JUNK_ROLES = {
+    "": 1, "not specified": 1, unspecified: 1, "n/a": 1, na: 1,
+    none: 1, unknown: 1, untitled: 1,
+  };
+  function cleanRole(v) {
+    var s = (v == null ? "" : String(v)).trim();
+    if (!s) return "";
+    return JUNK_ROLES[s.toLowerCase()] ? "" : s;
+  }
+
+  // Derive a meaningful role title, mirroring the server's deriveJobTitle
+  // (api/_lib/jobs.js) priority so the Defend page and the saved job agree:
+  //   a. explicit targetRole the candidate provided
+  //   b. real analysis.seniority (skipped if it's a junk placeholder)
+  //   c. first clause of analysis.roleSummary (AI-derived)
+  //   d. "" (caller decides the final fallback) — never "Not specified"
+  function deriveRoleTitle(targetRole, analysis) {
+    var a = analysis || {};
+    var explicit = cleanRole(targetRole);
+    if (explicit) return explicit.slice(0, 200);
+    var parsed = cleanRole(a.seniority);
+    if (parsed) return parsed.slice(0, 200);
+    var summary = cleanRole(a.roleSummary);
+    if (summary) {
+      var firstClause = summary.split(/[.;:\n\u2014\-]/)[0].trim();
+      var candidate = firstClause || summary;
+      if (candidate && !JUNK_ROLES[candidate.toLowerCase()]) return candidate.slice(0, 120);
+    }
+    return "";
+  }
+
   // Persist a small "defend role" signal so the Defend page can auto-filter to
   // the analyzed job AND lightly personalize the scenario prompts to it.
   // Stores only distilled signals (role, top technologies, top gaps) derived
@@ -92,7 +127,9 @@
         JSON.stringify({
           category: category,
           role: role || "",
-          seniority: (analysis && analysis.seniority) || "",
+          // Store seniority only when it's a real value, never the "Not
+          // specified" placeholder (the Defend page reads this for display).
+          seniority: cleanRole(analysis && analysis.seniority),
           technologies: techs.slice(0, 8),
           gaps: gaps.slice(0, 5),
           when: Date.now(),
@@ -246,7 +283,8 @@
         // "you analyzed X — drill these gaps". No JD/resume text is stored.
         logAnalyzeActivity(d.analysis, payload.targetRole);
         // Remember the matched Defend role so the Defend page filters to this job.
-        saveDefendRole(inferScenarioCategory(d.analysis, payload.targetRole), payload.targetRole || (d.analysis && d.analysis.seniority) || "", d.analysis);
+        // Use the derived role title (never the raw "Not specified" seniority).
+        saveDefendRole(inferScenarioCategory(d.analysis, payload.targetRole), deriveRoleTitle(payload.targetRole, d.analysis), d.analysis);
         renderResult(d.analysis, { model: d.model, input: { targetRole: payload.targetRole, jobDescription: payload.jobDescription } });
       } catch (e) {
         stop && stop();

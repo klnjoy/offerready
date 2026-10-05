@@ -75,7 +75,20 @@
             var job = jobs.filter(function (x) { return x.id === id; })[0];
             // If the pointer references a missing/unauthorized job, clear it.
             if (!job) { activeJobTitleCache = { id: id, title: "" }; return; }
-            activeJobTitleCache = { id: id, title: job.title || "Untitled role" };
+            var jobTitle = cleanRoleLabel(job.title) || "Untitled role";
+            activeJobTitleCache = { id: id, title: jobTitle };
+            // The saved job's title is the AUTHORITATIVE role identity (the
+            // server derives it via deriveJobTitle, never "Not specified"). If
+            // the Defend list is role-filtered but the matched label came from
+            // a junk/missing localStorage value (so it fell back to the generic
+            // category label), upgrade it to the real job title.
+            if (activeCat !== "all") {
+              var current = cleanRoleLabel(matchedRole);
+              var isCategoryFallback = current && current === CATEGORY_LABELS[activeCat];
+              if ((!current || isCategoryFallback) && jobTitle && jobTitle !== "Untitled role") {
+                matchedRole = jobTitle;
+              }
+            }
             if (repaint) repaint();
           })
           .catch(function () {});
@@ -104,6 +117,20 @@
     // Job-first: if the user arrived from an analyzed job (Analyze page adds
     // ?role=<category>, or stored offerready.defendRole.v1), pre-select that
     // role's filter so Defend shows scenarios for THEIR job, not a generic list.
+    // Placeholder/junk role labels that must NEVER be displayed as the matched
+    // role. Guards against stale localStorage written before the Analyze page
+    // started deriving a real role title (so we fall back to the category
+    // label instead of showing "Not specified").
+    var JUNK_ROLES = {
+      "": 1, "not specified": 1, unspecified: 1, "n/a": 1, na: 1,
+      none: 1, unknown: 1, untitled: 1,
+    };
+    function cleanRoleLabel(v) {
+      var s = (v == null ? "" : String(v)).trim();
+      if (!s) return "";
+      return JUNK_ROLES[s.toLowerCase()] ? "" : s;
+    }
+
     (function preselectRole() {
       var role = null, roleTitle = null;
       try {
@@ -112,15 +139,15 @@
       } catch (e) {}
       var saved = null;
       try { saved = JSON.parse(localStorage.getItem("offerready.defendRole.v1") || "null"); } catch (e) {}
-      if (!role && saved && saved.category) { role = saved.category; roleTitle = saved.role || null; }
+      if (!role && saved && saved.category) { role = saved.category; roleTitle = cleanRoleLabel(saved.role) || null; }
       // Keep the distilled job signals (technologies + gaps) to personalize the
       // scenario prompts to THIS user's analyzed job (Option A: tailor authored
       // questions, no LLM). Only used when it matches the scenario's category.
       if (saved && (saved.technologies || saved.gaps)) {
         jobContext = {
           category: saved.category || null,
-          role: saved.role || "",
-          seniority: saved.seniority || "",
+          role: cleanRoleLabel(saved.role),
+          seniority: cleanRoleLabel(saved.seniority),
           technologies: (saved.technologies || []).filter(Boolean),
           gaps: (saved.gaps || []).filter(Boolean),
         };
