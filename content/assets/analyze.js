@@ -14,7 +14,7 @@
     "Analyzing role\u2026",
     "Identifying requirements\u2026",
     "Checking preparation areas\u2026",
-    "Building your preparation plan\u2026",
+    "Preparing your role overview\u2026",
   ];
 
   // ---- persistence + share (no backend) --------------------------------------
@@ -270,6 +270,69 @@
     function renderResult(a, meta) {
       app.innerHTML = "";
       meta = meta || {};
+
+      // Tracks whether THIS analyzed role is already saved as a job. If it was
+      // saved (here or earlier this render), Check My Fit routes straight to the
+      // existing Gap Analysis page without asking the user to save again.
+      var checkFitState = { savedJobId: (meta.savedJobId || null) };
+
+      // Save-first Check My Fit: if already saved, set active + route to the
+      // existing Gap-Analysis page. If not saved, POST to the existing /api/jobs
+      // (same contract as the Save-to-My-Jobs button), set the new job active,
+      // then route. Never routes on failure; never claims success before the
+      // server confirms; preserves the free-tier/entitlement behavior (403).
+      function goToCheckFit() {
+        if (window.OfferReadyReadiness && window.OfferReadyReadiness.setActiveJob && checkFitState.savedJobId) {
+          window.OfferReadyReadiness.setActiveJob(checkFitState.savedJobId);
+        }
+        location.href = base + "Gap-Analysis/index.html";
+      }
+      function saveThenCheckFit(analysis, m, btn, msg) {
+        // Already saved → no duplicate save; go straight to Check My Fit.
+        if (checkFitState.savedJobId) { goToCheckFit(); return; }
+        if (!API_BASE) { msg.textContent = "Saving isn't enabled on this site yet."; return; }
+        if (!window.OfferReadyAuth) { msg.textContent = "Sign-in isn't available yet."; return; }
+        btn.disabled = true; msg.textContent = "Saving\u2026";
+        window.OfferReadyAuth.getAccessToken().then((token) => {
+          if (!token) { btn.disabled = false; msg.innerHTML = 'Please <a href="' + base + 'My-Jobs/index.html">sign in</a> to save this job and check your fit.'; return; }
+          const inp = m.input || {};
+          const payload = {
+            analysis: analysis,
+            title: inp.targetRole || analysis.seniority || "",
+            jobDescription: inp.jobDescription || "",
+            model: m.model || "",
+          };
+          fetch(API_BASE.replace(/\/$/, "") + "/api/jobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify(payload),
+          }).then((r) => r.json().catch(() => ({})).then((j) => ({ status: r.status, body: j })))
+            .then((res) => {
+              if (res.status === 201) {
+                var savedJob = res.body && res.body.job;
+                if (savedJob && savedJob.id) {
+                  checkFitState.savedJobId = savedJob.id;
+                  if (window.OfferReadyReadiness && window.OfferReadyReadiness.setActiveJob) {
+                    window.OfferReadyReadiness.setActiveJob(savedJob.id);
+                  }
+                }
+                msg.textContent = "Saved \u2713 \u2014 opening Check My Fit\u2026";
+                goToCheckFit();
+              } else if (res.status === 403 && res.body && res.body.upgrade) {
+                // Free-tier limit reached — preserve existing entitlement message; do NOT route.
+                btn.disabled = false;
+                msg.innerHTML = "Free includes one saved job. <a href='" + base + "assets/pricing.html'>Upgrade to Pro</a> to save more, or open <a href='" + base + "My-Jobs/index.html'>My Jobs</a> to Check My Fit on an existing job.";
+              } else if (res.status === 401) {
+                btn.disabled = false;
+                msg.innerHTML = 'Please <a href="' + base + 'My-Jobs/index.html">sign in</a> to save this job and check your fit.';
+              } else {
+                btn.disabled = false;
+                msg.textContent = (res.body && res.body.error) || "Couldn't save this job. Please try again.";
+              }
+            }).catch(() => { btn.disabled = false; msg.textContent = "Couldn't reach the server. Please try again."; });
+        }).catch(() => { btn.disabled = false; msg.textContent = "Couldn't check your sign-in. Please try again."; });
+      }
+
       if (meta.demo) {
         app.appendChild(el("div", "or-demo-banner",
           "\uD83E\uDDEA <strong>Sample analysis</strong> \u2014 illustrative demo data for a fictional role. " +
@@ -301,7 +364,7 @@
       if (a.resumeProvided && (a.alignment || []).length) {
         section("Initial alignment", () => tableRows(
           ["Requirement", "Status", "Evidence in resume"],
-          a.alignment.map((r) => [esc(r.requirement), statusPill(r.status), esc(r.evidence)])
+          a.alignment.map((r) => [esc(r.requirement), statusPill(r.status, true), esc(r.evidence)])
         ));
       }
 
@@ -309,10 +372,22 @@
       // what the role expects across the four dimensions; it does not blend a
       // readiness number here).
       if ((a.readiness || []).length) {
-        section("What the role expects", () => tableRows(
-          ["Dimension", "Status", "Role requires", "Found in resume", "Gap"],
-          a.readiness.map((r) => [esc(r.dimension), statusPill(r.status), esc(r.roleRequires), esc(r.candidateHas), esc(r.gap)])
-        ));
+        section("What the role expects", () => {
+          const tbl = tableRows(
+            ["Dimension", "Status", "Role requires", "Found in resume", "Gap"],
+            a.readiness.map((r) => [esc(r.dimension), statusPill(r.status, a.resumeProvided), esc(r.roleRequires), esc(r.candidateHas), esc(r.gap)])
+          );
+          // When no resume was in this analysis, explain the "Resume not
+          // compared" rows so they don't read as a negative assessment.
+          if (!a.resumeProvided) {
+            const wrap = el("div");
+            wrap.appendChild(el("p", "ip-ai-hint",
+              "A resume was not included in this analysis. Save the role and use <strong>Check My Fit</strong> to compare your resume evidence with the job requirements."));
+            wrap.appendChild(tbl);
+            return wrap;
+          }
+          return tbl;
+        });
       }
 
       // POTENTIAL GAPS
@@ -359,22 +434,37 @@
         });
       }
 
-      // RELEVANT OFFERREADY RESOURCES
-      if ((a.offerReadyResources || []).length) {
-        section("Relevant OfferReady resources", () => {
-          const w = el("div", "or-reslist");
-          a.offerReadyResources.forEach((r) => {
-            const link = el("a", "or-reslink"); link.href = base + r.path; link.textContent = r.label;
-            w.appendChild(link);
-          });
+      // NEXT STEP: CHECK MY FIT — the primary action after understanding the
+      // role. Placed BEFORE Resources and Defend so the recommended next step is
+      // the most prominent thing after the analysis. Save-first: it saves the
+      // role (if not already saved), sets it active, then routes to the existing
+      // Gap Analysis (Check My Fit) page. No new route/feature — reuses
+      // /api/jobs + the active-job pointer + the Gap-Analysis page.
+      if (!meta.shared && !meta.demo) {
+        section("Next step", () => {
+          const w = el("div", "or-next-fit");
+          w.appendChild(el("h3", null, "Check My Fit"));
+          w.appendChild(el("p", null,
+            "Compare your resume evidence with this role to identify your strengths, missing evidence, and highest-priority preparation areas."));
+          const row = el("div", "or-actions");
+          const fitBtn = el("button", "ip-btn or-cta-primary"); fitBtn.type = "button";
+          fitBtn.textContent = checkFitState.savedJobId ? "Check My Fit" : "Save Job and Check My Fit";
+          const fitMsg = el("span", "or-save-msg");
+          fitBtn.addEventListener("click", () => saveThenCheckFit(a, meta, fitBtn, fitMsg));
+          row.appendChild(fitBtn);
+          w.appendChild(row);
+          w.appendChild(fitMsg);
+          // Future steps — brief supporting text only (NOT equal primary buttons).
+          w.appendChild(el("p", "ip-ai-hint",
+            "After you check your fit: prepare role-specific questions, practice decision defense, then measure Interview Readiness."));
           return w;
         });
-      } else {
-        section("Relevant OfferReady resources", () => el("p", "ip-ai-hint", "No matching OfferReady resource found for this role's skills."));
       }
 
+      // RELEVANT OFFERREADY RESOURCES
       // DEFEND A DECISION FOR THIS ROLE — route the analyzed job straight into
       // the matching defend-your-decision scenarios (the paid differentiator).
+      // Defend stays visible but comes AFTER the primary Check My Fit next step.
       if (!meta.shared) {
         const CAT_LABELS = {
           "ai-engineer": "AI / GenAI Engineer", "ai-architect": "AI Architect",
@@ -396,14 +486,24 @@
         });
       }
 
-      // NEXT STEP + CTA
-      const cta = el("div", "ip-card or-next");
-      cta.appendChild(el("div", "ip-progress", "Next step"));
-      cta.appendChild(el("div", "ip-q", esc(a.nextStep || "Start with your Priority 1 preparation area.")));
-      const start = el("button", "ip-btn"); start.textContent = "Start preparation";
-      const firstLink = (a.preparationPlan || []).map((p) => p.resource).find((r) => r && r.path);
-      start.addEventListener("click", () => { if (firstLink) location.href = base + firstLink.path; else location.href = base + "Interview_Guide_Overview.html".replace(/^/, "Personal-SourceCode/"); });
-      cta.appendChild(start);
+      // RELEVANT OFFERREADY RESOURCES — supporting material, after the primary
+      // next step and Defend (lower visual priority than Check My Fit).
+      if ((a.offerReadyResources || []).length) {
+        section("Relevant OfferReady resources", () => {
+          const w = el("div", "or-reslist");
+          a.offerReadyResources.forEach((r) => {
+            const link = el("a", "or-reslink"); link.href = base + r.path; link.textContent = r.label;
+            w.appendChild(link);
+          });
+          return w;
+        });
+      } else {
+        section("Relevant OfferReady resources", () => el("p", "ip-ai-hint", "No matching OfferReady resource found for this role's skills."));
+      }
+
+      // Secondary control: analyze another job (the primary next step is the
+      // Check My Fit section above). Kept as a quiet action, not a rival CTA.
+      const cta = el("div", "ip-card or-actions");
       const again = el("button", "ip-btn ip-ghost"); again.textContent = "Analyze another job";
       again.addEventListener("click", () => { if (location.hash) { try { history.replaceState(null, "", location.pathname); } catch (e) {} } renderForm(); });
       cta.appendChild(again);
@@ -442,10 +542,14 @@
                   // Make this the active job so Gap Analysis / Questions /
                   // Dashboard all operate on it (job-rooted, cross-device).
                   var savedJob = res.body && res.body.job;
-                  if (savedJob && savedJob.id && window.OfferReadyReadiness && window.OfferReadyReadiness.setActiveJob) {
-                    window.OfferReadyReadiness.setActiveJob(savedJob.id);
+                  if (savedJob && savedJob.id) {
+                    // Keep the Check My Fit CTA in sync so it won't save again.
+                    checkFitState.savedJobId = savedJob.id;
+                    if (window.OfferReadyReadiness && window.OfferReadyReadiness.setActiveJob) {
+                      window.OfferReadyReadiness.setActiveJob(savedJob.id);
+                    }
                   }
-                  saveMsg.innerHTML = "Saved \u2713 \u2014 next: <a href='" + base + "Gap-Analysis/index.html'>gap analysis</a> \u00b7 <a href='" + base + "Question-Bank/index.html'>questions</a> \u00b7 <a href='" + base + "My-Jobs/index.html'>My Jobs</a>";
+                  saveMsg.innerHTML = "Saved \u2713 \u2014 next: <a href='" + base + "Gap-Analysis/index.html'>Check My Fit</a> \u00b7 <a href='" + base + "Question-Bank/index.html'>questions</a> \u00b7 <a href='" + base + "My-Jobs/index.html'>My Jobs</a>";
                 } else if (res.status === 403 && res.body && res.body.upgrade) {
                   saveBtn.disabled = false;
                   saveMsg.innerHTML = "Free includes one saved job. <a href='" + base + "assets/pricing.html'>Upgrade to Pro</a> to save more.";
@@ -554,7 +658,7 @@
       t += "</tbody></table>";
       return el("div", null, t);
     }
-    function statusPill(s) {
+    function statusPill(s, resumeProvided) {
       const map = {
         MATCHED: "or-ok", STRONG_MATCH: "or-ok",
         PARTIAL: "or-warn", PARTIAL_MATCH: "or-warn",
@@ -562,7 +666,18 @@
         NOT_ENOUGH_INFO: "or-info", INSUFFICIENT_INFO: "or-info",
       };
       const cls = map[s] || "or-info";
-      return `<span class="or-pill ${cls}">${esc(String(s || "").replace(/_/g, " "))}</span>`;
+      // When no resume was supplied, an insufficient-info status means no
+      // comparison was performed — show user-centered "Resume not compared"
+      // instead of a negative-looking "INSUFFICIENT INFO". We only relabel the
+      // DISPLAY; the underlying AI status enum is unchanged. A resume that WAS
+      // provided keeps its real status (e.g. a genuine gap), so "evidence not
+      // found" stays distinct from "resume not provided".
+      const insufficient = s === "INSUFFICIENT_INFO" || s === "NOT_ENOUGH_INFO";
+      if (insufficient && !resumeProvided) {
+        return `<span class="or-pill or-info">Resume not compared</span>`;
+      }
+      const label = esc(String(s || "").replace(/_/g, " "));
+      return `<span class="or-pill ${cls}">${label}</span>`;
     }
 
     // ---- export helpers ----

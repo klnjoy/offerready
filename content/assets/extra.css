@@ -1766,6 +1766,27 @@ a.ig-feature.ig-link .ig-d {
 .or-next { margin-top: 1.4rem; }
 .or-next .or-field-label { color: var(--or-text-secondary); }
 
+/* Analyze result — "Next step: Check My Fit" primary block. More prominent
+   than the Resources list below it: brand-tinted card, clear heading, one
+   solid primary CTA. Prominence does not rely on color alone (heading + card
+   framing + button weight carry it). */
+.md-typeset .or-next-fit {
+  border: 1px solid rgba(31, 157, 99, 0.45);
+  background: rgba(31, 157, 99, 0.06);
+  border-left: 4px solid var(--kb-green, #1f9d63);
+  border-radius: 0.6rem;
+  padding: 1rem 1.1rem 1.1rem;
+}
+.md-typeset .or-next-fit h3 { margin: 0 0 0.3rem; font-size: 1.1rem; }
+.md-typeset .or-next-fit .or-actions { margin: 0.6rem 0 0.2rem; }
+/* Primary CTA emphasis for the Check My Fit action. */
+.md-typeset a.ip-btn.or-cta-primary,
+.md-typeset button.ip-btn.or-cta-primary,
+.ip-btn.or-cta-primary {
+  font-size: 1rem;
+  padding: 0.6rem 1.3rem;
+}
+
 /* Context chips row on the dashboard header (added in readiness.js). */
 .or-contextchips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0 0 1.4rem; }
 .or-contextchips .or-chip { font-size: 0.8rem; }
