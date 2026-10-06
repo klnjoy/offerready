@@ -138,12 +138,23 @@
               matchedRole = jobTitle; changed = true;
             }
             // 2) Family: classify from the job's OWN context so the catalog
-            //    family matches the active job. Only override when we get a
-            //    confident classification (never force "all" or a wrong guess).
+            //    family matches the active job. The active job is authoritative,
+            //    so if we CAN'T confidently classify it (e.g. a generic
+            //    "Software Engineer"), we must NOT keep a family that came from a
+            //    different job's stale offerready.defendRole signal — that's what
+            //    showed "Software Engineer -> AI Architecture". In that case fall
+            //    back to "all roles" (no misleading filter) rather than a guess.
             var fam = classifyFamilyFromJob(job);
-            if (fam && CATEGORY_LABELS[fam] && fam !== activeCat) {
-              activeCat = fam;
-              if (!cleanRoleLabel(matchedRole)) matchedRole = CATEGORY_LABELS[fam];
+            if (fam && CATEGORY_LABELS[fam]) {
+              if (fam !== activeCat) {
+                activeCat = fam;
+                if (!cleanRoleLabel(matchedRole)) matchedRole = CATEGORY_LABELS[fam];
+                changed = true;
+              }
+            } else if (activeCat !== "all") {
+              // No confident family for THIS job -> drop any stale filter so we
+              // don't attribute another role's family to this job.
+              activeCat = "all";
               changed = true;
             }
             void changed;  // (kept for clarity; repaint always refreshes labels)
