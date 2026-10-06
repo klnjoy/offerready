@@ -236,7 +236,12 @@ async function saveProgressSnapshot(userId, jobId, snap) {
       headers: serviceHeaders({ Prefer: prefer }),
       body: JSON.stringify(row),
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) {
+      let body = '';
+      try { body = (await resp.text() || '').slice(0, 500); } catch (_) { /* ignore */ }
+      console.error('[saveProgressSnapshot] non-OK', JSON.stringify({ status: resp.status, body: body }));
+      return null;
+    }
     const rows = await resp.json();
     return (Array.isArray(rows) && rows[0]) || null;
   } catch (_e) {
@@ -302,7 +307,12 @@ async function savePracticeSession(userId, jobId, session) {
       headers: serviceHeaders({ Prefer: prefer }),
       body: JSON.stringify(row),
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) {
+      let body = '';
+      try { body = (await resp.text() || '').slice(0, 500); } catch (_) { /* ignore */ }
+      console.error('[savePracticeSession] non-OK', JSON.stringify({ status: resp.status, body: body }));
+      return null;
+    }
     const rows = await resp.json();
     return (Array.isArray(rows) && rows[0]) || null;
   } catch (_e) {
@@ -403,7 +413,15 @@ async function completePracticeAtomic(userId, jobId, session) {
       headers: serviceHeaders({ Prefer: 'return=representation' }),
       body: JSON.stringify(args),
     });
-    if (!resp.ok) return null;  // 404 (fn absent) / 42501 (ownership) / other → fall back
+    if (!resp.ok) {
+      // Log the REAL PostgREST/Postgres error so a persistence failure is
+      // diagnosable in the Vercel logs (missing column, RLS, type mismatch,
+      // function absent, ownership 42501, etc.) instead of a silent fallback.
+      let body = '';
+      try { body = (await resp.text() || '').slice(0, 500); } catch (_) { /* ignore */ }
+      console.error('[complete_practice RPC] non-OK', JSON.stringify({ status: resp.status, body: body }));
+      return null;  // fall back to the two-step write
+    }
     const out = await resp.json();
     // PostgREST returns the function's jsonb result (object), possibly wrapped.
     const r = Array.isArray(out) ? out[0] : out;
