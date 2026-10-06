@@ -73,6 +73,16 @@
     // signals map to the Data Engineering family BEFORE Data Architecture. Only
     // genuinely architecture-leaning data roles fall through to data-architect.
     if (/\bdata engineer|data engineering|azure data|data platform engineer|databricks|spark|pipeline|data pipeline|etl|elt|ingestion|streaming|real-?time|data quality|lakehouse|airflow|dbt\b/.test(hay)) return "data-engineer";
+    // Role-noun tiebreaker for data-PLATFORM roles (Snowflake/warehouse/data
+    // platform): the family follows the ROLE NOUN, not the tech. A "Snowflake
+    // (Data) Engineer" is Data Engineering; only an explicit "architect" (or
+    // modeling-centric) role is Data Architecture. This stops a Snowflake
+    // Engineer from being mislabeled "Data Architect" just because Snowflake
+    // was historically an architect-only signal.
+    var dataPlatformSignal = /\bsnowflake|warehouse|warehousing|cortex|data platform|redshift|bigquery\b/.test(hay);
+    var saysArchitect = /\barchitect|architecture|data model|dimensional\b/.test(hay);
+    var saysEngineer = /\bengineer\b/.test(hay);
+    if (dataPlatformSignal && saysEngineer && !saysArchitect) return "data-engineer";
     if (/\bdata architect|analytics architect|snowflake|warehouse|warehousing|cortex|data platform|analytics engineer|data modeling|dimensional\b/.test(hay)) return "data-architect";
     if (/\bcloud|platform|devops|kubernetes|infrastructure|sre|reliability|terraform\b/.test(hay)) return "cloud-platform";
     if (/\barchitect|architecture|system design|multi-tenant|enterprise\b/.test(hay)) return "ai-architect";

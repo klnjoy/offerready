@@ -441,6 +441,28 @@ test('normalizeRoleFamily: Data Architect still -> data-architect (not stolen by
   assert.equal(normalizeRoleFamily({ title: 'Analytics Architect', roleSummary: 'Snowflake warehouse modeling.' }), 'data-architect');
 });
 
+// Role-noun tiebreaker: a Snowflake/warehouse ENGINEER is Data Engineering, not
+// Data Architecture. Snowflake was historically an architect-only signal, which
+// mislabeled a "Snowflake Engineer" as Data Architect.
+test('normalizeRoleFamily: Snowflake Data Engineer -> data-engineer (not data-architect)', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Snowflake Data Engineer' }), 'data-engineer');
+});
+
+test('normalizeRoleFamily: Snowflake Engineer (warehouse role) -> data-engineer', () => {
+  assert.equal(
+    normalizeRoleFamily({ title: 'Snowflake Engineer', roleSummary: 'Owns the Snowflake data warehouse and analytics layer.' }),
+    'data-engineer'
+  );
+});
+
+test('normalizeRoleFamily: Snowflake ARCHITECT still -> data-architect (engineer tiebreaker does not steal it)', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Snowflake Data Architect' }), 'data-architect');
+  assert.equal(
+    normalizeRoleFamily({ title: 'Data Architect', roleSummary: 'Snowflake warehouse data modeling and dimensional design.' }),
+    'data-architect'
+  );
+});
+
 test('normalizeRoleFamily: AI/GenAI Engineer -> ai-engineer', () => {
   assert.equal(normalizeRoleFamily({ title: 'AI Engineer', roleSummary: 'Builds RAG and LLM agents.' }), 'ai-engineer');
 });

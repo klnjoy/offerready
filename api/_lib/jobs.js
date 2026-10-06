@@ -310,6 +310,15 @@ function normalizeRoleFamily(ctx) {
   // Data Engineering BEFORE Data Architecture (spec): a Data Engineer must not
   // default to the Data Architect family.
   if (/\bdata engineer|data engineering|azure data|data platform engineer|databricks|spark|pipeline|data pipeline|etl|elt|ingestion|streaming|real-?time|data quality|lakehouse|airflow|dbt\b/.test(hay)) return 'data-engineer';
+  // Role-noun tiebreaker for data-PLATFORM roles (Snowflake/warehouse/data
+  // platform): the family follows the ROLE NOUN, not the tech. A "Snowflake
+  // (Data) Engineer" is Data Engineering; only an explicit "architect" (or
+  // modeling-centric) role is Data Architecture. Mirrors client
+  // inferScenarioCategory (analyze.js).
+  const dataPlatformSignal = /\bsnowflake|warehouse|warehousing|cortex|data platform|redshift|bigquery\b/.test(hay);
+  const saysArchitect = /\barchitect|architecture|data model|dimensional\b/.test(hay);
+  const saysEngineer = /\bengineer\b/.test(hay);
+  if (dataPlatformSignal && saysEngineer && !saysArchitect) return 'data-engineer';
   if (/\bdata architect|analytics architect|snowflake|warehouse|warehousing|cortex|data platform|analytics engineer|data modeling|dimensional\b/.test(hay)) return 'data-architect';
   if (/\bcloud|platform|devops|kubernetes|infrastructure|sre|reliability|terraform\b/.test(hay)) return 'cloud-platform';
   if (/\barchitect|architecture|system design|multi-tenant|enterprise\b/.test(hay)) return 'ai-architect';
