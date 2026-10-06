@@ -467,6 +467,24 @@ test('normalizeRoleFamily: AI/GenAI Engineer -> ai-engineer', () => {
   assert.equal(normalizeRoleFamily({ title: 'AI Engineer', roleSummary: 'Builds RAG and LLM agents.' }), 'ai-engineer');
 });
 
+// Role-noun tiebreaker: an AI ENGINEER whose JD lists "architecture" as a SKILL
+// (e.g. "Multi-Agent / A2A architectures") must NOT be mislabeled AI Architect.
+test('normalizeRoleFamily: AI Engineer with "A2A architectures" skill -> ai-engineer (NOT ai-architect)', () => {
+  const fam = normalizeRoleFamily({
+    title: 'AI Engineer',
+    roleSummary: 'Develops agentic AI applications and multi-agent systems with LangChain and LangGraph.',
+    skills: ['Agentic AI', 'Multi-Agent / A2A architectures', 'LangChain', 'LangGraph', 'Deep Agents / Agent orchestration', 'LLM-powered applications'],
+  });
+  assert.equal(fam, 'ai-engineer');
+});
+
+test('normalizeRoleFamily: genuine AI Architect still -> ai-architect (engineer tiebreaker does not steal it)', () => {
+  assert.equal(
+    normalizeRoleFamily({ title: 'AI Architect', roleSummary: 'Owns multi-tenant GenAI platform system design and architecture.' }),
+    'ai-architect'
+  );
+});
+
 test('normalizeRoleFamily: Forward Deployed / Solutions Engineer -> fde', () => {
   assert.equal(normalizeRoleFamily({ title: 'Solutions Engineer', roleSummary: 'Customer-facing delivery.' }), 'fde');
 });

@@ -84,9 +84,22 @@
     var saysEngineer = /\bengineer\b/.test(hay);
     if (dataPlatformSignal && saysEngineer && !saysArchitect) return "data-engineer";
     if (/\bdata architect|analytics architect|snowflake|warehouse|warehousing|cortex|data platform|analytics engineer|data modeling|dimensional\b/.test(hay)) return "data-architect";
+    // AI roles: decide engineer-vs-architect by the ROLE NOUN, not by the word
+    // "architecture" appearing as a SKILL. "AI Engineer" with a skill like
+    // "Multi-Agent / A2A architectures" is AI Engineering; only an explicit
+    // ARCHITECT role noun (bounded \barchitect\b — doesn't match "architectures")
+    // or an architecture-scope phrase (system design / multi-tenant) is AI
+    // Architecture. These AI rules run before the generic cloud/platform rule so
+    // an "AI ... platform" role isn't mislabeled Cloud/Platform.
+    var aiEngSignal = /\bai engineer|genai|gen ai|ml engineer|rag|agent|agentic|langchain|langgraph|llm|nlp|prompt\b/.test(hay);
+    var archRoleNoun = /\barchitect\b/.test(hay);
+    var archScope = /\bsystem design|multi-?tenant|reference architecture\b/.test(hay);
+    if (aiEngSignal) {
+      if (archRoleNoun || archScope) return "ai-architect";
+      return "ai-engineer";
+    }
     if (/\bcloud|platform|devops|kubernetes|infrastructure|sre|reliability|terraform\b/.test(hay)) return "cloud-platform";
     if (/\barchitect|architecture|system design|multi-tenant|enterprise\b/.test(hay)) return "ai-architect";
-    if (/\bai engineer|genai|ml engineer|rag|agent|llm|nlp\b/.test(hay)) return "ai-engineer";
     return null; // no confident match → don't force a filter
   }
 
