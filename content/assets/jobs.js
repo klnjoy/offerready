@@ -136,12 +136,53 @@
 
     function confirmDelete(j, cardEl, token) {
       if (!window.confirm("Delete \u201c" + (j.title || "this job") + "\u201d? This can\u2019t be undone.")) return;
-      fetch(API_BASE.replace(/\/$/, "") + "/api/jobs/" + encodeURIComponent(j.id), {
-        method: "DELETE", headers: authHeaders(token),
-      }).then(function (r) {
-        if (r.ok) { cardEl.remove(); if (!app.querySelector(".or-job-card")) boot(); }
-        else window.alert("Couldn\u2019t delete that job. Please try again.");
-      }).catch(function () { window.alert("Couldn\u2019t reach the server. Please try again."); });
+      // Use a FRESH token (the list token may have expired since load) so an
+      // expired session surfaces as a clear auth error, not a generic failure.
+      var proceed = function (tok) {
+        if (!tok) {
+          window.alert("Your session has expired. Please sign in again, then retry the delete.");
+          renderSignedOut();
+          return;
+        }
+        fetch(API_BASE.replace(/\/$/, "") + "/api/jobs/" + encodeURIComponent(j.id), {
+          method: "DELETE", headers: authHeaders(tok),
+        }).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; });
+        }).then(function (res) {
+          if (res.status === 200) {
+            // Deleting the active job must clear the active-job pointer so other
+            // pages (Gap / Questions / Dashboard / Defend) stop operating on a
+            // dead id. The server CASCADE-deletes the job's gap analyses,
+            // question sets, readiness snapshots, and practice sessions.
+            try {
+              if (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob
+                && window.OfferReadyReadiness.getActiveJob() === j.id
+                && window.OfferReadyReadiness.clearActiveJob) {
+                window.OfferReadyReadiness.clearActiveJob();
+              }
+            } catch (e) {}
+            cardEl.remove();
+            // Refresh My Jobs immediately (re-fetch authoritative list).
+            loadJobs(tok);
+            return;
+          }
+          // Status-specific, meaningful errors (spec).
+          var msg;
+          if (res.status === 401) { msg = "Authentication issue \u2014 your session isn\u2019t valid. Sign in again and retry."; renderSignedOut(); }
+          else if (res.status === 403) { msg = "Permission issue \u2014 you don\u2019t have access to delete this job."; }
+          else if (res.status === 404) { msg = "This job no longer exists (it may already be deleted). Refreshing your list."; cardEl.remove(); loadJobs(tok); }
+          else if (res.status >= 500) { msg = "The server couldn\u2019t delete this job right now (server error). Please try again."; }
+          else { msg = (res.body && res.body.error) || "Couldn\u2019t delete that job. Please try again."; }
+          if (res.status !== 404) window.alert(msg);
+        }).catch(function () {
+          window.alert("Request failed \u2014 couldn\u2019t reach the server. Check your connection and try again.");
+        });
+      };
+      if (window.OfferReadyAuth && window.OfferReadyAuth.getAccessToken) {
+        window.OfferReadyAuth.getAccessToken().then(proceed).catch(function () { proceed(token); });
+      } else {
+        proceed(token);
+      }
     }
 
     function openJob(id, token) {
