@@ -17,7 +17,7 @@ const { getJob, deleteJob, touchJobStats, repairedTitleFor, updateJobFields } = 
 const {
   getGapAnalysis, getQuestions, getProgress,
   getPracticeSessions, savePracticeSession, computeReadiness, saveProgressSnapshot,
-  completePracticeAtomic,
+  completePracticeAtomic, practiceSchemaReady,
 } = require('../_lib/readiness');
 
 // Allowed enum-ish values for a practice completion (reject anything else).
@@ -155,10 +155,17 @@ module.exports = async function handler(req, res) {
     const session = await savePracticeSession(user.id, id, v.value);
     if (!session) {
       // Authoritative write failed — do NOT report success or snapshot, and do
-      // NOT fall back to an unscoped write. Client should retry.
+      // NOT fall back to an unscoped write. Distinguish the common deploy cause
+      // (migration 0006 not applied → the job_id/session_id columns + conflict
+      // index don't exist) from a transient failure, so the client can show an
+      // actionable message instead of a generic retry.
+      const schemaReady = await practiceSchemaReady();
       send(res, 502, {
-        error: 'Could not save your practice session. Please try again.',
+        error: schemaReady === false
+          ? 'Readiness storage isn\u2019t fully deployed yet (practice schema missing). Apply migration 0006, then try again.'
+          : 'Could not save your practice session. Please try again.',
         persisted: false,
+        reason: schemaReady === false ? 'schema_missing' : 'server',
       });
       return;
     }
@@ -181,14 +188,19 @@ module.exports = async function handler(req, res) {
 
     if (!snapshot) {
       // Session saved but snapshot did not. Report partial persistence
-      // explicitly rather than a generic success.
+      // explicitly rather than a generic success. The snapshot write needs the
+      // 0006 progress_metrics columns (source/dedupe_key); flag that cause.
+      const schemaReady = await practiceSchemaReady();
       send(res, 207, {
         ok: false,
         partial: true,
         session,
         snapshot: null,
         readiness,
-        error: 'Practice saved, but readiness could not be updated. It will reconcile on next activity.',
+        error: schemaReady === false
+          ? 'Practice saved, but readiness storage isn\u2019t fully deployed (apply migration 0006).'
+          : 'Practice saved, but readiness could not be updated. It will reconcile on next activity.',
+        reason: schemaReady === false ? 'schema_missing' : 'snapshot',
       });
       return;
     }

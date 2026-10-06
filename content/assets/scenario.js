@@ -995,9 +995,20 @@
         } else if (r && r.saved && r.partial) {
           state.saved = true; state.lastResult = r;
           statusEl.className = "or-status or-status-warn";
-          statusEl.textContent = "Scenario completed, and your practice was saved \u2014 Interview Readiness will reconcile on your next activity.";
+          statusEl.textContent = (r.reason === "schema_missing")
+            ? "Scenario completed and your practice was saved, but readiness storage isn\u2019t fully deployed yet (migration 0006). Readiness will update once it\u2019s applied."
+            : "Scenario completed, and your practice was saved \u2014 Interview Readiness will reconcile on your next activity.";
           var vr2 = el("a", "ip-btn", "View My Readiness"); vr2.href = base + "Dashboard/index.html";
           actionsEl.appendChild(vr2); actionsEl.appendChild(allScenariosBtn());
+        } else if (r && r.local && r.reason === "schema_missing") {
+          // Signed-in, owned job, but the practice schema (0006) isn't deployed
+          // so the server couldn't record the session. Be explicit + retryable.
+          statusEl.className = "or-status or-status-err";
+          statusEl.textContent = "Scenario completed, but readiness storage isn\u2019t fully deployed yet, so we couldn\u2019t save this to your job. (Migration 0006 needs to be applied.)";
+          var retrySchema = el("button", "ip-btn or-btn-primary", "Try Saving Again");
+          retrySchema.addEventListener("click", function () { state.saving = false; renderSummary(); });
+          actionsEl.appendChild(retrySchema);
+          actionsEl.appendChild(allScenariosBtn());
         } else if (r && r.local && r.reason === "choose") {
           // Multiple owned jobs and no explicit binding — don't guess.
           statusEl.className = "or-status or-status-warn";
@@ -1158,7 +1169,8 @@
           if (onDone) onDone({ saved: true, local: false, readiness: res.body.readiness });
         } else if (res.status === 207) {
           // Session saved but snapshot didn't — report partial, not success.
-          if (onDone) onDone({ saved: true, local: false, partial: true, readiness: res.body && res.body.readiness });
+          // Carry the server's reason (e.g. schema_missing) for actionable copy.
+          if (onDone) onDone({ saved: true, local: false, partial: true, readiness: res.body && res.body.readiness, reason: (res.body && res.body.reason) || "snapshot" });
         } else {
           // 404 => the job was deleted/unowned: clear the stale pointer so later
           // pages stop operating on a dead id.
@@ -1166,7 +1178,10 @@
             window.OfferReadyReadiness.clearActiveJob();
           }
           localSave(rec);
-          if (onDone) onDone({ saved: false, local: true, reason: res.status === 404 ? "nojob" : "server", error: (res.body && res.body.error) });
+          // Prefer the server-supplied reason (e.g. "schema_missing") so the
+          // completion screen can explain a deploy gap instead of a vague error.
+          var reason = (res.body && res.body.reason) || (res.status === 404 ? "nojob" : "server");
+          if (onDone) onDone({ saved: false, local: true, reason: reason, error: (res.body && res.body.error) });
         }
       }).catch(function () {
         localSave(rec);

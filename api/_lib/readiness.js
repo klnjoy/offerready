@@ -49,6 +49,27 @@ async function restFetch(path, opts) {
 
 const enc = encodeURIComponent;
 
+/**
+ * Probe whether the Phase-1.5 practice schema (migration 0006) is applied.
+ * Selects a 0006-only column (practice_sessions.session_id); PostgREST returns
+ * 400 ("column ... does not exist") when 0006 hasn't been applied, 200 when it
+ * has. Read-only, cheap, fail-closed. Used ONLY to turn an opaque write failure
+ * into an actionable "schema not deployed" signal — never to gate writes.
+ * Returns true/false, or null when the probe itself couldn't run (config/net).
+ */
+async function practiceSchemaReady() {
+  try {
+    const resp = await restFetch('/practice_sessions?select=session_id&limit=0',
+      { method: 'GET', headers: serviceHeaders() });
+    if (resp.ok) return true;
+    // 400 => missing column (0006 not applied). Other non-2xx => inconclusive.
+    if (resp.status === 400) return false;
+    return null;
+  } catch (_e) {
+    return null;
+  }
+}
+
 /** True iff `jobId` exists and is owned by `userId`. Fail-closed. */
 async function ownsJob(userId, jobId) {
   if (!userId || !jobId) return false;
@@ -395,7 +416,7 @@ function int(v) {
 }
 
 module.exports = {
-  ownsJob,
+  ownsJob, practiceSchemaReady,
   saveGapAnalysis, getGapAnalysis,
   saveQuestions, getQuestions,
   saveProgressSnapshot, getProgress,

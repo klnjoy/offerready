@@ -89,7 +89,7 @@ extra_javascript:
   - assets/mermaid-init.js?v=3
   - assets/chatbot.js?v=4
   - assets/practice.js?v=3
-  - assets/scenario.js?v=19
+  - assets/scenario.js?v=20
   - assets/progress.js?v=7
   - assets/why.js?v=3
   - assets/analyze.js?v=18
