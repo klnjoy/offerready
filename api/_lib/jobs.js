@@ -296,7 +296,16 @@ function normalizeRoleFamily(ctx) {
     c.seniority || '',
   ].join(' ').toLowerCase();
 
-  if (/\bsecurity|prompt injection|guardrail|threat|owasp|zero.?trust\b/.test(hay)) return 'ai-security';
+  // AI SECURITY is for AI/LLM security roles only (prompt injection, model
+  // guardrails, agent threats) — NOT general data/infra security. A plain
+  // data-security JD (Snowflake RBAC, data masking, CyberArk, audit, compliance)
+  // must NOT match the bare word "security" and skip the data rules. Require an
+  // unmistakable AI-security phrase OR the generic security word together with
+  // an AI/LLM signal. Mirrors client inferScenarioCategory (analyze.js).
+  const aiSignal = /\b(ai|a\.i\.|genai|gen ai|llm|ml|machine learning|rag|agent|prompt|model|nlp)\b/.test(hay);
+  const strongAiSec = /\bprompt injection|jailbreak|guardrail|owasp\s*(llm|top\s*10)?|model (security|poisoning)|adversarial|red.?team(ing)?\b/.test(hay);
+  const genericSec = /\bsecurity|threat|zero.?trust\b/.test(hay);
+  if (strongAiSec || (genericSec && aiSignal)) return 'ai-security';
   if (/\bforward deployed|forward-deployed|\bfde\b|customer-facing|client-facing|solutions engineer\b/.test(hay)) return 'fde';
   // Data Engineering BEFORE Data Architecture (spec): a Data Engineer must not
   // default to the Data Architect family.

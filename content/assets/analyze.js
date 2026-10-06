@@ -56,7 +56,17 @@
       (((analysis && analysis.coreSkills) || []).map(function (s) { return typeof s === "string" ? s : (s && s.name); }).join(" ")) + " " +
       (((analysis && analysis.technologies) || []).join(" "))).toLowerCase();
     // Order matters: most specific role signals first.
-    if (/\bsecurity|prompt injection|guardrail|threat|owasp|zero.?trust\b/.test(hay)) return "ai-security";
+    // AI SECURITY is for AI/LLM security roles (prompt injection, model
+    // guardrails, agent threats) — NOT general data/infra security. A plain
+    // data-security JD (Snowflake RBAC, data masking, CyberArk, audit,
+    // compliance) was wrongly matching the bare word "security" here and
+    // skipping the data rules below. So require either an unmistakable
+    // AI-security phrase, OR the generic security word TOGETHER with an AI/LLM
+    // signal. Otherwise fall through to the data/cloud/architecture rules.
+    var aiSignal = /\b(ai|a\.i\.|genai|gen ai|llm|ml|machine learning|rag|agent|prompt|model|nlp)\b/.test(hay);
+    var strongAiSec = /\bprompt injection|jailbreak|guardrail|owasp\s*(llm|top\s*10)?|model (security|poisoning)|adversarial|red.?team(ing)?\b/.test(hay);
+    var genericSec = /\bsecurity|threat|zero.?trust\b/.test(hay);
+    if (strongAiSec || (genericSec && aiSignal)) return "ai-security";
     if (/\bforward deployed|forward-deployed|\bfde\b|customer-facing|client-facing|solutions engineer\b/.test(hay)) return "fde";
     // DATA ENGINEERING first (spec): Data Engineer / Azure Data Engineer / Data
     // Platform Engineer and the pipeline/ETL/Spark/Databricks/streaming/quality

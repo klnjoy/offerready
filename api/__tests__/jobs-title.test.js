@@ -459,6 +459,41 @@ test('normalizeRoleFamily: bare seniority maps to NO family', () => {
   assert.equal(normalizeRoleFamily({}), '');
 });
 
+// AI SECURITY is for AI/LLM security roles only. A general data/infra security
+// JD (Snowflake RBAC, data masking, CyberArk, audit, compliance) must NOT match
+// the bare word "security" and must fall through to the data family.
+test('normalizeRoleFamily: Snowflake data-security role -> data (NOT ai-security)', () => {
+  const fam = normalizeRoleFamily({
+    title: 'Senior',
+    roleSummary: 'Establishes a Snowflake Center of Excellence, implementing security '
+      + 'frameworks, automating user provisioning, and ensuring compliance with audit findings.',
+    technologies: ['Snowflake', 'CyberArk', 'AWS', 'ServiceNow', 'Terraform'],
+    skills: ['Snowflake administration', 'Dynamic Data Masking', 'CI/CD pipelines'],
+  });
+  assert.notEqual(fam, 'ai-security');
+  assert.ok(fam === 'data-architect' || fam === 'data-engineer' || fam === 'cloud-platform',
+    'a Snowflake data-security role should map to a data/cloud family, got: ' + fam);
+});
+
+test('normalizeRoleFamily: generic security without AI signal is not ai-security', () => {
+  assert.notEqual(
+    normalizeRoleFamily({ title: 'Security Engineer', roleSummary: 'Zero-trust network security and threat monitoring on AWS.' }),
+    'ai-security'
+  );
+});
+
+test('normalizeRoleFamily: genuine AI/LLM security role -> ai-security', () => {
+  assert.equal(
+    normalizeRoleFamily({ title: 'AI Security Engineer', roleSummary: 'Hardens LLM apps against prompt injection and model threats.' }),
+    'ai-security'
+  );
+  // Strong AI-security phrase alone is enough even without the word "security".
+  assert.equal(
+    normalizeRoleFamily({ roleSummary: 'Owns guardrails and prompt injection defenses for our GenAI agents.' }),
+    'ai-security'
+  );
+});
+
 // ---------------------------------------------------------------------------
 // isWeakTitle / repairedTitleFor (legacy-title repair ON REOPEN only, spec §3).
 // ---------------------------------------------------------------------------
