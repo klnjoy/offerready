@@ -75,6 +75,40 @@
 
     // Resolve + cache the active job's title (best-effort) so the banner can
     // show "Current job: <title>". Fetches /api/jobs once; repaints on arrival.
+    // Classify a saved job into a Defend scenario FAMILY from its own context
+    // (title + seniority [+ roleSummary if available]). This mirrors the server
+    // normalizeRoleFamily (api/_lib/jobs.js) role-noun logic so the Defend page
+    // family ALWAYS matches the active job — never a stale offerready.defendRole
+    // signal from an earlier analysis. Returns a category key or "" (no match).
+    function classifyFamilyFromJob(job) {
+      if (!job) return "";
+      var hay = [job.title || "", job.seniority || "", job.roleSummary || "",
+        (job.analysis && job.analysis.roleSummary) || ""].join(" ").toLowerCase();
+      if (!hay.trim()) return "";
+      // AI security (AI/LLM only) — require a strong phrase or security+AI signal.
+      var aiSig = /\b(ai|a\.i\.|genai|gen ai|llm|ml|machine learning|rag|agent|prompt|model|nlp)\b/.test(hay);
+      var strongAiSec = /\bprompt injection|jailbreak|guardrail|owasp\s*(llm|top\s*10)?|model (security|poisoning)|adversarial|red.?team(ing)?\b/.test(hay);
+      var genericSec = /\bsecurity|threat|zero.?trust\b/.test(hay);
+      if (strongAiSec || (genericSec && aiSig)) return "ai-security";
+      if (/\bforward deployed|forward-deployed|\bfde\b|customer-facing|client-facing|solutions engineer\b/.test(hay)) return "fde";
+      if (/\bdata engineer|data engineering|azure data|data platform engineer|databricks|spark|pipeline|data pipeline|etl|elt|ingestion|streaming|real-?time|data quality|lakehouse|airflow|dbt\b/.test(hay)) return "data-engineer";
+      var dataPlatform = /\bsnowflake|warehouse|warehousing|cortex|data platform|redshift|bigquery\b/.test(hay);
+      var saysArch = /\barchitect|architecture|data model|dimensional\b/.test(hay);
+      var saysEng = /\bengineer\b/.test(hay);
+      if (dataPlatform && saysEng && !saysArch) return "data-engineer";
+      if (/\bdata architect|analytics architect|snowflake|warehouse|warehousing|cortex|data platform|analytics engineer|data modeling|dimensional\b/.test(hay)) return "data-architect";
+      // AI engineer-vs-architect by ROLE NOUN (not the word "architecture" as a
+      // skill). Runs before cloud/platform so an "AI ... platform" role isn't
+      // mislabeled Cloud/Platform.
+      var aiEngSig = /\bai engineer|genai|gen ai|ml engineer|rag|agent|agentic|langchain|langgraph|llm|nlp|prompt\b/.test(hay);
+      var archRoleNoun = /\barchitect\b/.test(hay);
+      var archScope = /\bsystem design|multi-?tenant|reference architecture\b/.test(hay);
+      if (aiEngSig) { return (archRoleNoun || archScope) ? "ai-architect" : "ai-engineer"; }
+      if (/\bcloud|platform|devops|kubernetes|infrastructure|sre|reliability|terraform\b/.test(hay)) return "cloud-platform";
+      if (/\barchitect|architecture|system design|multi-tenant|enterprise\b/.test(hay)) return "ai-architect";
+      return "";
+    }
+
     function ensureActiveJobTitle(repaint) {
       var id = (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob)
         ? window.OfferReadyReadiness.getActiveJob() : "";
@@ -91,18 +125,28 @@
             if (!job) { activeJobTitleCache = { id: id, title: "" }; return; }
             var jobTitle = cleanRoleLabel(job.title) || "Untitled role";
             activeJobTitleCache = { id: id, title: jobTitle };
-            // The saved job's title is the AUTHORITATIVE role identity (the
-            // server derives it via deriveJobTitle, never "Not specified"). If
-            // the Defend list is role-filtered but the matched label came from
-            // a junk/missing localStorage value (so it fell back to the generic
-            // category label), upgrade it to the real job title.
-            if (activeCat !== "all") {
-              var current = cleanRoleLabel(matchedRole);
-              var isCategoryFallback = current && current === CATEGORY_LABELS[activeCat];
-              if ((!current || isCategoryFallback) && jobTitle && jobTitle !== "Untitled role") {
-                matchedRole = jobTitle;
-              }
+            // The ACTIVE JOB is authoritative for the whole Defend page — it's
+            // where completed practice is saved — so the scenario section must
+            // reflect THIS job, not a stale offerready.defendRole signal from an
+            // earlier analysis (which caused two different "Current job" labels
+            // and a family that didn't match the job, e.g. an AI Engineer job
+            // showing the "AI Architecture" family).
+            var changed = false;
+            // 1) Role label: use the real saved-job title (server-derived via
+            //    deriveJobTitle, never "Not specified").
+            if (jobTitle && jobTitle !== "Untitled role" && cleanRoleLabel(matchedRole) !== jobTitle) {
+              matchedRole = jobTitle; changed = true;
             }
+            // 2) Family: classify from the job's OWN context so the catalog
+            //    family matches the active job. Only override when we get a
+            //    confident classification (never force "all" or a wrong guess).
+            var fam = classifyFamilyFromJob(job);
+            if (fam && CATEGORY_LABELS[fam] && fam !== activeCat) {
+              activeCat = fam;
+              if (!cleanRoleLabel(matchedRole)) matchedRole = CATEGORY_LABELS[fam];
+              changed = true;
+            }
+            void changed;  // (kept for clarity; repaint always refreshes labels)
             if (repaint) repaint();
           })
           .catch(function () {});
