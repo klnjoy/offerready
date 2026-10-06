@@ -89,7 +89,7 @@ extra_javascript:
   - assets/mermaid-init.js?v=3
   - assets/chatbot.js?v=4
   - assets/practice.js?v=3
-  - assets/scenario.js?v=24
+  - assets/scenario.js?v=25
   - assets/progress.js?v=7
   - assets/why.js?v=3
   - assets/analyze.js?v=23
@@ -99,7 +99,7 @@ extra_javascript:
   - assets/questions.js?v=8
   - assets/jobs.js?v=12
   - assets/onboarding.js?v=4
-  - assets/simulator.js?v=3
+  - assets/simulator.js?v=4
   - assets/walkthrough.js?v=3
 
 markdown_extensions:

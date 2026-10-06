@@ -1,0 +1,84 @@
+{
+  "slug": "dbt-analytics-engineering",
+  "title": "Build Trustworthy Analytics with dbt and Defend It",
+  "role": "Analytics Engineer",
+  "category": "data-engineer",
+  "required_entitlement": "system_design_pro",
+  "estimated_minutes": 22,
+  "teaser": {
+    "setup": "You own the transformation layer. Stakeholders don't trust the numbers and full refreshes are slow and expensive. Design a dbt project and defend the calls \u2014 project structure, testing, incremental models, and CI.",
+    "you_will_practice": [
+      "Layered dbt project structure (staging \u2192 marts)",
+      "Tests, contracts, and freshness as quality gates",
+      "Incremental, idempotent models and backfills",
+      "CI/CD for transformations and trust"
+    ],
+    "node_titles": ["Approach", "Why layer", "Testing & trust", "Incremental safely", "CI gate", "Incident: wrong metric", "Reflection", "Next"],
+    "sample_node": {
+      "id": "n3",
+      "kind": "constraint",
+      "prompt": "How do you stop a bad column or broken join from reaching a mart?",
+      "model": "dbt tests as gates: not_null/unique on keys, relationships for referential integrity, accepted_values for enums, and source freshness. Add model contracts on exposed marts so types/columns can't drift. Run build+test in CI on every PR and block merge on failure. Quarantine or fail rather than publish silently.",
+      "signals": ["schema + data tests on keys/enums", "contracts on exposed marts", "CI blocks merge on failure"]
+    }
+  },
+  "start": "n1",
+  "nodes": {
+    "n1": {
+      "id": "n1", "kind": "decision",
+      "prompt": "Clarify first, then give your one-paragraph dbt design for trustworthy, affordable marts.",
+      "model": "Clarify: sources + grain, which metrics are authoritative, freshness SLO, and the cost of full refresh. Design: layered models \u2014 staging (1:1 source cleanup) \u2192 intermediate \u2192 marts, all via ref() not hard-coded tables; tests + contracts + source freshness as gates; incremental materialization where refresh is expensive; docs/lineage from the DAG; CI runs build+test on PRs. One semantic definition per metric.",
+      "signals": ["clarifies grain/metrics/freshness/cost", "staging\u2192intermediate\u2192marts via ref()", "tests + contracts + CI as the trust mechanism"],
+      "next": "n2"
+    },
+    "n2": {
+      "id": "n2", "kind": "why",
+      "prompt": "Why a staging layer instead of writing marts directly off raw sources?",
+      "model": "Staging isolates source-specific cleanup (renames, types, dedup) so marts depend on a stable internal shape, not on raw quirks. When a source changes you fix one staging model, not every mart. It also makes lineage and testing clear. Trade-off: more models to maintain \u2014 worth it for change isolation and trust.",
+      "signals": ["staging isolates source quirks", "change in one place, not every mart", "names the maintenance trade-off"],
+      "next": "n3"
+    },
+    "n3": {
+      "id": "n3", "kind": "constraint", "constraint_type": "production",
+      "prompt": "How do you stop a bad column or broken join from reaching a mart?",
+      "model": "dbt tests as gates: not_null/unique on keys, relationships for referential integrity, accepted_values for enums, source freshness. Add model contracts on exposed marts so types/columns can't drift. Run build+test in CI on every PR and block merge on failure. Fail or quarantine rather than publish silently.",
+      "signals": ["schema + data tests on keys/enums", "contracts on exposed marts", "CI blocks merge on failure"],
+      "next": "n4"
+    },
+    "n4": {
+      "id": "n4", "kind": "constraint", "constraint_type": "production",
+      "prompt": "Full refreshes are too slow and expensive. How do you make models incremental safely?",
+      "model": "Incremental materialization with a stable unique_key and an is_incremental() filter on a watermark. Use merge (or delete+insert) so reruns converge \u2014 no duplicates. Handle late-arriving data with a lookback window. Keep a full-refresh path for logic changes/backfills, and test that the incremental result equals the full result on a sample. Idempotent by design.",
+      "signals": ["unique_key + is_incremental() watermark", "merge so reruns are idempotent", "lookback for late data + full-refresh escape hatch"],
+      "next": "n5"
+    },
+    "n5": {
+      "id": "n5", "kind": "incident",
+      "prompt": "Two dashboards show different revenue numbers. Diagnose and fix the trust problem.",
+      "model": "Root cause is usually a metric defined twice with different logic/filters. Find the canonical definition, move it into ONE dbt model (or a semantic/metrics layer), and point both dashboards at it. Add a test asserting the metric's expected properties. The fix is a single source of truth for the metric, not reconciling two queries by hand each time.",
+      "signals": ["duplicate/divergent metric definitions = root cause", "one canonical model / metrics layer", "test to lock the definition"],
+      "next": "n6"
+    },
+    "n6": {
+      "id": "n6", "kind": "reflection",
+      "prompt": "Where did you assert a choice without the mechanism, the trade-off, or the verification?",
+      "checklist": [
+        "I clarified grain/metrics/freshness/cost first",
+        "I layered staging\u2192marts for change isolation",
+        "I gated trust with tests + contracts + CI, not hope",
+        "I made incremental models idempotent (merge + lookback)",
+        "I fixed divergent numbers with one canonical metric definition"
+      ],
+      "next": "n7"
+    },
+    "n7": {
+      "id": "n7", "kind": "next_drill",
+      "prompt": "Strong analytics-engineering defense. Keep going:",
+      "recommend": [
+        { "label": "dbt \u2014 deep dive", "path": "Technologies/dbt/index.html" },
+        { "label": "Snowflake Cortex \u2014 System Design + Mock", "path": "Snowflake-Cortex/system-design-mock.html" },
+        { "label": "Keep Asking Why \u2014 data platform chain", "path": "Personal-SourceCode/Interview_Why_Chains.html" }
+      ]
+    }
+  }
+}

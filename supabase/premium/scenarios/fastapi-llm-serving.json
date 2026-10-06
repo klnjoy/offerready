@@ -1,0 +1,84 @@
+{
+  "slug": "fastapi-llm-serving",
+  "title": "Serve an LLM Feature with FastAPI in Production and Defend It",
+  "role": "Platform / Backend Engineer",
+  "category": "cloud-platform",
+  "required_entitlement": "system_design_pro",
+  "estimated_minutes": 22,
+  "teaser": {
+    "setup": "You're building the API that fronts an LLM/model for a real product. Design the FastAPI service and defend it under pressure \u2014 async, streaming, resilience, backpressure, and observability.",
+    "you_will_practice": [
+      "Async I/O and streaming responses for model calls",
+      "Timeouts, retries, circuit breakers, and fallbacks",
+      "Backpressure, load shedding, and concurrency limits",
+      "Observability and safe rollout"
+    ],
+    "node_titles": ["Approach", "Why async", "Resilience", "Spike/backpressure", "Observability", "Incident: latency", "Reflection", "Next"],
+    "sample_node": {
+      "id": "n2",
+      "kind": "why",
+      "prompt": "Why async endpoints here instead of a simple synchronous handler?",
+      "model": "LLM/model calls are I/O-bound and slow (hundreds of ms to seconds). Sync handlers tie up a worker per in-flight request, so a handful of slow calls starve the pool and throughput collapses. Async + httpx lets one worker await many upstream calls concurrently. Trade-off: async code is easier to get subtly wrong (blocking calls sneak in), so you keep CPU work off the event loop.",
+      "signals": ["model calls are I/O-bound/slow", "sync starves the worker pool", "names the async-correctness trade-off"]
+    }
+  },
+  "start": "n1",
+  "nodes": {
+    "n1": {
+      "id": "n1", "kind": "decision",
+      "prompt": "Clarify first, then give your one-paragraph design for a FastAPI service fronting an LLM.",
+      "model": "Clarify: expected QPS, p95 latency target, response size/streaming need, and the upstream model's limits. Design: async endpoints with httpx to the model; Pydantic request validation; stream long generations via SSE; per-call timeouts, bounded retries with backoff + a circuit breaker, and a fallback (cheaper/cached answer); concurrency limits + load shedding; structured logs with request IDs; health/readiness probes. Long jobs go to a task queue, not the request worker.",
+      "signals": ["clarifies QPS/latency/streaming first", "async + validation + streaming", "timeouts/breaker/fallback + backpressure + observability"],
+      "next": "n2"
+    },
+    "n2": {
+      "id": "n2", "kind": "why",
+      "prompt": "Why async endpoints here instead of a simple synchronous handler?",
+      "model": "Model calls are I/O-bound and slow, so sync ties up a worker per in-flight request and a few slow calls starve the pool \u2014 throughput collapses. Async + httpx lets one worker await many upstream calls concurrently. Trade-off: it's easy to accidentally block the event loop, so CPU work and blocking libraries must be offloaded.",
+      "signals": ["I/O-bound \u2192 async wins", "sync starves the pool", "names the blocking-the-loop trade-off"],
+      "next": "n3"
+    },
+    "n3": {
+      "id": "n3", "kind": "constraint", "constraint_type": "production",
+      "prompt": "The model provider gets slow and flaky at peak. How does your service stay up?",
+      "model": "Per-call timeout so a slow upstream can't hang a request; bounded retries with exponential backoff + jitter (not retry-forever); a circuit breaker that fails fast when the provider is down; and a fallback \u2014 an alternate provider/region, a cheaper model, or a cached/graceful answer. Multi-provider config to prevent a single point of failure. Mitigate now (breaker/fallback) and prevent (failover).",
+      "signals": ["timeout + bounded retry w/ backoff+jitter", "circuit breaker fails fast", "fallback / multi-provider"],
+      "next": "n4"
+    },
+    "n4": {
+      "id": "n4", "kind": "constraint", "constraint_type": "production",
+      "prompt": "A traffic spike arrives. How do you prevent the service from collapsing?",
+      "model": "Backpressure: a bounded concurrency limit and a queue with a max wait; when full, shed load with 429 + Retry-After instead of accepting work you can't finish. A fast 429 protects the healthy path and the upstream from a thundering herd. Scale horizontally behind a load balancer; keep streaming connections accounted for in the concurrency budget. Protect, then scale.",
+      "signals": ["bounded concurrency + queue", "shed load (429) rather than collapse", "horizontal scale + protect upstream"],
+      "next": "n5"
+    },
+    "n5": {
+      "id": "n5", "kind": "incident",
+      "prompt": "p95 latency doubled in prod but the model provider looks fine. Diagnose it.",
+      "model": "Instrument the request end to end: time spent in validation, queueing/backpressure wait, upstream call, and serialization/streaming. Common causes: an accidental blocking call on the event loop, connection-pool exhaustion to the model (raise/limit pool, keep-alive), GC/CPU from large payloads, or queue wait under load. Use the traces/request IDs to localize the stage, then fix that stage \u2014 don't blanket-scale.",
+      "signals": ["end-to-end tracing to localize the stage", "blocking-loop / pool exhaustion / queue wait", "fix the stage, not blanket-scale"],
+      "next": "n6"
+    },
+    "n6": {
+      "id": "n6", "kind": "reflection",
+      "prompt": "Where did you assert a choice without the mechanism, the trade-off, or the verification?",
+      "checklist": [
+        "I clarified QPS/latency/streaming before designing",
+        "I justified async by the I/O-bound workload",
+        "I added timeout/breaker/fallback, not retry-forever",
+        "I handled spikes with backpressure + load shedding",
+        "I made it observable (traces/request IDs) to diagnose latency"
+      ],
+      "next": "n7"
+    },
+    "n7": {
+      "id": "n7", "kind": "next_drill",
+      "prompt": "Strong serving defense. Go deeper:",
+      "recommend": [
+        { "label": "FastAPI \u2014 deep dive", "path": "Technologies/fastapi/index.html" },
+        { "label": "Reliability & Distributed Systems", "path": "GenAI-Topics/reliability/index.html" },
+        { "label": "Keep Asking Why \u2014 production incidents", "path": "Personal-SourceCode/Interview_Why_Chains.html" }
+      ]
+    }
+  }
+}

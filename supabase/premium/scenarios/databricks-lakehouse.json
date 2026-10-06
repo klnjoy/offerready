@@ -1,0 +1,99 @@
+{
+  "slug": "databricks-lakehouse",
+  "title": "Design a Databricks Lakehouse (Medallion + Delta) and Defend It",
+  "role": "Data Engineer",
+  "category": "data-engineer",
+  "required_entitlement": "system_design_pro",
+  "estimated_minutes": 24,
+  "teaser": {
+    "setup": "You own the data platform. The business wants trustworthy analytics on Databricks fed by batch and streaming sources. Design the lakehouse and defend the calls under pressure \u2014 medallion layering, Delta reliability, performance, cost, and governance.",
+    "you_will_practice": [
+      "Medallion (bronze/silver/gold) layering on Delta",
+      "Idempotent incremental loads and schema evolution",
+      "Spark/Delta performance (skew, small files, Z-ORDER)",
+      "Unity Catalog governance and cluster cost control"
+    ],
+    "node_titles": ["Approach", "Why medallion", "Delta reliability", "Schema evolution", "Governance", "Performance incident", "Cost spike", "Reflection", "Next"],
+    "sample_node": {
+      "id": "n2",
+      "kind": "why",
+      "prompt": "Why land raw in bronze instead of transforming before load?",
+      "model": "Raw bronze is an immutable, replayable source of truth: when transformation logic changes you reprocess from bronze without re-ingesting, and transforms run on elastic Spark close to the data. Trade-off: more storage and a larger governance surface. For strict PII-at-source you'd mask on ingest and accept less replayability.",
+      "signals": ["raw = replayable source of truth", "reprocess without re-ingest", "names the storage/governance trade-off"]
+    }
+  },
+  "start": "n1",
+  "nodes": {
+    "n1": {
+      "id": "n1", "kind": "decision",
+      "prompt": "Clarify first, then give your one-paragraph lakehouse design for batch + streaming analytics on Databricks.",
+      "model": "Clarify: volume/velocity, per-table freshness SLO, event ordering/dedup, PII, and a cost ceiling. Design: medallion on Delta \u2014 bronze (raw, replayable) \u2192 silver (cleaned/conformed) \u2192 gold (business marts); batch via incremental MERGE, streaming via Structured Streaming into bronze; data-quality gates between layers; Unity Catalog for governance/lineage; freshness + cost monitoring. Serve gold to BI.",
+      "signals": ["clarifies volume/freshness/cost/PII first", "bronze/silver/gold on Delta", "quality gates + governance + monitoring"],
+      "next": "n2"
+    },
+    "n2": {
+      "id": "n2", "kind": "why",
+      "prompt": "Why land raw in bronze instead of transforming before load?",
+      "model": "Raw bronze is an immutable, replayable source of truth: when logic changes you reprocess from bronze without re-ingesting, and transforms run on elastic Spark close to the data. Trade-off: more storage and a larger governance surface. For strict PII-at-source you'd mask on ingest and accept less replayability.",
+      "signals": ["raw = replayable source of truth", "reprocess without re-ingest", "names the trade-off"],
+      "next": "n3"
+    },
+    "n3": {
+      "id": "n3", "kind": "constraint", "constraint_type": "production",
+      "prompt": "A streaming job is retried after a partial failure. How do you avoid duplicates or corruption in Delta?",
+      "model": "Idempotent writes: MERGE on a stable business key for batch; for streaming use checkpointed exactly-once sinks so a replay doesn't double-write. Backfills target a bounded window with the same merge logic. A retried run converges to the same table state \u2014 safe by design, not luck. Delta's ACID transactions prevent partial-commit corruption.",
+      "signals": ["MERGE on business key / exactly-once checkpointing", "bounded same-logic backfill", "relies on Delta ACID, not append-and-hope"],
+      "next": "n4"
+    },
+    "n4": {
+      "id": "n4", "kind": "constraint", "constraint_type": "production",
+      "prompt": "An upstream source adds and renames columns without warning. How does your pipeline survive it?",
+      "model": "Bronze is schema-tolerant with Delta schema evolution/mergeSchema so new columns are additive, never a crash. Pin the silver/gold contract to the columns you actually consume and map explicitly, so an upstream rename surfaces as a controlled mapping change, not silent loss. Version the schema and alert on unexpected changes. Additive-safe at the edge, contract-stable in the middle.",
+      "signals": ["schema-tolerant bronze (additive)", "explicit consumed contract at silver/gold", "version + alert on change"],
+      "next": "n5"
+    },
+    "n5": {
+      "id": "n5", "kind": "constraint", "constraint_type": "security",
+      "prompt": "Analysts must only see rows for their region, and PII must be masked. How do you enforce it on the lakehouse?",
+      "model": "Govern in Unity Catalog: table/column grants, column-masking functions for PII, and row-level filters by region tied to the user's group. Enforce at the data layer so every tool/BI client inherits it \u2014 never rely on the dashboard to filter. Lineage + audit so access is reviewable.",
+      "signals": ["Unity Catalog grants + column masking + row filters", "enforced at the data layer, inherited by all clients", "lineage/audit for review"],
+      "next": "n6"
+    },
+    "n6": {
+      "id": "n6", "kind": "incident",
+      "prompt": "A Spark job that was fast is now slow and spilling after data growth. Diagnose it.",
+      "model": "Read the Spark UI stages. Usual suspects: data skew on a join/group key (one lagging task), small-file explosion from streaming (OPTIMIZE/compaction + auto-optimize), shuffle spill from under-partitioning or an undersized cluster, or an exploding join from a grain bug. Fix the specific cause \u2014 salt/repartition the skewed key, compact, tune shuffle partitions, Z-ORDER/liquid-cluster the filter columns. Don't just upsize to hide skew.",
+      "signals": ["reads Spark UI (skew/spill/small files)", "fixes the cause (salt/compact/Z-ORDER)", "doesn't just upsize to mask skew"],
+      "next": "n7"
+    },
+    "n7": {
+      "id": "n7", "kind": "incident",
+      "prompt": "Databricks cost doubled this month. Find and fix it without hurting SLAs.",
+      "model": "Attribute cost: all-purpose clusters used for jobs (move to job clusters), idle/oversized clusters (autoscaling + auto-termination), inefficient queries (the Spark perf fixes above), and over-frequent streaming where batch would do. Use spot/fleet where interruption is tolerable. Measure $/job and set budgets/alerts. Cut waste first, then right-size \u2014 keep the freshness SLOs intact.",
+      "signals": ["job clusters not all-purpose; autoscale + auto-terminate", "fix inefficient queries + over-streaming", "measure $/job + budget alerts, protect SLO"],
+      "next": "n8"
+    },
+    "n8": {
+      "id": "n8", "kind": "reflection",
+      "prompt": "Where did you assert a choice without the mechanism, the trade-off, or the verification?",
+      "checklist": [
+        "I clarified volume/freshness/cost/PII before designing",
+        "I justified medallion layering (replayability) with its trade-off",
+        "I made retries idempotent (MERGE/checkpoint), not append-and-hope",
+        "I handled schema evolution with a stable consumed contract",
+        "I governed access in Unity Catalog at the data layer",
+        "I diagnosed Spark perf by cause and cut cost without breaking SLOs"
+      ],
+      "next": "n9"
+    },
+    "n9": {
+      "id": "n9", "kind": "next_drill",
+      "prompt": "Strong lakehouse defense. Go deeper:",
+      "recommend": [
+        { "label": "Databricks \u2014 deep dive", "path": "Technologies/databricks/index.html" },
+        { "label": "dbt \u2014 transformations as tested software", "path": "Technologies/dbt/index.html" },
+        { "label": "Keep Asking Why \u2014 data platform chain", "path": "Personal-SourceCode/Interview_Why_Chains.html" }
+      ]
+    }
+  }
+}

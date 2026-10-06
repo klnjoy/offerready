@@ -1,0 +1,91 @@
+{
+  "slug": "identity-oauth-agent",
+  "title": "Secure Identity & Delegated Access for an AI App (OAuth/OIDC/Okta) and Defend It",
+  "role": "AI Security / Platform Engineer",
+  "category": "ai-security",
+  "required_entitlement": "system_design_pro",
+  "estimated_minutes": 23,
+  "teaser": {
+    "setup": "Your AI product authenticates users via an IdP (Okta/Entra) and its agent calls downstream APIs on their behalf. Design the identity architecture and defend the calls under pressure \u2014 OIDC, token validation, delegated access, and secrets.",
+    "you_will_practice": [
+      "OIDC login and JWT access-token validation",
+      "Where to enforce authorization (data layer, not UI)",
+      "Delegated access for agents (on-behalf-of / token exchange)",
+      "Secrets, rotation, and least privilege per tool"
+    ],
+    "node_titles": ["Approach", "Why validate aud/iss", "AuthZ placement", "Delegated agent access", "Secrets & rotation", "Incident: token leak", "Reflection", "Next"],
+    "sample_node": {
+      "id": "n4",
+      "kind": "decision",
+      "prompt": "The agent must call downstream APIs as the user. How do you delegate access safely?",
+      "model": "OAuth2 on-behalf-of / token exchange to mint a scoped, short-lived downstream token \u2014 not the agent reusing the user's broad token. Least-privilege scopes per tool, short TTL, and an audit of which identity performed each call. Secrets live in a vault, never in the prompt. Scope-down per hop so a compromised tool can't act broadly.",
+      "signals": ["token exchange / OBO, not broad-token reuse", "least-privilege scopes + short TTL", "audit identity per call"]
+    }
+  },
+  "start": "n1",
+  "nodes": {
+    "n1": {
+      "id": "n1", "kind": "decision",
+      "prompt": "Clarify first, then give your one-paragraph identity design for an SPA + API + agent that calls downstream services.",
+      "model": "Clarify: user population + IdP (Okta/Entra), which downstream APIs, data sensitivity, and session needs. Design: OIDC login with PKCE for the SPA \u2192 short-lived access token (JWT) with audience/scope; the API validates signature, exp, aud, iss on every request; identity propagates and authorization is enforced at the data layer; the agent uses OAuth2 token exchange to get scoped downstream tokens; refresh handled server-side; secrets in a vault with rotation. Audit everything.",
+      "signals": ["OIDC + PKCE + short-lived scoped JWT", "API validates sig/exp/aud/iss", "authz at the data layer + delegated downstream tokens"],
+      "next": "n2"
+    },
+    "n2": {
+      "id": "n2", "kind": "why",
+      "prompt": "Why validate the audience (aud) and issuer (iss) on the token, not just the signature?",
+      "model": "A valid signature only proves the IdP minted the token \u2014 not that it was minted for YOUR service. Without aud/iss checks, a token issued for another service (or a different tenant) could be replayed against yours (a confused-deputy / token-reuse attack). Checking aud ensures the token was meant for this API, and iss ensures it came from the IdP you trust. Also check exp and, where relevant, nonce.",
+      "signals": ["signature \u2260 intended audience", "aud stops cross-service token reuse", "iss pins the trusted IdP; also exp"],
+      "next": "n3"
+    },
+    "n3": {
+      "id": "n3", "kind": "constraint", "constraint_type": "security",
+      "prompt": "Where do you enforce 'this user can only see their own/their tenant's data'? Defend the placement.",
+      "model": "At the data/retrieval layer, keyed off the verified identity in the token \u2014 row-level security or a tenant filter applied before any data is returned. Never rely on the UI or the LLM/agent to filter, and never trust a client-supplied user/tenant id. The token is the source of truth for who the caller is; the data layer is the source of truth for what they may see. Defense in depth: API scope check + data-layer enforcement.",
+      "signals": ["enforce at data layer from the verified token", "no UI/client-supplied identity trust", "RLS/tenant filter before returning data"],
+      "next": "n4"
+    },
+    "n4": {
+      "id": "n4", "kind": "decision",
+      "prompt": "The agent must call downstream APIs as the user. How do you delegate access safely?",
+      "model": "OAuth2 on-behalf-of / token exchange to mint a scoped, short-lived downstream token \u2014 not the agent reusing the user's broad token. Least-privilege scopes per tool, short TTL, and an audit of which identity performed each call. Secrets in a vault, never in the prompt. Scope-down per hop so a compromised tool can't act broadly.",
+      "signals": ["token exchange / OBO, not broad-token reuse", "least-privilege scopes + short TTL", "audit identity per call"],
+      "next": "n5"
+    },
+    "n5": {
+      "id": "n5", "kind": "constraint", "constraint_type": "security",
+      "prompt": "How do you manage the secrets and keys this system depends on?",
+      "model": "Secrets (client secrets, downstream API keys) live in a managed vault/secret store, injected at runtime \u2014 never in code, env files in the repo, or the prompt. Rotate on a schedule and on suspected compromise; prefer short-lived credentials and workload identity over static keys. Validate the IdP's signing keys via JWKS with rotation. Least privilege for the service's own IAM role.",
+      "signals": ["vault-managed, runtime-injected secrets", "rotation + short-lived creds / workload identity", "JWKS key rotation; least-privilege service role"],
+      "next": "n6"
+    },
+    "n6": {
+      "id": "n6", "kind": "incident",
+      "prompt": "A short-lived access token was leaked in a log. What's the blast radius and what do you do?",
+      "model": "Blast radius is bounded by the token's short TTL and narrow scope \u2014 which is exactly why you issued it that way. Immediate: revoke/rotate the affected credentials and invalidate sessions if needed; scrub logs and fix the log statement that captured it (never log tokens). Investigate via audit for misuse in the window. Prevent: structured logging with redaction, token binding where supported, and alerts on anomalous use. The design (short TTL + least scope) limited the damage.",
+      "signals": ["short TTL + narrow scope bounds the damage", "revoke/rotate + fix the logging (redaction)", "audit for misuse; prevent recurrence"],
+      "next": "n7"
+    },
+    "n7": {
+      "id": "n7", "kind": "reflection",
+      "prompt": "Where did you assert a choice without the mechanism, the trade-off, or the verification?",
+      "checklist": [
+        "I used OIDC + PKCE + short-lived scoped tokens",
+        "I validated signature AND aud/iss/exp, not just signature",
+        "I enforced authorization at the data layer from the verified identity",
+        "I delegated agent access with scoped token exchange, not broad reuse",
+        "I kept secrets in a vault with rotation and redacted logs"
+      ],
+      "next": "n8"
+    },
+    "n8": {
+      "id": "n8", "kind": "next_drill",
+      "prompt": "Strong identity defense. Go deeper:",
+      "recommend": [
+        { "label": "Enterprise Identity & API Security (OAuth/OIDC/SAML)", "path": "AI-Security/identity-api-security.html" },
+        { "label": "AgentCore Identity & Gateway", "path": "AI-Security/agentcore-identity-gateway.html" },
+        { "label": "Keep Asking Why \u2014 security chain", "path": "Personal-SourceCode/Interview_Why_Chains.html" }
+      ]
+    }
+  }
+}

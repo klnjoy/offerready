@@ -200,6 +200,154 @@
       weak: ["Starts building a grand system; no clarifying; ignores their constraints."],
       followup: "Their data is a mess — now what? → the implementation gap; pragmatic ingestion + validation.",
       depth: "Ties the build to the customer's outcome, not tech for its own sake." },
+
+    // ---- Added areas (purely additive; new `area` values auto-create their
+    // own setup checkbox + question pool). Two items each (Senior + Staff),
+    // same depth/pattern as the originals. ----
+
+    { area: "Snowflake Cortex", topic: "Cortex", level: "Senior",
+      q: "When do you use Cortex Search / Analyst vs building your own RAG stack on Snowflake?",
+      tested: "Buy-vs-build judgment inside the data platform.",
+      strong: [
+        "Cortex Search/Analyst when the data already lives in Snowflake and you want governed, in-platform retrieval without moving data out.",
+        "Analyst for text-to-SQL over a semantic model; Search for document retrieval — both inherit RBAC + masking.",
+        "Roll your own only when you need a retrieval/rerank pipeline Cortex can't express, and you accept the data-movement + governance cost.",
+      ],
+      weak: ['"Always build custom RAG"; ignores governance/data-egress; no semantic model.'],
+      followup: "Why keep retrieval in-platform? → data never leaves the governance boundary (RBAC, masking, audit).",
+      depth: "Ties the choice to governance + data gravity, not just features." },
+
+    { area: "Snowflake Cortex", topic: "Cortex", level: "Staff",
+      q: "A Cortex Analyst text-to-SQL answer is wrong. How do you make it trustworthy at scale?",
+      tested: "Operating an LLM-over-data feature responsibly.",
+      strong: [
+        "Fix the semantic model first: verified metrics, join paths, synonyms — the model is only as good as the semantic layer.",
+        "Constrain to approved tables/metrics; show the generated SQL for transparency; add an eval set of question→expected-SQL.",
+        "Guardrails: row-access policies so a wrong query still can't leak data.",
+      ],
+      weak: ['"Prompt it harder"; no semantic model; trusts generated SQL blindly.'],
+      followup: "Who owns correctness? → the semantic model (metrics/joins), not the prompt.",
+      depth: "Separates generation quality from the governed data contract." },
+
+    { area: "Databricks & Spark", topic: "Databricks", level: "Senior",
+      q: "Design a medallion (bronze/silver/gold) lakehouse on Databricks. Defend the layering.",
+      tested: "Lakehouse architecture judgment.",
+      strong: [
+        "Bronze = raw/replayable; silver = cleaned/conformed; gold = business marts. Delta tables throughout.",
+        "Idempotent MERGE for incremental loads; schema evolution additive at bronze, contract-stable at gold.",
+        "Quality gates between layers; Unity Catalog for governance/lineage.",
+      ],
+      weak: ['"One big transform job"; no raw landing; no replayability; no governance.'],
+      followup: "Why land raw first? → replay/reprocess when logic changes without re-ingesting.",
+      depth: "Each layer earns its place with a mechanism + trade-off." },
+
+    { area: "Databricks & Spark", topic: "Delta / Perf", level: "Staff",
+      q: "A Databricks job slowed down and costs spiked after data grew. Diagnose and fix.",
+      tested: "Spark/Delta performance + cost control.",
+      strong: [
+        "Spark UI: data skew (salt/repartition the hot key), small-file explosion (OPTIMIZE/compaction + auto-optimize), shuffle spill (tune partitions / right-size).",
+        "Delta: Z-ORDER/liquid clustering on filter columns; prune with partitioning that matches query patterns.",
+        "Cost: autoscaling + job clusters (not all-purpose), spot where safe; measure $/run.",
+      ],
+      weak: ['"Scale the cluster up" to mask skew; no profiling; all-purpose clusters for jobs.'],
+      followup: "Why not just upsize? → it hides skew and burns money; fix the cause.",
+      depth: "Picks the cheapest correct fix; ties compute choice to cost." },
+
+    { area: "dbt & analytics engineering", topic: "dbt", level: "Senior",
+      q: "How do you structure a dbt project and guarantee the marts are trustworthy?",
+      tested: "Analytics-engineering discipline.",
+      strong: [
+        "Layered models: staging (1:1 source cleanup) → intermediate → marts; refs not hard-coded tables.",
+        "Tests (not_null/unique/relationships/accepted_values) + freshness; contracts on exposed models.",
+        "Docs + lineage from the DAG; CI runs build+test on PRs so a bad model can't merge.",
+      ],
+      weak: ['"Write SQL views"; no tests; no staging layer; no CI gate.'],
+      followup: "How does a bad column get caught before prod? → dbt test in CI + contract.",
+      depth: "Treats transformations as tested, versioned software." },
+
+    { area: "dbt & analytics engineering", topic: "dbt", level: "Staff",
+      q: "Full refreshes are too slow/expensive. How do you make dbt models incremental safely?",
+      tested: "Incremental modeling + idempotency.",
+      strong: [
+        "Incremental materialization with a stable unique_key and an is_incremental() filter on a watermark.",
+        "merge/delete+insert strategy so reruns converge (no dupes); handle late-arriving data with a lookback window.",
+        "Keep a full-refresh path for backfills/logic changes; test the incremental == full result.",
+      ],
+      weak: ['"Append only" (dupes on rerun); no unique_key; no late-data handling.'],
+      followup: "A model reran mid-day — dupes? → merge on unique_key makes it idempotent.",
+      depth: "Reruns are safe by design, not by luck." },
+
+    { area: "FastAPI & serving", topic: "FastAPI", level: "Senior",
+      q: "Design a production FastAPI service that fronts an LLM/model. What matters?",
+      tested: "API serving fundamentals for AI.",
+      strong: [
+        "Async endpoints + httpx for upstream calls; stream responses (SSE) for long generations.",
+        "Timeouts, retries with backoff, and a circuit breaker on the model provider; request validation via Pydantic.",
+        "Backpressure/concurrency limits; health/readiness probes; structured logs + request IDs.",
+      ],
+      weak: ['Sync blocking calls; no timeout; no streaming; no backpressure.'],
+      followup: "Why async here? → model calls are I/O-bound; blocking kills throughput.",
+      depth: "Ties async + limits to real throughput/latency, not boilerplate." },
+
+    { area: "FastAPI & serving", topic: "FastAPI", level: "Staff",
+      q: "Your FastAPI LLM endpoint falls over under a traffic spike. Contain it.",
+      tested: "Serving reliability under load.",
+      strong: [
+        "Concurrency cap + queue with a bounded wait; shed load (429) instead of collapsing.",
+        "Per-provider circuit breaker + fallback (cheaper/cached answer); timeouts so slow calls don't pile up.",
+        "Horizontal scale behind a load balancer; separate the model call from the request worker (task queue) if long-running.",
+      ],
+      weak: ['"Add workers" with no limits (thundering herd); no shedding; no fallback.'],
+      followup: "Why shed load? → a fast 429 beats a total outage; protects the healthy path.",
+      depth: "Distinguishes mitigate-now (shed/breaker) from scale-later." },
+
+    { area: "AWS Bedrock & AgentCore", topic: "Bedrock", level: "Senior",
+      q: "When do you choose Bedrock for a GenAI feature, and how do you keep it portable?",
+      tested: "Managed-GenAI judgment + lock-in awareness.",
+      strong: [
+        "Bedrock for managed access to multiple foundation models with IAM, VPC, and data-stays-in-your-account posture — no model hosting.",
+        "Guardrails + Knowledge Bases for managed RAG; model choice per task.",
+        "Keep an abstraction over the model call so you can swap providers; measure cost/latency per model.",
+      ],
+      weak: ['"Bedrock because AWS"; hard-codes one model; ignores lock-in/cost.'],
+      followup: "Why abstract the call? → model routing + avoid single-provider lock-in.",
+      depth: "Names the governance win and the lock-in trade-off." },
+
+    { area: "AWS Bedrock & AgentCore", topic: "AgentCore", level: "Staff",
+      q: "You're putting an agent into production on Bedrock AgentCore. How do you make it safe and bounded?",
+      tested: "Managed-agent runtime + guardrails.",
+      strong: [
+        "Least-privilege action groups (gated write tools), session isolation, and the managed memory/identity primitives — not a trust-the-model loop.",
+        "Guardrails for input/output; bounded iterations + token/cost caps; full trace/observability.",
+        "Treat retrieved/tool content as data (indirect injection); audit every action.",
+      ],
+      weak: ['Broad tool permissions; unbounded loop; trusts tool output as instructions.'],
+      followup: "Tool output says 'ignore instructions' — safe? → gated + least-privilege regardless.",
+      depth: "Managed runtime still needs the propose→validate→approve discipline." },
+
+    { area: "Identity & access (OAuth/OIDC/Okta)", topic: "Identity", level: "Senior",
+      q: "How does a user's identity flow securely from an SPA through your API to a tool/data layer?",
+      tested: "AuthN/AuthZ fundamentals.",
+      strong: [
+        "OIDC login (Okta/IdP) → short-lived access token (JWT) with audience/scope; validate signature, exp, aud, iss on the API.",
+        "Pass identity down; enforce authorization at the data layer (per-user/tenant), never trust the client.",
+        "Refresh tokens handled server-side; PKCE for public clients.",
+      ],
+      weak: ['Long-lived tokens; no signature/aud validation; authz in the UI only.'],
+      followup: "Why validate aud/iss? → stops token reuse across services (confused deputy).",
+      depth: "Separates authentication from authorization + where each is enforced." },
+
+    { area: "Identity & access (OAuth/OIDC/Okta)", topic: "Identity", level: "Staff",
+      q: "An AI agent needs to call downstream APIs as the user. How do you delegate access safely?",
+      tested: "Delegated authorization for agents/services.",
+      strong: [
+        "On-behalf-of / token exchange (OAuth2) to get a scoped downstream token — not the agent reusing the user's broad token.",
+        "Least-privilege scopes per tool; short TTL; audit which identity did what.",
+        "Secrets in a vault, not the prompt; rotate; egress allowlist for tools.",
+      ],
+      weak: ['Agent holds a broad long-lived token; creds in the prompt; no scoping.'],
+      followup: "Why token exchange vs passing the user token? → scope-down + least privilege per hop.",
+      depth: "Knows delegated-auth patterns, not just 'send the JWT'." },
   ];
 
   var LEVELS = ["Mixed", "Senior", "Staff", "Principal", "FDE"];
