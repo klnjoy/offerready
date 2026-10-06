@@ -21,7 +21,17 @@
     const el = (t, cls, html) => { const n = document.createElement(t); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
     const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    function load() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch { return []; } }
+    // Defend "scenario" runs are now tracked SERVER-SIDE (job-scoped) and shown
+    // on the Readiness Dashboard, so any scenario rows left in the browser-local
+    // history are STALE legacy entries from a previous build. Exclude them here
+    // so an old scenario (e.g. a prior "Senior Snowflake Architect" run) is never
+    // shown as current local practice. Non-scenario local modes (Practice Mode,
+    // Keep Asking Why, Mock) remain — they are genuinely browser-local.
+    function load() {
+      var all;
+      try { all = JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch (e) { all = []; }
+      return all.filter(function (s) { return s && s.mode !== "scenario"; });
+    }
 
     function render() {
       const h = load();

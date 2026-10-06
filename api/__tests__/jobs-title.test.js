@@ -422,16 +422,23 @@ test('deriveJobTitle: Data Engineer role noun survives (never collapses to "Seni
 // (title + summary + skills + technologies), never seniority alone.
 // ---------------------------------------------------------------------------
 
-test('normalizeRoleFamily: Senior Data Engineer -> data (Data Architecture catalog)', () => {
-  assert.equal(normalizeRoleFamily({ title: 'Senior Data Engineer' }), 'data-architect');
+test('normalizeRoleFamily: Senior Data Engineer -> data-engineer (NOT data-architect)', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Senior Data Engineer' }), 'data-engineer');
 });
 
-test('normalizeRoleFamily: Azure Data Engineer -> data', () => {
-  assert.equal(normalizeRoleFamily({ title: 'Azure Data Engineer', technologies: ['Azure', 'Databricks'] }), 'data-architect');
+test('normalizeRoleFamily: Azure Data Engineer -> data-engineer', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Azure Data Engineer', technologies: ['Azure', 'Databricks'] }), 'data-engineer');
 });
 
-test('normalizeRoleFamily: Data Architect -> data', () => {
+test('normalizeRoleFamily: Data Platform Engineer / Spark / ETL -> data-engineer', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Data Platform Engineer' }), 'data-engineer');
+  assert.equal(normalizeRoleFamily({ title: 'Engineer', roleSummary: 'Builds Spark ETL pipelines.' }), 'data-engineer');
+  assert.equal(normalizeRoleFamily({ roleSummary: 'Owns real-time streaming and data quality.' }), 'data-engineer');
+});
+
+test('normalizeRoleFamily: Data Architect still -> data-architect (not stolen by data-engineer)', () => {
   assert.equal(normalizeRoleFamily({ title: 'Data Architect' }), 'data-architect');
+  assert.equal(normalizeRoleFamily({ title: 'Analytics Architect', roleSummary: 'Snowflake warehouse modeling.' }), 'data-architect');
 });
 
 test('normalizeRoleFamily: AI/GenAI Engineer -> ai-engineer', () => {

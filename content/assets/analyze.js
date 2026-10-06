@@ -58,11 +58,12 @@
     // Order matters: most specific role signals first.
     if (/\bsecurity|prompt injection|guardrail|threat|owasp|zero.?trust\b/.test(hay)) return "ai-security";
     if (/\bforward deployed|forward-deployed|\bfde\b|customer-facing|client-facing|solutions engineer\b/.test(hay)) return "fde";
-    // Data roles (incl. Data Engineer / Azure Data Engineer / Data Platform
-    // Engineer) route to the data catalog and are PREFERRED over the generic
-    // cloud/architect buckets below. There's no separate "data-engineer"
-    // catalog, so the data bucket (data-architect) is the closest match.
-    if (/\bdata engineer|data engineering|azure data|data platform engineer|data architect|snowflake|databricks|warehouse|lakehouse|cortex|etl|elt|data platform|analytics engineer\b/.test(hay)) return "data-architect";
+    // DATA ENGINEERING first (spec): Data Engineer / Azure Data Engineer / Data
+    // Platform Engineer and the pipeline/ETL/Spark/Databricks/streaming/quality
+    // signals map to the Data Engineering family BEFORE Data Architecture. Only
+    // genuinely architecture-leaning data roles fall through to data-architect.
+    if (/\bdata engineer|data engineering|azure data|data platform engineer|databricks|spark|pipeline|data pipeline|etl|elt|ingestion|streaming|real-?time|data quality|lakehouse|airflow|dbt\b/.test(hay)) return "data-engineer";
+    if (/\bdata architect|analytics architect|snowflake|warehouse|warehousing|cortex|data platform|analytics engineer|data modeling|dimensional\b/.test(hay)) return "data-architect";
     if (/\bcloud|platform|devops|kubernetes|infrastructure|sre|reliability|terraform\b/.test(hay)) return "cloud-platform";
     if (/\barchitect|architecture|system design|multi-tenant|enterprise\b/.test(hay)) return "ai-architect";
     if (/\bai engineer|genai|ml engineer|rag|agent|llm|nlp\b/.test(hay)) return "ai-engineer";

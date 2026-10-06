@@ -213,7 +213,10 @@ function normalizeRoleFamily(ctx) {
 
   if (/\bsecurity|prompt injection|guardrail|threat|owasp|zero.?trust\b/.test(hay)) return 'ai-security';
   if (/\bforward deployed|forward-deployed|\bfde\b|customer-facing|client-facing|solutions engineer\b/.test(hay)) return 'fde';
-  if (/\bdata engineer|data engineering|azure data|data platform engineer|data architect|snowflake|databricks|warehouse|lakehouse|cortex|etl|elt|data platform|analytics engineer\b/.test(hay)) return 'data-architect';
+  // Data Engineering BEFORE Data Architecture (spec): a Data Engineer must not
+  // default to the Data Architect family.
+  if (/\bdata engineer|data engineering|azure data|data platform engineer|databricks|spark|pipeline|data pipeline|etl|elt|ingestion|streaming|real-?time|data quality|lakehouse|airflow|dbt\b/.test(hay)) return 'data-engineer';
+  if (/\bdata architect|analytics architect|snowflake|warehouse|warehousing|cortex|data platform|analytics engineer|data modeling|dimensional\b/.test(hay)) return 'data-architect';
   if (/\bcloud|platform|devops|kubernetes|infrastructure|sre|reliability|terraform\b/.test(hay)) return 'cloud-platform';
   if (/\barchitect|architecture|system design|multi-tenant|enterprise\b/.test(hay)) return 'ai-architect';
   if (/\bai engineer|genai|ml engineer|rag|agent|llm|nlp\b/.test(hay)) return 'ai-engineer';
