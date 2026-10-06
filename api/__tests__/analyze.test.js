@@ -81,6 +81,37 @@ test('safeParseModelJson: returns null on unparseable text (no crash)', () => {
   assert.equal(safeParseModelJson(null), null);
 });
 
+// Truncation recovery: a model response cut off at max_tokens produces a valid
+// JSON PREFIX that none of the direct/fenced/outermost-brace attempts can parse.
+// safeParseModelJson must repair it (close the open string + balance brackets)
+// so a long analysis isn't lost to "The analysis could not be understood".
+test('safeParseModelJson: recovers a truncated object (array cut mid-element)', () => {
+  const truncated = '{"roleSummary":"Senior AI Engineer","coreSkills":["RAG","LangGraph","Age';
+  const obj = safeParseModelJson(truncated);
+  assert.ok(obj, 'should recover an object, not null');
+  assert.equal(obj.roleSummary, 'Senior AI Engineer');
+  assert.ok(Array.isArray(obj.coreSkills));
+  // The complete elements survive; the dangling partial ("Age...) is dropped.
+  assert.ok(obj.coreSkills.indexOf('RAG') !== -1);
+  assert.ok(obj.coreSkills.indexOf('LangGraph') !== -1);
+});
+
+test('safeParseModelJson: recovers a truncated object cut after a comma', () => {
+  const truncated = '{"a":1,"b":[1,2,3],';
+  const obj = safeParseModelJson(truncated);
+  assert.ok(obj, 'should recover an object');
+  assert.equal(obj.a, 1);
+  assert.deepEqual(obj.b, [1, 2, 3]);
+});
+
+test('safeParseModelJson: recovers a truncated nested object', () => {
+  const truncated = '{"plan":[{"priority":1,"title":"Learn RAG"},{"priority":2,"title":"Mult';
+  const obj = safeParseModelJson(truncated);
+  assert.ok(obj, 'should recover an object');
+  assert.ok(Array.isArray(obj.plan));
+  assert.equal(obj.plan[0].title, 'Learn RAG');
+});
+
 test('normalizeAnalysis: fills defaults for a sparse/garbage object', () => {
   const a = normalizeAnalysis({ roleSummary: 'r' }, false);
   assert.equal(a.roleSummary, 'r');

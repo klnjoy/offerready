@@ -100,10 +100,25 @@ async function handleAnalyzeJd(body, res) {
   const v = validateInput(body);
   if (!v.ok) { send(res, v.status, { error: v.error }); return; }
   const { jobDescription, targetRole, resume } = v.value;
-  const out = await callOpenAI(JD_SYSTEM_PROMPT, buildJdUserMessage({ jobDescription, targetRole, resume }), 1800, 0.2);
+  // Token budget: the analysis JSON is large (roleSummary + several arrays +
+  // preparationPlan). With a resume it ALSO returns the per-requirement
+  // `alignment` rows, so the output is materially bigger. 1800 tokens could
+  // truncate the JSON mid-object -> response_format json_object stays valid
+  // ONLY if it completes, so a cut-off response fails to parse and surfaces as
+  // "The analysis could not be understood". Give it ample headroom (more when a
+  // resume is present). gpt-4o-mini supports up to 16k output tokens.
+  const analyzeMaxTokens = resume ? 4000 : 2600;
+  const out = await callOpenAI(JD_SYSTEM_PROMPT, buildJdUserMessage({ jobDescription, targetRole, resume }), analyzeMaxTokens, 0.2);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const parsed = safeParseModelJson(out.content);
-  if (!parsed) { send(res, 502, { error: 'The analysis could not be understood. Please try again.' }); return; }
+  if (!parsed) {
+    // Valid-JSON mode is on, so a parse failure almost always means truncation
+    // (hit max_tokens) or an empty body. Log length to disambiguate in prod.
+    console.error('[analyze_jd] unparseable model content', JSON.stringify({
+      len: (out.content || '').length, hadResume: Boolean(resume),
+    }));
+    send(res, 502, { error: 'The analysis could not be understood. Please try again.' }); return;
+  }
   const analysis = attachResources(normalizeAnalysis(parsed, Boolean(resume)));
   send(res, 200, { ok: true, action: 'analyze_jd', analysis });
 }
