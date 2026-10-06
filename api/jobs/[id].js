@@ -132,6 +132,18 @@ module.exports = async function handler(req, res) {
     const v = validatePractice(body);
     if (!v.ok) { send(res, 400, { error: v.error }); return; }
 
+    // Structured completion log (ids only, no PII) so a persistence failure is
+    // diagnosable in the Vercel function logs.
+    const logCtx = {
+      event: 'complete_practice',
+      userId: user.id,
+      jobId: id,
+      sessionId: v.value.sessionId,
+      mode: v.value.mode,
+      score: v.value.score,
+    };
+    console.log('[complete_practice] start', JSON.stringify(logCtx));
+
     // Preferred path: ONE atomic transaction (session + snapshot) via the
     // complete_practice RPC (migration 0006). Both writes commit or neither
     // does — no "saved but readiness missing" partial state.
@@ -139,6 +151,10 @@ module.exports = async function handler(req, res) {
     if (atomic && atomic.session && atomic.snapshot) {
       // Reflect "practice completed" on the My Jobs card (best-effort sync).
       try { await touchJobStats(user.id, id, { prepProgress: 75 }); } catch (_e) { /* best-effort */ }
+      console.log('[complete_practice] ok (atomic)', JSON.stringify({
+        jobId: id, sessionId: v.value.sessionId,
+        overall: atomic.readiness && atomic.readiness.overall,
+      }));
       send(res, 200, {
         ok: true,
         session: atomic.session,
@@ -148,6 +164,7 @@ module.exports = async function handler(req, res) {
       });
       return;
     }
+    console.log('[complete_practice] atomic RPC unavailable/failed; using fallback', JSON.stringify({ jobId: id }));
 
     // Fallback (RPC not yet applied, or RPC errored): two-step write. Session
     // first; only snapshot if the session persisted. Explicit partial-failure.
@@ -160,6 +177,9 @@ module.exports = async function handler(req, res) {
       // index don't exist) from a transient failure, so the client can show an
       // actionable message instead of a generic retry.
       const schemaReady = await practiceSchemaReady();
+      console.error('[complete_practice] FAILED session insert', JSON.stringify({
+        jobId: id, sessionId: v.value.sessionId, schemaReady: schemaReady,
+      }));
       send(res, 502, {
         error: schemaReady === false
           ? 'Readiness storage isn\u2019t fully deployed yet (practice schema missing). Apply migration 0006, then try again.'
@@ -191,6 +211,9 @@ module.exports = async function handler(req, res) {
       // explicitly rather than a generic success. The snapshot write needs the
       // 0006 progress_metrics columns (source/dedupe_key); flag that cause.
       const schemaReady = await practiceSchemaReady();
+      console.error('[complete_practice] session saved but snapshot FAILED', JSON.stringify({
+        jobId: id, sessionId: v.value.sessionId, schemaReady: schemaReady,
+      }));
       send(res, 207, {
         ok: false,
         partial: true,
@@ -206,6 +229,9 @@ module.exports = async function handler(req, res) {
     }
 
     try { await touchJobStats(user.id, id, { prepProgress: 75 }); } catch (_e) { /* best-effort */ }
+    console.log('[complete_practice] ok (fallback two-step)', JSON.stringify({
+      jobId: id, sessionId: v.value.sessionId, overall: readiness && readiness.overall,
+    }));
     send(res, 200, { ok: true, session, snapshot, readiness });
     return;
   }

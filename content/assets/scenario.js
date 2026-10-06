@@ -139,10 +139,25 @@
       "": 1, "not specified": 1, unspecified: 1, "n/a": 1, na: 1,
       none: 1, unknown: 1, untitled: 1,
     };
+    // Bare seniority levels are NOT a role on their own — e.g. "Senior",
+    // "Lead", "Principal". A stale defendRole.v1 (or a seniority field) must
+    // never surface as the matched role, so cleanRoleLabel rejects a string
+    // whose words are ALL seniority levels.
+    var SENIORITY_ONLY = { senior: 1, junior: 1, staff: 1, principal: 1, lead: 1, head: 1, chief: 1, mid: 1, "mid-level": 1 };
+    function isBareSeniorityLabel(s) {
+      var words = String(s || "").trim().split(/[\s/]+/).filter(Boolean);
+      if (!words.length) return false;
+      for (var i = 0; i < words.length; i++) {
+        if (!SENIORITY_ONLY[words[i].toLowerCase()]) return false;
+      }
+      return true;   // every word is a seniority level -> not a role
+    }
     function cleanRoleLabel(v) {
       var s = (v == null ? "" : String(v)).trim();
       if (!s) return "";
-      return JUNK_ROLES[s.toLowerCase()] ? "" : s;
+      if (JUNK_ROLES[s.toLowerCase()]) return "";
+      if (isBareSeniorityLabel(s)) return "";   // "Senior" / "Lead" alone -> not a role
+      return s;
     }
 
     (function preselectRole() {
@@ -701,7 +716,14 @@
     //  - catalog scenario (role-matched) -> "Closest available catalog scenario · family: <family>"
     // plus Stack and Focus lines derived from the analyzed job when present.
     function personalizeBanner(p) {
-      var who = p.role || (p.seniority ? p.seniority + " role" : "your target role");
+      // Prefer the complete role: the cleaned stored role, else the resolved
+      // active-job title, else a generic label. NEVER a bare seniority ("Senior")
+      // — p.role / p.seniority are already scrubbed of bare levels by
+      // cleanRoleLabel, so we don't reconstruct "<level> role" from them.
+      var who = p.role
+        || (activeJobTitleCache && activeJobTitleCache.title)
+        || matchedRole
+        || "your target role";
       var banner = el("div", "or-personalized");
       if (state && state.exactJob) {
         banner.appendChild(el("div", null, "Exact-job scenario generated for: <strong>" + esc(who) + "</strong>"));

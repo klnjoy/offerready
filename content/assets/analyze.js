@@ -156,15 +156,19 @@
     }
     return false;
   }
-  function bareSeniority(s) {
-    var str = String(s == null ? "" : s).trim();
-    if (!str || hasRoleNoun(str)) return "";
-    var words = str.split(/[\s/]+/).filter(Boolean);
-    if (!words.length) return "";
+  // Every word is a seniority level (handles "lead" being both a level and a
+  // role noun) — so "Lead"/"Senior"/"Principal" alone is never a title.
+  function isLevelOnly(s) {
+    var words = String(s == null ? "" : s).trim().split(/[\s/]+/).filter(Boolean);
+    if (!words.length) return false;
     for (var i = 0; i < words.length; i++) {
-      if (!SENIORITY_WORDS[words[i].toLowerCase()]) return "";
+      if (!SENIORITY_WORDS[words[i].toLowerCase()]) return false;
     }
-    var lvl = words[0];
+    return true;
+  }
+  function bareSeniority(s) {
+    if (!isLevelOnly(s)) return "";
+    var lvl = String(s).trim().split(/[\s/]+/).filter(Boolean)[0];
     return lvl.charAt(0).toUpperCase() + lvl.slice(1).toLowerCase();
   }
 
@@ -216,11 +220,13 @@
 
   function deriveRoleTitle(targetRole, analysis) {
     var a = analysis || {};
+    // Explicit role ONLY when it names a role; a bare level ("Senior") is a
+    // prefix, never a title on its own.
     var explicit = cleanRole(targetRole);
-    if (explicit) return explicit.slice(0, 200);
+    if (explicit && hasRoleNoun(explicit) && !isLevelOnly(explicit)) return explicit.slice(0, 200);
     var parsed = cleanRole(a.seniority);
-    if (parsed && hasRoleNoun(parsed)) return parsed.slice(0, 200);
-    var levelPrefix = bareSeniority(a.seniority);
+    if (parsed && hasRoleNoun(parsed) && !isLevelOnly(parsed)) return parsed.slice(0, 200);
+    var levelPrefix = bareSeniority(explicit) || bareSeniority(a.seniority);
     var role = extractRoleFromSummary(a.roleSummary);
     if (role) {
       var alreadyLeveled = levelPrefix && role.toLowerCase().indexOf(levelPrefix.toLowerCase()) === 0;
@@ -255,13 +261,17 @@
       (analysis && analysis.preparationPlan || []).forEach(function (p) {
         if (p && p.title && gaps.indexOf(p.title) === -1) gaps.push(p.title);
       });
+      // Seniority is stored ONLY as supplementary context, never as a role. A
+      // BARE level ("Senior"/"Lead"/"Principal") is scrubbed to "" here so the
+      // Defend page can never fall back to showing just "Senior" as the role —
+      // the complete role already lives in `role` (deriveRoleTitle).
+      var sen = cleanRole(analysis && analysis.seniority);
+      if (sen && bareSeniority(sen)) sen = "";
       localStorage.setItem("offerready.defendRole.v1",
         JSON.stringify({
           category: category,
           role: role || "",
-          // Store seniority only when it's a real value, never the "Not
-          // specified" placeholder (the Defend page reads this for display).
-          seniority: cleanRole(analysis && analysis.seniority),
+          seniority: sen,
           technologies: techs.slice(0, 8),
           gaps: gaps.slice(0, 5),
           when: Date.now(),

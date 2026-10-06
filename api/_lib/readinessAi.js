@@ -132,16 +132,59 @@ const QUESTIONS_SYSTEM_PROMPT = [
   'style. Vary difficulty realistically for the role seniority.',
 ].join('\n');
 
+// Short, de-duped list helper for prompt context (cap count + per-item length).
+function ctxList(arr, max, itemLen) {
+  if (!Array.isArray(arr)) return [];
+  const seen = {};
+  const out = [];
+  for (const raw of arr) {
+    const v = (typeof raw === 'string' ? raw : (raw && (raw.name || raw.title || raw.requirement || raw.skill)) || '');
+    const s = String(v || '').trim();
+    if (!s) continue;
+    const key = s.toLowerCase();
+    if (seen[key]) continue;
+    seen[key] = 1;
+    out.push(s.slice(0, itemLen || 80));
+    if (out.length >= (max || 12)) break;
+  }
+  return out;
+}
+
+/**
+ * Build the question-generation user message. Beyond the JD, we now inject the
+ * ANALYZED JOB CONTEXT when available — required technologies, core skills, and
+ * the gap-analysis focus (missing skills / keywords / experience). This makes a
+ * Data Engineer set materially differ from an AI Engineer set even when the JD
+ * prose is similar, and biases questions toward the candidate's actual gaps.
+ * It does NOT change the output contract (same 10/10/5/5 categories).
+ */
 function buildQuestionsUserMessage(input) {
-  const { jobTitle, seniority, jobDescription } = input || {};
+  const {
+    jobTitle, seniority, jobDescription,
+    technologies, coreSkills, missingSkills, missingKeywords, missingExperience,
+  } = input || {};
+
+  const techs = ctxList(technologies, 15, 60);
+  const skills = ctxList(coreSkills, 15, 80);
+  const gapFocus = ctxList(
+    [].concat(missingSkills || [], missingKeywords || [], missingExperience || []),
+    15, 80
+  );
+
   return [
     'JOB TITLE: ' + String(jobTitle || 'unspecified').slice(0, 200),
     seniority ? 'SENIORITY: ' + String(seniority).slice(0, 120) : '',
+    techs.length ? 'REQUIRED TECHNOLOGIES: ' + techs.join(', ') : '',
+    skills.length ? 'CORE SKILLS: ' + skills.join(', ') : '',
+    gapFocus.length ? 'GAP-ANALYSIS FOCUS (prioritize questions that probe these): ' + gapFocus.join(', ') : '',
     '',
     'JOB DESCRIPTION:',
     String(jobDescription || '').slice(0, 6000),
     '',
-    'Generate the full question set as JSON now (10 technical, 10 behavioral, 5 system_design, 5 leadership).',
+    'Ground EVERY question in the role above: name its specific technologies,',
+    'skills, and gap-focus areas. Technical and system-design questions must be',
+    'specific to this stack (not generic). Generate the full question set as JSON',
+    'now (10 technical, 10 behavioral, 5 system_design, 5 leadership).',
   ].filter(Boolean).join('\n');
 }
 
@@ -180,4 +223,5 @@ module.exports = {
   validateQuestions,
   QUESTION_TARGETS,
   VALID_CATEGORIES,
+  ctxList,
 };

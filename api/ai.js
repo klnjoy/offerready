@@ -32,7 +32,7 @@ const {
 } = require('./_lib/readinessAi');
 const { touchJobStats } = require('./_lib/jobs');
 const {
-  ownsJob, saveGapAnalysis, saveQuestions,
+  ownsJob, saveGapAnalysis, saveQuestions, getGapAnalysis,
   getPracticeSessions, computeReadiness, saveProgressSnapshot,
 } = require('./_lib/readiness');
 
@@ -161,12 +161,33 @@ async function handleGapAnalysis(body, res, user) {
 async function handleGenerateQuestions(body, res, user) {
   const jobDescription = String(body.jobDescription || '');
   if (jobDescription.trim().length < 30) { send(res, 400, { error: 'A job description is required to generate questions.' }); return; }
+
+  // Enrich the prompt with the ANALYZED JOB CONTEXT so questions are grounded
+  // in THIS role's stack + gaps (not generic/reused). Technologies + core
+  // skills come from the client-supplied analysis; the gap focus (missing
+  // skills/keywords/experience) is read from the PERSISTED gap_analysis for an
+  // owned job (authoritative), falling back to any client-supplied gap.
+  const jobId = body.job_id || body.jobId;
+  const analysis = (body.analysis && typeof body.analysis === 'object') ? body.analysis : {};
+  let gapResult = (body.gap && typeof body.gap === 'object') ? body.gap : null;
+  if (jobId && (await ownsJob(user.id, jobId))) {
+    try {
+      const gapRow = await getGapAnalysis(user.id, jobId);
+      if (gapRow && gapRow.result) gapResult = gapRow.result;
+    } catch (_e) { /* best-effort enrichment */ }
+  }
+
   const out = await callOpenAI(
     QUESTIONS_SYSTEM_PROMPT,
     buildQuestionsUserMessage({
       jobTitle: body.jobTitle || body.targetRole,
-      seniority: body.seniority,
+      seniority: body.seniority || analysis.seniority,
       jobDescription,
+      technologies: analysis.technologies,
+      coreSkills: analysis.coreSkills,
+      missingSkills: gapResult && gapResult.missingSkills,
+      missingKeywords: gapResult && gapResult.missingKeywords,
+      missingExperience: gapResult && gapResult.missingExperience,
     }),
     2600, 0.5
   );
@@ -174,8 +195,8 @@ async function handleGenerateQuestions(body, res, user) {
   const result = validateQuestions(safeParseModelJson(out.content));
   if (!result.ok) { send(res, 502, { error: 'Could not generate a full question set. Please try again.' }); return; }
 
+  // jobId already resolved + ownership used above for gap enrichment; reuse it.
   let saved = 0;
-  const jobId = body.job_id || body.jobId;
   if (jobId && (await ownsJob(user.id, jobId))) {
     saved = await saveQuestions(user.id, jobId, result.questions);
     // Generating a question set means prep is underway: reflect that on the

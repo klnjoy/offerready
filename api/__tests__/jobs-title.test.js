@@ -572,3 +572,48 @@ test('deriveJobTitle: still "Untitled role" when truly no role signal exists', (
   );
   assert.equal(t, 'Untitled role');
 });
+
+// ---------------------------------------------------------------------------
+// Defect 1: role extraction must NOT stop at a seniority word. The seniority is
+// a qualifier that is retained together with the role noun; a bare level
+// ("Senior"/"Lead"/"Principal") is never a title on its own.
+// ---------------------------------------------------------------------------
+
+test('extractRoleFromSummary: keeps seniority + platform + role noun together', () => {
+  assert.equal(
+    extractRoleFromSummary('We want a Senior Databricks Data Engineer for the lakehouse.'),
+    'Senior Databricks Data Engineer'
+  );
+  assert.equal(
+    extractRoleFromSummary('Hiring a Lead GenAI Engineer to own our agents.'),
+    'Lead GenAI Engineer'
+  );
+  assert.equal(
+    extractRoleFromSummary('Seeking a Principal Data Architect for governance.'),
+    'Principal Data Architect'
+  );
+});
+
+test('deriveJobTitle: explicit "Senior Databricks Data Engineer" is kept whole', () => {
+  assert.equal(
+    deriveJobTitle({ targetRole: 'Senior Databricks Data Engineer' }, { seniority: 'Senior' }),
+    'Senior Databricks Data Engineer'
+  );
+});
+
+test('deriveJobTitle: bare seniority + role in summary => full role (never "Senior")', () => {
+  const t = deriveJobTitle(
+    {},
+    { seniority: 'Senior', roleSummary: 'We want a Databricks Data Engineer for the lakehouse.' }
+  );
+  assert.equal(t, 'Senior Databricks Data Engineer');
+  assert.notEqual(t.toLowerCase(), 'senior');
+});
+
+test('deriveJobTitle: bare seniority is NEVER the whole title', () => {
+  ['Senior', 'Lead', 'Principal', 'Staff', 'Junior'].forEach(function (lvl) {
+    const t = deriveJobTitle({ targetRole: lvl }, { seniority: lvl });
+    assert.notEqual(t.toLowerCase(), lvl.toLowerCase(),
+      lvl + ' alone must not be persisted as a title');
+  });
+});

@@ -80,17 +80,28 @@ function hasRoleNoun(s) {
   return words.some((w) => w && (ROLE_NOUNS_SET.has(w) || ROLE_NOUNS_SET.has(w.replace(/s$/, ''))));
 }
 
+// True when EVERY word of the string is a seniority level — e.g. "Senior",
+// "Lead", "Principal", "Senior/Lead". Handles the fact that "lead" is both a
+// seniority word and (coincidentally) a ROLE_NOUN, so it must not be treated
+// as a real role title on its own.
+function isLevelOnly(s) {
+  const words = String(s == null ? '' : s).trim().split(/[\s/]+/).filter(Boolean);
+  if (!words.length) return false;
+  return words.every((w) => SENIORITY_WORDS.has(w.toLowerCase()));
+}
+
+// Return a title-cased level prefix when the string is level-only, else ''.
+function levelFrom(s) {
+  if (!isLevelOnly(s)) return '';
+  const lvl = String(s).trim().split(/[\s/]+/).filter(Boolean)[0];
+  return lvl.charAt(0).toUpperCase() + lvl.slice(1).toLowerCase();
+}
+
 // If a string is ONLY a seniority level (e.g. "Senior", "Staff", "Senior/Lead")
 // with no role noun, return the cleaned level to use as a prefix; else ''.
+// (Kept for existing callers; levelFrom is the level-only-aware variant.)
 function bareSeniority(s) {
-  const str = String(s == null ? '' : s).trim();
-  if (!str || hasRoleNoun(str)) return '';
-  const words = str.split(/[\s/]+/).filter(Boolean);
-  if (words.length && words.every((w) => SENIORITY_WORDS.has(w.toLowerCase()))) {
-    const lvl = words[0];
-    return lvl.charAt(0).toUpperCase() + lvl.slice(1).toLowerCase();
-  }
-  return '';
+  return levelFrom(s);
 }
 
 /**
@@ -159,16 +170,22 @@ function deriveJobTitle(body, analysis) {
   const b = body || {};
   const a = analysis || {};
 
-  // a) explicit role title from the request (candidate-provided)
+  // a) explicit role title from the request (candidate-provided) — ONLY when
+  //    it NAMES a role and is not merely a seniority level. "Lead"/"Principal"/
+  //    "Senior" alone must never be persisted as a title (note: "lead" is both
+  //    a role noun AND a level, so we explicitly reject a level-only string).
   const explicit = cleanTitle(b.title) || cleanTitle(b.targetRole);
-  if (explicit) return explicit.slice(0, 200);
+  if (explicit && hasRoleNoun(explicit) && !isLevelOnly(explicit)) return explicit.slice(0, 200);
 
   // b) parsed role title from analysis.seniority — ONLY when it already
-  //    contains a role noun (e.g. "Senior Data Engineer"). A bare level like
-  //    "Senior" is NOT a title on its own; we keep it as a prefix for (c).
+  //    contains a role noun and is not a level-only string.
   const parsed = cleanTitle(a.seniority);
-  if (parsed && hasRoleNoun(parsed)) return parsed.slice(0, 200);
-  const levelPrefix = bareSeniority(a.seniority); // "Senior" / "" (no role noun)
+  if (parsed && hasRoleNoun(parsed) && !isLevelOnly(parsed)) return parsed.slice(0, 200);
+
+  // Capture a bare level from either the explicit input OR the seniority, to
+  // prefix onto a role derived below (c/d) — e.g. explicit "Senior" + summary
+  // "Databricks Data Engineer" => "Senior Databricks Data Engineer".
+  const levelPrefix = levelFrom(explicit) || levelFrom(a.seniority);
 
   // c) AI-derived role title from the role summary. The summary is a paragraph
   //    that often OPENS with a company description, so we extract an actual
