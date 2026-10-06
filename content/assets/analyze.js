@@ -524,7 +524,18 @@
       // ROLE SUMMARY
       section("Role summary", () => {
         const w = el("div");
-        if (a.seniority) w.appendChild(el("span", "ip-topic", esc(a.seniority)));
+        // Show the FULL derived role title (level + role noun, e.g. "Senior
+        // Snowflake Data Engineer"), never a bare level word like "Senior".
+        // deriveRoleTitle combines the explicit target role, analysis.seniority,
+        // the role phrase in roleSummary, and JD signals the same way the saved
+        // job + Defend page do, so this chip agrees with the rest of the app.
+        var roleTitle = deriveRoleTitle((meta.input && meta.input.targetRole) || "", a);
+        if (roleTitle) {
+          w.appendChild(el("span", "ip-topic", esc(roleTitle)));
+        } else if (a.seniority && !isLevelOnly(a.seniority)) {
+          // Only fall back to raw seniority when it names a role (not a bare level).
+          w.appendChild(el("span", "ip-topic", esc(a.seniority)));
+        }
         w.appendChild(el("p", null, esc(a.roleSummary)));
         return w;
       });
