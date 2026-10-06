@@ -35,6 +35,16 @@
     var state = { jd: "", role: "", jobId: "", jobs: [] };
     var base = (window.__md_scope && window.__md_scope.pathname ? window.__md_scope.pathname.replace(/[^/]*$/, "") : "/");
 
+    // Link to Defend Your Decisions, carrying the CURRENT job id explicitly
+    // (?job=<id>) so the scenario + its completed practice session are
+    // attributed to the SAME job the user is practicing here — not an arbitrary
+    // newest job (spec §10/§15).
+    function defendHref() {
+      var href = "../Practice-Scenarios/index.html";
+      if (state.jobId) href += "?job=" + encodeURIComponent(state.jobId);
+      return href;
+    }
+
     // Load the user's jobs so generated questions attach to one (job-rooted,
     // persisted server-side). Falls back to a plain form if signed out.
     // If the preselected job already has a saved set, we RESTORE it first
@@ -244,7 +254,7 @@
 
       var foot = el("div", "or-card or-actions");
       foot.innerHTML =
-        '<a class="or-btn or-btn-primary" href="../Practice-Scenarios/index.html">\uD83D\uDDE1\ufe0f Practice & defend answers</a>' +
+        '<a class="or-btn or-btn-primary" href="' + defendHref() + '">\uD83D\uDDE1\ufe0f Practice & defend answers</a>' +
         '<a class="or-btn" href="../Dashboard/index.html">\uD83D\uDCCA Readiness dashboard</a>';
       app.appendChild(foot);
     }
@@ -289,7 +299,7 @@
 
       var actions = el("div", "or-actions");
       var cont = el("a", "or-btn or-btn-primary", "Continue Practice");
-      cont.href = "../Practice-Scenarios/index.html";
+      cont.href = defendHref();
       actions.appendChild(cont);
       var regen = el("button", "or-btn", "Regenerate Questions");
       regen.addEventListener("click", function () {

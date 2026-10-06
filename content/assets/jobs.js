@@ -93,9 +93,23 @@
       app.appendChild(grid);
     }
 
+    // Defensive display guard: the server repairs weak titles on reopen, but a
+    // legacy list row may still carry a company-description sentence (it hasn't
+    // been reopened yet). Never render a paragraph/company blurb as the card
+    // title — fall back to seniority or "Untitled role". (Opening the job then
+    // repairs + persists a real title via the detail endpoint.)
+    var COMPANY_TITLE_HINT = /\b(is a|is an|we are|we're|company|startup|provides|focuses|founded|headquarter)\b/i;
+    function displayTitle(j) {
+      var t = (j && j.title ? String(j.title) : "").trim();
+      if (t && t.length <= 80 && !COMPANY_TITLE_HINT.test(t)) return t;
+      var sen = (j && j.seniority ? String(j.seniority) : "").trim();
+      if (sen && sen.length <= 80 && !COMPANY_TITLE_HINT.test(sen) && sen.toLowerCase() !== "not specified") return sen;
+      return "Untitled role";
+    }
+
     function card(j, token) {
       var c = el("div", "or-job-card");
-      c.appendChild(el("h3", null, esc(j.title || "Untitled role")));
+      c.appendChild(el("h3", null, esc(displayTitle(j))));
       var meta = [];
       if (j.company) meta.push(esc(j.company));
       if (j.seniority) meta.push(esc(j.seniority));
@@ -161,7 +175,7 @@
       app.appendChild(backBtn);
 
       var a = job.analysis || {};
-      app.appendChild(el("h2", null, esc(job.title || a.seniority || "Saved job")));
+      app.appendChild(el("h2", null, esc(displayTitle(job) !== "Untitled role" ? displayTitle(job) : (job.title || a.seniority || "Saved job"))));
       if (a.roleSummary) app.appendChild(el("p", null, esc(a.roleSummary)));
 
       // Restored readiness snapshot (from persisted gap + progress). Use the

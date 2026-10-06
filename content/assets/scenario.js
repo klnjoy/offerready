@@ -59,6 +59,19 @@
     var jobContext = null;   // distilled analyzed-job signals used to personalize prompts
     var activeJobTitleCache = null;  // resolved title for the Current Job banner
 
+    // Explicit workflow job id, carried from Questions/Gap/Dashboard via the URL
+    // (?job=<id>). This is the HIGHEST-precedence job binding: when present it
+    // wins over the active-job pointer so a completed scenario is attributed to
+    // the job the user actually navigated from (not an arbitrary newest job).
+    var workflowJobId = (function () {
+      try {
+        var id = new URLSearchParams(location.search || "").get("job");
+        return id ? String(id) : "";
+      } catch (e) { return ""; }
+    })();
+    // The job a generated exact-job scenario was bound to (set in generateForJob).
+    var boundJobId = "";
+
     // Resolve + cache the active job's title (best-effort) so the banner can
     // show "Current job: <title>". Fetches /api/jobs once; repaints on arrival.
     function ensureActiveJobTitle(repaint) {
@@ -158,12 +171,33 @@
       }
     })();
 
-    // Hint shown above the list when it's filtered to the analyzed job.
+    // Human-readable SCENARIO FAMILY for a catalog category. Kept separate from
+    // the saved-job title so a catalog fallback is transparent (the saved role
+    // and the catalog family are shown as distinct lines).
+    var FAMILY_LABELS = {
+      "ai-engineer": "AI / GenAI Engineering",
+      "ai-architect": "AI Architecture",
+      "data-architect": "Data Architecture",
+      "cloud-platform": "Cloud / Platform",
+      "ai-security": "AI Security",
+      "fde": "Forward Deployed",
+    };
+    function familyLabel(cat) { return FAMILY_LABELS[cat] || catLabel(cat); }
+
+    // Hint shown above the list when it's filtered to the analyzed job. Keeps
+    // the saved-job identity and the catalog scenario family VISIBLY SEPARATE,
+    // and labels catalog content honestly as the closest available match (never
+    // "tailored to your exact role" — only a generated exact-job scenario is).
     function matchNote() {
       if (!matchedRole || activeCat === "all") return null;
       var wrap = el("div", "or-scn-match");
+      // Saved-job identity (the role we derived) — distinct from the catalog family.
+      wrap.appendChild(el("p", null,
+        "<span class=\"or-jobbanner-label\">Current job</span> <strong>" + esc(matchedRole) + "</strong>"));
+      // Honest catalog-fallback label: these are the closest catalog scenarios,
+      // not a bespoke scenario for the exact role.
       var p = el("p", null,
-        "\uD83C\uDFAF Showing scenarios matched to your analyzed role: <strong>" + esc(matchedRole) +
+        "Closest available catalog scenario family: <strong>" + esc(familyLabel(activeCat)) +
         "</strong>. <a href=\"#\" class=\"or-scn-clear\">Show all roles</a>");
       var link = p.querySelector(".or-scn-clear");
       if (link) link.addEventListener("click", function (e) {
@@ -171,14 +205,16 @@
         if (API) paintList(); else renderOfflineList();
       });
       wrap.appendChild(p);
-      // Pro: generate a scenario from THIS job so questions aren't identical to
-      // the authored one. Only offered when a backend + analyzed job exist.
+      // Pro: generate a scenario from THIS job so it's tailored to the exact
+      // role (not a catalog default). Only offered when a backend + analyzed
+      // job exist.
       if (API && getStoredAnalysis()) {
         var gen = el("button", "ip-btn or-scn-gen", "\u2728 Generate a scenario for my exact job");
         gen.addEventListener("click", function () { generateForJob(gen); });
         wrap.appendChild(gen);
         wrap.appendChild(el("p", "ip-ai-hint or-scn-gen-hint",
-          "Pro \u00b7 builds fresh defend questions from your analyzed job. Falls back to the standard scenario if unavailable."));
+          "Pro \u00b7 builds a scenario tailored to <strong>" + esc(matchedRole) +
+          "</strong> from your analyzed job. Falls back to the closest catalog scenario if unavailable."));
       }
       return wrap;
     }
@@ -207,16 +243,31 @@
       return "offerready.genscenario.v1." + (h >>> 0).toString(36);
     }
 
+    // Resolve the job id to bind an exact-job scenario to: explicit workflow id,
+    // else the active-job pointer. May be "" (then the scenario is still
+    // exact-job by content, and completion resolves the job via resolveActiveJob).
+    function bindJobId() {
+      if (workflowJobId) return workflowJobId;
+      return (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob)
+        ? (window.OfferReadyReadiness.getActiveJob() || "") : "";
+    }
+
     // Generate (or reuse a cached) per-job scenario, then run it.
     function generateForJob(btn) {
       var rec = getStoredAnalysis();
       if (!rec) return;
       var category = (jobContext && jobContext.category) || activeCat;
+      // Bind this exact-job scenario to the current workflow/active job so the
+      // completed session is attributed to the SAME job (spec §10).
+      boundJobId = bindJobId();
       var cacheKey = genCacheKey(rec, category);
       // Cached? Run it immediately — deterministic + free on repeat opens.
       try {
         var cached = JSON.parse(localStorage.getItem(cacheKey) || "null");
-        if (cached && cached.content && cached.content.start) { startRun(cached); return; }
+        if (cached && cached.content && cached.content.start) {
+          cached.exactJob = true; if (boundJobId) cached.jobId = boundJobId;
+          startRun(cached); return;
+        }
       } catch (e) {}
 
       var orig = btn ? btn.textContent : "";
@@ -231,14 +282,18 @@
             targetRole: (rec.input && rec.input.targetRole) || "",
             category: category || null,
             analysis: rec.analysis,
+            job_id: boundJobId || null,
           }),
         }).then(function (r) {
           return r.json().then(function (d) { return { status: r.status, body: d }; });
         }).then(function (res) {
           restore();
           if (res.status === 200 && res.body && res.body.scenario && res.body.scenario.content) {
-            try { localStorage.setItem(cacheKey, JSON.stringify(res.body.scenario)); } catch (e) {}
-            startRun(res.body.scenario);
+            var scn = res.body.scenario;
+            scn.exactJob = true;                 // generated from this job's analysis
+            if (boundJobId) scn.jobId = boundJobId;
+            try { localStorage.setItem(cacheKey, JSON.stringify(scn)); } catch (e) {}
+            startRun(scn);
           } else if (res.status === 401) {
             gate("sign-in", { title: "Generate a custom scenario" });
           } else if (res.status === 403) {
@@ -565,12 +620,22 @@
     // ---- Run the tree ------------------------------------------------------
     function startRun(scenario) {
       var nodes = scenario.content.nodes || {};
+      // A generated scenario is bound to a specific job; propagate that binding
+      // so completion attributes the session to the SAME job.
+      if (scenario.jobId) boundJobId = scenario.jobId;
       state = { slug: scenario.slug, title: scenario.title, nodes: nodes,
                 current: scenario.content.start, answers: {}, ratings: {}, startedAt: Date.now(),
                 // Stable per-run id -> idempotency key for the authoritative
                 // practice write (a double-submit/retry maps to the same row).
                 runId: (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
                 total: Object.keys(nodes).length, step: 0,
+                // Whether this run is an exact-job (generated) scenario vs a
+                // catalog scenario — drives honest "Tailored to" vs "Closest
+                // available catalog scenario" labeling and the summary copy.
+                exactJob: !!scenario.exactJob,
+                jobId: scenario.jobId || "",
+                // Guards against duplicate completion submits (spec §8/§11).
+                saving: false, saved: false,
                 // Personalize to the analyzed job only when it matches this
                 // scenario's role (avoids putting cloud tech into a security run).
                 personalize: personalizeFor(scenario) };
@@ -586,14 +651,25 @@
     }
 
     // A short, human line naming the user's target role + stack, shown once at
-    // the top of a personalized run so the authored questions read as "yours".
+    // the top of a run. HONEST labeling (spec §6/§7/§16):
+    //  - exact-job (generated) scenario  -> "Exact-job scenario generated for: <role>"
+    //  - catalog scenario (role-matched) -> "Closest available catalog scenario · family: <family>"
+    // plus Stack and Focus lines derived from the analyzed job when present.
     function personalizeBanner(p) {
-      var bits = [];
       var who = p.role || (p.seniority ? p.seniority + " role" : "your target role");
-      var line = "Tailored to <strong>" + esc(who) + "</strong>";
-      if ((p.technologies || []).length) line += " \u00b7 stack: " + esc(p.technologies.slice(0, 5).join(", "));
-      bits.push(line);
-      var banner = el("div", "or-personalized", bits.join(""));
+      var banner = el("div", "or-personalized");
+      if (state && state.exactJob) {
+        banner.appendChild(el("div", null, "Exact-job scenario generated for: <strong>" + esc(who) + "</strong>"));
+      } else {
+        banner.appendChild(el("div", null,
+          "Closest available catalog scenario \u00b7 for your role: <strong>" + esc(who) + "</strong>"));
+      }
+      if ((p.technologies || []).length) {
+        banner.appendChild(el("div", "or-small", "Stack: " + esc(p.technologies.slice(0, 5).join(", "))));
+      }
+      if ((p.gaps || []).length) {
+        banner.appendChild(el("div", "or-small", "Focus: " + esc(p.gaps.slice(0, 3).join(", "))));
+      }
       return banner;
     }
 
@@ -822,11 +898,18 @@
     // Return to the correct list depending on whether a backend is present.
     function goList() { if (API) renderList(); else renderOfflineList(); }
 
+    // Best-effort job title for completion copy ("saved to <job title>").
+    function jobTitleForCopy() {
+      if (activeJobTitleCache && activeJobTitleCache.title) return activeJobTitleCache.title;
+      if (matchedRole) return matchedRole;
+      return "your job";
+    }
+
     function renderSummary() {
       var ratings = Object.keys(state.ratings).map(function (k) { return state.ratings[k]; });
       var avg = ratings.length ? ratings.reduce(function (a, b) { return a + b; }, 0) / ratings.length : 0;
       var pct = Math.round((avg / 5) * 100);
-      persistProgress(false);       // local dashboard row (per-browser history)
+      persistProgress(false);       // local dashboard row (offline/signed-out only)
       app.innerHTML = "";
       var wrap = el("div", "ip-card ip-summary");
       wrap.appendChild(el("div", "ip-score", (ratings.length ? pct + "%" : "\u2713")));
@@ -835,31 +918,81 @@
         : pct >= 60 ? "Solid. Revisit the ones you rated low and run it again."
         : "Good start. Re-read the strong answers, then rerun."));
 
-      // Persistence status line — reflects the ACTUAL authoritative write, not
-      // an optimistic assumption. Starts as "saving", updated by the callback.
-      var statusEl = el("p", "or-muted or-small", "Saving your result\u2026");
+      // Persistence status + action slots. Status reflects the ACTUAL
+      // authoritative write; we never show success copy before the server
+      // confirms (spec §8/§9/§17).
+      var statusEl = el("p", "or-status", "Saving practice and updating readiness\u2026");
       wrap.appendChild(statusEl);
-
-      var again = el("button", "ip-btn", "All scenarios");
-      again.addEventListener("click", goList);
-      wrap.appendChild(again);
+      var actionsEl = el("div", "or-actions");
+      wrap.appendChild(actionsEl);
       app.appendChild(wrap);
+
+      // SINGLE completion event (spec §8/§11): guard against duplicate submits
+      // from a double-click, a re-render, or returning to the summary. The
+      // stable runId makes a server retry idempotent too.
+      if (state.saved) { showSaved(state.lastResult); return; }
+      if (state.saving) { return; }        // a submit is already in flight
+      state.saving = true;
+
+      function showSaved(r) {
+        actionsEl.innerHTML = "";
+        var jt = jobTitleForCopy();
+        if (r && r.saved && !r.partial) {
+          state.saved = true; state.lastResult = r;
+          var ov = r.readiness && typeof r.readiness.overall === "number"
+            ? (" Interview Readiness is now " + r.readiness.overall + "%.") : "";
+          statusEl.className = "or-status or-status-ok";
+          statusEl.textContent = "\u2713 Scenario complete. Practice saved to " + jt + " and Interview Readiness was updated." + ov;
+          var vr = el("a", "ip-btn or-btn-primary", "View My Readiness");
+          vr.href = base + "Dashboard/index.html";
+          actionsEl.appendChild(vr);
+          actionsEl.appendChild(allScenariosBtn());
+        } else if (r && r.saved && r.partial) {
+          state.saved = true; state.lastResult = r;
+          statusEl.className = "or-status or-status-warn";
+          statusEl.textContent = "Scenario completed, and your practice was saved \u2014 Interview Readiness will reconcile on your next activity.";
+          var vr2 = el("a", "ip-btn", "View My Readiness"); vr2.href = base + "Dashboard/index.html";
+          actionsEl.appendChild(vr2); actionsEl.appendChild(allScenariosBtn());
+        } else if (r && r.local && r.reason === "choose") {
+          // Multiple owned jobs and no explicit binding — don't guess.
+          statusEl.className = "or-status or-status-warn";
+          statusEl.innerHTML = "Scenario completed. You have more than one saved job \u2014 " +
+            "<a href=\"" + base + "My-Jobs/index.html\">open the job</a> you\u2019re practicing for, then re-run so it counts toward that job\u2019s readiness.";
+          actionsEl.appendChild(allScenariosBtn());
+        } else if (r && r.local && r.reason === "nojob") {
+          statusEl.className = "or-status or-status-warn";
+          statusEl.innerHTML = "Scenario completed (saved to this browser only). <a href=\"" + base + "Analyze/index.html\">Analyze &amp; save a job</a> so practice counts toward Interview Readiness.";
+          actionsEl.appendChild(allScenariosBtn());
+        } else if (r && r.local && r.reason === "signedout") {
+          statusEl.className = "or-status or-status-warn";
+          statusEl.innerHTML = "Scenario completed (saved to this browser only) \u2014 <a href=\"" + base + "My-Jobs/index.html\">sign in</a> so your practice is saved to your job and every device.";
+          actionsEl.appendChild(allScenariosBtn());
+        } else {
+          // Authoritative save failed — DO NOT claim readiness updated.
+          statusEl.className = "or-status or-status-err";
+          statusEl.textContent = "Scenario completed, but we couldn\u2019t update Interview Readiness.";
+          var retry = el("button", "ip-btn or-btn-primary", "Try Saving Again");
+          retry.addEventListener("click", function () {
+            state.saving = false;           // allow one more attempt
+            renderSummary();
+          });
+          actionsEl.appendChild(retry);
+          actionsEl.appendChild(allScenariosBtn());
+        }
+      }
 
       // Authoritative server write (records session + readiness snapshot).
       persistSession(pct, ratings.length, function (r) {
-        if (r && r.saved && !r.partial) {
-          var ov = r.readiness && typeof r.readiness.overall === "number" ? (" Your readiness is now " + r.readiness.overall + "%.") : "";
-          statusEl.textContent = "\u2713 Saved to this job \u2014 it counts toward your Interview Readiness." + ov;
-        } else if (r && r.saved && r.partial) {
-          statusEl.textContent = "\u2713 Practice saved. Readiness will update on your next activity.";
-        } else if (r && r.local && r.reason === "nojob") {
-          statusEl.innerHTML = "Saved to this browser only. <a href=\"" + base + "Dashboard/index.html\">Choose an active job</a> so practice counts toward that job\u2019s readiness.";
-        } else if (r && r.local && r.reason === "signedout") {
-          statusEl.innerHTML = "Saved to this browser only \u2014 <a href=\"" + base + "My-Jobs/index.html\">sign in</a> so your practice is saved to your job and every device.";
-        } else {
-          statusEl.textContent = "Couldn\u2019t save to your job just now (kept a local copy). Re-run when you\u2019re back online to record it.";
-        }
+        state.saving = false;
+        state.lastResult = r;
+        showSaved(r);
       });
+    }
+
+    function allScenariosBtn() {
+      var again = el("button", "ip-btn ip-ghost", "All scenarios");
+      again.addEventListener("click", goList);
+      return again;
     }
 
     function backToList() {
@@ -899,11 +1032,15 @@
         // we adopt the user's relevant saved job (preferring the active pointer,
         // else the newest owned job matching the analyzed role) so practice
         // always counts toward a job's readiness when the user has one.
-        resolveActiveJob(tok, function (jobId) {
+        resolveActiveJob(tok, function (jobId, reason) {
           if (!jobId) {
-            // Signed in but no saved jobs to attach to → local-only.
+            // Could not safely attribute this session to a single job.
+            //  - "choose": multiple owned jobs, no explicit workflow/bound id.
+            //  - "nojob":  signed in but no saved jobs yet.
+            // Keep a local copy and tell the user how to attribute it; do NOT
+            // guess a job.
             localSave(rec);
-            if (onDone) onDone({ saved: false, local: true, reason: "nojob" });
+            if (onDone) onDone({ saved: false, local: true, reason: reason || "nojob" });
             return;
           }
           writeToJob(jobId, tok, rec, sessionId, score, onDone);
@@ -911,32 +1048,47 @@
       }).catch(function () { localSave(rec); if (onDone) onDone({ saved: false, local: true, reason: "token" }); });
     }
 
-    // Resolve the job to attach practice to: the active-job pointer if present,
-    // otherwise fetch the user's jobs and adopt the best match (newest job in
-    // the analyzed role's category, else the newest job overall), setting it as
-    // the active job so the rest of the app stays consistent. Calls back with a
-    // job id or "" when the user has no saved jobs.
+    // Resolve the job a completed scenario is attributed to, in STRICT
+    // precedence (spec §10). We NEVER blindly adopt the newest job when the
+    // user has several — mis-attribution is worse than asking:
+    //   1. explicit workflow job id carried in the URL (?job=)
+    //   2. the job the generated exact-job scenario was bound to
+    //   3. a valid active-job pointer (confirmed to be one of the owned jobs)
+    //   4. the single owned job, ONLY when exactly one exists
+    //   5. otherwise require the user to choose -> callback("") with reason
+    // Candidate ids are validated against the owned-jobs list before use.
+    // Calls back(jobId) or back("", reason) where reason is "nojob" | "choose".
     function resolveActiveJob(tok, cb) {
-      var active = (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob)
+      var pointer = (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob)
         ? window.OfferReadyReadiness.getActiveJob() : "";
-      if (active) { cb(active); return; }
       fetch(API.replace(/\/$/, "") + "/api/jobs", { headers: { Authorization: "Bearer " + tok } })
         .then(function (r) { return r.json().catch(function () { return {}; }); })
         .then(function (j) {
           var jobs = (j && j.jobs) || [];
-          if (!jobs.length) { cb(""); return; }
-          // Take the newest job (the list is returned newest-first), which in
-          // the Analyze -> Save -> Defend flow is the job the user just saved.
-          // (The light list rows carry no scenario-category column, so there's
-          // nothing finer to match on here; newest is the correct choice.)
-          var pick = jobs[0];
-          var id = pick && pick.id;
-          if (id && window.OfferReadyReadiness && window.OfferReadyReadiness.setActiveJob) {
-            window.OfferReadyReadiness.setActiveJob(id);
+          if (!jobs.length) { cb("", "nojob"); return; }
+          var owns = function (id) { return !!id && jobs.some(function (x) { return x.id === id; }); };
+          var choose = function (id) {
+            if (id && window.OfferReadyReadiness && window.OfferReadyReadiness.setActiveJob) {
+              window.OfferReadyReadiness.setActiveJob(id);
+            }
+            cb(id, null);
+          };
+          // 1) explicit workflow job id
+          if (owns(workflowJobId)) { choose(workflowJobId); return; }
+          // 2) scenario-bound job id
+          if (owns(boundJobId)) { choose(boundJobId); return; }
+          // 3) valid active-job pointer (must still be owned)
+          if (owns(pointer)) { choose(pointer); return; }
+          // stale pointer -> clear it so we don't keep operating on a dead id
+          if (pointer && window.OfferReadyReadiness && window.OfferReadyReadiness.clearActiveJob) {
+            window.OfferReadyReadiness.clearActiveJob();
           }
-          cb(id || "");
+          // 4) exactly one owned job -> safe to adopt
+          if (jobs.length === 1) { choose(jobs[0].id); return; }
+          // 5) multiple jobs and no explicit binding -> require a choice
+          cb("", "choose");
         })
-        .catch(function () { cb(""); });
+        .catch(function () { cb("", "error"); });
     }
 
     // POST the completed scenario to the authoritative endpoint for a job.

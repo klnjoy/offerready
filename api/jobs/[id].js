@@ -13,7 +13,7 @@
 
 const { setCors, send } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
-const { getJob, deleteJob } = require('../_lib/jobs');
+const { getJob, deleteJob, touchJobStats, repairedTitleFor, updateJobFields } = require('../_lib/jobs');
 const {
   getGapAnalysis, getQuestions, getProgress,
   getPracticeSessions, savePracticeSession, computeReadiness, saveProgressSnapshot,
@@ -96,6 +96,21 @@ module.exports = async function handler(req, res) {
       getProgress(user.id, id, 30),
       getPracticeSessions(user.id, id, 10),
     ]);
+    // Legacy-title repair ON REOPEN ONLY: if this job's stored title is weak
+    // (empty / "Not specified" / a bare seniority / a company-description
+    // sentence) AND a reliable role can be derived from its OWN persisted
+    // analysis, persist the corrected title and return it. Never a blanket
+    // backfill, never overwrites a good or user-edited title, and never
+    // replaces one weak guess with another (repairedTitleFor guards all that).
+    try {
+      const repaired = repairedTitleFor(job);
+      if (repaired) {
+        const updated = await updateJobFields(user.id, id, {
+          title: repaired, updated_at: new Date().toISOString(),
+        });
+        if (updated && updated.title) job.title = updated.title;
+      }
+    } catch (_e) { /* repair is best-effort; original job still returned */ }
     send(res, 200, { ok: true, job, gap, questions, progress, practice });
     return;
   }
@@ -122,6 +137,8 @@ module.exports = async function handler(req, res) {
     // does — no "saved but readiness missing" partial state.
     const atomic = await completePracticeAtomic(user.id, id, v.value);
     if (atomic && atomic.session && atomic.snapshot) {
+      // Reflect "practice completed" on the My Jobs card (best-effort sync).
+      try { await touchJobStats(user.id, id, { prepProgress: 75 }); } catch (_e) { /* best-effort */ }
       send(res, 200, {
         ok: true,
         session: atomic.session,
@@ -176,6 +193,7 @@ module.exports = async function handler(req, res) {
       return;
     }
 
+    try { await touchJobStats(user.id, id, { prepProgress: 75 }); } catch (_e) { /* best-effort */ }
     send(res, 200, { ok: true, session, snapshot, readiness });
     return;
   }

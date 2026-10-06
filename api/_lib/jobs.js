@@ -190,6 +190,36 @@ function deriveJobTitle(body, analysis) {
   return 'Untitled role';
 }
 
+/**
+ * Normalize a job's role context into an internal scenario role FAMILY (spec
+ * §5). Pure/testable mirror of the client inferScenarioCategory (analyze.js):
+ * matching uses the COMPLETE context (title + summary + skills + technologies),
+ * never seniority alone. Returns one of the catalog family keys or '' when no
+ * confident family is found (so the UI shows no forced filter / asks).
+ *
+ * ctx: { title, roleSummary, skills:[], technologies:[], seniority } (any subset)
+ */
+function normalizeRoleFamily(ctx) {
+  const c = ctx || {};
+  const hay = [
+    c.title || '',
+    c.roleSummary || '',
+    (Array.isArray(c.skills) ? c.skills : []).map((s) => (typeof s === 'string' ? s : (s && s.name) || '')).join(' '),
+    (Array.isArray(c.technologies) ? c.technologies : []).join(' '),
+    // seniority is included for context but can NEVER by itself pick a family
+    // (none of the family patterns match a bare level word).
+    c.seniority || '',
+  ].join(' ').toLowerCase();
+
+  if (/\bsecurity|prompt injection|guardrail|threat|owasp|zero.?trust\b/.test(hay)) return 'ai-security';
+  if (/\bforward deployed|forward-deployed|\bfde\b|customer-facing|client-facing|solutions engineer\b/.test(hay)) return 'fde';
+  if (/\bdata engineer|data engineering|azure data|data platform engineer|data architect|snowflake|databricks|warehouse|lakehouse|cortex|etl|elt|data platform|analytics engineer\b/.test(hay)) return 'data-architect';
+  if (/\bcloud|platform|devops|kubernetes|infrastructure|sre|reliability|terraform\b/.test(hay)) return 'cloud-platform';
+  if (/\barchitect|architecture|system design|multi-tenant|enterprise\b/.test(hay)) return 'ai-architect';
+  if (/\bai engineer|genai|ml engineer|rag|agent|llm|nlp\b/.test(hay)) return 'ai-engineer';
+  return '';
+}
+
 // Minimum JD length the Gap form requires before "Analyze Gap" will run.
 // Mirrors the client-side guard in content/assets/gap.js so the restore
 // contract is testable in one place.
@@ -332,8 +362,91 @@ async function deleteJob(userId, id) {
   return resp.ok;
 }
 
+/**
+ * Patch selected fields on a job, scoped to the owner. `fields` is a plain
+ * object of column -> value. Returns the updated row or null. Never trusts a
+ * client user_id (always filters by the server-derived userId).
+ */
+async function updateJobFields(userId, id, fields) {
+  if (!userId || !id || !fields || typeof fields !== 'object') return null;
+  const keys = Object.keys(fields);
+  if (!keys.length) return null;
+  const qs =
+    `id=eq.${encodeURIComponent(id)}` +
+    `&user_id=eq.${encodeURIComponent(userId)}`;
+  const resp = await restFetch('/jobs?' + qs, {
+    method: 'PATCH',
+    headers: serviceHeaders({ Prefer: 'return=representation' }),
+    body: JSON.stringify(fields),
+  });
+  if (!resp.ok) return null;
+  const rows = await resp.json().catch(() => []);
+  return (Array.isArray(rows) && rows[0]) || null;
+}
+
+/**
+ * Keep the lightweight jobs-list columns truthful after job-scoped records are
+ * persisted. The My Jobs card reads gaps_count / prep_progress from the jobs
+ * row (the list endpoint stays light), so without this they go stale: a
+ * persisted Gap Analysis wouldn't update gaps_count, and generating questions
+ * or completing practice wouldn't move prep_progress off 0.
+ *
+ * This is a best-effort SYNC of already-persisted facts — not a new feature and
+ * not a readiness formula. `stats` may carry any of:
+ *   - gapsCount   (number)  -> gaps_count
+ *   - prepProgress(number)  -> prep_progress (clamped 0-100)
+ * Only provided keys are written. Returns the updated row or null.
+ */
+async function touchJobStats(userId, id, stats) {
+  if (!userId || !id || !stats) return null;
+  const fields = {};
+  if (typeof stats.gapsCount === 'number' && isFinite(stats.gapsCount)) {
+    fields.gaps_count = Math.max(0, Math.round(stats.gapsCount));
+  }
+  if (typeof stats.prepProgress === 'number' && isFinite(stats.prepProgress)) {
+    fields.prep_progress = Math.max(0, Math.min(100, Math.round(stats.prepProgress)));
+  }
+  if (!Object.keys(fields).length) return null;
+  fields.updated_at = new Date().toISOString();
+  return updateJobFields(userId, id, fields);
+}
+
+// A stored title is "weak" (eligible for repair-on-reopen) when it is empty, a
+// junk placeholder, a bare seniority level, OR looks like a company-description
+// sentence rather than a role. Used ONLY to repair a job's own persisted title
+// from its own persisted analysis when it is reopened — never a blanket
+// backfill, never overwriting a good/user-edited title.
+function isWeakTitle(title) {
+  const s = cleanTitle(title);
+  if (!s) return true;                       // '', 'Not specified', junk
+  if (bareSeniority(s)) return true;         // 'Senior' alone
+  if (!hasRoleNoun(s)) return true;          // no role noun => not a real title
+  if (s.length > 80) return true;            // paragraph-length => not a title
+  if (COMPANY_HINT.test(s)) return true;     // 'X is a ... company ...'
+  return false;
+}
+
+/**
+ * Repair a job's title ONLY when it is weak and a reliable role can be derived
+ * from the job's own persisted analysis. Returns the repaired title string if a
+ * better one was derived AND it differs from the stored title; else ''. Pure
+ * (no I/O) so the caller decides whether to persist.
+ */
+function repairedTitleFor(job) {
+  const j = job || {};
+  if (!isWeakTitle(j.title)) return '';      // preserve good / user-edited titles
+  // Derive from the job's own analysis (no body.title/targetRole available on
+  // a reopen) using the same precedence as a fresh save.
+  const derived = deriveJobTitle({}, j.analysis || {});
+  if (!derived || derived === 'Untitled role') return '';   // no reliable role
+  if (isWeakTitle(derived)) return '';       // don't replace one weak guess with another
+  if (cleanTitle(derived) === cleanTitle(j.title)) return '';
+  return derived;
+}
+
 module.exports = {
   listJobs, countJobs, getJob, insertJob, deleteJob,
   deriveJobTitle, cleanTitle, restoreJobContext, GAP_MIN_JD,
-  extractRoleFromSummary,
+  extractRoleFromSummary, normalizeRoleFamily,
+  updateJobFields, touchJobStats, isWeakTitle, repairedTitleFor,
 };

@@ -219,10 +219,13 @@
 
       // One primary next action (not a wall of buttons). Pick the next
       // uncompleted step in Job -> Analysis -> Practice -> Readiness.
+      // Carry the current job id to Defend (?job=) so the scenario + completed
+      // practice attribute to THIS job (spec §10).
+      var jobQ = (p.job && p.job.id) ? ("?job=" + encodeURIComponent(p.job.id)) : "";
       var nextHref, nextLabel;
       if (!p.gap) { nextHref = "Gap-Analysis/index.html"; nextLabel = "Check My Fit"; }
       else if (!qCount) { nextHref = "Question-Bank/index.html"; nextLabel = "Prepare Practice Questions"; }
-      else { nextHref = "Practice-Scenarios/index.html"; nextLabel = completedPractice.length ? "Continue Practice" : "Practice Decision Defense"; }
+      else { nextHref = "Practice-Scenarios/index.html" + jobQ; nextLabel = completedPractice.length ? "Continue Practice" : "Practice Decision Defense"; }
       var ctaWrap = el("div", "or-actions");
       ctaWrap.style.margin = "0 0 1.6rem";
       var cta = el("a", "or-btn or-btn-primary"); cta.href = base + nextHref; cta.textContent = nextLabel;

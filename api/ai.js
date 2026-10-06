@@ -30,6 +30,7 @@ const {
   GAP_SYSTEM_PROMPT, buildGapUserMessage, validateGap,
   QUESTIONS_SYSTEM_PROMPT, buildQuestionsUserMessage, validateQuestions,
 } = require('./_lib/readinessAi');
+const { touchJobStats } = require('./_lib/jobs');
 const {
   ownsJob, saveGapAnalysis, saveQuestions,
   getPracticeSessions, computeReadiness, saveProgressSnapshot,
@@ -142,6 +143,16 @@ async function handleGapAnalysis(body, res, user) {
         snap.dedupeKey = 'gap:' + row.id;
         await saveProgressSnapshot(user.id, jobId, snap);
       } catch (_e) { /* snapshot is best-effort; gap save already succeeded */ }
+      // Keep the My Jobs list card truthful: reflect the persisted gap count
+      // (missing skills + keywords) and mark prep as started. Best-effort sync
+      // of already-persisted facts — not a new metric or formula.
+      try {
+        const gr = result.result || {};
+        const gapsCount = ((gr.missingSkills || []).length)
+          + ((gr.missingKeywords || []).length)
+          + ((gr.missingExperience || []).length);
+        await touchJobStats(user.id, jobId, { gapsCount: gapsCount, prepProgress: 25 });
+      } catch (_e) { /* card-sync is best-effort */ }
     }
   }
   send(res, 200, { ok: true, action: 'gap_analysis', result: result.result, job_id: jobId || null, saved: saved });
@@ -167,6 +178,12 @@ async function handleGenerateQuestions(body, res, user) {
   const jobId = body.job_id || body.jobId;
   if (jobId && (await ownsJob(user.id, jobId))) {
     saved = await saveQuestions(user.id, jobId, result.questions);
+    // Generating a question set means prep is underway: reflect that on the
+    // My Jobs card (best-effort sync; the authoritative data stays in questions/
+    // practice_sessions/progress_metrics).
+    if (saved) {
+      try { await touchJobStats(user.id, jobId, { prepProgress: 50 }); } catch (_e) { /* best-effort */ }
+    }
   }
   send(res, 200, { ok: true, action: 'generate_questions', questions: result.questions, counts: result.counts, job_id: jobId || null, saved: saved });
 }

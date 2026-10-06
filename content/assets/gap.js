@@ -363,9 +363,12 @@
 
         focus.appendChild(el("div", "or-field-label", "Recommended next step"));
         var nrow = el("div", "or-actions");
+        // Carry the job id explicitly to Defend (?job=) so the scenario + its
+        // completed practice session attribute to THIS job (spec §10).
+        var jobQ = state.jobId ? ("?job=" + encodeURIComponent(state.jobId)) : "";
         nrow.innerHTML =
           '<a class="or-btn or-btn-primary" href="' + baseHref() + 'Question-Bank/index.html">Prepare Practice Questions</a>' +
-          '<a class="or-btn" href="' + baseHref() + 'Practice-Scenarios/index.html">Practice Decision Defense</a>';
+          '<a class="or-btn" href="' + baseHref() + 'Practice-Scenarios/index.html' + jobQ + '">Practice Decision Defense</a>';
         focus.appendChild(nrow);
         focus.appendChild(el("p", "or-muted or-small",
           "<strong>Prepare Practice Questions</strong> creates role-specific questions from this job and your identified gaps. " +

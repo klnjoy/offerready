@@ -15,6 +15,7 @@ const assert = require('node:assert');
 
 const {
   deriveJobTitle, cleanTitle, restoreJobContext, GAP_MIN_JD, extractRoleFromSummary,
+  normalizeRoleFamily, isWeakTitle, repairedTitleFor,
 } = require('../_lib/jobs');
 
 test('cleanTitle: trims and keeps a real title', () => {
@@ -414,4 +415,83 @@ test('deriveJobTitle: Data Engineer role noun survives (never collapses to "Seni
   );
   assert.ok(/data engineer/i.test(t));
   assert.notEqual(t.toLowerCase(), 'senior');
+});
+
+// ---------------------------------------------------------------------------
+// Role-family normalization (spec §5). Matching uses the COMPLETE context
+// (title + summary + skills + technologies), never seniority alone.
+// ---------------------------------------------------------------------------
+
+test('normalizeRoleFamily: Senior Data Engineer -> data (Data Architecture catalog)', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Senior Data Engineer' }), 'data-architect');
+});
+
+test('normalizeRoleFamily: Azure Data Engineer -> data', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Azure Data Engineer', technologies: ['Azure', 'Databricks'] }), 'data-architect');
+});
+
+test('normalizeRoleFamily: Data Architect -> data', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Data Architect' }), 'data-architect');
+});
+
+test('normalizeRoleFamily: AI/GenAI Engineer -> ai-engineer', () => {
+  assert.equal(normalizeRoleFamily({ title: 'AI Engineer', roleSummary: 'Builds RAG and LLM agents.' }), 'ai-engineer');
+});
+
+test('normalizeRoleFamily: Forward Deployed / Solutions Engineer -> fde', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Solutions Engineer', roleSummary: 'Customer-facing delivery.' }), 'fde');
+});
+
+test('normalizeRoleFamily: Cloud/Platform/DevOps -> cloud-platform', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Platform Engineer', technologies: ['Kubernetes', 'Terraform'] }), 'cloud-platform');
+});
+
+test('normalizeRoleFamily: bare seniority maps to NO family', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Senior', seniority: 'Senior' }), '');
+  assert.equal(normalizeRoleFamily({ seniority: 'Staff' }), '');
+  assert.equal(normalizeRoleFamily({}), '');
+});
+
+// ---------------------------------------------------------------------------
+// isWeakTitle / repairedTitleFor (legacy-title repair ON REOPEN only, spec §3).
+// ---------------------------------------------------------------------------
+
+test('isWeakTitle: flags empty / junk / bare seniority / company blurb / paragraph', () => {
+  assert.equal(isWeakTitle(''), true);
+  assert.equal(isWeakTitle('Not specified'), true);
+  assert.equal(isWeakTitle('Senior'), true);
+  assert.equal(isWeakTitle('Datavations is a data and AI software company'), true);
+  assert.equal(isWeakTitle('x'.repeat(90)), true);
+});
+
+test('isWeakTitle: accepts a real role title', () => {
+  assert.equal(isWeakTitle('Senior Data Engineer'), false);
+  assert.equal(isWeakTitle('Azure Data Engineer'), false);
+  assert.equal(isWeakTitle('Solutions Architect'), false);
+});
+
+test('repairedTitleFor: repairs a weak title from the job analysis', () => {
+  const job = {
+    title: 'Senior',
+    analysis: { seniority: 'Senior', roleSummary: 'Acme hires a Data Engineer for its lakehouse.' },
+  };
+  assert.equal(repairedTitleFor(job), 'Senior Data Engineer');
+});
+
+test('repairedTitleFor: company-blurb title repaired to the real role', () => {
+  const job = {
+    title: 'Datavations is a data and AI software company',
+    analysis: { seniority: 'Not specified', roleSummary: 'Datavations is a data and AI software company hiring a Data Engineer.' },
+  };
+  assert.ok(/data engineer/i.test(repairedTitleFor(job)));
+});
+
+test('repairedTitleFor: preserves a valid/user-edited title (returns "")', () => {
+  const job = { title: 'Staff ML Engineer', analysis: { roleSummary: 'whatever' } };
+  assert.equal(repairedTitleFor(job), '');
+});
+
+test('repairedTitleFor: does not replace one weak guess with another (returns "")', () => {
+  const job = { title: 'Senior', analysis: { seniority: 'Senior', roleSummary: 'A great company culture.' } };
+  assert.equal(repairedTitleFor(job), '');
 });
