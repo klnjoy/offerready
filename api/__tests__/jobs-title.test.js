@@ -365,3 +365,53 @@ test('deriveJobTitle: no role noun anywhere falls back to "Untitled role" (never
   );
   assert.equal(title, 'Untitled role');
 });
+
+// ---------------------------------------------------------------------------
+// Bare-seniority regression: a seniority of just "Senior" must NOT become the
+// whole title. The role noun from roleSummary must be kept, and the level
+// prefixed -> "Senior Data Engineer" (not "Senior").
+// ---------------------------------------------------------------------------
+
+test('deriveJobTitle: bare seniority "Senior" is NOT a title; role noun is kept', () => {
+  const t = deriveJobTitle(
+    {},
+    { seniority: 'Senior', roleSummary: 'The Data Engineer builds and operates ETL pipelines.' }
+  );
+  assert.equal(t, 'Senior Data Engineer');
+});
+
+test('deriveJobTitle: bare seniority prepended to extracted role (Azure Data Engineer)', () => {
+  const t = deriveJobTitle(
+    {},
+    { seniority: 'Senior', roleSummary: 'Acme seeks an Azure Data Engineer for its data team.' }
+  );
+  assert.equal(t, 'Senior Azure Data Engineer');
+});
+
+test('deriveJobTitle: seniority already containing a role noun is used as-is', () => {
+  const t = deriveJobTitle({}, { seniority: 'Senior Data Engineer', roleSummary: 'whatever' });
+  assert.equal(t, 'Senior Data Engineer');
+});
+
+test('deriveJobTitle: no double-level when extracted role already has the level', () => {
+  const t = deriveJobTitle(
+    {},
+    { seniority: 'Senior', roleSummary: 'We want a Senior Data Engineer.' }
+  );
+  assert.equal(t, 'Senior Data Engineer');
+});
+
+test('deriveJobTitle: bare seniority + no role noun anywhere -> "Untitled role" (never "Senior")', () => {
+  const t = deriveJobTitle({}, { seniority: 'Senior', roleSummary: 'A great culture and strong team.' });
+  assert.notEqual(t.toLowerCase(), 'senior');
+  assert.equal(t, 'Untitled role');
+});
+
+test('deriveJobTitle: Data Engineer role noun survives (never collapses to "Senior")', () => {
+  const t = deriveJobTitle(
+    {},
+    { seniority: 'Senior', roleSummary: 'Datavations is a data and AI software company hiring a Data Engineer.' }
+  );
+  assert.ok(/data engineer/i.test(t));
+  assert.notEqual(t.toLowerCase(), 'senior');
+});

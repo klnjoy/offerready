@@ -73,6 +73,26 @@ function isQualifier(tok) {
   return false;
 }
 
+// Does a string contain an actual role noun (engineer/architect/...)? Used to
+// reject a bare seniority level ("Senior") as a standalone title.
+function hasRoleNoun(s) {
+  const words = String(s == null ? '' : s).toLowerCase().split(/[^a-z]+/);
+  return words.some((w) => w && (ROLE_NOUNS_SET.has(w) || ROLE_NOUNS_SET.has(w.replace(/s$/, ''))));
+}
+
+// If a string is ONLY a seniority level (e.g. "Senior", "Staff", "Senior/Lead")
+// with no role noun, return the cleaned level to use as a prefix; else ''.
+function bareSeniority(s) {
+  const str = String(s == null ? '' : s).trim();
+  if (!str || hasRoleNoun(str)) return '';
+  const words = str.split(/[\s/]+/).filter(Boolean);
+  if (words.length && words.every((w) => SENIORITY_WORDS.has(w.toLowerCase()))) {
+    const lvl = words[0];
+    return lvl.charAt(0).toUpperCase() + lvl.slice(1).toLowerCase();
+  }
+  return '';
+}
+
 /**
  * Try to extract a concise role TITLE from a free-form role summary.
  * Returns '' when no confident role phrase is found. Pure/side-effect free.
@@ -143,20 +163,30 @@ function deriveJobTitle(body, analysis) {
   const explicit = cleanTitle(b.title) || cleanTitle(b.targetRole);
   if (explicit) return explicit.slice(0, 200);
 
-  // b) parsed role title from analysis (seniority often holds the role/level)
+  // b) parsed role title from analysis.seniority — ONLY when it already
+  //    contains a role noun (e.g. "Senior Data Engineer"). A bare level like
+  //    "Senior" is NOT a title on its own; we keep it as a prefix for (c).
   const parsed = cleanTitle(a.seniority);
-  if (parsed) return parsed.slice(0, 200);
+  if (parsed && hasRoleNoun(parsed)) return parsed.slice(0, 200);
+  const levelPrefix = bareSeniority(a.seniority); // "Senior" / "" (no role noun)
 
   // c) AI-derived role title from the role summary. The summary is a paragraph
   //    that often OPENS with a company description, so we extract an actual
-  //    role phrase (e.g. "Azure Data Engineer") rather than blindly taking the
-  //    first clause (which produced company-blurb titles like
-  //    "Datavations is a data and AI software company...").
+  //    role phrase (e.g. "Data Engineer") rather than blindly taking the first
+  //    clause. If analysis.seniority was a bare level, prepend it so we persist
+  //    the COMPLETE role (e.g. "Senior" + "Data Engineer" => "Senior Data
+  //    Engineer") instead of losing the role noun.
   const role = extractRoleFromSummary(a.roleSummary);
-  if (role) return role.slice(0, 120);
+  if (role) {
+    // Avoid doubling the level if the extracted phrase already starts with it.
+    const alreadyLeveled = levelPrefix
+      && role.toLowerCase().startsWith(levelPrefix.toLowerCase());
+    const full = (levelPrefix && !alreadyLeveled) ? (levelPrefix + ' ' + role) : role;
+    return full.slice(0, 120);
+  }
 
-  // d) fallback — never a placeholder like "Not specified" and never a
-  //    company-description sentence.
+  // d) fallback — never a placeholder like "Not specified", never a bare
+  //    seniority level, never a company-description sentence.
   return 'Untitled role';
 }
 

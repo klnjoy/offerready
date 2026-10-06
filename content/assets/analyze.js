@@ -58,7 +58,11 @@
     // Order matters: most specific role signals first.
     if (/\bsecurity|prompt injection|guardrail|threat|owasp|zero.?trust\b/.test(hay)) return "ai-security";
     if (/\bforward deployed|forward-deployed|\bfde\b|customer-facing|client-facing|solutions engineer\b/.test(hay)) return "fde";
-    if (/\bdata architect|snowflake|databricks|warehouse|lakehouse|cortex|etl|data platform|analytics engineer\b/.test(hay)) return "data-architect";
+    // Data roles (incl. Data Engineer / Azure Data Engineer / Data Platform
+    // Engineer) route to the data catalog and are PREFERRED over the generic
+    // cloud/architect buckets below. There's no separate "data-engineer"
+    // catalog, so the data bucket (data-architect) is the closest match.
+    if (/\bdata engineer|data engineering|azure data|data platform engineer|data architect|snowflake|databricks|warehouse|lakehouse|cortex|etl|elt|data platform|analytics engineer\b/.test(hay)) return "data-architect";
     if (/\bcloud|platform|devops|kubernetes|infrastructure|sre|reliability|terraform\b/.test(hay)) return "cloud-platform";
     if (/\barchitect|architecture|system design|multi-tenant|enterprise\b/.test(hay)) return "ai-architect";
     if (/\bai engineer|genai|ml engineer|rag|agent|llm|nlp\b/.test(hay)) return "ai-engineer";
@@ -143,20 +147,46 @@
     return "";
   }
 
+  function hasRoleNoun(s) {
+    var words = String(s == null ? "" : s).toLowerCase().split(/[^a-z]+/);
+    for (var i = 0; i < words.length; i++) {
+      var w = words[i];
+      if (w && (ROLE_NOUNS_SET[w] || ROLE_NOUNS_SET[w.replace(/s$/, "")])) return true;
+    }
+    return false;
+  }
+  function bareSeniority(s) {
+    var str = String(s == null ? "" : s).trim();
+    if (!str || hasRoleNoun(str)) return "";
+    var words = str.split(/[\s/]+/).filter(Boolean);
+    if (!words.length) return "";
+    for (var i = 0; i < words.length; i++) {
+      if (!SENIORITY_WORDS[words[i].toLowerCase()]) return "";
+    }
+    var lvl = words[0];
+    return lvl.charAt(0).toUpperCase() + lvl.slice(1).toLowerCase();
+  }
+
   // Derive a meaningful role title, mirroring the server's deriveJobTitle
   // (api/_lib/jobs.js) priority so the Defend page and the saved job agree:
   //   a. explicit targetRole the candidate provided
-  //   b. real analysis.seniority (skipped if it's a junk placeholder)
-  //   c. a role phrase extracted from analysis.roleSummary (not a company blurb)
+  //   b. analysis.seniority ONLY if it contains a role noun (not a bare level)
+  //   c. a role phrase from analysis.roleSummary, prefixed with the bare level
+  //      if seniority was just "Senior" etc. (-> "Senior Data Engineer")
   //   d. "" (caller decides the final fallback) — never "Not specified"
   function deriveRoleTitle(targetRole, analysis) {
     var a = analysis || {};
     var explicit = cleanRole(targetRole);
     if (explicit) return explicit.slice(0, 200);
     var parsed = cleanRole(a.seniority);
-    if (parsed) return parsed.slice(0, 200);
+    if (parsed && hasRoleNoun(parsed)) return parsed.slice(0, 200);
+    var levelPrefix = bareSeniority(a.seniority);
     var role = extractRoleFromSummary(a.roleSummary);
-    if (role) return role.slice(0, 120);
+    if (role) {
+      var alreadyLeveled = levelPrefix && role.toLowerCase().indexOf(levelPrefix.toLowerCase()) === 0;
+      var full = (levelPrefix && !alreadyLeveled) ? (levelPrefix + " " + role) : role;
+      return full.slice(0, 120);
+    }
     return "";
   }
 
