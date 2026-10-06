@@ -62,8 +62,12 @@ async function practiceSchemaReady() {
     const resp = await restFetch('/practice_sessions?select=session_id&limit=0',
       { method: 'GET', headers: serviceHeaders() });
     if (resp.ok) return true;
-    // 400 => missing column (0006 not applied). Other non-2xx => inconclusive.
-    if (resp.status === 400) return false;
+    // 400 => the 0006-only column doesn't exist. 404 => the practice_sessions
+    // table (or its PostgREST route) doesn't exist at all. Both mean migration
+    // 0006 hasn't been applied, so report schema-missing (not a vague server
+    // error) and give the user the actionable "apply 0006" message. Any other
+    // non-2xx (401/403/5xx) is inconclusive -> null.
+    if (resp.status === 400 || resp.status === 404) return false;
     return null;
   } catch (_e) {
     return null;

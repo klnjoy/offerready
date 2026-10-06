@@ -1046,9 +1046,25 @@
           statusEl.innerHTML = "Scenario completed (saved to this browser only) \u2014 <a href=\"" + base + "My-Jobs/index.html\">sign in</a> so your practice is saved to your job and every device.";
           actionsEl.appendChild(allScenariosBtn());
         } else {
-          // Authoritative save failed — DO NOT claim readiness updated.
+          // Authoritative save failed — DO NOT claim readiness updated. Give a
+          // reason-specific, honest message so the user isn't left with a vague
+          // error and a retry button that can't help. Known local reasons:
+          //   server  : the server couldn't record the session (5xx)
+          //   network : the request never reached/returned from the server
+          //   token   : couldn't read the sign-in to authorize the write
+          //   error   : couldn't load the job list to attribute the session
+          var reason = (r && r.reason) || "server";
           statusEl.className = "or-status or-status-err";
-          statusEl.textContent = "Scenario completed, but we couldn\u2019t update Interview Readiness.";
+          if (reason === "network") {
+            statusEl.textContent = "Scenario completed, but we couldn\u2019t reach the server to save it. Check your connection and try again \u2014 your practice is kept in this browser meanwhile.";
+          } else if (reason === "token") {
+            statusEl.innerHTML = "Scenario completed, but your sign-in couldn\u2019t be verified, so it wasn\u2019t saved to your job. <a href=\"" + base + "My-Jobs/index.html\">Sign in again</a>, then retry.";
+          } else if (reason === "error") {
+            statusEl.textContent = "Scenario completed, but we couldn\u2019t load your jobs to attribute this practice. Please try again.";
+          } else {
+            // "server" and any unexpected reason.
+            statusEl.textContent = "Scenario completed, but the server couldn\u2019t save it right now. Please try again \u2014 your practice is kept in this browser meanwhile.";
+          }
           var retry = el("button", "ip-btn or-btn-primary", "Try Saving Again");
           retry.addEventListener("click", function () {
             state.saving = false;           // allow one more attempt
