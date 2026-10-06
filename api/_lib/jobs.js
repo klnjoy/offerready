@@ -185,9 +185,77 @@ function deriveJobTitle(body, analysis) {
     return full.slice(0, 120);
   }
 
-  // d) fallback — never a placeholder like "Not specified", never a bare
+  // d) conservative role derived from the JD-extracted signals (technologies,
+  //    skills, responsibilities). A JD full of Snowflake/ETL/warehousing/
+  //    analytics clearly describes a role even when the summary has no explicit
+  //    role phrase — so synthesize one (e.g. "Snowflake Data Engineer") instead
+  //    of giving up.
+  const fromSignals = deriveTitleFromSignals(a, levelPrefix);
+  if (fromSignals) return fromSignals.slice(0, 120);
+
+  // e) fallback — never a placeholder like "Not specified", never a bare
   //    seniority level, never a company-description sentence.
   return 'Untitled role';
+}
+
+// Collect the lowercase signal text (technologies + skills + responsibilities)
+// from an analysis object for conservative role inference.
+function signalText(a) {
+  const parts = [];
+  (Array.isArray(a.technologies) ? a.technologies : []).forEach((t) => parts.push(String(t || '')));
+  (Array.isArray(a.coreSkills) ? a.coreSkills : []).forEach((s) => parts.push(typeof s === 'string' ? s : (s && s.name) || ''));
+  (Array.isArray(a.preferredSkills) ? a.preferredSkills : []).forEach((s) => parts.push(typeof s === 'string' ? s : (s && s.name) || ''));
+  (Array.isArray(a.responsibilities) ? a.responsibilities : []).forEach((r) => parts.push(typeof r === 'string' ? r : (r && (r.title || r.requirement)) || ''));
+  if (a.roleSummary) parts.push(String(a.roleSummary));
+  return parts.join(' ').toLowerCase();
+}
+
+/**
+ * Conservative role title from JD-derived signals when no explicit role phrase
+ * exists. Picks a role NOUN from the dominant domain signals and, when a
+ * signature platform is present, prefixes it (e.g. "Snowflake Data Engineer").
+ * Returns '' when the signals are too weak to name a role. Pure.
+ */
+function deriveTitleFromSignals(analysis, levelPrefix) {
+  const a = analysis || {};
+  const hay = signalText(a);
+  if (!hay.trim()) return '';
+
+  // Determine the role noun from the strongest domain signal.
+  let roleNoun = '';
+  let qualifier = '';
+  if (/\bdata engineer|etl|elt|data pipeline|pipeline|ingestion|data warehous|warehousing|lakehouse|spark|databricks\b/.test(hay)) {
+    roleNoun = 'Data Engineer';
+  } else if (/\bdata architect|dimensional model|data modeling\b/.test(hay)) {
+    roleNoun = 'Data Architect';
+  } else if (/\banalytics|tableau|power bi|looker|bi\b/.test(hay) && /\bsql|warehouse|etl|elt\b/.test(hay)) {
+    roleNoun = 'Analytics Engineer';
+  } else if (/\brag|llm|genai|gen ai|agent|prompt|embedding|vector\b/.test(hay)) {
+    roleNoun = 'AI Engineer';
+  } else if (/\bml engineer|machine learning|model training|mlops\b/.test(hay)) {
+    roleNoun = 'ML Engineer';
+  } else if (/\bkubernetes|terraform|devops|infrastructure|sre|ci\/cd|platform\b/.test(hay)) {
+    roleNoun = 'Platform Engineer';
+  } else if (/\bsql|snowflake|bigquery|redshift|analytics|reporting\b/.test(hay)) {
+    // Data-ish but not clearly engineering/architecture -> Data Engineer is the
+    // safe, common default for a SQL+warehouse JD.
+    roleNoun = 'Data Engineer';
+  }
+  if (!roleNoun) return '';
+
+  // Signature-platform qualifier (only for data roles, keeps titles natural).
+  if (/\bdata engineer\b/i.test(roleNoun) || /\bdata architect\b/i.test(roleNoun)) {
+    if (/\bsnowflake\b/.test(hay)) qualifier = 'Snowflake';
+    else if (/\bdatabricks\b/.test(hay)) qualifier = 'Databricks';
+    else if (/\bazure\b/.test(hay)) qualifier = 'Azure';
+    else if (/\baws\b/.test(hay)) qualifier = 'AWS';
+  }
+
+  const parts = [];
+  if (levelPrefix) parts.push(levelPrefix);
+  if (qualifier) parts.push(qualifier);
+  parts.push(roleNoun);
+  return parts.join(' ');
 }
 
 /**
@@ -450,6 +518,6 @@ function repairedTitleFor(job) {
 module.exports = {
   listJobs, countJobs, getJob, insertJob, deleteJob,
   deriveJobTitle, cleanTitle, restoreJobContext, GAP_MIN_JD,
-  extractRoleFromSummary, normalizeRoleFamily,
+  extractRoleFromSummary, normalizeRoleFamily, deriveTitleFromSignals,
   updateJobFields, touchJobStats, isWeakTitle, repairedTitleFor,
 };

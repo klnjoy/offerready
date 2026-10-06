@@ -15,7 +15,7 @@ const assert = require('node:assert');
 
 const {
   deriveJobTitle, cleanTitle, restoreJobContext, GAP_MIN_JD, extractRoleFromSummary,
-  normalizeRoleFamily, isWeakTitle, repairedTitleFor,
+  normalizeRoleFamily, isWeakTitle, repairedTitleFor, deriveTitleFromSignals,
 } = require('../_lib/jobs');
 
 test('cleanTitle: trims and keeps a real title', () => {
@@ -501,4 +501,74 @@ test('repairedTitleFor: preserves a valid/user-edited title (returns "")', () =>
 test('repairedTitleFor: does not replace one weak guess with another (returns "")', () => {
   const job = { title: 'Senior', analysis: { seniority: 'Senior', roleSummary: 'A great company culture.' } };
   assert.equal(repairedTitleFor(job), '');
+});
+
+// ---------------------------------------------------------------------------
+// Title from JD-derived signals (Defect 1): a JD with Snowflake/ETL/warehouse/
+// analytics clearly describes a role even when roleSummary has no role phrase.
+// deriveJobTitle must synthesize a title, not return "Untitled role".
+// ---------------------------------------------------------------------------
+
+test('deriveTitleFromSignals: Snowflake + ETL + warehouse -> Snowflake Data Engineer', () => {
+  const t = deriveTitleFromSignals(
+    { technologies: ['Snowflake', 'SQL', 'Tableau'], coreSkills: ['ETL', 'ELT', 'Data Warehousing', 'Analytics'] },
+    ''
+  );
+  assert.equal(t, 'Snowflake Data Engineer');
+});
+
+test('deriveTitleFromSignals: ETL/pipeline signal -> Data Engineer (data-eng wins over analytics)', () => {
+  // ETL/pipeline is an engineering signal and is matched before the analytics
+  // branch, so a SQL+Analytics+ETL JD is a Data Engineer (correct precedence).
+  const t = deriveTitleFromSignals({ technologies: ['SQL'], coreSkills: ['Analytics', 'ETL'] }, '');
+  assert.equal(t, 'Data Engineer');
+});
+
+test('deriveTitleFromSignals: Tableau + analytics + SQL (no ETL) -> Analytics Engineer', () => {
+  const t = deriveTitleFromSignals({ technologies: ['SQL', 'Tableau'], coreSkills: ['Analytics', 'Reporting'] }, '');
+  assert.equal(t, 'Analytics Engineer');
+});
+
+test('deriveTitleFromSignals: plain SQL + reporting (no analytics engine signal) -> Data Engineer', () => {
+  const t = deriveTitleFromSignals({ technologies: ['SQL'], coreSkills: ['Reporting'] }, '');
+  assert.equal(t, 'Data Engineer');
+});
+
+test('deriveTitleFromSignals: RAG/LLM -> AI Engineer', () => {
+  const t = deriveTitleFromSignals({ technologies: ['RAG', 'LLM', 'Vector DB'] }, '');
+  assert.equal(t, 'AI Engineer');
+});
+
+test('deriveTitleFromSignals: level prefix is applied', () => {
+  const t = deriveTitleFromSignals({ technologies: ['Databricks', 'Spark'] }, 'Senior');
+  assert.equal(t, 'Senior Databricks Data Engineer');
+});
+
+test('deriveTitleFromSignals: no usable signal -> ""', () => {
+  assert.equal(deriveTitleFromSignals({}, ''), '');
+  assert.equal(deriveTitleFromSignals({ coreSkills: ['Communication', 'Teamwork'] }, ''), '');
+});
+
+test('deriveJobTitle: JD-signal fallback prevents "Untitled role" for a clear data JD', () => {
+  // No explicit title, junk seniority, roleSummary with no role phrase, but the
+  // technologies/skills clearly describe a Snowflake data role.
+  const t = deriveJobTitle(
+    {},
+    {
+      seniority: 'Not specified',
+      roleSummary: 'A fast-growing team that values ownership and curiosity.',
+      technologies: ['Snowflake', 'SQL', 'Tableau'],
+      coreSkills: ['ETL', 'ELT', 'Data Warehousing', 'Analytics'],
+    }
+  );
+  assert.notEqual(t, 'Untitled role');
+  assert.equal(t, 'Snowflake Data Engineer');
+});
+
+test('deriveJobTitle: still "Untitled role" when truly no role signal exists', () => {
+  const t = deriveJobTitle(
+    {},
+    { seniority: 'Not specified', roleSummary: 'A great culture.', coreSkills: ['Teamwork'] }
+  );
+  assert.equal(t, 'Untitled role');
 });

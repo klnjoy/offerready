@@ -175,6 +175,45 @@
   //   c. a role phrase from analysis.roleSummary, prefixed with the bare level
   //      if seniority was just "Senior" etc. (-> "Senior Data Engineer")
   //   d. "" (caller decides the final fallback) — never "Not specified"
+  // Conservative role from JD-derived signals (technologies/skills/responsi-
+  // bilities) when no explicit role phrase exists. Mirrors the server's
+  // deriveTitleFromSignals so a Snowflake/ETL/warehouse JD becomes e.g.
+  // "Snowflake Data Engineer" instead of nothing.
+  function signalText(a) {
+    var parts = [];
+    (a.technologies || []).forEach(function (t) { parts.push(String(t || "")); });
+    (a.coreSkills || []).forEach(function (s) { parts.push(typeof s === "string" ? s : (s && s.name) || ""); });
+    (a.preferredSkills || []).forEach(function (s) { parts.push(typeof s === "string" ? s : (s && s.name) || ""); });
+    (a.responsibilities || []).forEach(function (r) { parts.push(typeof r === "string" ? r : (r && (r.title || r.requirement)) || ""); });
+    if (a.roleSummary) parts.push(String(a.roleSummary));
+    return parts.join(" ").toLowerCase();
+  }
+  function deriveTitleFromSignals(a, levelPrefix) {
+    var hay = signalText(a || {});
+    if (!hay.trim()) return "";
+    var roleNoun = "";
+    if (/\bdata engineer|etl|elt|data pipeline|pipeline|ingestion|data warehous|warehousing|lakehouse|spark|databricks\b/.test(hay)) roleNoun = "Data Engineer";
+    else if (/\bdata architect|dimensional model|data modeling\b/.test(hay)) roleNoun = "Data Architect";
+    else if (/\banalytics|tableau|power bi|looker|bi\b/.test(hay) && /\bsql|warehouse|etl|elt\b/.test(hay)) roleNoun = "Analytics Engineer";
+    else if (/\brag|llm|genai|gen ai|agent|prompt|embedding|vector\b/.test(hay)) roleNoun = "AI Engineer";
+    else if (/\bml engineer|machine learning|model training|mlops\b/.test(hay)) roleNoun = "ML Engineer";
+    else if (/\bkubernetes|terraform|devops|infrastructure|sre|ci\/cd|platform\b/.test(hay)) roleNoun = "Platform Engineer";
+    else if (/\bsql|snowflake|bigquery|redshift|analytics|reporting\b/.test(hay)) roleNoun = "Data Engineer";
+    if (!roleNoun) return "";
+    var qualifier = "";
+    if (/data engineer|data architect/i.test(roleNoun)) {
+      if (/\bsnowflake\b/.test(hay)) qualifier = "Snowflake";
+      else if (/\bdatabricks\b/.test(hay)) qualifier = "Databricks";
+      else if (/\bazure\b/.test(hay)) qualifier = "Azure";
+      else if (/\baws\b/.test(hay)) qualifier = "AWS";
+    }
+    var parts = [];
+    if (levelPrefix) parts.push(levelPrefix);
+    if (qualifier) parts.push(qualifier);
+    parts.push(roleNoun);
+    return parts.join(" ");
+  }
+
   function deriveRoleTitle(targetRole, analysis) {
     var a = analysis || {};
     var explicit = cleanRole(targetRole);
@@ -188,6 +227,8 @@
       var full = (levelPrefix && !alreadyLeveled) ? (levelPrefix + " " + role) : role;
       return full.slice(0, 120);
     }
+    var fromSignals = deriveTitleFromSignals(a, levelPrefix);
+    if (fromSignals) return fromSignals.slice(0, 120);
     return "";
   }
 

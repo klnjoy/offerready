@@ -37,7 +37,7 @@ const REQUIRED_ENTITLEMENT = 'system_design_pro';
 
 // Categories the client filter understands (matches scenario.js CATEGORY_LABELS).
 const VALID_CATEGORIES = [
-  'ai-engineer', 'ai-architect', 'data-architect',
+  'ai-engineer', 'ai-architect', 'data-engineer', 'data-architect',
   'cloud-platform', 'ai-security', 'fde',
 ];
 
