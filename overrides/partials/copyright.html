@@ -11,15 +11,25 @@
   correctly under the GitHub Pages sub-path (…/offerready/).
 -#}
 <div class="md-copyright or-footer">
-  {% if config.copyright %}
-    <div class="md-copyright__highlight or-footer__copy">
-      {{ config.copyright }}
-    </div>
-  {% endif %}
-  <nav class="or-footer__links" aria-label="Legal and contact">
+  {#- Brand block: wordmark + one-line product descriptor (compact, left). -#}
+  <div class="or-footer__brand">
+    <span class="or-footer__name">Offer<span class="or-ready">Ready</span></span>
+    <span class="or-footer__tag">Interview readiness platform.</span>
+    {% if config.copyright %}
+      <span class="or-footer__copy">{{ config.copyright }}</span>
+    {% endif %}
+  </div>
+  {#- Utility + legal links (right). Pricing & Resources added per the UI brief;
+     existing legal links preserved. Site-root-relative so they resolve under
+     the GitHub Pages sub-path. -#}
+  <nav class="or-footer__links" aria-label="Site and legal links">
+    <a href="{{ base_url }}/assets/pricing.html">Pricing</a>
+    <span class="or-footer__sep" aria-hidden="true">·</span>
+    <a href="{{ base_url }}/Documentation/">Resources</a>
+    <span class="or-footer__sep" aria-hidden="true">·</span>
     <a href="{{ base_url }}/Privacy/">Privacy</a>
     <span class="or-footer__sep" aria-hidden="true">·</span>
-    <a href="{{ base_url }}/Terms/">Terms of Service</a>
+    <a href="{{ base_url }}/Terms/">Terms</a>
     <span class="or-footer__sep" aria-hidden="true">·</span>
     <a href="{{ base_url }}/Disclaimer/">Disclaimer</a>
     <span class="or-footer__sep" aria-hidden="true">·</span>

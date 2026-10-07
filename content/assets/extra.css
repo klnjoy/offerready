@@ -2164,3 +2164,91 @@ a.ig-feature.ig-link .ig-d {
 /* ---- 8. Images/SVG never cause horizontal scroll. */
 .md-typeset img, .md-typeset svg { max-width: 100%; height: auto; }
 .or-spark, .ip-chart { max-width: 100%; }
+
+/* ============================================================
+   UI/UX SPRINT — PHASE 2: header + footer polish.
+   Presentation-only. No nav structure, route, or logic changes.
+   ============================================================ */
+
+/* ---- Footer: compact professional block ----
+   Left: wordmark + one-line descriptor + copyright. Right: utility/legal links.
+   Reuses the existing .or-footer flex (space-between, wrap) from Phase-0 CSS. */
+.or-footer__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 12rem;
+}
+.or-footer__name {
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+/* "Ready" picks up the brand green, matching the header + hero wordmark. */
+.or-footer__name .or-ready { color: var(--kb-green, #1f9d63); }
+.or-footer__tag {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.82);
+}
+.or-footer__copy {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.15rem;
+}
+/* Links row: comfortable spacing, readable brand-blue on navy. */
+.or-footer__links { gap: 6px 10px; }
+
+/* Mobile: stack brand over links, centered, with room between. */
+@media (max-width: 480px) {
+  .or-footer { flex-direction: column; align-items: center; text-align: center; gap: 0.8rem; }
+  .or-footer__brand { align-items: center; min-width: 0; }
+  .or-footer__links { justify-content: center; }
+}
+
+/* ---- Header: clearer current-page title + responsive polish ----
+   Material shows the page title in the header once you scroll past the H1
+   (navigation.tracking is enabled). Give that title confident, legible weight
+   so "where am I" is always answerable from the top bar. Logic/markup unchanged. */
+.md-header__title--active .md-header__topic:first-child .md-ellipsis {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.96);
+}
+/* Keep the brand wordmark (the OTHER topic) visually distinct from the page
+   title when both are present. */
+.md-header__title .md-header__topic ~ .md-header__topic .md-ellipsis {
+  font-weight: 600;
+}
+
+/* Search field: calmer, rounded, so the header reads premium not utilitarian. */
+.md-search__form {
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.14);
+}
+.md-search__form:hover { background: rgba(255, 255, 255, 0.2); }
+[data-md-toggle="search"]:checked ~ .md-header .md-search__form {
+  background: #fff;
+}
+
+/* Header action icons (search, menu, repo): comfortable tap size on touch. */
+@media (pointer: coarse) {
+  .md-header__button { min-width: 44px; min-height: 44px; }
+}
+
+/* Mobile header: hamburger | logo+wordmark | (title). Material already renders
+   the drawer toggle (hamburger) + logo on small screens; make sure the
+   wordmark stays visible next to the mark and nothing is clipped. */
+@media screen and (max-width: 76.1875em) {
+  .md-header__title { font-size: 0.95rem; }
+  .md-header__button.md-logo { margin-right: 0.5rem; }
+}
+@media screen and (max-width: 29.9em) {
+  /* Very narrow: keep the wordmark but let it ellipsize rather than push the
+     search/menu icons off-screen (prevents header overflow). */
+  .md-header__title .md-ellipsis {
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
