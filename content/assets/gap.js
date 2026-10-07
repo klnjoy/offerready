@@ -338,13 +338,23 @@
       // Evidence found + evidence not found in the resume. Careful wording: a
       // "not found" item means the resume didn't show it — NOT that the
       // candidate lacks the ability.
-      var detail = el("div", "or-card");
-      var s = chips("\u2713 Evidence found in your resume", r.strengths, "or-chip-ok"); if (s) detail.appendChild(s);
-      var ms = chips("\u26a0 Skills not found in your resume", r.missingSkills, "or-chip-warn"); if (ms) detail.appendChild(ms);
-      var mk = chips("\u26a0 Keywords not found in your resume", r.missingKeywords, "or-chip-warn"); if (mk) detail.appendChild(mk);
-      var me = chips("\u26a0 Experience not evidenced in your resume", r.missingExperience, "or-chip-warn"); if (me) detail.appendChild(me);
-      detail.appendChild(el("p", "or-muted or-small", "\u201cNot found\u201d means this wasn\u2019t shown in your uploaded resume \u2014 it isn\u2019t a judgment of your ability. Treat these as recommended preparation areas."));
-      app.appendChild(detail);
+      // Strengths (evidence found) and Missing evidence read as two distinct
+      // callout cards so the "what I have" vs "what to prepare" split is scannable.
+      var s = chips("\u2713 Evidence found in your resume", r.strengths, "or-chip-ok");
+      if (s) {
+        var strengthsCard = el("div", "or-card or-callout or-callout-ok");
+        strengthsCard.appendChild(s);
+        app.appendChild(strengthsCard);
+      }
+      var missing = el("div", "or-card or-callout or-callout-warn");
+      var hasMissing = false;
+      var ms = chips("\u26a0 Skills not found in your resume", r.missingSkills, "or-chip-warn"); if (ms) { missing.appendChild(ms); hasMissing = true; }
+      var mk = chips("\u26a0 Keywords not found in your resume", r.missingKeywords, "or-chip-warn"); if (mk) { missing.appendChild(mk); hasMissing = true; }
+      var me = chips("\u26a0 Experience not evidenced in your resume", r.missingExperience, "or-chip-warn"); if (me) { missing.appendChild(me); hasMissing = true; }
+      if (hasMissing) {
+        missing.appendChild(el("p", "or-muted or-small", "\u201cNot found\u201d means this wasn\u2019t shown in your uploaded resume \u2014 it isn\u2019t a judgment of your ability. Treat these as recommended preparation areas."));
+        app.appendChild(missing);
+      }
 
       // Persistence status — the DB is the source of truth.
       if (state.jobId && saved) {

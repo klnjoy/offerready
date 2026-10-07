@@ -2421,3 +2421,18 @@ a.ig-feature.ig-link .ig-d {
 }
 /* Keep the EXPLICIT/implied type tag subtle next to a skill. */
 #analyze-app .or-chips .ip-topic .or-tag { margin-left: 0.3rem; }
+
+/* ---- Check My Fit: Strengths vs Missing Evidence callouts ----
+   Split the single detail block into two tinted callout cards so "what I have"
+   (green) and "what to prepare" (amber) are scannable at a glance. */
+.or-callout { border-left: 4px solid var(--or-border, #e5e9f0); }
+.or-callout-ok {
+  border-left-color: var(--or-green, #1f9d63);
+  background: var(--or-green-soft, rgba(31, 157, 99, 0.06));
+}
+.or-callout-warn {
+  border-left-color: #e0a53a;
+  background: rgba(237, 154, 28, 0.07);
+}
+.or-callout .or-chips-block:last-child,
+.or-callout .or-chips:last-child { margin-bottom: 0; }
