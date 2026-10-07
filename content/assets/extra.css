@@ -2026,7 +2026,11 @@ a.ig-feature.ig-link .ig-d {
   .md-nav--primary .md-nav[data-md-level="4"],
   .md-nav--primary .md-nav[data-md-level="5"],
   .md-nav--primary .md-nav[data-md-level="6"] {
-    font-size: 0.84rem;              /* slightly smaller than workflow items */
+    /* Keep the SAME font-size as the rest of the sidebar so the Resources
+       drill-down doesn't look like a different, smaller typeface. The only
+       cue separating the library from the top-level workflow is font-weight
+       (normal vs. the 600 used by workflow items), applied on the links below. */
+    font-size: inherit;
     opacity: 1;                      /* full strength — not greyed/shadowed */
   }
   /* Resources library links read as REAL, legible links: full primary text
