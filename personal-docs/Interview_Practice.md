@@ -1,29 +1,22 @@
 ---
-icon: material/dumbbell
+hide:
+  - navigation
+  - toc
+search:
+  exclude: true
 ---
 
-# Interview Practice — Mock Session
+<!-- Interview Practice moved to the OfferReady app (klnjoy/offerready-app). This page
+     stays so old links keep working: it forwards to the same screen in the
+     app, keeping any ?query (e.g. ?upgrade=1) and #hash (shared plans). -->
 
-Run a self-scored mock interview drawn from the question banks. Pick a track and
-topic, answer each question (out loud or typed), reveal the model answer, and
-rate yourself. Your scores are saved locally in your browser.
+# Interview Practice has moved
 
-!!! tip "How it works"
-    - Pick a **mode**: **📝 Practice** (answer → reveal → self-rate), **🃏 Flashcards**
-      (flip → Again/Good/Easy), or **⏱️ Timed Exam** (countdown, answer all, score
-      at the end).
-    - Everything runs **in your browser** — no account, nothing sent anywhere.
-      Scores feed the [Progress Dashboard](Interview_Progress.md).
-    - **🤖 AI grade** is an *optional local-only* extra: it works when you run the
-      bundled agent on your machine (`start-chatbot.bat`). The published site does
-      not include AI grading.
-    - Prefer answering **out loud** and timing yourself — that's the real rehearsal.
+This tool now lives in the OfferReady app, with your saved jobs and readiness.
+The study library you're on now holds the learning material.
 
-<div id="ip-app">
-  <p><em>Loading practice…</em> If this doesn't load, enable JavaScript.</p>
-</div>
+[Open Interview practice](https://klnjoy.github.io/offerready-app/practice){ .md-button .md-button--primary }
 
----
-
-Want the underlying material? Every question links back to a full bank in the
-[Interview Guide overview](Interview_Guide_Overview.md).
+<script>
+  location.replace("https://klnjoy.github.io/offerready-app/practice" + location.search + location.hash);
+</script>

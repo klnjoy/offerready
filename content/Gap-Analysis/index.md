@@ -1,33 +1,22 @@
 ---
-icon: material/scale-balance
+hide:
+  - navigation
+  - toc
+search:
+  exclude: true
 ---
 
-# Gap Analysis
+<!-- Check My Fit moved to the OfferReady app (klnjoy/offerready-app). This page
+     stays so old links keep working: it forwards to the same screen in the
+     app, keeping any ?query (e.g. ?upgrade=1) and #hash (shared plans). -->
 
-**Check my fit:** compare your resume evidence with this saved role. You'll see
-your **Resume Match** — your strengths, the evidence found in your resume, and
-the skills, keywords, and experience the role asks for that **weren't found in
-your resume** yet.
+# Check My Fit has moved
 
-!!! info "Job Match vs Interview Readiness"
-    **Resume Match** here measures how well your resume's evidence lines up with
-    this job's requirements. Your **Interview Readiness** on the
-    [Dashboard](../Dashboard/index.html) is a *blended* score — it combines that
-    match with your practice and completed reps — so the two numbers are
-    measuring different things and won't always be the same.
+This tool now lives in the OfferReady app, with your saved jobs and readiness.
+The study library you're on now holds the learning material.
 
-!!! info "Your resume stays private"
-    Your resume is read **in your browser**. The file is never uploaded or
-    stored — only the extracted text is sent for this one analysis, and nothing
-    is kept afterward. See [Privacy](../Privacy/index.md).
+[Open Check my fit](https://klnjoy.github.io/offerready-app/fit){ .md-button .md-button--primary }
 
-<div id="gap-app" markdown="0">
-  <p><em>Loading gap analysis…</em></p>
-</div>
-
----
-
-A missing item means that evidence **wasn't found in your uploaded resume** — it
-isn't a judgment of your actual ability. Once you've seen your gaps, head to the
-[Readiness Dashboard](../Dashboard/index.html) to track your blended Interview
-Readiness, or [Analyze another job](../Analyze/index.md).
+<script>
+  location.replace("https://klnjoy.github.io/offerready-app/fit" + location.search + location.hash);
+</script>

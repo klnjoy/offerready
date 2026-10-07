@@ -1,26 +1,22 @@
 ---
-icon: material/chart-line
+hide:
+  - navigation
+  - toc
+search:
+  exclude: true
 ---
 
-# Practice History
+<!-- Practice History moved to the OfferReady app (klnjoy/offerready-app). This page
+     stays so old links keep working: it forwards to the same screen in the
+     app, keeping any ?query (e.g. ?upgrade=1) and #hash (shared plans). -->
 
-Your practice **session history** on this device — strength by topic and recent
-sessions, saved **locally in your browser** (nothing uploaded), so it's private
-to this device.
+# Practice History has moved
 
-!!! tip "Looking for your readiness score?"
-    Your overall readiness score and trend live on the
-    **[Readiness Dashboard](../Dashboard/index.html)** — that's the single place
-    OfferReady tracks how ready you are for each job. This page is just the
-    detailed practice log.
+This tool now lives in the OfferReady app, with your saved jobs and readiness.
+The study library you're on now holds the learning material.
 
-<div id="ip-dash">
-  <p><em>Loading your practice history…</em> If this is empty, complete a
-  <a href="Interview_Practice.html">practice session</a> first.</p>
-</div>
+[Open Interview practice](https://klnjoy.github.io/offerready-app/practice){ .md-button .md-button--primary }
 
----
-
-Tip: mix **Practice**, **Flashcards**, and **Timed Exam** modes over on the
-[practice page](Interview_Practice.md). The dashboard tracks all three and
-highlights your weakest topics so you know what to review next.
+<script>
+  location.replace("https://klnjoy.github.io/offerready-app/practice" + location.search + location.hash);
+</script>

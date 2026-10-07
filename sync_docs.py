@@ -791,117 +791,48 @@ def _section(title_with_icon: str, intro: str, cards: list[str]) -> list[str]:
 
 
 def write_index(md_catalog, modules) -> None:
-    # Homepage is a focused, single-path landing: hero (one primary CTA) ->
-    # workflow strip -> Start with your job (analyzer) -> one worked example.
-    # Deep catalog content (Technologies, GenAI Topics, Setup Guides, Docs,
-    # Enterprise, Study Guide, Projects) lives in the left-nav tabs, not here.
+    # Study-library landing. The interactive product (analyze a job, check fit,
+    # questions, defend, readiness) lives in the OfferReady app; this site is
+    # the learning material behind it.
+    app = "https://klnjoy.github.io/offerready-app/"
     lines = [
-        # Hero banner: branded panel wrapping the title, tagline, CTAs, and stat
-        # pills so the top of the home page reads as a product hero, not loose text.
-        # The H1 lives inside the panel (title text set via CSS so the page still
-        # has a proper <h1> for SEO/nav).
         '<div class="or-hero" markdown>',
         "",
         "# OfferReady",
         "",
-        '<p class="or-hero-eyebrow">Job description &rarr; interview readiness</p>',
+        '<p class="or-hero-eyebrow">Study library</p>',
         "",
-        '<p class="home-hero"><strong>Interview readiness for the job you\u2019re '
-        "actually applying for.</strong> Paste a job description, see your gaps, "
-        "and practice what matters.</p>",
+        '<p class="home-hero"><strong>The concepts behind the questions.</strong> '
+        "Deep-dive notes on GenAI, agents, data platforms and cloud, plus "
+        "interview guides by role and level.</p>",
         "",
-        # ONE primary action (Analyze a Job) + one optional secondary that
-        # points at the existing Sample Walkthrough. The old Upload Resume /
-        # Open Dashboard / Get Started buttons and the role-marketing chips were
-        # removed: they didn't move a new visitor through Job -> Analysis ->
-        # Practice -> Readiness and created decision paralysis.
         '<p class="home-cta" markdown>'
-        '[:material-clipboard-search-outline: Analyze a Job](Analyze/index.md){ .md-button .md-button--primary }'
+        "[Browse GenAI topics](GenAI-Topics/index.md){ .md-button .md-button--primary }"
         "&nbsp;"
-        "[See Example](Sample-Walkthrough/index.md){ .md-button }"
+        f"[Open the OfferReady app]({app}){{ .md-button }}"
         "</p>",
         "",
         "</div>",
         "",
-        "## How OfferReady works",
+        "## What's in the library",
         "",
-        "Start with the job you\u2019re targeting and move through four steps:",
+        "| Section | What you'll find |",
+        "| --- | --- |",
+        "| **[GenAI topics](GenAI-Topics/index.md)** | LLM fundamentals, prompt and context engineering, RAG, retrieval tuning, embeddings, vector and graph DBs, LangChain, LangGraph, MCP, agents, A2A, Bedrock, AgentCore, observability, LLMOps, cost |",
+        "| **[Data & cloud tech](Technologies/index.md)** | Snowflake, Databricks, dbt, AWS, FastAPI and the rest of the data and serving stack |",
+        "| **[Snowflake Cortex](Snowflake-Cortex/index.md)** | Cortex Agents, Analyst, Search, AISQL, security, cost, and a system-design mock |",
+        "| **[Enterprise & security](Enterprise/index.md)** | Enterprise architecture, AI security, identity and API security |",
+        "| **[Setup guides](Setup-Guides/index.md)** and **[case studies](Case-Studies/index.md)** | Hands-on setup, projects, case studies and labs |",
+        "| **Interview prep** | Guides by role and level, technical Q&A banks, system-design scenarios, coding, behavioral, cheat sheets and a 30-day plan (in the menu) |",
         "",
-        # Four-step workflow as a card grid (numbered step + short description).
-        # Clearer and more legible than the old inline pill strip.
-        '<div class="or-steps" markdown="0">'
-        '<div class="or-stepcard"><span class="or-stepnum">01</span>'
-        '<span class="or-steptitle">Add the job</span>'
-        '<span class="or-stepdesc">Paste the job description.</span></div>'
-        '<div class="or-stepcard"><span class="or-stepnum">02</span>'
-        '<span class="or-steptitle">Analyze the gap</span>'
-        '<span class="or-stepdesc">See what the role expects and where you fall short.</span></div>'
-        '<div class="or-stepcard"><span class="or-stepnum">03</span>'
-        '<span class="or-steptitle">Practice &amp; defend</span>'
-        '<span class="or-stepdesc">Defend your decisions as the interviewer keeps asking why.</span></div>'
-        '<div class="or-stepcard or-stepcard-goal"><span class="or-stepnum">04</span>'
-        '<span class="or-steptitle">Track readiness</span>'
-        '<span class="or-stepdesc">Watch your readiness build, with your next drill.</span></div>'
-        "</div>",
+        "## Practice with your own job",
         "",
-        # --- Differentiation: why OfferReady over a general AI chatbot. A new
-        #     visitor's first objection is "ChatGPT/Claude/Gemini/Copilot/
-        #     Perplexity already answer interview questions." This section names
-        #     that objection and answers it with the things a stateless chat
-        #     cannot do: a job-anchored gap model, adversarial defend drills,
-        #     role/level-aware scoring, and readiness that persists across
-        #     sessions. Presentation-only content; no routes/logic change.
-        "## Why OfferReady, not just ChatGPT?",
-        "",
-        "ChatGPT, Claude, Gemini, Copilot, and Perplexity are great at answering "
-        "a question you type. But interview prep isn\u2019t one question \u2014 "
-        "it\u2019s knowing which questions *this* job will ask, finding your weak "
-        "spots, and rehearsing under pressure until you\u2019re ready. A chat "
-        "window forgets all of that the moment you close the tab.",
-        "",
-        '<div class="or-why" markdown="0">'
-        '<div class="or-why-col or-why-them">'
-        '<p class="or-why-head">A general AI chat</p>'
-        '<ul class="or-why-list">'
-        '<li>Answers the question you type, then forgets it</li>'
-        '<li>No memory of the job you\u2019re targeting</li>'
-        '<li>You have to know what to ask</li>'
-        '<li>Agrees with you \u2014 won\u2019t pin you down</li>'
-        '<li>No sense of your progress or readiness</li>'
-        "</ul></div>"
-        '<div class="or-why-col or-why-us">'
-        '<p class="or-why-head">OfferReady</p>'
-        '<ul class="or-why-list">'
-        '<li><strong>Job-anchored:</strong> maps a specific job description to its real requirements</li>'
-        '<li><strong>Gap-aware:</strong> finds where you fall short and what to study first</li>'
-        '<li><strong>Adversarial Defend drills:</strong> keeps asking \u201cwhy\u201d until your reasoning holds</li>'
-        '<li><strong>Role &amp; level aware:</strong> scoring tuned to Senior / Staff / Principal, AI, data, platform, FDE</li>'
-        '<li><strong>Readiness that persists:</strong> tracks practice and gaps across sessions</li>'
-        "</ul></div>"
-        "</div>",
-        "",
-        "In short: a chatbot is a smart answer engine. OfferReady is a prep system "
-        "built around the one job you\u2019re trying to land.",
-        "",
-        "## Start with your job",
-        "",
-        "Begin on **[Analyze a Job](Analyze/index.md)**: paste a job description "
-        "to see the role requirements, likely gaps, and a preparation plan \u2014 "
-        "free. Save it to **[My Jobs](My-Jobs/index.md)** to track your readiness "
-        "over time. The analyzer lives on that one screen, so there\u2019s a single "
-        "place to run and resume it.",
+        "Studying is half of it. In the **OfferReady app** you paste a real job "
+        "description, see where you fall short, get questions for that job, and "
+        "practice defending your decisions until your readiness score moves.",
         "",
         '<p class="home-cta" markdown>'
-        '[:material-clipboard-search-outline: Start on Analyze a Job](Analyze/index.md){ .md-button .md-button--primary }'
-        "</p>",
-        "",
-        "## See a worked example",
-        "",
-        "Prefer to see it first? The sample walkthrough maps a real job to a "
-        "preparation plan, end to end.",
-        "",
-        '<p class="home-cta" markdown>'
-        '[:material-clipboard-check-outline: See a sample walkthrough](Sample-Walkthrough/index.md){ .md-button .md-button--primary }'
+        f"[Open the OfferReady app]({app}){{ .md-button .md-button--primary }}"
         "</p>",
         "",
     ]
@@ -954,6 +885,9 @@ def _retired_homepage_sections_unused():
 # Nav (rewrites mkdocs.yml between markers), with section icons
 # ---------------------------------------------------------------------------
 
+APP_URL = "https://klnjoy.github.io/offerready-app/"
+
+
 def write_nav(md_catalog, modules) -> None:
     if not MKDOCS_YML.exists():
         return
@@ -967,64 +901,12 @@ def write_nav(md_catalog, modules) -> None:
     #   "      - Section:"    (6 spaces)  a section inside a group
     #   "          - Page"    (10 spaces) a page inside a section
     nav = ["nav:", "  - Home: index.md"]
-    # ----- ONE INTERVIEW-PREP JOURNEY (top-level) ----------------------------
-    # The product is a single journey, not a toolbox. Top-level reads:
-    #   Home · Dashboard · Prepare for My Job · Progress · Pricing · Account
-    # "Prepare for My Job" is an intent group that holds the ordered journey:
-    #   Analyze a Job -> Gap Analysis -> My Jobs -> Practice(workspace).
-    # Inside Practice the VISIBLE children are the primary activities (Defend
-    # Your Decisions, Mock Interview); supporting capabilities (Question
-    # Generator, Practice Mode, Keep Asking Why) and the knowledge library are
-    # demoted into a collapsed "Resources" group so they don't read as rival
-    # destinations. Progress holds Practice History (readiness lives on the
-    # Dashboard). NO pages are deleted and NO URLs change — only grouping,
-    # labels, and nesting.
-
-    # 1) Dashboard — the executive summary + readiness.
-    if (DOCS_DIR / "Dashboard" / "index.md").exists():
-        nav.append("  - Dashboard: Dashboard/index.md")
-
-    # 2) Prepare for My Job — the ordered journey, grouped so the sequence reads
-    #    as one flow rather than separate products.
-    prepare_children = []
-    if (DOCS_DIR / "Analyze" / "index.md").exists():
-        prepare_children.append("      - Analyze a Job: Analyze/index.md")
-    if (DOCS_DIR / "Gap-Analysis" / "index.md").exists():
-        # Visible action/destination label is "Check My Fit"; the page itself
-        # keeps the "Gap Analysis" heading to describe the resulting analysis.
-        # URL/route/identifier (Gap-Analysis/) are unchanged.
-        prepare_children.append("      - Check My Fit: Gap-Analysis/index.md")
-    if (DOCS_DIR / "My-Jobs" / "index.md").exists():
-        prepare_children.append("      - My Jobs: My-Jobs/index.md")
-
-    # Practice workspace — primary activities visible; supporting tools nested
-    # under Resources (built later and tucked in).
-    practice_children = []
-    if (DOCS_DIR / "Practice" / "index.md").exists():
-        practice_children.append("          - Practice/index.md")  # bare = section landing
-    if (DOCS_DIR / "Practice-Scenarios" / "index.md").exists():
-        practice_children.append("          - Defend Your Decisions: Practice-Scenarios/index.md")
-    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Master_Simulator.md").exists():
-        practice_children.append("          - Mock Interview: Personal-SourceCode/Interview_Master_Simulator.md")
-    # Supporting capabilities — demoted so they don't look like rival journeys.
-    practice_support = []
-    if (DOCS_DIR / "Question-Bank" / "index.md").exists():
-        practice_support.append("              - Question Generator: Question-Bank/index.md")
-    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Practice.md").exists():
-        practice_support.append("              - Practice Mode (Q&A drills): Personal-SourceCode/Interview_Practice.md")
-    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Why_Interactive.md").exists():
-        practice_support.append("              - Keep Asking Why: Personal-SourceCode/Interview_Why_Interactive.md")
-
-    # ----- STUDY & INTERVIEW LIBRARY (nested UNDER Practice) ------------------
-    # Simplified IA: the top nav is exactly Dashboard · Jobs · Analysis ·
-    # Practice · Account (+ Home/Pricing). Practice is the SINGLE interview-prep
-    # hub, so the former top-level Learn / Build / Interview Prep / Study Guide
-    # groups are built below at their normal 2/6/10/14-space levels, then sliced
-    # out of `nav` and re-indented +4 so they nest inside Practice as one
-    # collapsed "Study Library" section. No pages are deleted — only moved one
-    # level deeper, so there are no duplicate top-level journeys.
-    lib_start = len(nav)
-
+    # STUDY LIBRARY ONLY. The interactive product (Analyze, My Jobs, Check My
+    # Fit, Questions, Defend, Dashboard, Practice, Mock Interview, Account)
+    # moved to the OfferReady app (klnjoy/offerready-app). Its old pages here
+    # are redirect stubs so existing links keep working; they are not in nav.
+    # Top level reads: Home · Learn · Build · Interview Prep · Study Guide ·
+    # Open the app.
     # ----- LEARN --------------------------------------------------------------
     nav.append("  - Learn:")
 
@@ -1171,6 +1053,7 @@ def write_nav(md_catalog, modules) -> None:
             # "Keep Asking Why" drill lives in the Practice tab (not here) to
             # avoid duplicating it across two tabs.
             ("System Design & Scenarios", [
+                ("Interview_Why_Interactive.md", "Keep Asking Why (interactive drill)"),
                 ("Interview_Requirements_to_Production.md", "Requirements → Production"),
                 ("Interview_Production_Incidents.md", "Production Incident Interviews"),
                 ("Interview_Why_Chains.md", "The Interviewer Keeps Asking Why"),
@@ -1205,9 +1088,9 @@ def write_nav(md_catalog, modules) -> None:
         # Pages that live in the top-level PRACTICE tab must NOT reappear here
         # (in an explicit group OR the "More Q&A" safety net) — that's what
         # caused the duplicate nav entries. Pre-seed them as already-placed.
+        # Redirect stubs to the app — never listed in the library nav.
         practice_tab_bases = {
             "Interview_Practice.md",
-            "Interview_Why_Interactive.md",
             "Interview_Master_Simulator.md",
             "Interview_Progress.md",
         }
@@ -1267,64 +1150,8 @@ def write_nav(md_catalog, modules) -> None:
         for rel_dest, title in sorted(entries, key=lambda e: e[1].lower()):
             nav.append(f"      - {nav_label(title)}: {rel_dest}")
 
-    # ----- Assemble: Prepare for My Job > Practice > Resources ----------------
-    # Slice the Learn/Build/Interview-Prep/Study-Guide/leftover library lines out
-    # of nav. They, plus the supporting Practice tools and Sample Walkthrough,
-    # nest inside Practice's collapsed "Resources" group. Final IA:
-    #   Prepare for My Job
-    #     ├ Analyze a Job ├ Gap Analysis ├ My Jobs
-    #     └ Practice
-    #         ├ (landing) ├ Defend Your Decisions ├ Mock Interview
-    #         └ Resources (collapsed)
-    #             ├ Question Generator ├ Practice Mode ├ Keep Asking Why
-    #             ├ Sample Walkthrough
-    #             └ Learn ├ Build ├ Interview Prep └ Study Guide
-    #   Progress
-    #     └ Practice History
-    # No pages removed, no URLs changed — only grouping/visibility/labels.
-    library = nav[lib_start:]
-    del nav[lib_start:]
-
-    # Build the Practice sub-tree (sits two levels deep, under Prepare for My Job).
-    if practice_children:
-        resources = []
-        resources.extend(practice_support)
-        if (DOCS_DIR / "Sample-Walkthrough" / "index.md").exists():
-            resources.append("              - Sample Walkthrough: Sample-Walkthrough/index.md")
-        if library:
-            # library lines were emitted at 2-space indent; +12 nests them as
-            # sections inside Resources (which sits at 10 under Practice).
-            for line in library:
-                resources.append("            " + line)
-        nav_practice = ["      - Practice:"]
-        nav_practice.extend(practice_children)
-        if resources:
-            nav_practice.append("          - Resources:")
-            nav_practice.extend(resources)
-        prepare_children.extend(nav_practice)
-
-    if prepare_children:
-        nav.append("  - Prepare for My Job:")
-        nav.extend(prepare_children)
-
-    # Progress — where "how am I doing?" detail lives (readiness summary is on
-    # the Dashboard; this holds the local practice history detail page).
-    progress_children = []
-    if (DOCS_DIR / "Personal-SourceCode" / "Interview_Progress.md").exists():
-        progress_children.append("      - Practice History: Personal-SourceCode/Interview_Progress.md")
-    if progress_children:
-        nav.append("  - Progress:")
-        nav.extend(progress_children)
-
-    # Pricing — standalone HTML landing page (chrome-free); kept top-level as a
-    # conversion entry point.
-    if (DOCS_DIR / "assets" / "pricing.html").exists():
-        nav.append("  - Pricing: assets/pricing.html")
-
-    # Account — the one obvious place to sign in / create an account (renders
-    # the auth form via #or-auth-slot). Top-level so sign-in is always findable.
-    if (DOCS_DIR / "Account" / "index.md").exists():
-        nav.append("  - Account: Account/index.md")
+    # ----- Link out to the product -------------------------------------------
+    nav.append("  - Open the app \u2197: " + APP_URL)
 
     # Legal / utility pages (Privacy, Terms, Disclaimer, Contact) are intentionally
     # NOT added to the top nav. They are surfaced in the site FOOTER instead, via

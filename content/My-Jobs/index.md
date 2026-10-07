@@ -1,17 +1,22 @@
 ---
-icon: material/briefcase-outline
+hide:
+  - navigation
+  - toc
+search:
+  exclude: true
 ---
 
-# My Jobs
+<!-- My Jobs moved to the OfferReady app (klnjoy/offerready-app). This page
+     stays so old links keep working: it forwards to the same screen in the
+     app, keeping any ?query (e.g. ?upgrade=1) and #hash (shared plans). -->
 
-Every role you analyze, in one place — its requirements, gaps, and your
-preparation progress. Open a job to pick up where you left off.
+# My Jobs has moved
 
-!!! info "Sign in to save and track jobs"
-    My Jobs is tied to your OfferReady account. Free includes **one** saved job;
-    **Pro** saves unlimited jobs with full preparation tracking. See
-    [Free vs Pro](../assets/pricing.html).
+This tool now lives in the OfferReady app, with your saved jobs and readiness.
+The study library you're on now holds the learning material.
 
-<div id="jobs-app" markdown="0">
-  <p><em>Loading your jobs…</em></p>
-</div>
+[Open My jobs](https://klnjoy.github.io/offerready-app/jobs){ .md-button .md-button--primary }
+
+<script>
+  location.replace("https://klnjoy.github.io/offerready-app/jobs" + location.search + location.hash);
+</script>
