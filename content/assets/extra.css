@@ -910,13 +910,30 @@
   display: none !important;
 }
 
-/* Hide the redundant "OfferReady" site title at the top of the left sidebar —
-   the header bar already shows the logo + wordmark. (Broad match: the primary
-   nav title in both the desktop sidebar and the mobile drawer.) */
-.md-sidebar--primary .md-nav__title,
+/* Hide the redundant "OfferReady" site title at the TOP of the left sidebar /
+   drawer root — the header bar already shows the logo + wordmark.
+   IMPORTANT: only the ROOT title is hidden. In the mobile drawer, the titles of
+   NESTED sections double as the "← back to parent" button; hiding those made
+   deep pages (e.g. Practice History) feel like a dead-end with no way back up.
+   We hide just the drawer root label (`[for="__drawer"]`) and the primary
+   sidebar's own title, and leave nested `.md-nav__title` rows visible so the
+   back arrow works. */
+.md-sidebar--primary > .md-nav > .md-nav__title,
 .md-nav--primary > .md-nav__title,
 .md-nav__title[for="__drawer"] {
   display: none !important;
+}
+/* Mobile drawer: make the nested "back" title rows clearly tappable and
+   readable (they carry Material's ← arrow button to the parent level). */
+@media screen and (max-width: 76.1875em) {
+  .md-nav--primary .md-nav .md-nav__title {
+    display: block;
+    font-weight: 700;
+    color: var(--or-text, #16233b);
+  }
+  .md-nav--primary .md-nav .md-nav__title .md-nav__button.md-logo {
+    display: none; /* don't repeat the brand logo inside back rows */
+  }
 }
 
 /* Branded footer accent bar + copyright styling */
@@ -2271,6 +2288,27 @@ a.ig-feature.ig-link .ig-d {
 @media screen and (max-width: 76.1875em) {
   .md-header__title { font-size: 0.95rem; }
   .md-header__button.md-logo { margin-right: 0.5rem; }
+}
+
+/* ---- Logo = the always-visible "go home" button ----
+   The header mark links to index.html, so it is also the primary "back to
+   start" affordance on deep pages (e.g. Practice History) where the drawer
+   only shows one leaf. Guarantee it is always rendered and tappable: never let
+   it collapse to zero, and keep the image visible regardless of the generic
+   `svg { color:#fff }` header rule above (the mark uses explicit stroke colors,
+   not currentColor, so it stays painted). Presentation-only. */
+.md-header__button.md-logo {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  display: block;
+  width: 1.875rem !important;
+  height: 1.875rem !important;
 }
 @media screen and (max-width: 29.9em) {
   /* Very narrow: keep the wordmark but let it ellipsize rather than push the
