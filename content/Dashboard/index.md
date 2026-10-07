@@ -1,20 +1,22 @@
 ---
-icon: material/view-dashboard-outline
+hide:
+  - navigation
+  - toc
+search:
+  exclude: true
 ---
 
-# Readiness Dashboard
+<!-- Readiness Dashboard moved to the OfferReady app (klnjoy/offerready-app). This page
+     stays so old links keep working: it forwards to the same screen in the
+     app, keeping any ?query (e.g. ?upgrade=1) and #hash (shared plans). -->
 
-Your interview readiness at a glance — an overall score blended from your
-resume match, your practice activity, and the reps you've completed, plus a
-breakdown by area so you know exactly what to work on next.
+# Readiness Dashboard has moved
 
-<div id="dashboard-app" markdown="0">
-  <p><em>Loading your readiness…</em></p>
-</div>
+This tool now lives in the OfferReady app, with your saved jobs and readiness.
+The study library you're on now holds the learning material.
 
----
+[Open Interview readiness](https://klnjoy.github.io/offerready-app/dashboard){ .md-button .md-button--primary }
 
-Everything here is computed from your activity in this browser and your latest
-[gap analysis](../Gap-Analysis/index.html). Do a
-[gap analysis](../Gap-Analysis/index.html) and some
-[practice](../Practice-Scenarios/index.html) to build your score.
+<script>
+  location.replace("https://klnjoy.github.io/offerready-app/dashboard" + location.search + location.hash);
+</script>

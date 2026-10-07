@@ -1,19 +1,22 @@
 ---
-icon: material/frequently-asked-questions
+hide:
+  - navigation
+  - toc
+search:
+  exclude: true
 ---
 
-# Interview Questions
+<!-- Interview Questions moved to the OfferReady app (klnjoy/offerready-app). This page
+     stays so old links keep working: it forwards to the same screen in the
+     app, keeping any ?query (e.g. ?upgrade=1) and #hash (shared plans). -->
 
-Turn a job description into the questions you're actually likely to be asked —
-a full set across Technical, Behavioral, System Design, and Leadership, each
-tagged by difficulty.
+# Interview Questions has moved
 
-<div id="questions-app" markdown="0">
-  <p><em>Loading the question generator…</em></p>
-</div>
+This tool now lives in the OfferReady app, with your saved jobs and readiness.
+The study library you're on now holds the learning material.
 
----
+[Open Practice questions](https://klnjoy.github.io/offerready-app/questions){ .md-button .md-button--primary }
 
-Got your questions? Practice defending your answers in
-[Defend](../Practice-Scenarios/index.html), and track how you're doing on the
-[Readiness Dashboard](../Dashboard/index.html).
+<script>
+  location.replace("https://klnjoy.github.io/offerready-app/questions" + location.search + location.hash);
+</script>

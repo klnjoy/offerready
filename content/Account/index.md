@@ -1,23 +1,22 @@
 ---
-icon: material/account-circle-outline
+hide:
+  - navigation
+  - toc
+search:
+  exclude: true
 ---
 
-# Account
+<!-- Account moved to the OfferReady app (klnjoy/offerready-app). This page
+     stays so old links keep working: it forwards to the same screen in the
+     app, keeping any ?query (e.g. ?upgrade=1) and #hash (shared plans). -->
 
-Your OfferReady account saves your work and keeps your preparation in sync across
-devices. Free to create — no card required.
+# Account has moved
 
-<div id="or-auth-slot" markdown="0">
-  <p><em>Loading sign-in…</em></p>
-</div>
+This tool now lives in the OfferReady app, with your saved jobs and readiness.
+The study library you're on now holds the learning material.
 
----
+[Open Account](https://klnjoy.github.io/offerready-app/account){ .md-button .md-button--primary }
 
-!!! info "What signing in unlocks"
-    - **My Jobs** — save and return to analyzed roles.
-    - **Interview Readiness** — track your preparation progress for saved jobs.
-    - **Cross-device access** — continue your preparation on any device.
-    - **Practice History** — review your completed readiness activities.
-    - **Pro Scenarios** — access advanced interview preparation experiences (see [Free vs Pro](../assets/pricing.html)).
-
-Your email is used only to authenticate your account. See [Privacy](../Privacy/index.md).
+<script>
+  location.replace("https://klnjoy.github.io/offerready-app/account" + location.search + location.hash);
+</script>
