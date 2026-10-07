@@ -2022,15 +2022,26 @@ a.ig-feature.ig-link .ig-d {
    full-spacing rendering. Opacity is also raised so the desktop library reads
    as calm, not shadowed. Structure/URLs/order are unchanged. */
 @media screen and (min-width: 76.25em) {
+  /* Force EVERY primary-nav link — top-level AND all nested Resources depths —
+     to the same explicit font-size. Material scales nested .md-nav font-size
+     down via inheritance, which is why the Resources drill-down looked like a
+     smaller typeface. Pinning an absolute value (with !important to beat the
+     inherited scaling) makes the whole sidebar one consistent size. The only
+     remaining distinction between library and workflow items is font-weight. */
+  /* Match Material's TOP-LEVEL item size exactly. Material sets
+     `.md-nav__item { font-size: .8rem }` on direct items, but nested navs
+     inherit the smaller base `.md-nav { font-size: .7rem }`, so Resources'
+     children rendered at .7rem — visibly smaller. Pin every primary-nav item
+     and link to .8rem so the whole sidebar is one consistent size. */
+  .md-nav--primary .md-nav__item,
+  .md-nav--primary .md-nav__link {
+    font-size: 0.8rem !important;
+  }
   .md-nav--primary .md-nav[data-md-level="3"],
   .md-nav--primary .md-nav[data-md-level="4"],
   .md-nav--primary .md-nav[data-md-level="5"],
   .md-nav--primary .md-nav[data-md-level="6"] {
-    /* Keep the SAME font-size as the rest of the sidebar so the Resources
-       drill-down doesn't look like a different, smaller typeface. The only
-       cue separating the library from the top-level workflow is font-weight
-       (normal vs. the 600 used by workflow items), applied on the links below. */
-    font-size: inherit;
+    font-size: 0.8rem;
     opacity: 1;                      /* full strength — not greyed/shadowed */
   }
   /* Resources library links read as REAL, legible links: full primary text
