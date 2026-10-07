@@ -844,6 +844,45 @@ def write_index(md_catalog, modules) -> None:
         '<span class="or-stepdesc">Watch your readiness build, with your next drill.</span></div>'
         "</div>",
         "",
+        # --- Differentiation: why OfferReady over a general AI chatbot. A new
+        #     visitor's first objection is "ChatGPT/Claude/Gemini/Copilot/
+        #     Perplexity already answer interview questions." This section names
+        #     that objection and answers it with the things a stateless chat
+        #     cannot do: a job-anchored gap model, adversarial defend drills,
+        #     role/level-aware scoring, and readiness that persists across
+        #     sessions. Presentation-only content; no routes/logic change.
+        "## Why OfferReady, not just ChatGPT?",
+        "",
+        "ChatGPT, Claude, Gemini, Copilot, and Perplexity are great at answering "
+        "a question you type. But interview prep isn\u2019t one question \u2014 "
+        "it\u2019s knowing which questions *this* job will ask, finding your weak "
+        "spots, and rehearsing under pressure until you\u2019re ready. A chat "
+        "window forgets all of that the moment you close the tab.",
+        "",
+        '<div class="or-why" markdown="0">'
+        '<div class="or-why-col or-why-them">'
+        '<p class="or-why-head">A general AI chat</p>'
+        '<ul class="or-why-list">'
+        '<li>Answers the question you type, then forgets it</li>'
+        '<li>No memory of the job you\u2019re targeting</li>'
+        '<li>You have to know what to ask</li>'
+        '<li>Agrees with you \u2014 won\u2019t pin you down</li>'
+        '<li>No sense of your progress or readiness</li>'
+        "</ul></div>"
+        '<div class="or-why-col or-why-us">'
+        '<p class="or-why-head">OfferReady</p>'
+        '<ul class="or-why-list">'
+        '<li><strong>Job-anchored:</strong> maps a specific job description to its real requirements</li>'
+        '<li><strong>Gap-aware:</strong> finds where you fall short and what to study first</li>'
+        '<li><strong>Adversarial Defend drills:</strong> keeps asking \u201cwhy\u201d until your reasoning holds</li>'
+        '<li><strong>Role &amp; level aware:</strong> scoring tuned to Senior / Staff / Principal, AI, data, platform, FDE</li>'
+        '<li><strong>Readiness that persists:</strong> tracks practice and gaps across sessions</li>'
+        "</ul></div>"
+        "</div>",
+        "",
+        "In short: a chatbot is a smart answer engine. OfferReady is a prep system "
+        "built around the one job you\u2019re trying to land.",
+        "",
         "## Start with your job",
         "",
         "Begin on **[Analyze a Job](Analyze/index.md)**: paste a job description "
