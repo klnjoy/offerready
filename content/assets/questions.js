@@ -124,9 +124,26 @@
       }).catch(function () { renderForm(); });
     }
 
+    // Guard a stored title before showing it: skip company blurbs, junk
+    // placeholders, and bare seniority levels, falling back to seniority then
+    // "Untitled role". Mirrors jobs.js displayTitle for cross-page consistency.
+    var TITLE_HINT_RE = /\b(is a|is an|we are|we're|company|startup|provides|focuses|founded|headquarter)\b/i;
+    var LEVEL_WORDS = { senior: 1, junior: 1, staff: 1, principal: 1, lead: 1, head: 1, chief: 1, mid: 1 };
+    var TITLE_JUNK = { "": 1, "not specified": 1, unspecified: 1, "n/a": 1, na: 1, none: 1, unknown: 1, untitled: 1 };
+    function usableTitle(v) {
+      var s = (v == null ? "" : String(v)).trim();
+      if (!s || s.length > 80 || TITLE_HINT_RE.test(s) || TITLE_JUNK[s.toLowerCase()]) return "";
+      var words = s.split(/[\s/]+/).filter(Boolean), levelOnly = words.length > 0;
+      for (var i = 0; i < words.length; i++) { if (!LEVEL_WORDS[words[i].toLowerCase()]) { levelOnly = false; break; } }
+      return levelOnly ? "" : s;
+    }
+    function cleanJobTitle(j) {
+      if (!j) return "";
+      return usableTitle(j.title) || usableTitle(j.seniority) || "Untitled role";
+    }
     function activeJobTitle() {
       var j = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
-      return j ? (j.title || "Untitled role") : "";
+      return j ? cleanJobTitle(j) : "";
     }
 
     // The analysis for the currently-selected job (hydrated from GET /api/jobs/:id
@@ -140,37 +157,81 @@
       return (j && j.analysis) ? j.analysis : null;
     }
 
+    // Does any question prompt actually reference this term? Token-aware,
+    // case-insensitive: we match whole words/phrases so a short term like "Go"
+    // or "R" can't false-match inside "Google"/"error". Multi-word terms match
+    // as a phrase; we also accept the term's first significant word for things
+    // like "Azure Databricks" -> "Databricks".
+    function termCovered(term, haystack) {
+      var t = String(term || "").trim().toLowerCase();
+      if (!t) return false;
+      var tryWord = function (w) {
+        w = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");           // escape regex
+        if (!w) return false;
+        return new RegExp("(^|[^a-z0-9])" + w + "([^a-z0-9]|$)", "i").test(haystack);
+      };
+      if (tryWord(t)) return true;
+      // Fall back to the longest single word in a multi-word term (>= 4 chars),
+      // so "Azure Databricks"/"CI/CD pipelines" still count when the distinctive
+      // word appears.
+      var words = t.split(/[^a-z0-9]+/).filter(function (w) { return w.length >= 4; });
+      words.sort(function (a, b) { return b.length - a.length; });
+      return words.length ? tryWord(words[0]) : false;
+    }
+
     // "Why these questions" panel: names the required technologies + identified
-    // gaps that the generator was given for this job. Returns null when we have
-    // no analysis to be honest about (e.g. an unsaved/ad-hoc generation).
-    function whyPanel() {
+    // gaps the generator was given, AND verifies coverage by checking whether
+    // the RETURNED question prompts actually reference each one — turning the
+    // "not generic" claim into evidence. Returns null when we have no analysis.
+    function whyPanel(questions) {
       var a = activeJobAnalysis();
       if (!a) return null;
       var techs = (a.technologies || []).filter(Boolean).slice(0, 8);
       var gaps = (a.potentialGaps || []).map(function (g) {
-        return g && (g.requirement || g.title || (typeof g === "string" ? g : "")); 
+        return g && (g.requirement || g.title || (typeof g === "string" ? g : ""));
       }).filter(Boolean).slice(0, 6);
       if (!techs.length && !gaps.length) return null;
+
+      // Build one lowercase haystack of every prompt to test coverage against.
+      var hay = (questions || []).map(function (q) { return String(q && q.prompt || ""); }).join("  \u2022  ").toLowerCase();
+
+      var items = techs.concat(gaps);
+      var coveredCount = 0;
+      var mark = {};
+      items.forEach(function (term) { var ok = termCovered(term, hay); mark[term] = ok; if (ok) coveredCount++; });
+      var ratio = items.length ? (coveredCount / items.length) : 1;
 
       var panel = el("div", "or-card or-why");
       panel.appendChild(el("div", "or-field-label", "Why these questions"));
       panel.appendChild(el("p", "or-muted or-small",
-        "Generated for this role\u2019s requirements and the gaps found in your analysis \u2014 not a generic set."));
-      if (techs.length) {
-        var tb = el("div", "or-why-block");
-        tb.appendChild(el("div", "or-why-head", "Because the role requires"));
-        var tc = el("div", "or-chips");
-        techs.forEach(function (t) { tc.appendChild(el("span", "or-chip", esc(t))); });
-        tb.appendChild(tc);
-        panel.appendChild(tb);
-      }
-      if (gaps.length) {
-        var gb = el("div", "or-why-block");
-        gb.appendChild(el("div", "or-why-head", "And to close your identified gaps"));
-        var gc = el("div", "or-chips");
-        gaps.forEach(function (g) { gc.appendChild(el("span", "or-chip or-chip-warn", esc(g))); });
-        gb.appendChild(gc);
-        panel.appendChild(gb);
+        "Generated for this role\u2019s requirements and the gaps found in your analysis. A \u2713 means a question actually references that item."));
+
+      var chipRow = function (label, list, warn) {
+        if (!list.length) return;
+        var b = el("div", "or-why-block");
+        b.appendChild(el("div", "or-why-head", label));
+        var c = el("div", "or-chips");
+        list.forEach(function (term) {
+          var on = mark[term];
+          var cls = "or-chip or-why-chip " + (on ? "or-why-chip-on" : (warn ? "or-chip-warn or-why-chip-off" : "or-why-chip-off"));
+          c.appendChild(el("span", cls, (on ? "\u2713 " : "\u25cb ") + esc(term)));
+        });
+        b.appendChild(c);
+        panel.appendChild(b);
+      };
+      chipRow("Because the role requires", techs, false);
+      chipRow("And to close your identified gaps", gaps, true);
+
+      // Coverage summary + honest nudge. Only flag "looks generic" when a real
+      // set came back and coverage is low — never on an empty set.
+      if (questions && questions.length) {
+        panel.appendChild(el("p", "or-why-coverage or-small",
+          "Coverage: " + coveredCount + " of " + items.length + " role items are referenced by these questions."));
+        if (ratio < 0.5) {
+          var nudge = el("div", "or-why-nudge or-error");
+          nudge.textContent = "This set references few of your role\u2019s specifics \u2014 it may be too generic. Regenerate to get questions tied more closely to this job.";
+          panel.appendChild(nudge);
+        }
       }
       return panel;
     }
@@ -202,7 +263,7 @@
         var ph = document.createElement("option"); ph.value = ""; ph.textContent = "\u2014 Select a saved job \u2014"; sel.appendChild(ph);
         state.jobs.forEach(function (j) {
           var o = document.createElement("option"); o.value = j.id;
-          o.textContent = j.title || "Untitled role"; if (j.id === state.jobId) o.selected = true;
+          o.textContent = cleanJobTitle(j); if (j.id === state.jobId) o.selected = true;
           sel.appendChild(o);
         });
         sel.addEventListener("change", function () {
@@ -280,8 +341,9 @@
     // Shared: render the categorized question cards + the Practice/Dashboard
     // footer. Used by both the freshly-generated and the restored views.
     function renderQuestionCards(questions) {
-      // Lead with the honest, job-level reason this set exists (role tech + gaps).
-      var why = whyPanel();
+      // Lead with the honest, job-level reason this set exists (role tech +
+      // gaps) AND verified coverage against the actual returned prompts.
+      var why = whyPanel(questions);
       if (why) app.appendChild(why);
 
       var byCat = {};

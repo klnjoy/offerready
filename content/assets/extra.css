@@ -1472,6 +1472,21 @@ a.ig-feature.ig-link .ig-d {
 }
 .or-job-nextlink { font-size: .9rem; font-weight: 700; color: var(--md-primary-fg-color, #1f9d63); text-decoration: none; }
 .or-job-nextlink:hover { text-decoration: underline; }
+/* Inline delete confirmation (replaces window.confirm) — full-width within the
+   card, styled like the app. */
+.or-job-delconfirm {
+  flex: 0 0 100%; order: 8; margin-top: .25rem; padding: .6rem .75rem;
+  border: 1px solid #e0b4b4; border-radius: .5rem;
+  background: color-mix(in srgb, #c62828 6%, transparent);
+}
+.or-job-delq { font-size: .88rem; margin-bottom: .5rem; }
+.or-job-delbtns { display: flex; gap: .5rem; flex-wrap: wrap; }
+.or-job-delerr:empty { display: none; }
+.or-job-delerr { margin-top: .4rem; }
+.or-btn-danger, .ip-btn.or-btn-danger {
+  background: #c62828; color: #fff; border-color: #c62828;
+}
+.or-btn-danger:hover, .ip-btn.or-btn-danger:hover { background: #a81f1f; border-color: #a81f1f; }
 .or-save-msg { display: block; margin-top: .5rem; font-size: .9rem; }
 
 /* My Jobs: controls (search + sort) shown once the list grows large enough
@@ -1543,6 +1558,16 @@ a.ig-feature.ig-link .ig-d {
 .or-why .or-why-head {
   font-size: .78rem; font-weight: 700; color: var(--or-text-secondary, #5b6b85); margin-bottom: .3rem;
 }
+/* Coverage chips: a checkmark = the term is referenced by a returned question;
+   an open circle = it isn't. Evidence, not just a claim. */
+.or-why-chip-on {
+  color: #2e7d32;
+  background: color-mix(in srgb, #2e7d32 10%, transparent);
+  border-color: color-mix(in srgb, #2e7d32 35%, transparent);
+}
+.or-why-chip-off { opacity: .75; }
+.or-why-coverage { margin: .6rem 0 0; color: var(--or-text-secondary, #5b6b85); font-weight: 600; }
+.or-why-nudge { margin-top: .4rem; }
 
 /* "What this tests" rubric shown before the user answers a scenario node, so
    the step feels purposeful (they know what a strong answer must show up front).

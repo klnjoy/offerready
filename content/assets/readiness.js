@@ -55,6 +55,49 @@
 
     var el = function (t, c, h) { var n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
     var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
+    // Guard a stored title before display: skip company blurbs, junk
+    // placeholders, and bare seniority levels, falling back to seniority then
+    // "Untitled role". Mirrors jobs.js displayTitle for cross-page consistency.
+    var TITLE_HINT_RE = /\b(is a|is an|we are|we're|company|startup|provides|focuses|founded|headquarter)\b/i;
+    var LEVEL_WORDS = { senior: 1, junior: 1, staff: 1, principal: 1, lead: 1, head: 1, chief: 1, mid: 1 };
+    var TITLE_JUNK = { "": 1, "not specified": 1, unspecified: 1, "n/a": 1, na: 1, none: 1, unknown: 1, untitled: 1 };
+    var usableTitle = function (v) {
+      var s = (v == null ? "" : String(v)).trim();
+      if (!s || s.length > 80 || TITLE_HINT_RE.test(s) || TITLE_JUNK[s.toLowerCase()]) return "";
+      var words = s.split(/[\s/]+/).filter(Boolean), levelOnly = words.length > 0;
+      for (var i = 0; i < words.length; i++) { if (!LEVEL_WORDS[words[i].toLowerCase()]) { levelOnly = false; break; } }
+      return levelOnly ? "" : s;
+    };
+    // j may be a job row (title+seniority) or a plain title string.
+    var cleanJobTitle = function (j) {
+      if (j && typeof j === "object") return usableTitle(j.title) || usableTitle(j.seniority) || "Untitled role";
+      return usableTitle(j) || "Untitled role";
+    };
+
+    // Friendly labels for the Recent Practice table so users never see raw
+    // enum keys or machine slugs. MODE_LABEL mirrors progress.js's map.
+    var MODE_LABEL = {
+      practice: "Practice", flashcard: "Flashcards", exam: "Timed Exam",
+      why: "Keep Asking Why", scenario: "Defend Decisions", weak: "Weak Areas",
+    };
+    var modeLabel = function (m) {
+      var k = String(m == null ? "" : m).trim().toLowerCase();
+      if (!k) return "Practice";
+      return MODE_LABEL[k] || humanize(k);
+    };
+    // Turn a slug/enum ("rag-assistant", "system_design") into readable words.
+    var humanize = function (s) {
+      var t = String(s == null ? "" : s).trim().replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+      if (!t) return "";
+      return t.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+    };
+    // Activity cell: prefer a human category, humanize a slug fallback, else
+    // a generic label — never a raw machine slug.
+    var activityLabel = function (s) {
+      if (s && s.category) return humanize(s.category);
+      if (s && s.content_slug) return humanize(s.content_slug);
+      return "Practice";
+    };
     var base = (window.__md_scope && window.__md_scope.pathname ? window.__md_scope.pathname.replace(/[^/]*$/, "") : "/");
 
     // ---- render helpers ---------------------------------------------------
@@ -176,7 +219,7 @@
       if (!c) { signedOut(); return; }
       root.innerHTML = "";
       root.appendChild(el("div", "or-card", '<p class="or-muted">' + esc(reason) + "</p>"));
-      renderScoreBlocks(c.gap, c.progress, c.questionCount, c.jobTitle, c.practice || []);
+      renderScoreBlocks(c.gap, c.progress, c.questionCount, cleanJobTitle(c.jobTitle), c.practice || []);
     }
 
     // ---- dashboard --------------------------------------------------------
@@ -191,13 +234,13 @@
         var sel = el("select", "or-input");
         p.jobs.forEach(function (j) {
           var o = document.createElement("option"); o.value = j.id;
-          o.textContent = j.title || "Untitled role"; if (j.id === p.job.id) o.selected = true;
+          o.textContent = cleanJobTitle(j); if (j.id === p.job.id) o.selected = true;
           sel.appendChild(o);
         });
         sel.addEventListener("change", function () { loadJob(token, p.jobs, sel.value); });
         sw.appendChild(sel);
       } else {
-        sw.appendChild(el("strong", null, esc(p.job.title || "Untitled role")));
+        sw.appendChild(el("strong", null, esc(cleanJobTitle(p.job))));
       }
       root.appendChild(sw);
 
@@ -248,7 +291,7 @@
       nextWrap.appendChild(nextRow);
       root.appendChild(nextWrap);
 
-      renderScoreBlocks(p.gap, p.progress, (p.questions || []).length, p.job.title, p.practice || []);
+      renderScoreBlocks(p.gap, p.progress, (p.questions || []).length, cleanJobTitle(p.job), p.practice || []);
 
       // Secondary paths, de-emphasized (the ONE primary action is the CTA at
       // the top of the page). Quiet text links, not a wall of buttons.
@@ -369,8 +412,8 @@
         practice.slice(0, 8).forEach(function (s) {
           var when = s.completed_at ? new Date(s.completed_at) : null;
           var whenTxt = (when && !isNaN(when.getTime())) ? when.toLocaleDateString() : "";
-          tbl += "<tr><td>" + esc(s.category || s.content_slug || "Practice") + "</td><td>" +
-            esc(s.mode || "") + "</td><td>" + (s.score != null ? esc(String(s.score)) + "%" : "\u2014") +
+          tbl += "<tr><td>" + esc(activityLabel(s)) + "</td><td>" +
+            esc(modeLabel(s.mode)) + "</td><td>" + (s.score != null ? esc(String(s.score)) + "%" : "\u2014") +
             "</td><td>" + esc(whenTxt) + "</td></tr>";
         });
         tbl += "</tbody></table>";

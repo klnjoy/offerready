@@ -67,9 +67,27 @@
       }).catch(function () { cb(); });
     }
 
+    // Guard a stored title before showing it: skip company blurbs, junk
+    // placeholders, and bare seniority levels ("Senior"/"Lead"), falling back to
+    // seniority then "Untitled role". Mirrors jobs.js displayTitle so the role
+    // reads consistently across pages.
+    var TITLE_HINT_RE = /\b(is a|is an|we are|we're|company|startup|provides|focuses|founded|headquarter)\b/i;
+    var LEVEL_WORDS = { senior: 1, junior: 1, staff: 1, principal: 1, lead: 1, head: 1, chief: 1, mid: 1 };
+    var TITLE_JUNK = { "": 1, "not specified": 1, unspecified: 1, "n/a": 1, na: 1, none: 1, unknown: 1, untitled: 1 };
+    function usableTitle(v) {
+      var s = (v == null ? "" : String(v)).trim();
+      if (!s || s.length > 80 || TITLE_HINT_RE.test(s) || TITLE_JUNK[s.toLowerCase()]) return "";
+      var words = s.split(/[\s/]+/).filter(Boolean), levelOnly = words.length > 0;
+      for (var i = 0; i < words.length; i++) { if (!LEVEL_WORDS[words[i].toLowerCase()]) { levelOnly = false; break; } }
+      return levelOnly ? "" : s;
+    }
+    function cleanJobTitle(j) {
+      if (!j) return "";
+      return usableTitle(j.title) || usableTitle(j.seniority) || "Untitled role";
+    }
     function activeJobTitle() {
       var j = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
-      return j ? (j.title || "Untitled role") : "";
+      return j ? cleanJobTitle(j) : "";
     }
     // Populate Target Role + JD into state from a saved job. Used both when the
     // active job is preselected on load AND when the user picks one from the

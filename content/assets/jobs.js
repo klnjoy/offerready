@@ -223,12 +223,30 @@
     }
 
     var COMPANY_TITLE_HINT = /\b(is a|is an|we are|we're|company|startup|provides|focuses|founded|headquarter)\b/i;
+    // Placeholder/junk values that must never render as a title.
+    var TITLE_JUNK = { "": 1, "not specified": 1, unspecified: 1, "n/a": 1, na: 1, none: 1, unknown: 1, untitled: 1 };
+    // Seniority levels — a title made ONLY of these (e.g. "Senior", "Lead",
+    // "Principal") names a LEVEL, not a role, so it must not stand as a title.
+    // Mirrors analyze.js isLevelOnly so every page agrees on what a title is.
+    var SENIORITY_WORDS = { senior: 1, junior: 1, staff: 1, principal: 1, lead: 1, head: 1, chief: 1, mid: 1 };
+    function isLevelOnly(s) {
+      var words = String(s == null ? "" : s).trim().split(/[\s/]+/).filter(Boolean);
+      if (!words.length) return false;
+      for (var i = 0; i < words.length; i++) { if (!SENIORITY_WORDS[words[i].toLowerCase()]) return false; }
+      return true;
+    }
+    // A value is usable as a title when it's present, not too long, not a
+    // company blurb, not a junk placeholder, and not a bare seniority level.
+    function usableTitle(v) {
+      var s = (v == null ? "" : String(v)).trim();
+      if (!s || s.length > 80) return "";
+      if (COMPANY_TITLE_HINT.test(s)) return "";
+      if (TITLE_JUNK[s.toLowerCase()]) return "";
+      if (isLevelOnly(s)) return "";
+      return s;
+    }
     function displayTitle(j) {
-      var t = (j && j.title ? String(j.title) : "").trim();
-      if (t && t.length <= 80 && !COMPANY_TITLE_HINT.test(t)) return t;
-      var sen = (j && j.seniority ? String(j.seniority) : "").trim();
-      if (sen && sen.length <= 80 && !COMPANY_TITLE_HINT.test(sen) && sen.toLowerCase() !== "not specified") return sen;
-      return "Untitled role";
+      return usableTitle(j && j.title) || usableTitle(j && j.seniority) || "Untitled role";
     }
 
     // Derive the interview-pipeline stage from prep_progress, the one progress
@@ -327,54 +345,84 @@
       return c;
     }
 
+    // In-DOM delete confirmation (replaces window.confirm/alert): the card's
+    // action row is swapped for an inline "Delete this job? [Delete] [Cancel]"
+    // prompt styled like the app, so confirmation and any error stay in place —
+    // no blocking native dialogs, no jarring alerts.
     function confirmDelete(j, cardEl, token) {
-      if (!window.confirm("Delete \u201c" + (j.title || "this job") + "\u201d? This can\u2019t be undone.")) return;
-      // Use a FRESH token (the list token may have expired since load) so an
-      // expired session surfaces as a clear auth error, not a generic failure.
-      var proceed = function (tok) {
-        if (!tok) {
-          window.alert("Your session has expired. Please sign in again, then retry the delete.");
-          renderSignedOut();
-          return;
+      var row = cardEl.querySelector(".or-job-actions");
+      if (!row) return;
+      if (cardEl.querySelector(".or-job-delconfirm")) return;   // already confirming
+      row.style.display = "none";
+
+      var box = el("div", "or-job-delconfirm");
+      box.appendChild(el("div", "or-job-delq",
+        "Delete \u201c" + esc(displayTitle(j)) + "\u201d? This also removes its gap analysis, questions, and practice \u2014 and can\u2019t be undone."));
+      var btns = el("div", "or-job-delbtns");
+      var yes = el("button", "ip-btn or-btn-danger"); yes.type = "button"; yes.textContent = "Delete";
+      var no = el("button", "ip-btn ip-ghost"); no.type = "button"; no.textContent = "Cancel";
+      btns.append(yes, no);
+      box.appendChild(btns);
+      var errSlot = el("div", "or-job-delerr"); box.appendChild(errSlot);
+      cardEl.appendChild(box);
+
+      var cancel = function () { box.remove(); row.style.display = ""; };
+      no.addEventListener("click", cancel);
+
+      var showErr = function (m) { errSlot.textContent = m; errSlot.className = "or-job-delerr or-error"; };
+
+      yes.addEventListener("click", function () {
+        yes.disabled = true; no.disabled = true; errSlot.className = "or-job-delerr"; errSlot.textContent = "Deleting\u2026";
+        // Use a FRESH token (the list token may have expired since load) so an
+        // expired session surfaces as a clear auth error, not a generic failure.
+        var proceed = function (tok) {
+          if (!tok) { showErr("Your session has expired. Sign in again, then retry."); yes.disabled = false; no.disabled = false; return; }
+          fetch(API_BASE.replace(/\/$/, "") + "/api/jobs/" + encodeURIComponent(j.id), {
+            method: "DELETE", headers: authHeaders(tok),
+          }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; });
+          }).then(function (res) {
+            if (res.status === 200 || res.status === 404) {
+              // 200 = deleted; 404 = already gone — both mean "remove it".
+              // Deleting the active job clears the active-job pointer so other
+              // pages stop operating on a dead id. Server CASCADE-deletes the
+              // job's gap analyses, question sets, snapshots, practice sessions.
+              try {
+                if (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob
+                  && window.OfferReadyReadiness.getActiveJob() === j.id
+                  && window.OfferReadyReadiness.clearActiveJob) {
+                  window.OfferReadyReadiness.clearActiveJob();
+                }
+              } catch (e) {}
+              removeCard(cardEl, tok);
+              return;
+            }
+            // Inline, status-specific errors (no window.alert, no reload flash).
+            if (res.status === 401) { showErr("Your session isn\u2019t valid. Sign in again and retry."); }
+            else if (res.status === 403) { showErr("You don\u2019t have access to delete this job."); }
+            else if (res.status >= 500) { showErr("The server couldn\u2019t delete this job right now. Please try again."); }
+            else { showErr((res.body && res.body.error) || "Couldn\u2019t delete that job. Please try again."); }
+            yes.disabled = false; no.disabled = false;
+          }).catch(function () {
+            showErr("Couldn\u2019t reach the server. Check your connection and try again.");
+            yes.disabled = false; no.disabled = false;
+          });
+        };
+        if (window.OfferReadyAuth && window.OfferReadyAuth.getAccessToken) {
+          window.OfferReadyAuth.getAccessToken().then(proceed).catch(function () { proceed(token); });
+        } else {
+          proceed(token);
         }
-        fetch(API_BASE.replace(/\/$/, "") + "/api/jobs/" + encodeURIComponent(j.id), {
-          method: "DELETE", headers: authHeaders(tok),
-        }).then(function (r) {
-          return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; });
-        }).then(function (res) {
-          if (res.status === 200) {
-            // Deleting the active job must clear the active-job pointer so other
-            // pages (Gap / Questions / Dashboard / Defend) stop operating on a
-            // dead id. The server CASCADE-deletes the job's gap analyses,
-            // question sets, readiness snapshots, and practice sessions.
-            try {
-              if (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob
-                && window.OfferReadyReadiness.getActiveJob() === j.id
-                && window.OfferReadyReadiness.clearActiveJob) {
-                window.OfferReadyReadiness.clearActiveJob();
-              }
-            } catch (e) {}
-            cardEl.remove();
-            // Refresh My Jobs immediately (re-fetch authoritative list).
-            loadJobs(tok);
-            return;
-          }
-          // Status-specific, meaningful errors (spec).
-          var msg;
-          if (res.status === 401) { msg = "Authentication issue \u2014 your session isn\u2019t valid. Sign in again and retry."; renderSignedOut(); }
-          else if (res.status === 403) { msg = "Permission issue \u2014 you don\u2019t have access to delete this job."; }
-          else if (res.status === 404) { msg = "This job no longer exists (it may already be deleted). Refreshing your list."; cardEl.remove(); loadJobs(tok); }
-          else if (res.status >= 500) { msg = "The server couldn\u2019t delete this job right now (server error). Please try again."; }
-          else { msg = (res.body && res.body.error) || "Couldn\u2019t delete that job. Please try again."; }
-          if (res.status !== 404) window.alert(msg);
-        }).catch(function () {
-          window.alert("Request failed \u2014 couldn\u2019t reach the server. Check your connection and try again.");
-        });
-      };
-      if (window.OfferReadyAuth && window.OfferReadyAuth.getAccessToken) {
-        window.OfferReadyAuth.getAccessToken().then(proceed).catch(function () { proceed(token); });
-      } else {
-        proceed(token);
+      });
+    }
+
+    // Remove a deleted job's card in place (no full-list reload flash). Only
+    // re-fetch when the list becomes empty, so the correct empty state renders.
+    function removeCard(cardEl, tok) {
+      var grid = cardEl.parentNode;
+      cardEl.remove();
+      if (grid && grid.querySelectorAll(".or-job-card").length === 0) {
+        loadJobs(tok);   // authoritative empty-state (and clears header/controls)
       }
     }
 
