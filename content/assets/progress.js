@@ -47,20 +47,29 @@
       //   • Local Practice     — this browser only, does NOT affect readiness (here)
       root.appendChild(el("div", "ip-card",
         '<p><strong>Two kinds of practice are tracked separately:</strong></p>' +
-        '<ul>' +
-        '<li><strong>Readiness Activity</strong> \u2014 job-scoped and saved to your account ' +
-        '(Defend Your Decisions). It <strong>affects Interview Readiness</strong> and appears on the ' +
-        '<a href="../Dashboard/index.html">Readiness Dashboard</a>.</li>' +
-        '<li><strong>Local Practice</strong> \u2014 this browser only (Practice Mode, Keep Asking Why, ' +
-        'Mock Interview). It <strong>does not currently update Interview Readiness</strong>.</li>' +
-        '</ul>' +
+        '<div class="or-ptlegend">' +
+          '<div class="or-ptlegend-item or-ptlegend-readiness">' +
+            '<span class="or-ptlegend-dot" aria-hidden="true"></span>' +
+            '<div><strong>Readiness Activity</strong> \u2014 job-scoped and saved to your account ' +
+            '(Defend Your Decisions). It <strong>affects Interview Readiness</strong> and appears on the ' +
+            '<a href="../Dashboard/index.html">Readiness Dashboard</a>.</div>' +
+          '</div>' +
+          '<div class="or-ptlegend-item or-ptlegend-local">' +
+            '<span class="or-ptlegend-dot" aria-hidden="true"></span>' +
+            '<div><strong>Local Practice</strong> \u2014 this browser only (Practice Mode, Keep Asking Why, ' +
+            'Mock Interview). It <strong>does not currently update Interview Readiness</strong>.</div>' +
+          '</div>' +
+        '</div>' +
         '<p class="ip-ai-hint">The sessions below are your <strong>Local Practice</strong> on this device.</p>'));
 
       if (!h.length) {
-        root.appendChild(el("div", "ip-card",
-          '<p>No practice sessions yet. Do a drill and it shows up here:</p>' +
-          '<p><a class="ip-btn" href="Interview_Practice.html">📝 Practice mode</a> ' +
-          '<a class="ip-btn ip-ghost" href="Interview_Why_Interactive.html">🗡️ Keep Asking Why</a></p>'));
+        root.appendChild(el("div", "ip-card or-empty",
+          '<div class="or-empty-ico" aria-hidden="true">\uD83D\uDCDd</div>' +
+          '<div class="or-empty-title">No local practice yet</div>' +
+          '<p class="or-empty-text">Do a drill and it shows up here. (Defend Your Decisions saves to your ' +
+          '<a href="../Dashboard/index.html">Readiness Dashboard</a> instead.)</p>' +
+          '<p class="or-empty-actions"><a class="ip-btn" href="Interview_Practice.html">\uD83D\uDCDD Practice mode</a> ' +
+          '<a class="ip-btn ip-ghost" href="Interview_Why_Interactive.html">\uD83D\uDDE1\uFE0F Keep Asking Why</a></p>'));
         return;
       }
 

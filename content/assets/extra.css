@@ -2452,3 +2452,30 @@ a.ig-feature.ig-link .ig-d {
 .or-qcat-leadership   .or-qcat-title { color: #8a5a00; }
 /* Comfortable spacing between questions in the list. */
 .or-qlist .or-qitem { margin: 0.55rem 0; line-height: 1.55; }
+
+/* ---- Practice History: Readiness-vs-Local legend + empty state ----
+   A two-item legend with colored dots makes the distinction between
+   job-scoped Readiness Activity (green) and browser-only Local Practice
+   (slate) obvious at a glance. */
+.or-ptlegend { display: flex; flex-direction: column; gap: 0.6rem; margin: 0.6rem 0 0.2rem; }
+.or-ptlegend-item { display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.92rem; line-height: 1.5; }
+.or-ptlegend-dot {
+  flex: 0 0 auto;
+  width: 0.8rem; height: 0.8rem; margin-top: 0.3rem;
+  border-radius: 50%;
+}
+.or-ptlegend-readiness .or-ptlegend-dot { background: var(--or-green, #1f9d63); }
+.or-ptlegend-local .or-ptlegend-dot { background: var(--or-text-secondary, #5b6b85); }
+
+/* Friendly empty state (centered icon + title + copy + actions). */
+.or-empty { text-align: center; padding: 1.8rem 1.2rem; }
+.or-empty-ico { font-size: 2rem; line-height: 1; }
+.or-empty-title {
+  font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em;
+  margin: 0.5rem 0 0.3rem; color: var(--or-text, #16233b);
+}
+.or-empty-text {
+  max-width: 32rem; margin: 0 auto 0.9rem;
+  color: var(--or-text-secondary, #5b6b85); font-size: 0.92rem;
+}
+.or-empty-actions { margin: 0; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
