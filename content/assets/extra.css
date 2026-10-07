@@ -2252,3 +2252,58 @@ a.ig-feature.ig-link .ig-d {
     white-space: nowrap;
   }
 }
+
+/* ============================================================
+   UI/UX SPRINT — PHASE 3: per-page app polish.
+   Presentation-only (CSS + markup-class tweaks in the render fns).
+   No logic, persistence, route, or readiness-formula changes.
+   ============================================================ */
+
+/* Screen-reader-only utility (keep a plain status line for a11y while showing
+   a richer visual panel). */
+.or-visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+/* ---- Defend: completion panel ----
+   Clear "done" state so the user knows the scenario saved and what's next.
+   Calm brand-green framing + a short "what happened" checklist. */
+.or-complete {
+  margin: 0.6rem 0 0.4rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(31, 157, 99, 0.45);
+  border-left: 4px solid var(--or-green, #1f9d63);
+  border-radius: 0.6rem;
+  background: var(--or-green-soft, rgba(31, 157, 99, 0.10));
+}
+.or-complete-badge {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #0f6b43;
+}
+.or-complete-list {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.92rem;
+}
+.or-complete-list li { position: relative; padding-left: 1.5rem; }
+.or-complete-list li.or-complete-ok::before {
+  content: "\2713";
+  position: absolute; left: 0; top: 0;
+  font-weight: 800; color: var(--or-green, #1f9d63);
+}
+.or-complete-list strong { color: var(--or-text, #16233b); }
+
+/* Make the Defend summary read as a result card, not a loading state:
+   center the actions and give the primary CTA clear dominance. */
+.ip-summary .or-actions { justify-content: center; margin-top: 1rem; }
+.ip-summary .or-complete { text-align: left; }

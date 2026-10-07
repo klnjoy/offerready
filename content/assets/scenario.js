@@ -1195,14 +1195,30 @@
         var jt = jobTitleForCopy();
         if (r && r.saved && !r.partial) {
           state.saved = true; state.lastResult = r;
-          var ov = r.readiness && typeof r.readiness.overall === "number"
-            ? (" Interview Readiness is now " + r.readiness.overall + "%.") : "";
-          statusEl.className = "or-status or-status-ok";
-          statusEl.textContent = "\u2713 Scenario complete. Practice saved to " + jt + " and Interview Readiness was updated." + ov;
-          var vr = el("a", "ip-btn or-btn-primary", "View My Readiness");
+          var ovNum = r.readiness && typeof r.readiness.overall === "number" ? r.readiness.overall : null;
+          // Structured completion panel (UI pass): a clear "done" headline + a
+          // short checklist of what was persisted, so the user is never left
+          // wondering what happened. Same data/flow; richer presentation.
+          // The plain status line is kept (visually hidden) for a11y/history.
+          statusEl.className = "or-status or-status-ok or-visually-hidden";
+          statusEl.textContent = "\u2713 Scenario complete. Practice saved to " + jt +
+            " and Interview Readiness was updated." + (ovNum != null ? " Interview Readiness is now " + ovNum + "%." : "");
+          var done = el("div", "or-complete");
+          done.appendChild(el("div", "or-complete-badge", "\u2705 Scenario complete"));
+          var checks = el("ul", "or-complete-list");
+          checks.appendChild(el("li", "or-complete-ok", "Practice saved to <strong>" + esc(jt) + "</strong>"));
+          checks.appendChild(el("li", "or-complete-ok",
+            ovNum != null ? "Interview Readiness updated \u2014 now <strong>" + ovNum + "%</strong>"
+                          : "Interview Readiness updated"));
+          done.appendChild(checks);
+          // Insert the completion panel right after the status slot.
+          statusEl.parentNode.insertBefore(done, actionsEl);
+          var vr = el("a", "ip-btn or-btn-primary or-cta-primary", "View My Readiness \u2192");
           vr.href = base + "Dashboard/index.html";
           actionsEl.appendChild(vr);
-          actionsEl.appendChild(allScenariosBtn());
+          var again = el("button", "ip-btn ip-ghost", "Try another scenario");
+          again.addEventListener("click", goList);
+          actionsEl.appendChild(again);
         } else if (r && r.saved && r.partial) {
           state.saved = true; state.lastResult = r;
           statusEl.className = "or-status or-status-warn";
