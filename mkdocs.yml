@@ -72,7 +72,7 @@ plugins:
 extra_css:
   # ?v=N cache-buster — bump when extra.css changes so browsers don't serve a
   # stale cached stylesheet after a deploy.
-  - assets/extra.css?v=40
+  - assets/extra.css?v=41
 
 extra_javascript:
   # Must load first: sets window.OFFERREADY_API_BASE + Supabase config for the
@@ -85,7 +85,7 @@ extra_javascript:
   - assets/auth.js?v=9
   - assets/upgrade.js?v=1
   - assets/progress-store.js?v=4
-  - assets/brand.js?v=3
+  - assets/brand.js?v=4
   - assets/mermaid-init.js?v=3
   - assets/chatbot.js?v=4
   - assets/practice.js?v=3

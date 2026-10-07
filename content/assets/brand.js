@@ -37,7 +37,32 @@
     splitWordmark(document.querySelector(".or-hero h1"));
   }
 
-  function run() { brandTitle(); }
+  // Mobile drawer "go back" affordance. This theme's drawer is inline-collapsible
+  // (no native per-level back button), so on a deep page the drawer can open
+  // scrolled to the active leaf with no obvious way up. We prepend ONE always-
+  // present "Home" row at the very top of the primary nav list so there's a
+  // guaranteed path back to the start from anywhere. CSS shows it only on
+  // mobile (.or-drawer-home). Idempotent; safe no-op if the nav isn't found.
+  // Links to the site root — same destination as the header logo. No routes,
+  // nav structure, or page order are changed.
+  function injectDrawerHome() {
+    var primary = document.querySelector(".md-nav--primary > .md-nav__list");
+    if (!primary || primary.querySelector(".or-drawer-home")) return;
+    // Resolve the site root from the header logo link so the href is correct
+    // regardless of how deep the current page sits.
+    var logo = document.querySelector("a.md-header__button.md-logo, a.md-nav__button.md-logo");
+    var href = (logo && logo.getAttribute("href")) || "../index.html";
+    var li = document.createElement("li");
+    li.className = "md-nav__item or-drawer-home";
+    var a = document.createElement("a");
+    a.className = "md-nav__link";
+    a.href = href;
+    a.innerHTML = '<span class="md-ellipsis">\u2190 OfferReady Home</span>';
+    li.appendChild(a);
+    primary.insertBefore(li, primary.firstChild);
+  }
+
+  function run() { brandTitle(); injectDrawerHome(); }
 
   if (document.readyState !== "loading") run();
   else document.addEventListener("DOMContentLoaded", run);
