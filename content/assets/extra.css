@@ -2355,3 +2355,37 @@ a.ig-feature.ig-link .ig-d {
   /* a subtle left tick-rail reinforces "this is counting toward readiness" */
   padding-left: 0.1rem;
 }
+
+/* ---- My Jobs: card stat tiles ----
+   Replace inline topic chips with a clean 3-up stat row (value + label) so each
+   saved job scans at a glance. Stacks responsively on narrow cards. */
+.or-job-card .or-job-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.2rem 0 0.1rem;
+}
+.or-jobstat {
+  text-align: center;
+  padding: 0.5rem 0.3rem;
+  border: 1px solid var(--or-border, #e5e9f0);
+  border-radius: 0.5rem;
+  background: var(--or-surface, #f7f9fc);
+}
+.or-jobstat-num {
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--or-text, #16233b);
+}
+.or-jobstat-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--or-text-secondary, #5b6b85);
+  margin-top: 0.15rem;
+}
+/* Open action spans comfortably; Delete stays quiet + compact. */
+.or-job-card .or-job-actions { margin-top: 0.6rem; }
+.or-job-card .or-job-actions .or-cta-primary { flex: 1; text-align: center; }

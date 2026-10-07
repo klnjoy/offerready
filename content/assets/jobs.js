@@ -115,17 +115,27 @@
       if (j.seniority) meta.push(esc(j.seniority));
       if (meta.length) c.appendChild(el("div", "or-job-meta", meta.join(" \u00b7 ")));
 
+      // Stat tiles for the fields the list row carries (value + label), so the
+      // card scans cleanly on desktop and mobile. Same data; clearer layout.
       var stats = el("div", "or-job-stats");
-      stats.appendChild(el("span", "ip-topic", esc(j.skills_count || 0) + " skills"));
-      stats.appendChild(el("span", "ip-topic", esc(j.gaps_count || 0) + " gaps"));
-      stats.appendChild(el("span", "ip-topic", "Prep " + esc(j.prep_progress || 0) + "%"));
+      var statTile = function (num, label) {
+        var t = el("div", "or-jobstat");
+        t.appendChild(el("div", "or-jobstat-num", esc(num)));
+        t.appendChild(el("div", "or-jobstat-label", esc(label)));
+        return t;
+      };
+      stats.appendChild(statTile(j.skills_count || 0, "Skills"));
+      stats.appendChild(statTile(j.gaps_count || 0, "Gaps"));
+      stats.appendChild(statTile((j.prep_progress || 0) + "%", "Prep"));
       c.appendChild(stats);
 
       var when = j.created_at ? new Date(j.created_at) : null;
       if (when && !isNaN(when.getTime())) c.appendChild(el("div", "or-job-date", "Analyzed " + when.toLocaleDateString()));
 
+      // Open is the primary next action (sets this job active + restores full
+      // context); Delete is a quiet secondary.
       var row = el("div", "or-job-actions");
-      var open = el("button", "ip-btn"); open.type = "button"; open.textContent = "Open";
+      var open = el("button", "ip-btn or-cta-primary"); open.type = "button"; open.textContent = "Open & continue";
       open.addEventListener("click", function () { openJob(j.id, token); });
       var del = el("button", "ip-btn ip-ghost"); del.type = "button"; del.textContent = "Delete";
       del.addEventListener("click", function () { confirmDelete(j, c, token); });
