@@ -302,14 +302,42 @@
     // ---- shared pieces ----
     function cardHeader(s, item, withClock) {
       const card = el("div", "ip-card");
+      // Top row: progress text on the left, a quiet "End session" exit on the
+      // right. Lets the learner leave mid-session without being trapped by the
+      // only other button being "Reveal model answer".
+      const top = el("div", "ip-cardtop");
       const pct = Math.round((s.i / s.items.length) * 100);
       let head = `Question ${s.i + 1} of ${s.items.length} · ${s.track}`;
       if (withClock) head += ` · <span id="ip-clock">${fmtTime(s.remaining)}</span> left`;
-      card.appendChild(el("div", "ip-progress", head));
+      top.appendChild(el("div", "ip-progress", head));
+      const endBtn = el("button", "ip-btn ip-ghost ip-end", "End session");
+      endBtn.type = "button";
+      endBtn.title = "Save progress so far and exit this session";
+      endBtn.addEventListener("click", () => endSessionEarly());
+      top.appendChild(endBtn);
+      card.appendChild(top);
       const bar = el("div", "ip-bar"); bar.appendChild(el("div")); bar.firstChild.style.width = pct + "%"; card.appendChild(bar);
       card.appendChild(el("span", "ip-topic", esc(item.topic)));
       card.appendChild(el("div", "ip-q", esc(item.q)));
       return card;
+    }
+
+    // Leave a session mid-way. If the learner has rated at least one question,
+    // we save a (partial) result and show the normal summary so the progress
+    // still counts. If they haven't rated anything yet, there's nothing
+    // meaningful to save — just return to the setup screen.
+    function endSessionEarly() {
+      const s = session;
+      if (!s) return renderSetup();
+      const ratedCount = s.ratings.filter((r) => r != null).length;
+      const msg = ratedCount
+        ? "End this session now? Your " + ratedCount + " rated " +
+          (ratedCount === 1 ? "answer" : "answers") + " will be saved to your progress."
+        : "End this session? You haven't rated anything yet, so nothing will be saved.";
+      if (!window.confirm(msg)) return;
+      if (s.timer) { clearInterval(s.timer); s.timer = null; }
+      if (ratedCount) renderSummary(true);
+      else renderSetup();
     }
     function ratingRow(onPick) {
       const wrap = el("div");
@@ -349,7 +377,7 @@
       } finally { btn.disabled = false; }
     }
 
-    function renderSummary() {
+    function renderSummary(endedEarly) {
       const s = session;
       if (s.timer) clearInterval(s.timer);
       const rated = s.ratings.filter((r) => r != null);
@@ -363,11 +391,15 @@
       });
       saveHistory({
         when: new Date().toLocaleString(), mode: s.mode, track: s.track, topic: s.topic,
-        score, n: rated.length,
+        score, n: rated.length, partial: !!endedEarly,
         topics: Object.fromEntries(Object.entries(byTopic).map(([k, v]) => [k, Math.round((v.reduce((a, b) => a + b, 0) / v.length / 5) * 100)])),
       });
       app.innerHTML = "";
       const wrap = el("div", "ip-card ip-summary");
+      if (endedEarly) {
+        wrap.appendChild(el("div", "ip-progress",
+          `Session ended early \u2014 ${rated.length} of ${s.items.length} questions rated and saved.`));
+      }
       wrap.appendChild(el("div", "ip-score", score + "%"));
       wrap.appendChild(el("p", null, `${esc(MODES[s.mode].label)} · ${rated.length} questions · ${s.track} · ${esc(s.topic)}`));
       let msg = score >= 80 ? "Strong — you're interview-ready on this set."

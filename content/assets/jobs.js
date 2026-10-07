@@ -88,9 +88,110 @@
       head.appendChild(add);
       app.appendChild(head);
 
+      // For a handful of jobs, a plain grid is clearest. Once the list grows,
+      // a wall of cards is hard to scan — so we add a lightweight control bar
+      // (search + sort) and reveal cards in pages ("Show more"). All of this is
+      // client-side over the already-fetched list; no new endpoints or data.
+      var SHOW_CONTROLS_AT = 6; // below this, keep the UI minimal
+      var PAGE_SIZE = 9;        // cards revealed per "Show more" (3 rows of 3)
+
       var grid = el("div", "or-jobs-grid");
-      jobs.forEach(function (j) { grid.appendChild(card(j, token)); });
+
+      if (jobs.length < SHOW_CONTROLS_AT) {
+        jobs.forEach(function (j) { grid.appendChild(card(j, token)); });
+        app.appendChild(grid);
+        return;
+      }
+
+      // ---- Controls (search + sort) --------------------------------------
+      var state = { q: "", sort: "recent", shown: PAGE_SIZE };
+
+      var controls = el("div", "or-jobs-controls");
+
+      var searchWrap = el("div", "or-jobs-search");
+      var search = el("input", "or-input or-jobs-search-input");
+      search.type = "search";
+      search.placeholder = "Search jobs by title or company\u2026";
+      search.setAttribute("aria-label", "Search jobs");
+      searchWrap.appendChild(search);
+      controls.appendChild(searchWrap);
+
+      var sortWrap = el("div", "or-jobs-sort");
+      var sortLabel = el("label", "or-jobs-sort-label", "Sort");
+      sortLabel.htmlFor = "or-jobs-sort-select";
+      var sort = el("select", "or-input or-jobs-sort-select");
+      sort.id = "or-jobs-sort-select";
+      [
+        ["recent", "Most recent"],
+        ["oldest", "Oldest first"],
+        ["title", "Title (A\u2013Z)"],
+        ["prep", "Prep (high\u2192low)"],
+        ["gaps", "Gaps (high\u2192low)"],
+      ].forEach(function (opt) {
+        var o = el("option"); o.value = opt[0]; o.textContent = opt[1]; sort.appendChild(o);
+      });
+      sortWrap.append(sortLabel, sort);
+      controls.appendChild(sortWrap);
+
+      app.appendChild(controls);
+
+      var count = el("div", "or-jobs-count or-muted or-small");
+      app.appendChild(count);
+
       app.appendChild(grid);
+
+      var more = el("div", "or-jobs-more");
+      var moreBtn = el("button", "ip-btn ip-ghost"); moreBtn.type = "button"; moreBtn.textContent = "Show more";
+      more.appendChild(moreBtn);
+      app.appendChild(more);
+
+      var timeOf = function (j) { var d = j && j.created_at ? new Date(j.created_at).getTime() : 0; return isNaN(d) ? 0 : d; };
+
+      function filtered() {
+        var q = state.q.trim().toLowerCase();
+        var list = jobs.filter(function (j) {
+          if (!q) return true;
+          var hay = (displayTitle(j) + " " + (j.company || "") + " " + (j.seniority || "")).toLowerCase();
+          return hay.indexOf(q) !== -1;
+        });
+        list.sort(function (a, b) {
+          switch (state.sort) {
+            case "oldest": return timeOf(a) - timeOf(b);
+            case "title": return displayTitle(a).localeCompare(displayTitle(b));
+            case "prep": return (b.prep_progress || 0) - (a.prep_progress || 0);
+            case "gaps": return (b.gaps_count || 0) - (a.gaps_count || 0);
+            case "recent":
+            default: return timeOf(b) - timeOf(a);
+          }
+        });
+        return list;
+      }
+
+      function paint() {
+        var list = filtered();
+        var shown = Math.min(state.shown, list.length);
+        grid.innerHTML = "";
+        for (var i = 0; i < shown; i++) grid.appendChild(card(list[i], token));
+
+        if (!list.length) {
+          grid.appendChild(el("p", "ip-ai-hint", "No jobs match \u201c" + esc(state.q) + "\u201d."));
+          count.textContent = "";
+        } else {
+          count.textContent = "Showing " + shown + " of " + list.length +
+            (list.length === 1 ? " job" : " jobs");
+        }
+        more.style.display = shown < list.length ? "" : "none";
+      }
+
+      var debounce;
+      search.addEventListener("input", function () {
+        clearTimeout(debounce);
+        debounce = setTimeout(function () { state.q = search.value; state.shown = PAGE_SIZE; paint(); }, 120);
+      });
+      sort.addEventListener("change", function () { state.sort = sort.value; state.shown = PAGE_SIZE; paint(); });
+      moreBtn.addEventListener("click", function () { state.shown += PAGE_SIZE; paint(); });
+
+      paint();
     }
 
     // Defensive display guard: the server repairs weak titles on reopen, but a

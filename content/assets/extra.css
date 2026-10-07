@@ -599,6 +599,13 @@
   box-shadow: 0 4px 16px rgba(0,0,0,0.06);
 }
 .ip-progress { font-size: 0.75rem; color: var(--md-default-fg-color--light); margin-bottom: 0.5rem; }
+
+/* Question card top row: progress text left, quiet "End session" exit right. */
+.ip-cardtop { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.ip-cardtop .ip-progress { margin-bottom: 0; }
+.ip-btn.ip-end {
+  padding: 0.28rem 0.8rem; font-size: 0.78rem; flex: 0 0 auto;
+}
 .ip-bar { height: 6px; border-radius: 3px; background: var(--md-default-fg-color--lightest); overflow: hidden; margin-bottom: 1rem; }
 .ip-bar > div { height: 100%; background: linear-gradient(90deg, var(--kb-grad-1), var(--kb-grad-3)); transition: width 200ms ease; }
 .ip-topic {
@@ -1430,6 +1437,23 @@ a.ig-feature.ig-link .ig-d {
 .or-job-date { color: var(--md-default-fg-color--light); font-size: .8rem; }
 .or-job-actions { display: flex; gap: .5rem; margin-top: .25rem; }
 .or-save-msg { display: block; margin-top: .5rem; font-size: .9rem; }
+
+/* My Jobs: controls (search + sort) shown once the list grows large enough
+   to need scanning help. Collapses to a single column on narrow screens. */
+.or-jobs-controls {
+  display: flex; gap: .75rem; align-items: flex-end; flex-wrap: wrap;
+  margin: 0 0 .75rem;
+}
+.or-jobs-search { flex: 1 1 16rem; min-width: 12rem; }
+.or-jobs-search-input { margin: 0; }
+.or-jobs-sort { display: flex; flex-direction: column; gap: .15rem; }
+.or-jobs-sort-label {
+  font-size: .72rem; font-weight: 700; letter-spacing: .03em;
+  text-transform: uppercase; color: var(--md-default-fg-color--light);
+}
+.or-jobs-sort-select { margin: 0; min-width: 11rem; }
+.or-jobs-count { margin: 0 0 .6rem; }
+.or-jobs-more { display: flex; justify-content: center; margin: 1rem 0 .25rem; }
 
 /* ============================================================
    Homepage "How it works" flow strip (write_index .or-flow)
