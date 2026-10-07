@@ -1434,7 +1434,18 @@ a.ig-feature.ig-link .ig-d {
   gap: .5rem 1.25rem;
 }
 /* Title + meta occupy the flexible left column; they stack together. */
-.or-job-card h3 { margin: 0; font-size: 1.02rem; flex: 1 1 14rem; min-width: 11rem; order: 1; }
+.or-job-titlerow {
+  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+  flex: 1 1 14rem; min-width: 11rem; order: 1;
+}
+.or-job-card h3 { margin: 0; font-size: 1.02rem; }
+/* Active-job marker: the job other pages are currently operating on. */
+.or-job-active { border-color: var(--md-primary-fg-color, #1f9d63); box-shadow: inset 3px 0 0 var(--md-primary-fg-color, #1f9d63); }
+.or-job-activebadge {
+  font-size: .62rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+  color: #fff; background: var(--md-primary-fg-color, #1f9d63);
+  padding: .12rem .45rem; border-radius: 999px; line-height: 1.4;
+}
 .or-job-meta {
   color: var(--md-default-fg-color--light); font-size: .8rem;
   flex: 0 0 100%; order: 2; margin: -.3rem 0 .1rem;
@@ -1442,6 +1453,25 @@ a.ig-feature.ig-link .ig-d {
 .or-job-stats { flex: 0 0 auto; order: 3; }
 .or-job-date { color: var(--md-default-fg-color--light); font-size: .78rem; flex: 0 0 auto; order: 4; white-space: nowrap; }
 .or-job-actions { display: flex; gap: .5rem; flex: 0 0 auto; order: 5; margin: 0; }
+/* Interview-pipeline checklist: full-width line under the top row, reads as
+   "where am I with this role". */
+.or-job-pipeline {
+  flex: 0 0 100%; order: 6; display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .15rem;
+}
+.or-job-step {
+  font-size: .72rem; font-weight: 600; padding: .12rem .5rem; border-radius: 999px;
+  border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
+}
+.or-job-step-done { color: var(--md-primary-fg-color, #1f9d63); border-color: color-mix(in srgb, var(--md-primary-fg-color, #1f9d63) 40%, transparent); background: color-mix(in srgb, var(--md-primary-fg-color, #1f9d63) 8%, transparent); }
+.or-job-step-todo { color: var(--md-default-fg-color--light); }
+/* Per-card Next Action — the single most useful step for this job. */
+.or-job-next { flex: 0 0 100%; order: 7; display: flex; align-items: baseline; gap: .5rem; margin-top: .1rem; }
+.or-job-next-label {
+  font-size: .64rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--md-default-fg-color--light);
+}
+.or-job-nextlink { font-size: .9rem; font-weight: 700; color: var(--md-primary-fg-color, #1f9d63); text-decoration: none; }
+.or-job-nextlink:hover { text-decoration: underline; }
 .or-save-msg { display: block; margin-top: .5rem; font-size: .9rem; }
 
 /* My Jobs: controls (search + sort) shown once the list grows large enough
@@ -1506,6 +1536,26 @@ a.ig-feature.ig-link .ig-d {
   font-size: .92rem;
 }
 .or-scn-match a.or-scn-clear { margin-left: .3rem; }
+
+/* "Why these questions" panel on the Questions page — the honest, job-level
+   reason the set exists (role tech + identified gaps). */
+.or-why .or-why-block { margin-top: .6rem; }
+.or-why .or-why-head {
+  font-size: .78rem; font-weight: 700; color: var(--or-text-secondary, #5b6b85); margin-bottom: .3rem;
+}
+
+/* "What this tests" rubric shown before the user answers a scenario node, so
+   the step feels purposeful (they know what a strong answer must show up front).
+   A quiet framed callout that doesn't compete with the prompt. */
+.or-scn-tests {
+  margin: .6rem 0 .8rem; padding: .6rem .85rem;
+  border: 1px solid var(--or-border, #e5e9f0);
+  border-left: 3px solid var(--md-primary-fg-color, #1f9d63);
+  border-radius: .5rem; background: var(--md-code-bg-color, rgba(0,0,0,.02));
+}
+.or-scn-tests .or-field-label { margin: 0 0 .25rem; }
+.or-scn-tests-list { margin: 0 0 0 1.1rem; font-size: .88rem; }
+.or-scn-tests-list li { margin: .1rem 0; }
 
 /* ============================================================
    OAuth (Google / GitHub) buttons on the sign-in form (auth.js)
@@ -2178,6 +2228,8 @@ a.ig-feature.ig-link .ig-d {
   /* Comfortable spacing between stacked actions so fat-finger taps don't
      hit the wrong button. */
   .or-actions, .ip-controls, .or-job-actions { gap: 0.6rem; }
+  /* Per-card "Next" link on My Jobs reads as an easy tap target on touch. */
+  .or-job-nextlink { min-height: 32px; display: inline-flex; align-items: center; }
 }
 
 /* ---- 4. Mobile audit: no horizontal scroll, clean stacking ----
@@ -2234,6 +2286,31 @@ a.ig-feature.ig-link .ig-d {
   .or-chips, .or-chips-block, .or-scn-filter, .or-contextchips, .or-job-stats {
     flex-wrap: wrap;
   }
+
+  /* My Jobs row-wise card: on phones the horizontal strip stacks vertically so
+     title, stats, pipeline, next action, and buttons read top-to-bottom with
+     comfortable tap targets instead of cramming into a row. */
+  .or-job-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: .55rem;
+  }
+  .or-job-titlerow, .or-job-stats, .or-job-pipeline, .or-job-next, .or-job-date {
+    flex-basis: auto;
+    min-width: 0;
+  }
+  .or-job-stats { gap: .4rem; }
+  .or-job-stats .or-jobstat { flex: 1 1 0; }     /* even 3-up tiles on narrow cards */
+  /* Pipeline chips + Next action get a bit more breathing room when tapped. */
+  .or-job-pipeline { gap: .4rem; }
+  .or-job-next { padding-top: .1rem; }
+  /* The per-card Next link is an easy, obvious tap target. */
+  .or-job-nextlink { padding: .2rem 0; display: inline-block; }
+
+  /* "What this tests" + "Why these questions" panels keep comfortable padding
+     and never force horizontal scroll. */
+  .or-scn-tests, .or-why { padding-left: .85rem; padding-right: .85rem; }
+  .or-scn-tests-list { margin-left: 1rem; }
 
   /* Readiness bar rows: let the label shrink so the bar + pct stay on-screen. */
   .or-bar-row { gap: 0.5rem; }

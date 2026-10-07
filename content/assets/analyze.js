@@ -714,11 +714,20 @@
       // next step and Defend (lower visual priority than Check My Fit).
       if ((a.offerReadyResources || []).length) {
         section("Relevant OfferReady resources", () => {
-          const w = el("div", "or-reslist");
+          const w = el("div");
+          // Relevance line: these resources are matched to THIS role's required
+          // technologies (honest, role-level — not a generic reading list).
+          const techs = (a.technologies || []).filter(Boolean).slice(0, 6);
+          if (techs.length) {
+            w.appendChild(el("p", "or-muted or-small",
+              "Matched to what this role requires: " + esc(techs.join(", ")) + "."));
+          }
+          const list = el("div", "or-reslist");
           a.offerReadyResources.forEach((r) => {
             const link = el("a", "or-reslink"); link.href = base + r.path; link.textContent = r.label;
-            w.appendChild(link);
+            list.appendChild(link);
           });
+          w.appendChild(list);
           return w;
         });
       } else {

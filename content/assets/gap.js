@@ -335,6 +335,31 @@
       bars.appendChild(bar("Domain", r.domainScore || 0));
       app.appendChild(bars);
 
+      // Explain how the resume match relates to the blended Interview Readiness
+      // the Dashboard tracks: Resume match (done here) is ONE of three factors.
+      // This mirrors the Dashboard's "Based on" panel so the two pages tell a
+      // consistent story. Honest status: match is assessed now; the other two
+      // factors come from completing the practice steps. (Presentation only;
+      // no score is computed here — the formula lives on the Dashboard.)
+      var factors = el("div", "or-card or-readiness-factors");
+      factors.appendChild(el("div", "or-field-label", "How your Interview Readiness is built"));
+      var factor = function (label, present, detailTxt) {
+        var mark = present ? "\u2713" : "\u2014";
+        var cls = present ? "or-factor-on" : "or-factor-off";
+        return el("div", "or-factor " + cls,
+          '<span class="or-factor-mark">' + mark + '</span> <strong>' + esc(label) + '</strong>' +
+          ' <span class="or-muted or-small">' + esc(detailTxt) + '</span>');
+      };
+      factors.appendChild(factor("Resume match", true,
+        "measured here \u2014 " + score + "% for this role"));
+      factors.appendChild(factor("Practice activity", false,
+        "from how you score when you practice questions and defend decisions"));
+      factors.appendChild(factor("Preparation coverage", false,
+        "from how much of your prepared question set you work through"));
+      factors.appendChild(el("p", "or-muted or-small",
+        "Your blended <strong>Interview Readiness</strong> combines all three and updates as you practice. See it on your <a href=\"../Dashboard/index.html\">readiness dashboard</a>."));
+      app.appendChild(factors);
+
       // Evidence found + evidence not found in the resume. Careful wording: a
       // "not found" item means the resume didn't show it — NOT that the
       // candidate lacks the ability.
@@ -367,22 +392,33 @@
       // them discover it. The active job is already set, so these destinations
       // operate on the same job (no re-selection).
       if (saved && state.jobId) {
-        var focus = el("div", "or-card or-next");
-        focus.appendChild(el("div", "or-field-label", "Your preparation focus"));
-        focus.appendChild(el("p", "or-muted or-small", "Use the gaps identified for this job to focus your interview preparation. Your job stays selected \u2014 no need to pick it again."));
-
-        focus.appendChild(el("div", "or-field-label", "Recommended next step"));
-        var nrow = el("div", "or-actions");
         // Carry the job id explicitly to Defend (?job=) so the scenario + its
         // completed practice session attribute to THIS job (spec §10).
         var jobQ = state.jobId ? ("?job=" + encodeURIComponent(state.jobId)) : "";
-        nrow.innerHTML =
-          '<a class="or-btn or-btn-primary" href="' + baseHref() + 'Question-Bank/index.html">Prepare Practice Questions</a>' +
+
+        // Prominent, standardized Next-Best-Action (matches the Dashboard's
+        // .or-nextaction panel): one labeled primary step + rationale. The
+        // other path and the preparation note stay as quiet secondaries.
+        var next = el("div", "or-nextaction");
+        next.appendChild(el("div", "or-nextaction-label", "What to do next"));
+        var nrow = el("div", "or-nextaction-row");
+        var cta = el("a", "or-btn or-btn-primary or-cta-primary");
+        cta.href = baseHref() + "Question-Bank/index.html";
+        cta.textContent = "Prepare Practice Questions";
+        nrow.appendChild(cta);
+        nrow.appendChild(el("span", "or-nextaction-why",
+          "Generate role-specific questions from this job and the gaps found above. Your job stays selected \u2014 no need to pick it again."));
+        next.appendChild(nrow);
+        app.appendChild(next);
+
+        var focus = el("div", "or-card or-next");
+        focus.appendChild(el("div", "or-field-label", "Or go straight to decision defense"));
+        var drow = el("div", "or-actions");
+        drow.innerHTML =
           '<a class="or-btn" href="' + baseHref() + 'Practice-Scenarios/index.html' + jobQ + '">Practice Decision Defense</a>';
-        focus.appendChild(nrow);
+        focus.appendChild(drow);
         focus.appendChild(el("p", "or-muted or-small",
-          "<strong>Prepare Practice Questions</strong> creates role-specific questions from this job and your identified gaps. " +
-          "<strong>Practice Decision Defense</strong> practices explaining tradeoffs, alternatives, cost, scale, and failure modes."));
+          "Decision defense practices explaining tradeoffs, alternatives, cost, scale, and failure modes under follow-up pressure."));
         app.appendChild(focus);
       }
 

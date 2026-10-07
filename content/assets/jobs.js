@@ -88,6 +88,18 @@
       head.appendChild(add);
       app.appendChild(head);
 
+      // Reinforce workflow continuity: name the job the rest of the app is
+      // currently working on (marked "Active" in the list below). Only shown
+      // when the active pointer resolves to a job in this list.
+      var activeId = activeJobId();
+      var activeJob = activeId ? jobs.filter(function (j) { return j && j.id === activeId; })[0] : null;
+      if (activeJob) {
+        var ctx = el("div", "or-jobbanner");
+        ctx.innerHTML = '<span class="or-jobbanner-label">Current job</span> <strong>' +
+          esc(displayTitle(activeJob)) + '</strong> \u00b7 <span class="or-small">this is what Check My Fit, Questions, Defend, and your Dashboard are working on</span>';
+        app.appendChild(ctx);
+      }
+
       // For a handful of jobs, a plain grid is clearest. Once the list grows,
       // a wall of cards is hard to scan — so we add a lightweight control bar
       // (search + sort) and reveal cards in pages ("Show more"). All of this is
@@ -199,6 +211,17 @@
     // been reopened yet). Never render a paragraph/company blurb as the card
     // title — fall back to seniority or "Untitled role". (Opening the job then
     // repairs + persists a real title via the detail endpoint.)
+    // The My Jobs list IS the job switcher, so instead of a redundant banner we
+    // mark the currently-active job (the one other pages are operating on) so
+    // the user always knows "which job am I working on". Reads the shared
+    // active-job pointer; never changes it.
+    function activeJobId() {
+      try {
+        return (window.OfferReadyReadiness && window.OfferReadyReadiness.getActiveJob)
+          ? (window.OfferReadyReadiness.getActiveJob() || "") : "";
+      } catch (e) { return ""; }
+    }
+
     var COMPANY_TITLE_HINT = /\b(is a|is an|we are|we're|company|startup|provides|focuses|founded|headquarter)\b/i;
     function displayTitle(j) {
       var t = (j && j.title ? String(j.title) : "").trim();
@@ -208,9 +231,36 @@
       return "Untitled role";
     }
 
+    // Derive the interview-pipeline stage from prep_progress, the one progress
+    // signal the light list row carries (set server-side by touchJobStats:
+    // 25 after gap analysis, 50 after questions, 75 after a practice completion).
+    // No extra per-job fetch, no fabricated numbers — just a truthful "what's
+    // done + what's next" read of the existing field.
+    function pipeline(j) {
+      var p = j && j.prep_progress || 0;
+      var steps = [
+        { label: "Analyzed", done: true },
+        { label: "Fit checked", done: p >= 25 },
+        { label: "Questions ready", done: p >= 50 },
+        { label: "Practice started", done: p >= 75 },
+      ];
+      var next;
+      if (p < 25)      next = { label: "Check My Fit",             href: "Gap-Analysis/index.html" };
+      else if (p < 50) next = { label: "Prepare Practice Questions", href: "Question-Bank/index.html" };
+      else if (p < 75) next = { label: "Start Recommended Practice", href: "Practice-Scenarios/index.html", carryJob: true };
+      else             next = { label: "View My Readiness",         href: "Dashboard/index.html" };
+      return { steps: steps, next: next };
+    }
+
     function card(j, token) {
-      var c = el("div", "or-job-card");
-      c.appendChild(el("h3", null, esc(displayTitle(j))));
+      var isActive = j && j.id && j.id === activeJobId();
+      var c = el("div", "or-job-card" + (isActive ? " or-job-active" : ""));
+      var titleRow = el("div", "or-job-titlerow");
+      titleRow.appendChild(el("h3", null, esc(displayTitle(j))));
+      // A quiet "Active" badge marks the job other pages are currently working
+      // on, so the user never wonders which job is in context.
+      if (isActive) titleRow.appendChild(el("span", "or-job-activebadge", "Active"));
+      c.appendChild(titleRow);
       var meta = [];
       if (j.company) meta.push(esc(j.company));
       if (j.seniority) meta.push(esc(j.seniority));
@@ -232,6 +282,38 @@
 
       var when = j.created_at ? new Date(j.created_at) : null;
       if (when && !isNaN(when.getTime())) c.appendChild(el("div", "or-job-date", "Analyzed " + when.toLocaleDateString()));
+
+      // Interview-pipeline progress: a compact checklist of the stages this job
+      // has moved through, so each card reads as "where am I with this role".
+      var pl = pipeline(j);
+      var steps = el("div", "or-job-pipeline");
+      pl.steps.forEach(function (s) {
+        var chip = el("span", "or-job-step " + (s.done ? "or-job-step-done" : "or-job-step-todo"));
+        chip.textContent = (s.done ? "\u2713 " : "\u25cb ") + s.label;
+        steps.appendChild(chip);
+      });
+      c.appendChild(steps);
+
+      // Per-card Next Action — the single most useful step for THIS job. Sets
+      // the job active (so the destination operates on it), then navigates.
+      // Mirrors openJob's active-pointer behavior without the full restore.
+      var nextWrap = el("div", "or-job-next");
+      nextWrap.appendChild(el("span", "or-job-next-label", "Next"));
+      var nextBtn = el("a", "or-job-nextlink"); nextBtn.href = "#";
+      nextBtn.textContent = pl.next.label;
+      nextBtn.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        try {
+          if (window.OfferReadyReadiness && window.OfferReadyReadiness.setActiveJob) {
+            window.OfferReadyReadiness.setActiveJob(j.id);
+          }
+        } catch (e) {}
+        var href = base + pl.next.href;
+        if (pl.next.carryJob) href += "?job=" + encodeURIComponent(j.id);
+        window.location.href = href;
+      });
+      nextWrap.appendChild(nextBtn);
+      c.appendChild(nextWrap);
 
       // Open is the primary next action (sets this job active + restores full
       // context); Delete is a quiet secondary.

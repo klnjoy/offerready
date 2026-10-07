@@ -987,6 +987,19 @@
         card.appendChild(cont);
       } else {
         // decision | why | tradeoff | constraint | incident: answer -> (grade) -> reveal -> rate
+        // Surface WHAT this step tests up front (the node's signals) so practice
+        // feels purposeful and premium — the user knows what a strong answer must
+        // show before they attempt it, not only after revealing. Same data
+        // (node.signals); shown here as "What this tests" and again, as the
+        // scoring rubric, under the strong answer on reveal.
+        if ((node.signals || []).length) {
+          var tests = el("div", "or-scn-tests");
+          tests.appendChild(el("div", "or-field-label", "What this tests"));
+          var tul = el("ul", "or-scn-tests-list");
+          node.signals.forEach(function (x) { tul.appendChild(el("li", null, esc(x))); });
+          tests.appendChild(tul);
+          card.appendChild(tests);
+        }
         var ta = el("textarea", "ip-answerbox"); ta.placeholder = "Answer out loud, then type the gist \u2014 get it graded, or reveal the strong answer."; ta.rows = 5;
         card.appendChild(ta);
         var actions = el("div", "ip-controls");

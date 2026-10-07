@@ -128,6 +128,52 @@
       var j = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
       return j ? (j.title || "Untitled role") : "";
     }
+
+    // The analysis for the currently-selected job (hydrated from GET /api/jobs/:id
+    // into state.jobs[].analysis). Used to explain, at the JOB level, why this
+    // question set exists — the role's required technologies and the gaps the
+    // analysis found. (Per-question mapping is NOT returned by the API, so we
+    // never claim a specific question maps to a specific skill — we state the
+    // honest set-level reason the generator was given.)
+    function activeJobAnalysis() {
+      var j = state.jobs.filter(function (x) { return x.id === state.jobId; })[0];
+      return (j && j.analysis) ? j.analysis : null;
+    }
+
+    // "Why these questions" panel: names the required technologies + identified
+    // gaps that the generator was given for this job. Returns null when we have
+    // no analysis to be honest about (e.g. an unsaved/ad-hoc generation).
+    function whyPanel() {
+      var a = activeJobAnalysis();
+      if (!a) return null;
+      var techs = (a.technologies || []).filter(Boolean).slice(0, 8);
+      var gaps = (a.potentialGaps || []).map(function (g) {
+        return g && (g.requirement || g.title || (typeof g === "string" ? g : "")); 
+      }).filter(Boolean).slice(0, 6);
+      if (!techs.length && !gaps.length) return null;
+
+      var panel = el("div", "or-card or-why");
+      panel.appendChild(el("div", "or-field-label", "Why these questions"));
+      panel.appendChild(el("p", "or-muted or-small",
+        "Generated for this role\u2019s requirements and the gaps found in your analysis \u2014 not a generic set."));
+      if (techs.length) {
+        var tb = el("div", "or-why-block");
+        tb.appendChild(el("div", "or-why-head", "Because the role requires"));
+        var tc = el("div", "or-chips");
+        techs.forEach(function (t) { tc.appendChild(el("span", "or-chip", esc(t))); });
+        tb.appendChild(tc);
+        panel.appendChild(tb);
+      }
+      if (gaps.length) {
+        var gb = el("div", "or-why-block");
+        gb.appendChild(el("div", "or-why-head", "And to close your identified gaps"));
+        var gc = el("div", "or-chips");
+        gaps.forEach(function (g) { gc.appendChild(el("span", "or-chip or-chip-warn", esc(g))); });
+        gb.appendChild(gc);
+        panel.appendChild(gb);
+      }
+      return panel;
+    }
     function currentJobBanner() {
       var banner = el("div", "or-jobbanner");
       var title = activeJobTitle();
@@ -234,6 +280,10 @@
     // Shared: render the categorized question cards + the Practice/Dashboard
     // footer. Used by both the freshly-generated and the restored views.
     function renderQuestionCards(questions) {
+      // Lead with the honest, job-level reason this set exists (role tech + gaps).
+      var why = whyPanel();
+      if (why) app.appendChild(why);
+
       var byCat = {};
       questions.forEach(function (q) { (byCat[q.category] = byCat[q.category] || []).push(q); });
 
@@ -254,10 +304,24 @@
         app.appendChild(card);
       });
 
-      var foot = el("div", "or-card or-actions");
+      // Prominent, standardized Next-Best-Action (matches the Dashboard's
+      // .or-nextaction panel): one labeled primary step + a one-line rationale,
+      // with the dashboard as a quiet secondary link. Same targets as before.
+      var next = el("div", "or-nextaction");
+      next.appendChild(el("div", "or-nextaction-label", "What to do next"));
+      var nrow = el("div", "or-nextaction-row");
+      var cta = el("a", "or-btn or-btn-primary or-cta-primary");
+      cta.href = defendHref();
+      cta.innerHTML = "\uD83D\uDDE1\ufe0f Start Recommended Practice";
+      nrow.appendChild(cta);
+      nrow.appendChild(el("span", "or-nextaction-why",
+        "Defend these answers under follow-up pressure \u2014 tradeoffs, alternatives, cost, scale, failure modes \u2014 to raise your Interview Readiness for this job."));
+      next.appendChild(nrow);
+      app.appendChild(next);
+
+      var foot = el("div", "or-actions"); foot.style.marginTop = "0.5rem";
       foot.innerHTML =
-        '<a class="or-btn or-btn-primary" href="' + defendHref() + '">\uD83D\uDDE1\ufe0f Practice & defend answers</a>' +
-        '<a class="or-btn" href="../Dashboard/index.html">\uD83D\uDCCA Readiness dashboard</a>';
+        '<a class="or-btn" href="../Dashboard/index.html">\uD83D\uDCCA View My Readiness</a>';
       app.appendChild(foot);
     }
 
