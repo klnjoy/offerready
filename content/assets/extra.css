@@ -2307,3 +2307,51 @@ a.ig-feature.ig-link .ig-d {
    center the actions and give the primary CTA clear dominance. */
 .ip-summary .or-actions { justify-content: center; margin-top: 1rem; }
 .ip-summary .or-complete { text-align: left; }
+
+/* ---- Dashboard: prominent "Next recommended action" block ----
+   A labeled, framed panel so the single next step is unmissable. */
+.or-nextaction {
+  margin: 0 0 1.6rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid rgba(31, 157, 99, 0.40);
+  border-left: 4px solid var(--or-green, #1f9d63);
+  border-radius: 0.6rem;
+  background: var(--or-green-soft, rgba(31, 157, 99, 0.08));
+}
+.or-nextaction-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--or-text-secondary, #5b6b85);
+  margin-bottom: 0.5rem;
+}
+.or-nextaction-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+.or-nextaction-row .or-btn { margin: 0; }
+.or-nextaction-why {
+  font-size: 0.9rem;
+  color: var(--or-text, #16233b);
+  flex: 1;
+  min-width: 12rem;
+}
+@media screen and (max-width: 44.9375em) {
+  .or-nextaction-row { flex-direction: column; align-items: stretch; }
+  .or-nextaction-row .or-btn { width: 100%; text-align: center; }
+  .or-nextaction-why { min-width: 0; }
+}
+
+/* ---- Dashboard: "Based on" factors read as distinct blocks ----
+   Resume Match / Practice Activity / Preparation Completion each get a clear
+   on/off state so the reader can see at a glance what's counting. */
+.or-readiness-factors .or-factor {
+  padding: 0.6rem 0;
+}
+.or-factor.or-factor-on {
+  /* a subtle left tick-rail reinforces "this is counting toward readiness" */
+  padding-left: 0.1rem;
+}

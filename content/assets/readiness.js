@@ -222,15 +222,31 @@
       // Carry the current job id to Defend (?job=) so the scenario + completed
       // practice attribute to THIS job (spec §10).
       var jobQ = (p.job && p.job.id) ? ("?job=" + encodeURIComponent(p.job.id)) : "";
-      var nextHref, nextLabel;
-      if (!p.gap) { nextHref = "Gap-Analysis/index.html"; nextLabel = "Check My Fit"; }
-      else if (!qCount) { nextHref = "Question-Bank/index.html"; nextLabel = "Prepare Practice Questions"; }
-      else { nextHref = "Practice-Scenarios/index.html" + jobQ; nextLabel = completedPractice.length ? "Continue Practice" : "Practice Decision Defense"; }
-      var ctaWrap = el("div", "or-actions");
-      ctaWrap.style.margin = "0 0 1.6rem";
-      var cta = el("a", "or-btn or-btn-primary"); cta.href = base + nextHref; cta.textContent = nextLabel;
-      ctaWrap.appendChild(cta);
-      root.appendChild(ctaWrap);
+      var nextHref, nextLabel, nextWhy;
+      if (!p.gap) {
+        nextHref = "Gap-Analysis/index.html"; nextLabel = "Check My Fit";
+        nextWhy = "Compare your resume to this role to see your match and gaps.";
+      } else if (!qCount) {
+        nextHref = "Question-Bank/index.html"; nextLabel = "Prepare Practice Questions";
+        nextWhy = "Generate role-specific questions from your job and gaps.";
+      } else {
+        nextHref = "Practice-Scenarios/index.html" + jobQ;
+        nextLabel = completedPractice.length ? "Continue Practice" : "Practice Decision Defense";
+        nextWhy = completedPractice.length
+          ? "Keep defending decisions under follow-ups to raise readiness."
+          : "Defend your decisions under pressure to raise Interview Readiness.";
+      }
+      // Prominent "Next recommended action" block (UI pass): a labeled, framed
+      // panel with a one-line rationale + a single primary CTA. Same next-step
+      // logic/targets; richer presentation so the one thing to do next is obvious.
+      var nextWrap = el("div", "or-nextaction");
+      nextWrap.appendChild(el("div", "or-nextaction-label", "Next recommended action"));
+      var nextRow = el("div", "or-nextaction-row");
+      var cta = el("a", "or-btn or-btn-primary or-cta-primary"); cta.href = base + nextHref; cta.textContent = nextLabel;
+      nextRow.appendChild(cta);
+      nextRow.appendChild(el("span", "or-nextaction-why", nextWhy));
+      nextWrap.appendChild(nextRow);
+      root.appendChild(nextWrap);
 
       renderScoreBlocks(p.gap, p.progress, (p.questions || []).length, p.job.title, p.practice || []);
 
