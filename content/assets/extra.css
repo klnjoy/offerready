@@ -2008,3 +2008,159 @@ a.ig-feature.ig-link .ig-d {
   color: var(--or-text);
   font-weight: 600;
 }
+
+/* ============================================================
+   UI/UX SPRINT — PHASE 1: global polish + mobile hardening.
+   Appended last so it wins. Additive and presentation-only:
+   no class renames, no markup/logic/route/persistence changes.
+   Goals: consistent spacing + typography rhythm, accessible focus
+   states, touch-friendly controls, and a mobile audit that removes
+   horizontal scrolling and makes every JS app stack cleanly on phones.
+   ============================================================ */
+
+/* ---- 1. Typography + readability baseline ----
+   Slightly tighter heading tracking and a comfortable body measure so long
+   analysis/question pages scan like a product, not a doc dump. */
+.md-typeset { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.md-typeset p { line-height: 1.65; }
+/* Keep content from stretching too wide on large screens (readability). */
+.md-grid { max-width: 72rem; }
+
+/* ---- 2. Accessible, consistent focus rings ----
+   One visible focus style for keyboard users across every interactive control
+   in the apps (buttons, inputs, chips, cards-as-links). Mouse clicks are
+   unaffected (:focus-visible only). */
+.ip-btn:focus-visible,
+.or-btn:focus-visible,
+.or-input:focus-visible,
+.ip-answerbox:focus-visible,
+.or-scn-chip:focus-visible,
+.or-onboard-chip:focus-visible,
+.ig-feature.ig-link:focus-visible,
+.or-oauth-btn:focus-visible,
+.md-nav__link:focus-visible {
+  outline: 2px solid var(--or-green, #1f9d63);
+  outline-offset: 2px;
+  border-radius: 0.4rem;
+}
+/* Inputs: calm green focus border (replaces the heavier default). */
+.or-input:focus, .ip-answerbox:focus {
+  outline: none;
+  border-color: var(--or-green, #1f9d63);
+  box-shadow: 0 0 0 3px var(--or-green-soft, rgba(31,157,99,0.10));
+}
+
+/* ---- 3. Touch-friendly controls (WCAG ~44px targets on touch devices) ----
+   Only on coarse pointers so desktop density is preserved. */
+@media (pointer: coarse) {
+  .ip-btn, .or-btn, .or-cta, .pr-cta,
+  .or-scn-chip, .or-onboard-chip, .or-oauth-btn,
+  .ip-rate .ip-star, .ip-rate .ip-btn {
+    min-height: 44px;
+  }
+  .ip-rate { gap: 0.5rem; }
+  /* Comfortable spacing between stacked actions so fat-finger taps don't
+     hit the wrong button. */
+  .or-actions, .ip-controls, .or-job-actions { gap: 0.6rem; }
+}
+
+/* ---- 4. Mobile audit: no horizontal scroll, clean stacking ----
+   Applies to EVERY JS-rendered app surface. Phones first. */
+@media screen and (max-width: 44.9375em) {
+  /* Nothing in an app should force the page wider than the viewport. */
+  #analyze-app, #gap-app, #questions-app, #scenario-app, #dashboard-app,
+  #jobs-app, #ip-app, #ip-dash, #simulator-app, #walkthrough-app, #why-app {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Any wide data table inside an app scrolls inside its own box, not the page. */
+  #analyze-app table, #gap-app table, #questions-app table,
+  #dashboard-app table, #ip-dash table, #walkthrough-app .wt-table,
+  .or-practice-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Card + stat grids collapse to a single column for comfortable reading. */
+  .or-jobs-grid,
+  .or-grid,
+  .ip-dash-stats,
+  .ip-setup,
+  #simulator-app .ip-area-checks,
+  #walkthrough-app .wt-grid,
+  .ig-features, .pr-tiers, .pr-quotes {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Action rows stack full-width so buttons are easy to tap and never clip. */
+  .or-actions, .or-job-actions, .ip-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .or-actions > .ip-btn, .or-actions > .or-btn,
+  .or-job-actions > .ip-btn, .ip-controls > .ip-btn {
+    width: 100%;
+    text-align: center;
+    margin: 0;
+  }
+  /* But keep genuinely inline control rows (selects, rating buttons) wrapping,
+     not forced full-width columns. */
+  .ip-rate { flex-direction: row; flex-wrap: wrap; }
+  .ip-rate .ip-btn, .ip-rate .ip-star { width: auto; }
+
+  /* Score header stacks: big number above its label. */
+  .or-score-head { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+
+  /* Chip rows wrap tightly without overflow. */
+  .or-chips, .or-chips-block, .or-scn-filter, .or-contextchips, .or-job-stats {
+    flex-wrap: wrap;
+  }
+
+  /* Readiness bar rows: let the label shrink so the bar + pct stay on-screen. */
+  .or-bar-row { gap: 0.5rem; }
+  .or-bar-label { width: 84px; font-size: 0.8rem; }
+
+  /* App cards: a touch less inner padding to reclaim width on small screens. */
+  #dashboard-app .or-card, #jobs-app .or-job-card,
+  #gap-app .or-card, #questions-app .or-card, .ip-card {
+    padding: 1rem 1.05rem;
+  }
+
+  /* Current Job banner wraps gracefully instead of truncating. */
+  .or-jobbanner { font-size: 0.98rem; }
+
+  /* The Defend completion summary number shouldn't overflow narrow screens. */
+  .ip-summary { padding: 1.1rem; }
+  .ip-score { font-size: 2.4rem; }
+
+  /* Question text slightly smaller on phones for comfortable line length. */
+  .ip-q { font-size: 1.05rem; }
+}
+
+/* ---- 5. Very small phones (<=23.4em): tighten the dashboard topic rows. */
+@media screen and (max-width: 23.4em) {
+  .ip-topicrow { grid-template-columns: 6rem 1fr 2.4rem; }
+  .or-stat-num, .or-score-num { font-size: 1.7rem; }
+}
+
+/* ---- 6. Responsive tags/badges: never let a long skill tag overflow ----
+   Allow wrapping inside the tag and keep the row flexible. */
+.or-chip, .or-pill, .or-tag, .or-diff, .ip-topic, .or-scn-lock {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* ---- 7. Card hierarchy consistency ----
+   One consistent radius + hairline across the app card families so Analyze,
+   Gap, Questions, Dashboard, My Jobs read as one product. */
+.ip-card, .or-card, .or-scn-card, .or-job-card {
+  border-radius: 0.75rem;
+}
+
+/* ---- 8. Images/SVG never cause horizontal scroll. */
+.md-typeset img, .md-typeset svg { max-width: 100%; height: auto; }
+.or-spark, .ip-chart { max-width: 100%; }
