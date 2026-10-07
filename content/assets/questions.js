@@ -240,8 +240,10 @@
       CATEGORY_ORDER.forEach(function (cat) {
         var list = byCat[cat];
         if (!list || !list.length) return;
-        var card = el("div", "or-card");
-        card.appendChild(el("h3", null, esc(CATEGORY_LABEL[cat] || cat) + " <span class=\"or-muted or-small\">(" + list.length + ")</span>"));
+        // Per-category accent class so Technical / Behavioral / System Design /
+        // Leadership read as visually distinct sections (left-border tint).
+        var card = el("div", "or-card or-qcat or-qcat-" + cat);
+        card.appendChild(el("h3", "or-qcat-title", esc(CATEGORY_LABEL[cat] || cat) + " <span class=\"or-muted or-small\">(" + list.length + ")</span>"));
         var ol = el("ol", "or-qlist");
         list.forEach(function (q) {
           var li = el("li", "or-qitem");

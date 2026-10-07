@@ -2436,3 +2436,19 @@ a.ig-feature.ig-link .ig-d {
 }
 .or-callout .or-chips-block:last-child,
 .or-callout .or-chips:last-child { margin-bottom: 0; }
+
+/* ---- Practice Questions: distinct category sections ----
+   Each category card gets a colored left accent + a matching heading tint so
+   Technical / Behavioral / System Design / Leadership are visually separable. */
+.or-qcat { border-left: 4px solid var(--or-border, #e5e9f0); }
+.or-qcat-title { margin-top: 0; }
+.or-qcat-technical    { border-left-color: #1f6fb2; }   /* blue   */
+.or-qcat-behavioral   { border-left-color: #1f9d63; }   /* green  */
+.or-qcat-system_design{ border-left-color: #7a5cc0; }   /* violet */
+.or-qcat-leadership   { border-left-color: #e0a53a; }   /* amber  */
+.or-qcat-technical    .or-qcat-title { color: #175a92; }
+.or-qcat-behavioral   .or-qcat-title { color: #15663f; }
+.or-qcat-system_design .or-qcat-title { color: #5a44a0; }
+.or-qcat-leadership   .or-qcat-title { color: #8a5a00; }
+/* Comfortable spacing between questions in the list. */
+.or-qlist .or-qitem { margin: 0.55rem 0; line-height: 1.55; }
