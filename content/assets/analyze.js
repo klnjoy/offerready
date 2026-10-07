@@ -859,8 +859,13 @@
 
     // ---- small render helpers ----
     function section(title, build) {
-      app.appendChild(el("h2", null, esc(title)));
-      app.appendChild(build());
+      // Wrap each section (title + body) in a card so Role Summary,
+      // Requirements, Signals, Next Step read as distinct, scannable blocks
+      // instead of one long flow. Presentation only — same title + build().
+      const sec = el("section", "or-section");
+      sec.appendChild(el("h2", "or-section-title", esc(title)));
+      sec.appendChild(build());
+      app.appendChild(sec);
     }
     function skillLabel(s) { return typeof s === "string" ? esc(s) : (esc(s.name) + (s.type ? ` <span class="or-tag">${esc(s.type)}</span>` : "")); }
     function chips(label, items) {

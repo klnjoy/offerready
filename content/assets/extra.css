@@ -2389,3 +2389,35 @@ a.ig-feature.ig-link .ig-d {
 /* Open action spans comfortably; Delete stays quiet + compact. */
 .or-job-card .or-job-actions { margin-top: 0.6rem; }
 .or-job-card .or-job-actions .or-cta-primary { flex: 1; text-align: center; }
+
+/* ---- Analyze result: section cards ----
+   Each analysis section (Role Summary, Requirements, Signals, Next Step, …)
+   is framed as a calm card so the result reads as distinct, scannable blocks.
+   Scoped to #analyze-app so it can't affect doc-page h2 rhythm elsewhere. */
+#analyze-app .or-section {
+  border: 1px solid var(--or-border, #e5e9f0);
+  border-radius: 0.75rem;
+  background: var(--or-bg, #fff);
+  padding: 1.1rem 1.25rem;
+  margin: 0 0 1rem;
+  box-shadow: var(--or-shadow, 0 1px 2px rgba(16,35,59,0.05));
+}
+#analyze-app .or-section-title {
+  margin: 0 0 0.6rem;
+  padding: 0;
+  border: 0;                 /* drop the global h2 underline inside the card */
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+/* Skill / technology chips: give the chip rows breathing room + a soft tint so
+   they read as tags, not plain text. (ip-topic is reused across apps; only
+   restyle within the Analyze requirements context.) */
+#analyze-app .or-chips { gap: 0.4rem; margin: 0.3rem 0 0.8rem; }
+#analyze-app .or-chips .ip-topic {
+  background: var(--or-surface, #f7f9fc);
+  border: 1px solid var(--or-border, #e5e9f0);
+  color: var(--or-text, #16233b);
+  font-weight: 600;
+}
+/* Keep the EXPLICIT/implied type tag subtle next to a skill. */
+#analyze-app .or-chips .ip-topic .or-tag { margin-left: 0.3rem; }
