@@ -1121,7 +1121,7 @@ may call `server/discover` first to learn what the server supports. Then the cli
 sequenceDiagram
     participant H as Host + Client
     participant S as MCP Server
-    H->>S: server/discover (optional; older specs: initialize)
+    H->>S: server/discover (optional, older specs use initialize)
     S-->>H: versions + capabilities (tools, resources, prompts)
     H->>S: tools/list
     S-->>H: [ tool schemas ]
