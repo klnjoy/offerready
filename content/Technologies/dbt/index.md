@@ -4,6 +4,21 @@ icon: material/cube-outline
 
 # dbt (data build tool)
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **dbt v2 is a Rust rewrite** (the engine first previewed as **Fusion** in
+      2025). It ships as a single binary using ADBC drivers, parses much faster,
+      and is **stricter**: unknown YAML keys, undefined macros or vars, and
+      missing tests fail at parse time, and `-m/--models` is gone in favor of
+      `-s/--select`. dbt v1.x is still supported, and the two can run side by side.
+    - **Fivetran and dbt Labs completed their merger** in June 2026.
+    - **YAML key:** use `data_tests:` (introduced in 1.8) rather than `tests:`
+      for data tests; unit tests are a separate `unit_tests:` block.
+    - **Newer features worth naming:** the `microbatch` incremental strategy
+      (1.9), YAML-defined snapshots, model contracts and versions, and the
+      dbt Semantic Layer (MetricFlow).
+
 dbt is the **T in ELT** — analytics engineering with software best practices:
 you write `SELECT` statements as **models**, dbt handles dependencies, builds
 them in the right order, tests them, and documents them. It runs *inside* your
@@ -69,9 +84,9 @@ models:
   - name: fct_orders
     columns:
       - name: order_id
-        tests: [unique, not_null]
+        data_tests: [unique, not_null]
       - name: customer_id
-        tests:
+        data_tests:
           - relationships:
               to: ref('dim_customers')
               field: customer_id
@@ -170,6 +185,8 @@ discipline to the transformation layer.
 | SCD Type 2 in dbt? | Snapshots |
 | Generic vs singular test? | Generic = reusable (unique/not_null); singular = custom SQL |
 | What does `dbt build` do? | Runs models + tests + snapshots + seeds in DAG order |
+| dbt v2? | Rust engine (ex-Fusion): faster parse, stricter validation, `--select` only |
+| Time-sliced incremental? | `microbatch` strategy (1.9+) |
 
 ---
 
@@ -205,8 +222,10 @@ flowchart LR
 | Just reusable logic | `ephemeral` | Inlined as a CTE, no object |
 
 Incremental **strategies** matter: `append` (facts, no updates), `merge`
-(upsert on `unique_key`), `delete+insert`, and `insert_overwrite` (partition
-swap). Wrong strategy = duplicates or full rewrites.
+(upsert on `unique_key`), `delete+insert`, `insert_overwrite` (partition
+swap), and `microbatch` (1.9+; processes time-bounded batches on an
+`event_time` column, which makes backfills and retries per batch easy). Wrong
+strategy = duplicates or full rewrites.
 
 ---
 
@@ -322,3 +341,30 @@ Each: **diagnose → mitigate → prevent.**
 - [Snowflake](../snowflake/index.md) · [Databricks](../databricks/index.md) — the warehouses dbt runs inside.
 - [Data Engineering Interview Q&A](../../Personal-SourceCode/DataEngineering_Interview_QA.md) · [dbt Interview Q&A](../../Personal-SourceCode/dbt_Interview_QA.md).
 - [DevOps for AI](../../GenAI-Topics/devops-ai/index.md) — CI/CD patterns that apply to dbt.
+
+## How interviewers probe this
+
+??? question "You're asked to move a 1,500-model project to dbt v2. How do you plan it?"
+    A strong answer covers: clearing all deprecation warnings on v1.x first,
+    running the v2 parser in compatibility mode, using automated fix tooling,
+    checking that every package supports v2 and every adapter has a v2 driver,
+    running v1 and v2 side by side on the same manifest, comparing results, and
+    cutting over environment by environment.
+
+??? question "Design the dbt layer for a data mesh with several domain teams."
+    Separate projects per domain with public, contracted, versioned models as
+    interfaces, cross-project `ref`s to those public models only, owners and
+    groups on each model, CI that builds only what changed plus its dependents,
+    and exposures to track consumers. Explain the governance trade-off against a
+    single monorepo.
+
+??? question "A backfill of two years of events through an incremental model keeps timing out."
+    Use `microbatch` with `event_time` so the backfill runs as bounded batches
+    that can retry independently, or run a targeted `--full-refresh` with an
+    explicit date range. Size the warehouse for the backfill, and check that the
+    `unique_key` and lookback window handle late-arriving data.
+
+??? question "How do you test dbt models without a full copy of production data?"
+    Unit tests with mocked inputs for transformation logic, data tests on
+    sampled or cloned (zero-copy) data in CI, contracts for interface shape, and
+    deferral to production artifacts so CI only builds what changed.

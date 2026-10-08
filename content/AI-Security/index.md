@@ -4,6 +4,28 @@ icon: material/shield-lock
 
 # AI Security
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **OWASP Top 10 for LLM Applications 2026** (published August 2026)
+      reshuffled the list. **Excessive Agency** rose to #3, **Unbounded
+      Consumption** to #6, and **Improper Output Handling** fell to #10. System
+      Prompt Leakage was broadened into **Hidden Context Exposure** (#8). Prompt
+      Injection stays #1 and now explicitly covers attacks hidden in images and
+      audio.
+    - **OWASP Top 10 for Agentic Applications** (December 2025) covers
+      agent-specific risks: goal hijack, tool misuse, identity and privilege abuse,
+      agentic supply chain, unexpected code execution, memory and context
+      poisoning, insecure inter-agent communication, cascading failures,
+      human-agent trust exploitation, and rogue agents.
+    - **MCP security is now spec-level.** Remote MCP servers are OAuth resource
+      servers that must only accept tokens issued for them and must not pass
+      tokens through. Client registration is moving to Client ID Metadata
+      Documents. See [MCP](../GenAI-Topics/mcp/index.md).
+    - **Runtime enforcement products arrived**, such as AgentCore Policy (Cedar
+      rules on tool calls, GA March 2026). OWASP also accepted an **Agent
+      Control Standard** (v0.1) for runtime agent governance.
+
 Securing LLM and agentic systems is different from classic appsec: the model
 follows natural-language instructions, so **untrusted text becomes a control-flow
 risk**. This section covers the threat landscape, agent/MCP-specific attacks, the
@@ -32,20 +54,30 @@ method for any AI system.
 
 ## The threat landscape (LLM/agent-specific)
 
-Mapped loosely to the OWASP Top 10 for LLM Applications, framed for engineers.
+Mapped to the **OWASP Top 10 for LLM Applications 2026** (IDs in the second
+column; agent-specific items also map to the OWASP Agentic Top 10), framed for
+engineers.
 
-| Threat | What it is | Where it enters | Primary control |
-|--------|-----------|-----------------|-----------------|
-| **Prompt injection (direct)** | User overrides system intent | User message | Instruction hierarchy, output gating |
-| **Indirect prompt injection** | Malicious instructions hidden in retrieved/fetched content | RAG docs, web pages, emails, tool output | Treat content as data; sanitize; gate actions |
-| **Jailbreak** | Bypass safety/policy | User message | Guardrail models, policy checks |
-| **Excessive agency** | Agent can do more than it should | Over-broad tools/permissions | Least privilege, gated writes |
-| **Sensitive info disclosure** | Secrets/PII in responses | Prompt, retrieval, tools | Data minimization, masking, output filter |
-| **Insecure output handling** | Model output used unsafely downstream | Output → SQL/shell/HTML/eval | Validate/escape; never `eval` model output |
-| **Tool poisoning** | Malicious tool or tool description manipulates the agent | MCP/tool registry | Allowlist, pinned/signed tools, review |
-| **Data / knowledge-base poisoning** | Attacker plants content that skews answers | Ingestion pipeline | Source trust, provenance, review |
-| **Supply chain** | Compromised model, package, or MCP server | Deps, model registry, MCP | Pinning, signing, provenance, sandboxing |
-| **Model DoS / cost abuse** | Expensive prompts/loops exhaust budget | User/agent loop | Rate limits, token/cost budgets, caps |
+| Threat | OWASP 2026 | What it is | Where it enters | Primary control |
+|--------|-----------|-----------|-----------------|-----------------|
+| **Prompt injection (direct)** | LLM01 | User overrides system intent | User message | Instruction hierarchy, output gating |
+| **Indirect prompt injection** | LLM01 | Malicious instructions hidden in retrieved/fetched content (incl. images, audio) | RAG docs, web pages, emails, tool output | Treat content as data; sanitize; gate actions |
+| **Jailbreak** | LLM01 | Bypass safety/policy | User message | Guardrail models, policy checks |
+| **Sensitive info disclosure** | LLM02 | Secrets/PII in responses | Prompt, retrieval, tools | Data minimization, masking, output filter |
+| **Excessive agency** | LLM03 | Agent can do more than it should | Over-broad tools/permissions | Least privilege, gated writes |
+| **Supply chain** | LLM04 | Compromised model, package, or MCP server | Deps, model registry, MCP | Pinning, signing, provenance, sandboxing |
+| **Tool poisoning** | LLM04 / ASI02 | Malicious tool or tool description manipulates the agent | MCP/tool registry | Allowlist, pinned/signed tools, review |
+| **Data / knowledge-base poisoning** | LLM05 | Attacker plants content that skews answers (or subverts fine-tuning) | Ingestion, training data | Source trust, provenance, review |
+| **Model DoS / cost abuse** | LLM06 | Expensive prompts/loops exhaust budget | User/agent loop | Rate limits, token/cost budgets, caps |
+| **Misinformation** | LLM07 | Confident, wrong output that users act on | Generation | Grounding, citations, verification, UX that shows uncertainty |
+| **Hidden context exposure** | LLM08 | System prompts, hidden instructions, or tool context leak | Prompt, memory | Keep secrets out of prompts; treat any hidden context as eventually public |
+| **Vector & embedding weaknesses** | LLM09 | Cross-tenant retrieval, embedding inversion, poisoned vectors | Vector store | Tenant filters server-side, access control, provenance |
+| **Improper output handling** | LLM10 | Model output used unsafely downstream | Output → SQL/shell/HTML/eval | Validate/escape; never `eval` model output |
+
+!!! note "Using the numbers in interviews"
+    Many teams and tools still cite the **2025** numbering (for example LLM05
+    Improper Output Handling, LLM06 Excessive Agency, LLM07 System Prompt
+    Leakage). Say which edition you mean, and lead with the risk, not the number.
 
 ---
 
@@ -295,6 +327,8 @@ flowchart LR
 | Q | A |
 |---|---|
 | #1 principle? | Untrusted text ≠ instructions; contain by architecture |
+| Current OWASP lists? | LLM Top 10 **2026** + Top 10 for **Agentic Applications** (Dec 2025) |
+| Excessive agency in 2026 list? | LLM03 (up from LLM06 in 2025) |
 | Indirect injection? | Malicious instructions hidden in retrieved/tool content |
 | Excessive agency fix? | Least-privilege, narrow, gated tools |
 | Insecure output handling? | Model output into a sink (SQL/shell/HTML) unchecked |

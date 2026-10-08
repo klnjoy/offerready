@@ -4,6 +4,23 @@ icon: material/snowflake
 
 # Snowflake Cortex AI & Agents
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **Snowflake Intelligence is now Snowflake CoWork** (renamed June 2026), the
+      end-user surface for Cortex Agents. **Cortex Code** is the AI coding
+      assistant and is replacing Snowflake Copilot.
+    - **"Cortex AI Functions" is the official name** for the SQL AI surface
+      (formerly marketed as Cortex AISQL). It now includes `AI_EXTRACT`,
+      `AI_PARSE_DOCUMENT`, `AI_REDACT`, `AI_TRANSCRIBE`, `AI_SUMMARIZE`, and
+      `AI_MULTI_EMBED`. Document AI was decommissioned in March 2026 in favor of
+      `AI_EXTRACT`.
+    - **MCP works in both directions.** A Snowflake-managed MCP server (GA
+      November 2025) exposes Cortex tools to external clients, and agents can call
+      remote MCP servers through **MCP connectors** (GA mid-2026).
+    - **Agent operations matured:** Cortex Agent evaluations reached GA in March
+      2026, and background agent runs (up to 6 hours) work with threads.
+
 A deep, production-focused interview guide for **Snowflake Cortex AI** — the
 LLM/ML layer that runs *next to your data*, inside Snowflake's governance
 perimeter. This section goes beyond the overview on the
@@ -41,9 +58,9 @@ flowchart TB
             STRUCT[(Structured tables)]
             UNSTRUCT[(Docs, transcripts, PDFs)]
         end
-        subgraph FUNC[Cortex AI functions - AISQL]
-            LLM[LLM functions: COMPLETE, SUMMARIZE, SENTIMENT, CLASSIFY, EXTRACT, AI_FILTER]
-            EMB[EMBED_TEXT / vector ops]
+        subgraph FUNC[Cortex AI Functions]
+            LLM[AI_COMPLETE, AI_CLASSIFY, AI_FILTER, AI_AGG, AI_EXTRACT, AI_SENTIMENT ...]
+            EMB[AI_EMBED / vector ops]
         end
         subgraph RETR[Retrieval + NL query]
             SEARCH[Cortex Search - hybrid retrieval over unstructured]
@@ -64,11 +81,11 @@ flowchart TB
 
 | Layer | What it is | When you reach for it |
 |-------|-----------|-----------------------|
-| **AISQL / LLM functions** | Call LLMs and embeddings directly in SQL — newer `AI_*` family (`AI_COMPLETE`, `AI_CLASSIFY`, `AI_FILTER`, `AI_AGG`, `AI_EMBED`) and legacy `SNOWFLAKE.CORTEX.*` (`COMPLETE`, `SUMMARIZE`, `SENTIMENT`, `EMBED_TEXT_*`). See the [functions & API reference](aisql-functions-api.md). | Batch enrichment, classification, extraction over columns — set-based AI |
+| **Cortex AI Functions (AISQL)** | Call LLMs and embeddings directly in SQL — newer `AI_*` family (`AI_COMPLETE`, `AI_CLASSIFY`, `AI_FILTER`, `AI_AGG`, `AI_EMBED`, `AI_EXTRACT`, …) and legacy `SNOWFLAKE.CORTEX.*` (`COMPLETE`, `SUMMARIZE`, `SENTIMENT`, `EMBED_TEXT_*`). See the [functions & API reference](aisql-functions-api.md). | Batch enrichment, classification, extraction over columns — set-based AI |
 | **Cortex Search** | Managed **hybrid** (vector + keyword) retrieval service over text | The RAG retrieval engine; grounding for chatbots and agents |
 | **Cortex Analyst** | Natural language → governed SQL over a **semantic view/model** | Self-serve analytics, "ask your data" over structured tables |
 | **Cortex Agents** | Fully managed agentic platform: an orchestrator LLM that plans, calls tools, runs code, and responds | Multi-step questions that mix structured + unstructured data and actions |
-| **Snowflake CoWork / Cortex Code** | Chat / notebook surfaces where users interact with agents | The UX layer; you also call agents from your own app via REST API |
+| **Snowflake CoWork / Cortex Code** | CoWork (formerly Snowflake Intelligence) is the business-user agent chat; Cortex Code is the developer coding assistant | The UX layer; you also call agents from your own app via REST API or MCP |
 
 ### The three questions that pick the layer
 

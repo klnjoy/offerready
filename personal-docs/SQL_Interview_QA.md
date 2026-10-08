@@ -4,6 +4,8 @@ icon: material/database-search
 
 # SQL Interview Q&A — Advanced & Scenario-Based
 
+*Last reviewed: October 2026*
+
 Senior SQL for data/analytics engineering: window functions, query tuning, data
 modeling, and the tricky semantics interviewers probe. Study at a glance, then
 open each question for depth.
@@ -78,7 +80,7 @@ Can you explain each without notes?
              ROW_NUMBER() OVER (PARTITION BY department
                                 ORDER BY salary DESC) AS rn
       FROM employees e
-    ) WHERE rn <= 3;   -- top 3 earners per department
+    ) ranked WHERE rn <= 3;   -- top 3 per department (alias needed in Postgres/MySQL/SQL Server)
     ```
 
 === "Deduplicate, keep latest"
@@ -89,7 +91,7 @@ Can you explain each without notes?
              ROW_NUMBER() OVER (PARTITION BY natural_key
                                 ORDER BY updated_at DESC) AS rn
       FROM t
-    ) WHERE rn = 1;
+    ) d WHERE rn = 1;
     ```
 
 === "Running total & period-over-period"
@@ -123,7 +125,7 @@ Can you explain each without notes?
              DENSE_RANK() OVER (PARTITION BY department
                                 ORDER BY salary DESC) AS rnk
       FROM employees
-    ) WHERE rnk = 2;
+    ) ranked WHERE rnk = 2;
     ```
 
     **Talking point:** "The choice between ROW_NUMBER / RANK / DENSE_RANK *is* the
@@ -213,9 +215,21 @@ Can you explain each without notes?
              DATEADD('day',
                -ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY day), day) AS grp
       FROM activity
-    )
+    ) g
     GROUP BY user_id, grp;
     ```
+
+??? question "An LLM generates SQL for business users. How do you make it safe and correct?"
+    **Safety:** run under a read-only, least-privilege role scoped to curated
+    views, so row/column policies still apply; parse the SQL (e.g. with `sqlglot`)
+    and allow only `SELECT` on approved objects; add `LIMIT`, statement timeouts
+    and warehouse/credit caps; never concatenate user text into SQL you run with a
+    privileged role. **Correctness:** ground generation in a semantic layer
+    (metrics and joins defined once) plus verified example queries; validate with
+    `EXPLAIN` before running; check result sanity (row counts, NULL rates,
+    totals against known reports); and show the SQL and assumptions to the user.
+    Measure execution accuracy on a labeled question→answer set, comparing results
+    rather than SQL text, since many SQL strings are equally correct.
 
 ---
 
@@ -224,7 +238,7 @@ Can you explain each without notes?
 | Q | A |
 |---|---|
 | `WHERE` vs `HAVING`? | WHERE filters rows before grouping; HAVING filters groups after |
-| `UNION` vs `UNION ALL`? | UNION dedups (sorts); UNION ALL keeps dups (faster) |
+| `UNION` vs `UNION ALL`? | UNION dedups (sort/hash cost); UNION ALL keeps dups (faster) |
 | `ROW_NUMBER` vs `RANK` vs `DENSE_RANK`? | unique / ties+gap / ties+no-gap |
 | Anti-join? | LEFT JOIN + `IS NULL` (or `NOT EXISTS`) |
 | `NOT IN` + NULL? | returns zero rows — use `NOT EXISTS` |

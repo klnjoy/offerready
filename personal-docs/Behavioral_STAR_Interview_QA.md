@@ -4,6 +4,8 @@ icon: material/account-voice
 
 # Behavioral / STAR Interview Q&A
 
+*Last reviewed: October 2026*
+
 The non-technical half that decides many interviews: how you communicate impact,
 handle conflict, and show ownership. Uses the **STAR** method (Situation, Task,
 Action, Result). Build your own story bank from the prompts below.
@@ -27,6 +29,7 @@ Action, Result). Build your own story bank from the prompts below.
 - [ ] How to quantify impact when you don't have clean numbers
 - [ ] "Why this role / why now" answer
 - [ ] Smart questions to ask the interviewer
+- [ ] "How do you use AI tools in your work?" with a concrete, honest example
 
 ---
 
@@ -113,6 +116,25 @@ Action, Result). Build your own story bank from the prompts below.
     approach and improved the outcome. Frame being corrected as useful signal, not a
     threat — that maps directly to how you'd work on a team.
 
+??? question "Tell me about a time you disagreed with a decision but committed to it."
+    STAR it: the decision, your concern backed by data, how you raised it through
+    the right channel (once, clearly, with an alternative), and what happened when
+    it went the other way. Then show you **committed fully**: you executed well,
+    tracked the risk you had flagged, and revisited it with evidence if needed.
+    End with the outcome, including if you turned out to be wrong. Interviewers
+    are checking that you can disagree without stalling or undermining the team.
+
+??? question "How do you use AI coding assistants and agents in your day-to-day work?"
+    Very common in 2026, and interviewers want judgment, not enthusiasm. Give a
+    concrete example: what you delegate (boilerplate, tests, migrations,
+    exploring an unfamiliar codebase, first drafts of docs), what you keep
+    (architecture, security-sensitive code, final review), and how you **verify**
+    (tests, reading every diff, running it, evals for AI features). Mention a
+    time the tool was wrong and how you caught it, and how you set it up for the
+    team (repo instruction files, review norms, data-handling rules for
+    confidential code). Quantify if you can, honestly ("cut the migration from
+    about three weeks to one; review was still the bottleneck").
+
 ---
 
 ## Framing & closing
@@ -150,6 +172,7 @@ Action, Result). Build your own story bank from the prompts below.
 | Ambiguity | drove clarity, shipped to learn |
 | Feedback | sought it, acted on it |
 | Disagreed with a decision | disagree-and-commit |
+| Using AI tools | what you delegate, how you verify, a time it was wrong |
 
 ---
 

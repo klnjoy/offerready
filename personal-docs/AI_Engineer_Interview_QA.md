@@ -4,6 +4,8 @@ icon: material/brain
 
 # AI Engineer Interview Q&A — Advanced & Scenario-Based
 
+*Last reviewed: October 2026*
+
 Senior GenAI / AI-engineering questions: RAG design, agents, evaluation,
 guardrails, cost/latency, and productionizing LLM systems. Study at a glance,
 then open each question for depth.
@@ -40,8 +42,9 @@ Can you explain each without notes?
   fine-tuning for factual, changing knowledge, and gives provenance.
 - **"Evaluate before you tune."** A labeled eval set turns prompt/model changes
   from vibes into measured decisions.
-- **"Determinism and structure where correctness matters."** Low temperature,
-  JSON-only output, and validation for anything auditable.
+- **"Determinism and structure where correctness matters."** Low temperature
+  (where the model supports it), schema-constrained structured output, and
+  validation for anything auditable.
 
 ---
 
@@ -190,7 +193,8 @@ Can you explain each without notes?
     ```text
     System: Answer ONLY from context. If missing, return NA.
     Return JSON only: {"answer": "...", "citations": ["chunk_id", ...]}
-    temperature = 0.0
+    temperature = 0.0   # if supported; many reasoning models ignore or reject it
+    # Prefer the provider's structured-output / JSON-schema mode over "JSON only" prose
     ```
 
 === "Eval dimensions"
@@ -228,10 +232,32 @@ Can you explain each without notes?
 
 ??? question "Your LLM feature is too slow and too expensive. Levers?"
     **Model routing**: small/cheap model for easy cases, escalate hard ones.
-    **Caching**: exact + semantic caching of frequent queries. **Prompt trimming**:
-    retrieve less, compress context, drop redundant history. **Batching** where
-    possible. **Streaming** to cut *perceived* latency. Right-size context (tokens =
-    cost + latency). Measure per-request cost/latency and optimize the top offenders.
+    **Prompt caching** (provider-side): put stable content (system prompt, tool
+    definitions, long documents) first so repeated prefixes bill at a discount and
+    return faster. **Response caching**: exact + semantic caching of frequent
+    queries. **Prompt trimming**: retrieve less, compress context, drop redundant
+    history. **Batch APIs** for offline work (typically about half price).
+    **Reasoning effort**: on reasoning models, lower the effort/thinking budget for
+    easy requests, because reasoning tokens are billed as output. **Streaming** to cut
+    *perceived* latency. Measure per-request cost/latency and optimize the top
+    offenders.
+
+??? question "Finance says LLM spend tripled this quarter. How do you get it under control without hurting quality?"
+    1. **Attribute first:** tag every call with feature, tenant, model and
+       prompt version; build a cost dashboard (input, cached input, output and
+       reasoning tokens) and find the top offenders. Usually a few features or
+       a runaway agent loop dominate.
+    2. **Set unit economics:** cost per successful task or per resolved ticket,
+       with budgets and alerts per feature and tenant.
+    3. **Cut waste:** fix retry storms and loops (step caps, budgets), trim
+       oversized context and tool catalogs, cap output length.
+    4. **Cheaper paths:** prompt caching, route easy traffic to smaller models,
+       batch offline jobs, lower reasoning effort where evals allow.
+    5. **Protect quality:** gate every change on the eval set and compare cost
+       *and* success rate; a cheaper model that fails more often costs more per
+       success.
+    6. **Guardrails:** per-user rate limits and quotas so abuse or a bug can't
+       spike spend again.
 
 ??? question "How do you handle prompt injection in a RAG/agent system?"
     Treat all retrieved/tool content as **data, not instructions**; the system
@@ -262,7 +288,8 @@ Can you explain each without notes?
 | RAG vs fine-tune? | RAG = facts/fresh/cited; fine-tune = behavior/format/style |
 | Hybrid search? | vector + keyword combined for better recall |
 | Reranker role? | reorders top-k for relevance before context assembly |
-| Temperature for auditing? | 0.0 (deterministic, repeatable) |
+| Temperature for auditing? | low/0 where supported — more repeatable, not guaranteed deterministic |
+| Prompt caching? | stable prefix reused across calls → cheaper, faster input |
 | LLM-as-judge? | model scores outputs against a rubric, human-calibrated |
 | Semantic cache? | reuse answers for similar (not just identical) queries |
 | Agent step cap? | prevents runaway plan→act loops |
@@ -294,6 +321,7 @@ Can you explain each without notes?
 6. Name four levers to cut LLM cost/latency.
 7. Why can adding more context *reduce* answer quality?
 8. How do you catch quality drift after a model upgrade?
+9. Why is cost per successful task a better metric than cost per call?
 
 !!! note "Cross-links"
     Deep dives: [RAG](../GenAI-Topics/rag/index.md) ·

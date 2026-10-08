@@ -4,6 +4,8 @@ icon: material/infinity
 
 # DevOps Interview Q&A — Advanced & Scenario-Based
 
+*Last reviewed: October 2026*
+
 Senior DevOps / platform questions: CI/CD design, IaC, containers and
 Kubernetes, observability, incident response, and cloud deployment patterns.
 Study at a glance, then open each question for depth.
@@ -29,6 +31,8 @@ Can you explain each without notes?
 - [ ] The three pillars of observability
 - [ ] SLI / SLO / error budget
 - [ ] Incident response order (restore first)
+- [ ] Software supply-chain security (OIDC, SBOM, signing, pinned actions)
+- [ ] Shipping LLM features: prompts and models as versioned config
 
 ---
 
@@ -149,10 +153,33 @@ Can you explain each without notes?
     Choose by risk tolerance and infra cost.
 
 ??? question "How do you manage state for a team so two applies don't collide?"
-    Remote backend with **state locking** (e.g. an object store + lock table), so a
-    second apply waits or fails fast instead of corrupting state. Separate state per
+    Remote backend with **state locking**, so a second apply waits or fails fast
+    instead of corrupting state. On AWS, Terraform 1.10+ supports native S3
+    locking (`use_lockfile = true`), and the older DynamoDB lock table is now
+    deprecated; other backends (Terraform Cloud/HCP, GCS, azurerm) lock natively. Separate state per
     environment/component to shrink blast radius, restrict who can apply to prod, and
     never store state locally for shared infra.
+
+??? question "How do you secure the CI/CD supply chain?"
+    **No long-lived cloud keys in CI:** use OIDC federation (e.g. GitHub Actions →
+    AWS IAM role) with short-lived, branch-scoped credentials. **Pin third-party
+    actions and base images by digest/SHA**, not mutable tags (the 2025
+    `tj-actions/changed-files` compromise leaked secrets from thousands of repos
+    through a retagged action). Generate an **SBOM**, scan dependencies and images,
+    **sign** artifacts (Sigstore/cosign) and verify signatures and provenance
+    (SLSA attestations) at deploy time with admission policies. Least-privilege
+    tokens per job, protected branches and required reviews for workflow changes,
+    and isolated runners for untrusted PRs.
+
+??? question "How do you deploy an LLM-backed feature safely?"
+    Treat **prompts, model IDs, tool definitions and retrieval config as versioned
+    artifacts** in the same build-once-promote flow. Gate promotion on an
+    offline **eval suite** (quality, safety, cost per request) as well as unit
+    tests. Roll out with a flag or canary and compare online metrics (task success,
+    user feedback, refusal and error rates, p95 latency, tokens per request)
+    against the old version. Pin model versions so a provider update doesn't ship
+    silently, keep a fallback model, and trace every call so rollbacks are
+    evidence-based.
 
 ---
 
@@ -241,6 +268,8 @@ Can you explain each without notes?
 | RED metrics? | Rate, Errors, Duration |
 | Error budget? | allowed unreliability = 1 − SLO |
 | Feature flag vs deploy? | activation control vs shipping code |
+| CI → cloud auth? | OIDC federation, short-lived role credentials |
+| Pin GitHub Actions how? | full commit SHA, not a tag |
 
 ---
 

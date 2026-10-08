@@ -4,27 +4,65 @@ icon: material/email-outline
 
 # Contact
 
-Questions, feedback, or a bug to report? We'd like to hear from you.
+Questions, feedback, bug reports or partnership ideas are all welcome. The
+quickest way to reach the OfferReady team is through the project's GitHub
+repository.
 
-| | |
-|---|---|
-| **General & support** | `hello@offerready.example` |
-| **Privacy & data requests** | `privacy@offerready.example` |
-| **Billing** *(when subscriptions are live)* | `billing@offerready.example` |
+<div class="grid cards" markdown>
 
-!!! note "Placeholder contact details"
-    The addresses above are **placeholders**. Replace them with your real support
-    inbox (or a contact form / LinkedIn link) before launch.
+-   :material-bug-outline: __Report a bug or content error__
 
-## Before you write
+    ---
 
-- **Found an error in the content?** Tell us the page and what looks wrong — we
-  fix accuracy issues quickly.
-- **Feature ideas** are welcome. OfferReady is built around one workflow at a
-  time; the most-requested ideas get prioritized.
-- **Response time:** we aim to reply within a few business days.
+    A broken link, a command that no longer runs, or an answer that looks wrong.
+
+    [:octicons-arrow-right-24: Open an issue](https://github.com/klnjoy/offerready/issues)
+
+-   :material-lightbulb-on-outline: __Feedback and feature ideas__
+
+    ---
+
+    Topics you'd like covered, or changes that would help your preparation.
+
+    [:octicons-arrow-right-24: Share feedback](https://github.com/klnjoy/offerready/issues)
+
+-   :material-lifebuoy: __Support__
+
+    ---
+
+    Problems using the site or the study tools.
+
+    [:octicons-arrow-right-24: Ask for help](https://github.com/klnjoy/offerready/issues)
+
+-   :material-handshake-outline: __Partnerships__
+
+    ---
+
+    Teams, bootcamps or communities that want to use OfferReady. Open an issue
+    titled "Partnership" and we'll follow up.
+
+    [:octicons-arrow-right-24: Get in touch](https://github.com/klnjoy/offerready/issues)
+
+</div>
+
+## What helps us respond quickly
+
+- **Content errors:** the page link, the section heading, what looks wrong and,
+  if you can, a source showing the correct version.
+- **Setup guide failures:** your OS, Python version (`uv run python --version`),
+  the command you ran and the full error message.
+- **Feature ideas:** the interview or role you're preparing for, and what you
+  would use the feature for.
+
+!!! warning "Keep private details out of public issues"
+    GitHub issues are public. Never include API keys, passwords, personal data
+    or confidential material from an employer or interview. For a privacy or data
+    request, open an issue that asks for a private follow-up and leave the details
+    out.
+
+We aim to reply within a few business days.
 
 ## Related
 
-- [Privacy](../Privacy/index.md) — what we do (and don't) collect.
-- [Terms of Service](../Terms/index.md) — the terms for using OfferReady.
+- [Privacy](../Privacy/index.md): what we collect and what we don't.
+- [Terms of Service](../Terms/index.md): the terms for using OfferReady.

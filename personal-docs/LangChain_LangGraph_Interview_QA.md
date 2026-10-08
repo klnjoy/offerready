@@ -4,6 +4,8 @@ icon: material/link-variant
 
 # LangChain / LangGraph Interview Q&A — Advanced
 
+*Last reviewed: October 2026*
+
 Senior questions on the LangChain ecosystem and LangGraph: chains vs graphs,
 state and memory, tools, streaming, and productionizing. Assumes basics; this is
 the depth layer. Study at a glance, then open each question for depth.
@@ -26,7 +28,8 @@ Can you explain each without notes?
 - [ ] Chains vs agents vs graphs
 - [ ] LangGraph state, nodes, edges, conditional routing
 - [ ] Checkpointing / persistence and human-in-the-loop
-- [ ] Memory options and their limits
+- [ ] Memory options and their limits (checkpointer vs store)
+- [ ] LangChain 1.x `create_agent` and middleware
 - [ ] Tools / structured output
 - [ ] Streaming tokens and intermediate steps
 - [ ] Tracing/eval (LangSmith) and why
@@ -88,7 +91,7 @@ Can you explain each without notes?
 === "LangGraph state machine"
 
     ```python
-    from langgraph.graph import StateGraph, END
+    from langgraph.graph import StateGraph, START, END
 
     def plan(state):   ...   # returns {"steps": [...]}
     def act(state):    ...   # calls a tool, returns {"observation": ...}
@@ -96,7 +99,7 @@ Can you explain each without notes?
 
     g = StateGraph(AgentState)
     g.add_node("plan", plan); g.add_node("act", act)
-    g.set_entry_point("plan")
+    g.add_edge(START, "plan")            # (older code: set_entry_point)
     g.add_conditional_edges("plan", route, {"act": "act", END: END})
     g.add_edge("act", "plan")           # loop back
     app = g.compile(checkpointer=saver) # durable state, resumable
@@ -109,9 +112,12 @@ Can you explain each without notes?
     **Reasoning:**
     1. A linear chain can't cleanly **pause and resume** for input — move to
        **LangGraph**.
-    2. Add an **interrupt** before the "execute" node; the graph pauses with state
-       checkpointed.
-    3. A human approves/edits; you **resume** the graph from the checkpoint.
+    2. Call `interrupt(...)` inside the "execute" node (or compile with
+       `interrupt_before=["execute"]`); the graph pauses with state checkpointed.
+       In LangChain 1.x `create_agent`, the prebuilt human-in-the-loop middleware
+       does the same for chosen tools.
+    3. A human approves/edits; you **resume** with `Command(resume=...)` on the same
+       `thread_id`.
     4. The execute node runs only after approval; everything is traced.
 
     **Talking point:** "Human-in-the-loop and resume-after-pause are exactly why you
@@ -132,12 +138,15 @@ Can you explain each without notes?
     control flow.
 
 ??? question "How does memory work and what are its limits?"
-    LangChain offers conversation memory (buffer, windowed, summary, or vector-backed
-    retrieval memory). Limits: raw buffers blow the context window; summaries lose
-    detail; vector memory can retrieve irrelevant chunks. Treat memory as a
-    **context-budget** problem — keep recent turns + retrieved relevant facts +
-    compacted summary, not everything. In LangGraph, memory is part of persisted
-    state.
+    In current LangChain/LangGraph (1.x), **short-term memory** is the thread's
+    message state persisted by a **checkpointer** (keyed by `thread_id`), and
+    **long-term memory** lives in a **store** (namespaced key-value/vector items
+    shared across threads). The old `ConversationBufferMemory`-style classes are
+    legacy (moved to `langchain-classic`). Limits: raw history blows the context
+    window; summaries lose detail; vector memory can retrieve irrelevant chunks.
+    Treat memory as a **context-budget** problem — keep recent turns + retrieved
+    relevant facts + a compacted summary (e.g. summarization middleware), not
+    everything.
 
 ??? question "How do you do structured/tool output reliably?"
     Bind tools/schemas to the model (function calling) and use structured-output
@@ -161,6 +170,18 @@ Can you explain each without notes?
     wrong, compare versions, and build **eval** datasets from real traces.
     Observability + eval is how you ship changes on evidence, not vibes.
 
+??? question "What changed in LangChain 1.0 and what is `create_agent`?"
+    LangChain 1.0 (with LangGraph 1.0, late 2025) slimmed the `langchain` package to
+    agents, messages, tools, models and embeddings, moving legacy chains,
+    retrievers and memory classes to `langchain-classic`. **`create_agent`** is the
+    standard agent constructor (replacing `langgraph.prebuilt.create_react_agent`):
+    a model-calls-tools loop built on LangGraph, so persistence, streaming and HITL
+    come for free. You customize it with **middleware** — hooks before/after model
+    calls and around model/tool calls — with prebuilt ones for summarization, PII
+    redaction and human approval of sensitive tools. Messages also expose standard
+    `content_blocks` (text, reasoning, tool calls) across providers. Drop to raw
+    LangGraph when you need custom topology beyond that loop.
+
 ??? question "When should you NOT use LangChain/LangGraph?"
     When the task is a single model call or a thin, stable pipeline — the framework's
     abstractions add indirection and version churn for little gain. Also when you need
@@ -182,7 +203,7 @@ Can you explain each without notes?
 | Q | A |
 |---|---|
 | LangChain in one line? | orchestration glue for LLM apps (models, prompts, tools, memory) |
-| LCEL? | expression language to compose runnables with `|` |
+| LCEL? | expression language that composes runnables with the pipe operator |
 | LangGraph in one line? | stateful graph/state-machine for cyclic, durable agent flows |
 | Chain vs graph? | fixed sequence vs branching/cyclic stateful flow |
 | Checkpointer? | persists graph state → resume, HITL, time-travel debug |
@@ -190,6 +211,8 @@ Can you explain each without notes?
 | Memory risk? | context bloat / irrelevant retrieval |
 | Structured output? | bind schema/tools + validate (Pydantic) |
 | Tracing tool? | LangSmith (traces + eval datasets) |
+| Agent constructor in 1.x? | `create_agent` + middleware |
+| Long-term memory in LangGraph? | a store (cross-thread), not the checkpointer |
 | When to skip it? | single call / thin stable pipeline |
 
 ---

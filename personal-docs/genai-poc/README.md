@@ -1,6 +1,15 @@
 # GenAI POC - LangChain & LangGraph Learning
 
+*Last reviewed: October 2026*
+
 Hands-on POC examples for learning LLM calls, LangChain, and LangGraph.
+
+!!! warning "Pinned to 2024 library versions"
+    `requirements.txt` pins LangChain 0.2 / LangGraph 0.2, so the scripts use APIs
+    from that era (for example `langgraph.prebuilt.create_react_agent`). They still
+    teach the concepts, but current LangChain 1.x code uses `create_agent` with
+    middleware, and legacy chains/memory moved to `langchain-classic`. Install the
+    pinned versions in a fresh virtual environment; don't mix them with 1.x.
 
 ## Setup
 
@@ -11,17 +20,27 @@ python -m venv .venv
 # Activate (Windows)
 .venv\Scripts\activate
 
+# Activate (macOS / Linux)
+source .venv/bin/activate
+
 # Install dependencies
 pip install -r requirements.txt
 ```
 
 ## Configuration
 
-Copy `.env.example` to `.env` and fill in your API keys:
+Copy `.env.example` to `.env` and fill in your API keys (never commit `.env`):
 
 ```bash
-copy .env.example .env
+copy .env.example .env      # Windows
+cp .env.example .env        # macOS / Linux
 ```
+
+`07_tool_calling_agent.py` also reads `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`,
+`SNOWFLAKE_PASSWORD`, `SNOWFLAKE_WAREHOUSE` and `SNOWFLAKE_DATABASE`, which are not
+in `.env.example`; add them yourself. Use a read-only role, and note that Snowflake
+is phasing out password-only sign-in, so you may need key-pair auth or a
+programmatic access token instead of a password.
 
 ## Phase 1 - Foundations
 

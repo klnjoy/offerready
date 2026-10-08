@@ -6,6 +6,8 @@ icon: material/clipboard-list
 
 # OfferReady — your interview prep hub
 
+*Last reviewed: October 2026*
+
 **Prep smarter. Land the offer.** A complete, self-contained hub — advanced Q&A
 across data, GenAI, and the full stack around it, with model answers, worked
 scenarios, and an interactive practice mode. Study smart, rehearse out loud,
@@ -33,7 +35,7 @@ walk in ready.
 <a class="ig-feature ig-link" href="Interview_Practice.html">
   <span class="ig-ico">📝</span>
   <span class="ig-h">Interactive practice</span>
-  <span class="ig-d">Question-by-question mock mode with self-scoring — right here in the browser.</span>
+  <span class="ig-d">Question-by-question mock mode with self-scoring, in the OfferReady app.</span>
 </a>
 
 <a class="ig-feature ig-link" href="Interview_Practice.html">
@@ -105,7 +107,7 @@ walk in ready.
 
 - [GenAI Interview Q&A](GenAI_Interview_QA.md) — GenAI concepts and applied systems
 - [AI Engineer Interview Q&A](AI_Engineer_Interview_QA.md) — RAG, agents, eval, production
-- [Agentic AI / Agents Interview Q&A](Agents_Interview_QA.md) — advanced agent design
+- [Agentic AI / Agents Interview Q&A](Agents_Interview_QA.md) — agent design, context engineering, agent evals
 - [FDE Interview Q&A](Forward_Deployed_Engineer_Interview_QA.md) — forward-deployed engineering
 - [FDE Coding Prep](FDE_Coding_Interview_Prep.md) — coding drills
 - [FDE Live-Coding & Scenarios](FDE_LiveCoding_Scenarios_Prep.md) — live scenarios
@@ -123,7 +125,7 @@ walk in ready.
 ### GenAI stack
 
 - [LangChain / LangGraph Interview Q&A](LangChain_LangGraph_Interview_QA.md) — chains vs graphs, state
-- [MCP Interview Q&A](MCP_Interview_QA.md) — protocol, tools, security
+- [MCP Interview Q&A](MCP_Interview_QA.md) — protocol (2026-07-28 spec), OAuth, tool poisoning
 - [Python Interview Q&A](Python_Interview_QA.md) — concurrency, memory, internals
 
 ### Non-technical
@@ -142,7 +144,7 @@ Every question bank follows the same study-friendly layout:
 - **Tabbed code / worked scenarios** — reason through real problems
 - **Collapsible Q&A** — click to reveal model answers
 - **Rapid-fire** table + **pitfalls** + **self-quiz**
-- **Further reading** — optional authoritative external links
+- **Cross-links** — the matching deep-dive topic pages
 
 !!! note "Prep tips"
     - **Talk out loud.** Reading isn't rehearsing.

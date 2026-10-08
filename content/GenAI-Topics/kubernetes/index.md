@@ -4,6 +4,23 @@ icon: material/kubernetes
 
 # Kubernetes & Containers
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **Versions:** Kubernetes **1.37** shipped in August 2026. Upstream maintains roughly the three most recent
+      minor releases, with about 14 months of patches each.
+      Managed services (EKS/GKE/AKS) run on their own support calendars.
+    - **Dynamic Resource Allocation (DRA) is GA** (1.34). Accelerators can be
+      requested through `ResourceClaim`s with device attributes and sharing,
+      beyond the simple `nvidia.com/gpu: 1` extended resource.
+    - **In-place Pod resize is GA** (1.35). You can change CPU and memory requests
+      and limits without restarting the Pod, which helps right-size slow-to-load
+      model servers.
+    - **Ingress NGINX is retired.** Best-effort maintenance ended in March 2026,
+      with no further releases or security fixes. New designs should use
+      **Gateway API**; the **Gateway API Inference Extension** adds model-aware
+      routing for LLM serving.
+
 How AI workloads actually run in production: containers for reproducibility,
 Kubernetes for orchestration, and the extra concerns unique to **model serving
 and GPU workloads**. This is the "where does the model live and how does it
@@ -52,7 +69,7 @@ CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
 | **Pod** | One or more co-located containers (smallest unit) | A model-server instance |
 | **Deployment** | Manages replicas + rolling updates of stateless pods | The inference/API service |
 | **Service** | Stable virtual IP/DNS load-balancing to pods | Front the model-server pods |
-| **Ingress** | HTTP(S) routing from outside the cluster | Expose the AI API/gateway |
+| **Ingress / Gateway API** | HTTP(S) routing from outside the cluster (Gateway API is the modern successor) | Expose the AI API/gateway; model-aware routing |
 | **Namespace** | Logical isolation | Separate dev/prod or teams |
 | **ConfigMap / Secret** | Config / sensitive values | Prompts/config; API keys (KMS-backed) |
 | **HPA** | Horizontal Pod Autoscaler — scale replicas on metrics | Scale inference on load |
@@ -105,19 +122,26 @@ a pod mid-load in a crash loop.
 
 The parts that differ from a normal web service:
 
-- **GPU scheduling** — request GPUs explicitly (`nvidia.com/gpu: 1`); GPUs are
-  scarce and expensive, so bin-pack and don't over-request. Node pools/taints keep
-  GPU nodes for GPU work.
+- **GPU scheduling** — request GPUs explicitly (`nvidia.com/gpu: 1` via the
+  device plugin, or a DRA `ResourceClaim` for richer selection and sharing); GPUs
+  are scarce and expensive, so bin-pack and don't over-request. Node pools/taints
+  keep GPU nodes for GPU work. MIG and time-slicing let small models share a GPU.
 - **Model loading / cold start** — weights take time + memory to load; use
   readiness probes, pre-pull large images, keep a warm pool, and avoid
   scale-to-zero for latency-sensitive inference.
-- **Autoscaling** — HPA on GPU utilization or queue depth (not just CPU);
-  cluster autoscaler adds GPU nodes under load. Scaling GPU pods is slower and
+- **Autoscaling** — HPA (or KEDA) on queue depth, in-flight requests, or KV-cache
+  utilization rather than CPU; cluster autoscaler or Karpenter adds GPU nodes
+  under load. Scaling GPU pods is slower and
   costlier than web pods, factor that into the SLO.
 - **Batch inference** — `Job`/`CronJob` for throughput-oriented offline work;
   queue-fed workers scale out.
 - **Right-sizing** — inference is memory/GPU-bound; set requests/limits from real
-  profiles or one pod starves the node.
+  profiles or one pod starves the node. In-place resize (GA in 1.35) lets you
+  adjust CPU and memory without a restart.
+- **Model-aware routing** — LLM requests vary hugely in cost, so plain
+  round-robin balancing is a poor fit. Inference gateways (the Gateway API
+  Inference Extension, or llm-d-style schedulers) route on queue length,
+  KV-cache state, and LoRA adapter placement.
 
 ```yaml
 # Requesting a GPU
@@ -184,7 +208,8 @@ resources:
 | Pod vs Deployment? | Pod = smallest unit; Deployment manages replicas + rollouts |
 | Requests vs limits? | Schedule vs cap (throttle/OOM) |
 | HPA scales on? | A load metric — for inference, GPU util / queue depth |
-| Request a GPU? | `limits: {nvidia.com/gpu: 1}` |
+| Request a GPU? | `limits: {nvidia.com/gpu: 1}` (device plugin) or a DRA `ResourceClaim` |
+| Ingress NGINX status? | Retired March 2026; move to Gateway API |
 | CrashLoop top causes? | Failed probe, OOMKilled, bad config, startup crash |
 | Secrets live where? | KMS-backed Secret, mounted — not the image |
 | Batch inference? | Job / CronJob, queue-fed workers |

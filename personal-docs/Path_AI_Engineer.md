@@ -4,6 +4,8 @@ icon: material/account-tie
 
 # Path: AI / GenAI Engineer
 
+*Last reviewed: October 2026*
+
 A curated preparation path for **AI / GenAI Engineer** (Senior-level) interviews —
 roles where you build and ship LLM applications. This page is your *plan*: what to
 read, in what order, what to emphasize, and how to know you're ready. It routes
@@ -60,9 +62,11 @@ Work top to bottom. Each step notes **what to emphasize**.
    **[Building Agents — Deep Dive](../GenAI-Topics/agent-principles/index.md)** —
    the plan/act/observe loop, tool design, when *not* to use an agent.
 8. **[MCP](../GenAI-Topics/mcp/index.md)** — connecting tools/data; MCP vs
-   function calling.
+   function calling; the stateless 2026-07-28 spec, OAuth for remote servers,
+   and tool-poisoning defenses.
 9. **[Observability & Eval](../GenAI-Topics/observability/index.md)** — tracing,
-   LLM-as-judge, an eval set; how you debug a wrong answer.
+   LLM-as-judge, an eval set; how you debug a wrong answer. For agents: multiple
+   trials per task, outcome + trajectory scoring.
 10. **[FastAPI](../Technologies/fastapi/index.md)** — serve a streaming
     RAG/agent endpoint with timeouts and input limits.
 
@@ -83,7 +87,7 @@ Work top to bottom. Each step notes **what to emphasize**.
   [Agentic AI / Agents Q&A](Agents_Interview_QA.md) ·
   [LangChain / LangGraph Q&A](LangChain_LangGraph_Interview_QA.md) ·
   [MCP Q&A](MCP_Interview_QA.md).
-- **Full run:** the [Master Interview Simulator](Interview_Master_Simulator.md),
+- **Full run:** the [Mock Interview](Interview_Master_Simulator.md) (OfferReady app),
   then the [Master Cheat Sheets](Interview_Cheat_Sheets.md).
 
 ---
@@ -95,7 +99,8 @@ Work top to bottom. Each step notes **what to emphasize**.
 - [ ] I can build a bounded, tool-using agent that can't take unsafe actions.
 - [ ] I can evaluate an LLM app (eval set + LLM-as-judge) and debug a wrong answer.
 - [ ] I can serve it behind a FastAPI endpoint with streaming, timeouts, and limits.
-- [ ] I know the failure modes of my components (why temp 0, why this embedding model).
+- [ ] I know the failure modes of my components (why temp 0 or low reasoning effort, why this embedding model).
+- [ ] I can explain context engineering and the main LLM cost levers (routing, prompt caching, batch, token budgets).
 
 If most boxes are checked, you're solid at Senior. To push toward **Staff**, add
 the trade-off for every choice and how you'd verify at scale — see the

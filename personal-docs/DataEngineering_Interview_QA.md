@@ -4,6 +4,8 @@ icon: material/pipe
 
 # Data Engineering Interview Q&A — System Design & Scenarios
 
+*Last reviewed: October 2026*
+
 Senior data-engineering questions focused on **pipeline and system design**:
 batch vs streaming, CDC, idempotency, data quality, schema evolution, and
 end-to-end architecture. Study at a glance, then open each question for depth.
@@ -30,6 +32,8 @@ Can you explain each without notes?
 - [ ] Partitioning and file sizing
 - [ ] Orchestration + dependency/retry design
 - [ ] Medallion / layered architecture
+- [ ] Open table formats (Iceberg, Delta) and catalogs
+- [ ] Pipelines that feed RAG and agents (unstructured data)
 
 ---
 
@@ -170,6 +174,36 @@ Can you explain each without notes?
     availability/sensors). Isolate failures (one branch failing shouldn't corrupt
     others), alert on SLA misses, and make reruns safe.
 
+??? question "Why are open table formats like Apache Iceberg everywhere now, and what are the catches?"
+    Iceberg (and Delta, with UniForm/interop) put ACID tables on object storage
+    in an open format, so Snowflake, Databricks, Spark, Trino, Flink and cloud
+    services such as S3 Tables can share **one copy** of the data instead of
+    copying between platforms. Features: snapshot isolation, schema and
+    partition evolution, hidden partitioning, time travel. **The catalog is the
+    real control point:** an Iceberg REST catalog (Polaris/Snowflake Open Catalog,
+    Unity Catalog, AWS Glue, Nessie) decides where table metadata lives and who
+    may write. Catches: one writer of record per table (multi-engine writes need
+    care), table maintenance (compaction, snapshot expiry, orphan-file cleanup)
+    is your job unless managed, governance policies may not follow the data to
+    every engine, and engine feature support varies by spec version.
+
+??? question "Design the data pipeline behind an enterprise RAG assistant."
+    1. **Ingest** from sources (SharePoint, Confluence, tickets, PDFs) with
+       incremental sync and **source ACLs captured** alongside content.
+    2. **Parse** with layout-aware extraction (tables, headings, OCR for scans);
+       keep document IDs, versions and timestamps.
+    3. **Chunk** on structure, attach metadata (source, section, ACL, effective
+       date), dedupe near-duplicates.
+    4. **Embed and index** into a vector/hybrid index, versioned by embedding
+       model so you can re-embed without downtime.
+    5. **Handle deletes and updates** (CDC for documents): a removed or
+       permission-changed document must leave the index quickly.
+    6. **Quality gates:** parse-failure rates, empty chunks, PII scanning, and a
+       retrieval eval set re-run after every pipeline change.
+    7. **Serve** with permission filtering at query time, so the assistant never
+       retrieves what the user couldn't open. Treat it like any other data
+       product: freshness SLAs, lineage, owners.
+
 ---
 
 ## Rapid-fire
@@ -186,6 +220,8 @@ Can you explain each without notes?
 | Backfill safely? | partitioned/idempotent target, validate counts |
 | Medallion layers? | bronze (raw) → silver (clean) → gold (marts) |
 | Partition on? | low-cardinality frequent filter (usually date) |
+| Iceberg's control point? | the catalog (REST catalog decides metadata + writes) |
+| RAG pipeline must-have? | ACL-aware indexing + delete propagation |
 
 ---
 
@@ -210,6 +246,8 @@ Can you explain each without notes?
 6. What quality checks, and where do they run?
 7. Handle a breaking schema change from an upstream team.
 8. Choose partitioning + file sizing for a large fact table.
+9. Two engines need to write the same Iceberg table. What could go wrong?
+10. A document is deleted in SharePoint. How fast does it leave your RAG index, and how do you prove it?
 
 !!! note "Cross-links"
     Related: [SQL](SQL_Interview_QA.md) · [Snowflake](Snowflake_Interview_QA.md) ·

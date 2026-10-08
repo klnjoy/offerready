@@ -4,6 +4,19 @@ icon: material/chart-line
 
 # Observability & Evaluation
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **OpenTelemetry is the common wire format.** The OTel GenAI semantic
+      conventions define standard span attributes for model calls, tokens, and
+      tools. MCP's `2026-07-28` spec documents trace-context propagation through
+      `_meta`, so traces can follow a request across MCP servers.
+    - **Agent evaluation is trajectory-based.** Tools now score tool selection,
+      tool arguments, and goal success, not just the final text.
+    - **Online evaluation is built into platforms.** For example, AgentCore
+      Evaluations and Snowflake Cortex Agent evaluations (both GA in March 2026)
+      score live traffic and alert on quality drops.
+
 You can't improve what you can't see. Observability = **tracing and monitoring**
 what your LLM app does in production; evaluation = **measuring quality**
 systematically. Together they turn "it feels better" into evidence.
@@ -25,7 +38,9 @@ flowchart LR
 A trace links every step of one request. Capture: inputs/outputs at each step,
 retrieved chunks + scores, the exact prompt, model + tokens + latency + cost,
 tool calls, and any errors. Tools: **LangSmith, Langfuse, Arize/Phoenix,
-OpenTelemetry** (many wrap OTel).
+OpenTelemetry** (many emit or ingest OTel using the GenAI semantic conventions).
+For agents spanning services, propagate trace context (`traceparent`) through
+tool and MCP calls so one trace covers the whole run.
 
 ## Evaluation methods
 
@@ -47,6 +62,8 @@ OpenTelemetry** (many wrap OTel).
 
 - **Task success rate** (did it accomplish the goal?), steps/iterations, tool-call
   accuracy, cost per task.
+- **Trajectory quality** — right tools, right arguments, no wasted or unsafe
+  steps. Score it against reference trajectories or with an LLM judge.
 
 ## LLM-as-judge (done right)
 
@@ -109,3 +126,32 @@ Powerful but biased if naive:
 | Agent metric? | Task success rate |
 | LLM-as-judge best practice? | Pairwise + rubric + calibrate to humans |
 | Guardrails cover? | PII, injection, toxicity, off-topic, format |
+
+## How interviewers probe this
+
+??? question "Design the observability stack for an agent platform used by ten teams."
+    A strong answer covers: OpenTelemetry instrumentation with GenAI conventions
+    and trace propagation across tools and MCP servers; one backend for traces,
+    metrics, and logs; per-team and per-tenant cost and latency dashboards;
+    redaction of PII in captured prompts; sampling and retention policies; and
+    online evaluators with alerts that feed failing traces into eval datasets.
+
+??? question "How do you trust an LLM-as-judge enough to gate releases on it?"
+    Calibrate it against a human-labeled sample and report agreement. Use
+    pairwise comparisons and specific rubrics, randomize order, use a different
+    model family from the system under test where possible, and track judge
+    drift when the judge model changes. Keep a small human-reviewed slice in
+    every release.
+
+??? question "Quality dropped 5% this week with no deploy. How do you find out why?"
+    Segment the metric by input type, tenant, and tool path; check for upstream
+    changes (provider model update, data or index freshness, a changed MCP
+    server, new traffic mix); diff traces of failing cases against last week; and
+    confirm the eval itself didn't change. Then add the new failure pattern to
+    the regression set.
+
+??? question "What do you log, and what do you deliberately not log?"
+    Log inputs, outputs, retrieved document IDs, tool arguments and results,
+    tokens, cost, and latency. Mask or hash PII and secrets, keep raw prompts
+    under restricted access and short retention, and never log credentials that
+    tools receive.

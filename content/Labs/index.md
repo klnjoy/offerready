@@ -4,6 +4,8 @@ icon: material/flask-outline
 
 # Hands-on Labs
 
+*Last reviewed: October 2026*
+
 Original OfferReady labs — runnable notebooks and editable architecture diagrams that
 turn the [Study Guide](../Personal-SourceCode/OfferReady-Complete-Study-Guide.md) into
 practice. Everything here is authored for OfferReady: our own code and our own diagrams.
@@ -44,7 +46,8 @@ def build_prompt(query, hits):
 ### Lab 02 — A tiny agent loop
 
 The plan → act → observe loop built from scratch, with a read-only tool and a hard step
-cap. Maps directly onto LangGraph nodes/edges. Pairs with **Study Guide Ch8 (LangGraph)**.
+cap. Maps directly onto LangGraph nodes/edges (and onto LangChain 1.x `create_agent`,
+which runs the same loop on LangGraph). Pairs with **Study Guide Ch8 (LangGraph)**.
 
 [:material-download: Download `02_langgraph_agent.ipynb`](notebooks/02_langgraph_agent.ipynb)
 
@@ -123,7 +126,10 @@ def subgraph(start, max_hops=3):
 
 Model the MCP shape: a server exposing tools, a client that discovers (`tools/list`) and
 invokes (`tools/call`) them with an allowlist, and the "output is data, not instructions"
-security rule. Pairs with **Study Guide Ch9 (MCP)** and **AI Security**.
+security rule. Pairs with **Study Guide Ch9 (MCP)** and **AI Security**. This is a
+teaching model, not the wire protocol: real MCP uses JSON-RPC over stdio or Streamable
+HTTP, and the current spec (2026-07-28) is stateless (no `initialize` handshake). For a
+real server, use the official Python SDK (`FastMCP`).
 
 [:material-download: Download `06_mcp_server.ipynb`](notebooks/06_mcp_server.ipynb)
 

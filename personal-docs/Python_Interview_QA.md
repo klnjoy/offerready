@@ -4,6 +4,8 @@ icon: material/language-python
 
 # Python Interview Q&A — Advanced & Scenario-Based
 
+*Last reviewed: October 2026*
+
 Senior Python questions for data/AI engineering: concurrency, memory,
 performance, and the runtime behaviors that trip people up. Study at a glance,
 then open each question for depth.
@@ -51,8 +53,13 @@ Can you explain each without notes?
     **The nuance:** The GIL protects interpreter state. For **CPU-bound** work, use
     `multiprocessing` (separate interpreters/memory) or push into C/NumPy which
     releases the GIL. For **I/O-bound** work, the GIL is released while waiting, so
-    threads and `asyncio` give real concurrency. Free-threaded CPython is emerging,
-    but assume the GIL in most environments and answer accordingly.
+    threads and `asyncio` give real concurrency. **Free-threaded CPython** (PEP 703)
+    shipped as experimental in 3.13 and became officially supported, but still
+    opt-in (a separate `python3.14t` build), in 3.14. It removes the GIL at some
+    single-thread cost, and C extensions must declare support. Python 3.14 also
+    added `concurrent.interpreters` (subinterpreters with their own GIL). Assume
+    the GIL in most production environments today, and say how you'd verify that
+    your dependencies support free-threading before relying on it.
 
 ??? note "Generators vs lists: simple, then deep"
     **Simple:** A list holds everything in memory at once; a generator produces
@@ -75,7 +82,7 @@ Can you explain each without notes?
 
     async def fetch(session, url, sem):
         async with sem:                      # cap concurrency
-            async with session.get(url, timeout=10) as r:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as r:
                 return await r.text()
 
     async def main(urls):
@@ -134,6 +141,15 @@ Can you explain each without notes?
     concurrency, per-request timeouts, and retries with backoff; gather in chunks. If
     the client lib is blocking, a capped `ThreadPoolExecutor` is the pragmatic
     alternative.
+
+??? question "How do you run many async tasks so one failure doesn't leave orphans?"
+    Use **structured concurrency**: `asyncio.TaskGroup` (3.11+). All tasks run
+    inside an `async with` block; if one raises, the rest are cancelled and the
+    errors surface together as an `ExceptionGroup` (handle with `except*`). That
+    beats bare `asyncio.gather`, which by default leaves the other tasks running
+    after the first error. Wrap each call with `asyncio.timeout()` and a semaphore
+    for bounded concurrency. If you need partial results, catch errors inside each
+    task and return them as values instead.
 
 ??? question "What's the difference between concurrency and parallelism?"
     **Concurrency** = dealing with many things at once by interleaving (one core can
@@ -229,7 +245,19 @@ Can you explain each without notes?
     It validates and coerces external input (API payloads, config, LLM JSON) into
     typed models, failing fast with clear errors. At boundaries you can't trust
     input; Pydantic turns "hope it's the right shape" into enforced, documented
-    contracts.
+    contracts. In LLM apps the same model doubles as the **JSON Schema** you pass to
+    a provider's structured-output or tool-calling API (`Model.model_json_schema()`),
+    then validates the response (`Model.model_validate_json`). Pydantic v2 has a Rust
+    core, so validation is cheap enough for hot paths.
+
+??? question "How do you set up and ship a Python project in 2026?"
+    `pyproject.toml` as the single source of truth; **uv** for fast environment,
+    dependency and Python-version management with a committed lockfile (`uv.lock`)
+    for reproducible builds; **Ruff** for lint and format; a type checker (mypy or
+    pyright) in CI; pytest. Pin direct dependencies with ranges in
+    `pyproject.toml`, rely on the lockfile for exact versions, and scan
+    dependencies for vulnerabilities. Containers install from the lockfile so dev,
+    CI and prod match.
 
 ??? question "How do you handle a poison message / bad record in a batch?"
     Isolate it — route failures to a dead-letter store with the error and continue
@@ -253,6 +281,8 @@ Can you explain each without notes?
 | `lru_cache`? | memoizes results by args |
 | `__slots__`? | fixed attrs, no per-instance dict → less memory |
 | GIL affects? | CPU-bound threads (not I/O-bound) |
+| Free-threaded Python? | supported opt-in build since 3.14 (`python3.14t`) |
+| `TaskGroup`? | structured concurrency: one failure cancels siblings |
 
 ---
 

@@ -1,5 +1,8 @@
 /* ============================================================
-   GenAI Knowledge Base — visual polish
+   OfferReady study library — theme for MkDocs Material.
+   Order: brand tokens -> page components (hero, cards, chatbot, interview
+   guide, practice, pricing) -> sidebar -> mobile hardening -> site chrome
+   (header, tabs, typography, footer), which comes last so it wins.
    ============================================================ */
 
 :root {
@@ -27,6 +30,31 @@
   --or-green: #1f9d63;           /* soft green accent */
   --or-green-soft: rgba(31, 157, 99, 0.10);
   --or-shadow: 0 1px 2px rgba(16, 35, 59, 0.05);  /* the only shadow we use */
+
+  /* Site chrome (header, tabs, footer). */
+  --or-ink: #0c1c38;             /* header + footer surface */
+  --or-canvas: #f4f6f9;          /* code blocks, table heads */
+  --or-signal: #1a9e64;          /* CTA fill (signal green) */
+  --or-signal-hover: #168a57;
+  --or-link: #12784b;            /* in-content links (AA on white) */
+  --or-on-ink: rgba(255, 255, 255, 0.72);       /* secondary text on ink */
+  --or-on-ink-strong: #ffffff;
+  --or-on-ink-line: rgba(255, 255, 255, 0.10);  /* hairlines on ink */
+}
+
+/* Dark (slate) scheme: tint Material's dark greys toward the brand navy and
+   flip the text/border tokens so every rule using them stays legible. */
+[data-md-color-scheme="slate"] {
+  --md-hue: 220;
+  --or-text: #e4e9f2;
+  --or-text-secondary: #9eabc2;
+  --or-bg: var(--md-default-bg-color);
+  --or-surface: rgba(255, 255, 255, 0.04);
+  --or-border: rgba(255, 255, 255, 0.10);
+  --or-canvas: rgba(255, 255, 255, 0.04);
+  --or-ink: #0a1630;
+  --or-link: #4fd197;
+  --or-shadow: none;
 }
 
 /* Brand the Material primary (header/links) navy and the accent green so the
@@ -124,58 +152,6 @@
   color: #08301f;
 }
 
-/* Stat pills inside the hero: translucent glass on the dark band. */
-.md-typeset .or-hero .home-stats { margin: 0; }
-.md-typeset .or-hero .home-stats > span {
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: none;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(4px);
-}
-
-/* Move the "OfferReady" H1 visually onto the band: give it white text and
-   tuck the panel right beneath it. (The H1 renders just above .or-hero.) */
-.md-typeset h1 {
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-/* Stat pills row */
-.home-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  margin: 0 0 2rem;
-  padding: 0;
-}
-
-.home-stats > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.95rem;
-  border-radius: 2rem;
-  color: #fff;
-  background: linear-gradient(135deg, var(--kb-grad-1), var(--kb-grad-2));
-  font-size: 0.8rem;
-  font-weight: 500;
-  box-shadow: 0 3px 10px rgba(79, 70, 229, 0.25);
-  white-space: nowrap;
-}
-
-.home-stats strong {
-  color: #fff;
-  font-weight: 700;
-}
-
-/* ---- Section headings with a subtle accent bar ---- */
-
-.md-typeset h2 {
-  margin-top: 2.2rem;
-  padding-bottom: 0.3rem;
-  border-bottom: 2px solid var(--md-default-fg-color--lightest);
-}
-
 /* ---- Cards ---- */
 
 .md-typeset .grid.cards > ul > li,
@@ -233,38 +209,6 @@
       color-mix(in srgb, var(--md-primary-fg-color) 4%, transparent),
       transparent);
   text-align: center;
-}
-
-/* ---- Admonitions (incl. collapsible interview questions) ---- */
-
-.md-typeset .admonition,
-.md-typeset details {
-  border-radius: 0.6rem;
-  border-left-width: 4px;
-}
-
-/* ---- Tables ---- */
-
-.md-typeset table:not([class]) {
-  border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-}
-
-.md-typeset table:not([class]) th {
-  background: color-mix(in srgb, var(--md-primary-fg-color) 10%, transparent);
-  font-weight: 700;
-}
-
-/* ---- Nav / header polish ---- */
-
-.md-nav__item .md-nav__link--active {
-  font-weight: 700;
-}
-
-/* Wider content column so cards & diagrams breathe */
-.md-grid {
-  max-width: 70rem;
 }
 
 /* ---- Landing hero CTA row ---- */
@@ -555,7 +499,6 @@
 /* ============================================================
    Practice mode
    ============================================================ */
-#ip-app { margin: 1.2rem 0 2rem; }
 
 .ip-setup {
   display: grid;
@@ -572,7 +515,7 @@
   transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 }
 .ip-track:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(79,70,229,0.15); }
-.ip-track.ip-sel { border-color: var(--md-accent-fg-color); box-shadow: 0 0 0 2px var(--md-accent-fg-color) inset; }
+
 .ip-track h3 { margin: 0 0 0.25rem; font-size: 0.95rem; }
 .ip-track p { margin: 0; font-size: 0.78rem; color: var(--md-default-fg-color--light); }
 
@@ -600,12 +543,6 @@
 }
 .ip-progress { font-size: 0.75rem; color: var(--md-default-fg-color--light); margin-bottom: 0.5rem; }
 
-/* Question card top row: progress text left, quiet "End session" exit right. */
-.ip-cardtop { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
-.ip-cardtop .ip-progress { margin-bottom: 0; }
-.ip-btn.ip-end {
-  padding: 0.28rem 0.8rem; font-size: 0.78rem; flex: 0 0 auto;
-}
 .ip-bar { height: 6px; border-radius: 3px; background: var(--md-default-fg-color--lightest); overflow: hidden; margin-bottom: 1rem; }
 .ip-bar > div { height: 100%; background: linear-gradient(90deg, var(--kb-grad-1), var(--kb-grad-3)); transition: width 200ms ease; }
 .ip-topic {
@@ -629,71 +566,6 @@
   font-size: 0.9rem; line-height: 1.55;
 }
 .ip-model h4 { margin: 0 0 0.4rem; font-size: 0.82rem; color: var(--md-primary-fg-color); }
-
-.ip-rate { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; margin-top: 1rem; }
-.ip-rate .ip-star {
-  border: 1px solid var(--md-default-fg-color--lighter); background: transparent;
-  border-radius: 0.5rem; padding: 0.35rem 0.7rem; cursor: pointer; font-size: 0.85rem;
-}
-.ip-rate .ip-star.ip-on { background: var(--md-primary-fg-color); color: #fff; border-color: var(--md-primary-fg-color); }
-
-/* Rate-to-continue block: makes it obvious that picking a rating advances the
-   scenario to the next step (fixes "only one answer" confusion). */
-.or-raterow {
-  margin-top: 1rem; padding: 0.9rem 1.1rem;
-  border: 1px dashed var(--md-accent-fg-color);
-  border-radius: 0.6rem; background: color-mix(in srgb, var(--md-accent-fg-color) 6%, transparent);
-}
-.or-raterow .ip-ai-hint { margin: 0.6rem 0 0; }
-.ip-inprogress { color: var(--md-accent-fg-color); font-size: 0.78rem; font-weight: 600; }
-
-/* Personalization: ties an authored scenario to the user's analyzed job. */
-.or-personalized {
-  margin: 0 0 0.9rem; padding: 0.55rem 0.85rem;
-  border-radius: 0.5rem; font-size: 0.85rem;
-  background: color-mix(in srgb, var(--md-primary-fg-color) 10%, transparent);
-  border-left: 3px solid var(--md-primary-fg-color);
-}
-.or-pers-hint { margin: 0.5rem 0 0.75rem; }
-
-/* "Generate a scenario for my exact job" (Pro, per-JD LLM generation). */
-.or-scn-gen { margin-top: 0.6rem; }
-.or-scn-gen-hint { margin: 0.35rem 0 0; }
-.or-scn-fallback { margin: 0 0 0.75rem; }
-
-/* AI answer feedback — the interviewer grade on the user's OWN answer (Pro). */
-.or-feedback {
-  margin: 0.9rem 0; padding: 0.9rem 1.1rem; border-radius: 0.6rem;
-  border-left: 4px solid var(--md-primary-fg-color);
-  background: var(--md-code-bg-color, rgba(0,0,0,0.03));
-}
-.or-feedback.or-fb-strong { border-left-color: #2e7d32; }
-.or-feedback.or-fb-mid { border-left-color: #ed9a1c; }
-.or-feedback.or-fb-weak { border-left-color: #c62828; }
-.or-fb-head { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
-.or-fb-score { font-size: 1.35rem; font-weight: 800; }
-.or-fb-strong .or-fb-score { color: #2e7d32; }
-.or-fb-mid .or-fb-score { color: #ed9a1c; }
-.or-fb-weak .or-fb-score { color: #c62828; }
-.or-fb-verdict { font-weight: 600; }
-.or-feedback ul { margin: 0.2rem 0 0.6rem; }
-.or-fb-ok li { color: #2e7d32; }
-.or-fb-miss li { color: #c62828; }
-.or-fb-followup {
-  margin-top: 0.5rem; padding: 0.6rem 0.85rem; border-radius: 0.45rem;
-  background: color-mix(in srgb, var(--md-primary-fg-color) 8%, transparent);
-}
-.or-fb-followup p { margin: 0.25rem 0 0; font-style: italic; }
-
-/* AI grade (local only) */
-.ip-ai { margin-top: 1rem; }
-.ip-ai-out {
-  margin-top: 0.6rem; padding: 0.8rem 1rem; border-radius: 0.6rem;
-  border: 1px dashed var(--md-accent-fg-color);
-  background: color-mix(in srgb, var(--md-accent-fg-color) 6%, transparent);
-  font-size: 0.86rem; line-height: 1.5;
-}
-.ip-ai-hint { font-size: 0.72rem; color: var(--md-default-fg-color--light); margin-top: 0.3rem; }
 
 /* Summary */
 .ip-summary { text-align: center; padding: 1.5rem; }
@@ -765,8 +637,6 @@
 
 /* Comparison table */
 .pr-compare table { width: 100%; }
-.pr-compare td.pr-y { color: var(--md-accent-fg-color); font-weight: 700; }
-.pr-compare td.pr-n { color: var(--md-default-fg-color--light); }
 
 /* Testimonials */
 .pr-quotes {
@@ -785,43 +655,6 @@
 }
 .pr-quote .pr-who { margin-top: 0.6rem; font-size: 0.76rem; font-weight: 700; color: var(--md-primary-fg-color); }
 .pr-note { font-size: 0.72rem; color: var(--md-default-fg-color--light); font-style: italic; }
-
-/* ============================================================
-   Progress dashboard + waitlist
-   ============================================================ */
-
-.ip-dash-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
-  gap: 0.8rem;
-  margin: 1rem 0 1.6rem;
-}
-.ip-stat {
-  border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0.7rem;
-  padding: 0.9rem;
-  text-align: center;
-  background: var(--md-default-bg-color);
-}
-.ip-stat-v {
-  font-size: 1.6rem; font-weight: 800; line-height: 1;
-  background: linear-gradient(135deg, var(--kb-grad-1), var(--kb-grad-3));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-.ip-stat-k { font-size: 0.72rem; color: var(--md-default-fg-color--light); margin-top: 0.3rem; }
-
-.ip-chart { width: 100%; height: auto; }
-
-.ip-topics { margin: 0.8rem 0 1rem; display: flex; flex-direction: column; gap: 0.45rem; }
-.ip-topicrow { display: grid; grid-template-columns: 11rem 1fr 3rem; gap: 0.6rem; align-items: center; font-size: 0.82rem; }
-.ip-topiclbl small { color: var(--md-default-fg-color--light); }
-.ip-topicbar { height: 10px; border-radius: 5px; background: var(--md-default-fg-color--lightest); overflow: hidden; }
-.ip-topicbar > div { height: 100%; }
-.ip-topicbar .ip-good { background: #2e7d32; }
-.ip-topicbar .ip-mid  { background: #f9a825; }
-.ip-topicbar .ip-weak { background: #e53935; }
-.ip-topicpct { text-align: right; font-weight: 700; font-size: 0.78rem; }
-@media (max-width: 30rem) { .ip-topicrow { grid-template-columns: 7rem 1fr 2.6rem; } }
 
 /* Waitlist form */
 .pr-waitlist {
@@ -843,68 +676,6 @@
 /* ============================================================
    OfferReady branding
    ============================================================ */
-
-/* Branded gradient header bar (navy -> blue) to match the home hero and the
-   standalone pricing/paywall/dashboard pages — one consistent look sitewide. */
-.md-header {
-  background: linear-gradient(135deg, var(--kb-navy) 0%, #1a3a6b 55%, var(--kb-blue) 100%);
-  box-shadow: 0 2px 10px rgba(15, 37, 71, 0.25);
-}
-/* Thin brand-green accent line under the header, like the hero panel's top line. */
-.md-header::after {
-  content: "";
-  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
-  background: linear-gradient(90deg, var(--kb-green), var(--kb-blue), var(--kb-green));
-}
-/* Match the tabs bar (if shown) to the header so there's no color seam. */
-.md-tabs {
-  background: transparent;
-}
-
-/* Header wordmark — style the site title next to the logo mark */
-.md-header__title .md-header__topic:first-child .md-ellipsis {
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  font-size: 1.125rem;    /* 18px — same wordmark size as the standalone pages */
-  color: #fff;
-}
-/* "Ready" recolored green by brand.js — matches the pricing/paywall wordmark. */
-.md-header__title .md-ellipsis .or-ready {
-  color: var(--kb-green);
-}
-
-/* Logo mark + wordmark: one consistent, tight gap between them — matching the
-   standalone pricing page header (30px mark + 10px gap + wordmark).
-   Material's default .md-logo button is wide (fixed padding + margin) which left
-   a large space before "OfferReady". We shrink the button to the mark itself and
-   set a single, predictable gap (no fragile negative-margin hacks). */
-.md-header__button.md-logo {
-  width: 1.875rem;        /* 30px — same mark size as the standalone pages */
-  height: 1.875rem;
-  padding: 0;
-  margin: 0 0.625rem 0 0; /* 0.625rem = 10px gap — matches .brand{gap:10px} */
-  flex: 0 0 auto;
-}
-.md-header__button.md-logo img,
-.md-header__button.md-logo svg {
-  width: 1.875rem;
-  height: 1.875rem;
-  color: #fff;
-}
-/* Sit the wordmark right after the mark. Material's default is
-   `.md-header__title{ padding:0 .8rem }` (≈12.8px) which — on top of the logo
-   button's own margin — created the large gap. Force the left padding/margin to
-   zero (with !important to beat the theme shorthand) so the only space between
-   the mark and the wordmark is the logo's 10px margin-right above. */
-.md-header__title {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-}
-.md-header__title .md-header__topic,
-.md-header__title .md-header__topic .md-ellipsis {
-  padding-left: 0 !important;
-  margin-left: 0 !important;
-}
 
 /* Hide page icons in the LEFT NAV only (e.g. the flag on "Start Here" and the
    topic icons). Covers Material's emoji spans AND inline SVG icons rendered
@@ -962,23 +733,6 @@
   }
 }
 
-/* Branded footer accent bar + copyright styling */
-.md-footer-meta {
-  background: linear-gradient(135deg, var(--kb-grad-2), var(--kb-grad-1));
-}
-.md-footer-meta__inner .md-footer-copyright {
-  font-weight: 600;
-  opacity: 0.95;
-}
-
-/* Small brand chip usable inline in content (e.g. <span class="or-chip">) */
-.or-chip {
-  display: inline-flex; align-items: center; gap: 0.35rem;
-  padding: 0.15rem 0.6rem; border-radius: 2rem;
-  background: linear-gradient(135deg, var(--kb-grad-1), var(--kb-grad-2));
-  color: #fff; font-size: 0.72rem; font-weight: 700;
-}
-
 /* Permalink (¶) handling. On the H1 / hero it's always hidden (it reads as a
    stray glyph next to the brand). On section headings (h2+) it stays a
    shareable anchor but is HOVER-ONLY — invisible until you hover the heading —
@@ -1031,121 +785,26 @@
   color: var(--md-primary-fg-color);
 }
 
-/* Stat pills: a little more separation and a subtle divider feel. */
-.home-stats { gap: 0.5rem 1.1rem; margin: 0.6rem 0 1.4rem; }
-
 /* Mobile: stack the hero CTAs full-width and tighten hero type so the value
    prop and buttons are readable without horizontal scrolling on a phone. */
 @media screen and (max-width: 44.9375em) {
   .home-hero { font-size: 1rem; }
   .home-cta { display: flex; flex-direction: column; align-items: stretch; }
   .home-cta .md-button { margin: 0.25rem 0; text-align: center; }
-  .home-stats { justify-content: flex-start; }
   /* Single-column card grids on small screens for comfortable tap targets. */
   .md-typeset .grid.cards > ul { grid-template-columns: 1fr; }
 }
-
-/* Slightly stronger heading rhythm so long study pages scan better. */
-.md-typeset h2 { margin-top: 2.2rem; }
-
-/* ============================================================
-   Analyze My Job (MVP) — form, results, status pills
-   ============================================================ */
-.or-analyze-form { display: flex; flex-direction: column; gap: 0.3rem; }
-.or-field-label { font-size: 0.78rem; font-weight: 700; color: var(--md-default-fg-color--light); margin-top: 0.6rem; }
-.or-input {
-  width: 100%; padding: 0.55rem 0.7rem; border-radius: 0.5rem;
-  border: 1px solid var(--md-default-fg-color--lightest);
-  background: var(--md-default-bg-color); color: var(--md-default-fg-color);
-  font-size: 0.9rem;
-}
-.or-error { color: #c62828; font-size: 0.85rem; margin-top: 0.5rem; font-weight: 600; }
-
-.or-demo-banner {
-  border-left: 4px solid var(--md-accent-fg-color);
-  background: color-mix(in srgb, var(--md-accent-fg-color) 8%, transparent);
-  padding: 0.7rem 0.9rem; border-radius: 0.5rem; font-size: 0.85rem; margin: 0.4rem 0 1rem;
-}
-
-.or-steps { list-style: none; padding: 0; margin: 0.5rem 0; }
-.or-steps li { opacity: 0.35; padding: 0.2rem 0; transition: opacity 200ms ease; }
-.or-steps li.or-step-on { opacity: 1; font-weight: 600; }
-.or-steps li.or-step-on::before { content: "\2713 "; color: var(--md-accent-fg-color); }
-
-.or-chips { margin: 0.4rem 0; }
-.or-tag {
-  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.03em; padding: 0.05rem 0.35rem;
-  border-radius: 0.3rem; margin-left: 0.3rem;
-  background: color-mix(in srgb, var(--md-primary-fg-color) 12%, transparent);
-  color: var(--md-primary-fg-color); vertical-align: middle;
-}
-.or-reslist { display: flex; flex-direction: column; gap: 0.35rem; }
-.or-reslink {
-  display: inline-block; font-weight: 600; text-decoration: none;
-  border-bottom: 1px dotted currentColor; color: var(--md-primary-fg-color);
-}
-.or-next { margin-top: 1.2rem; }
-
-/* Status pills for alignment / readiness tables. */
-.or-pill { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 1rem; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
-.or-pill.or-ok   { background: #1b7f4d; color: #fff; }
-.or-pill.or-warn { background: #b26a00; color: #fff; }
-.or-pill.or-gap  { background: #b23b3b; color: #fff; }
-.or-pill.or-info { background: color-mix(in srgb, var(--md-default-fg-color) 18%, transparent); color: var(--md-default-fg-color); }
-
-@media screen and (max-width: 44.9375em) {
-  #analyze-app table { display: block; overflow-x: auto; }
-}
-
-/* ============================================================
-   Analyze: resume banner + save/share toolbar (added)
-   ============================================================ */
-
-/* "You have a saved analysis" banner shown above the form */
-.or-resume-banner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: .6rem;
-  padding: .7rem .9rem;
-  margin: 0 0 1rem;
-  border: 1px solid var(--kb-green, #22c07a);
-  border-left: 4px solid var(--kb-green, #22c07a);
-  border-radius: 8px;
-  background: rgba(34, 192, 122, .08);
-  font-size: .9rem;
-}
-.or-resume-banner span { flex: 1 1 auto; min-width: 12rem; }
-.or-resume-banner .ip-btn { margin: 0; }
-
-/* Save & share this plan toolbar (below the result) */
-.or-toolbar {
-  margin: 1rem 0 .5rem;
-  padding: .9rem 1rem;
-  border: 1px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.12));
-  border-radius: 10px;
-  background: var(--md-code-bg-color, rgba(0,0,0,.03));
-}
-.or-toolbar .or-field-label { margin-bottom: .55rem; }
-.or-toolbar-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .5rem;
-}
-.or-toolbar-row .ip-btn { margin: 0; }
-.or-toolbar .ip-ai-hint { margin: .6rem 0 0; }
 
 /* ============================================================
    Print / PDF: strip site chrome, keep the analysis clean
    ============================================================ */
 @media print {
   .md-header, .md-tabs, .md-sidebar, .md-footer,
-  .md-content__button, .or-toolbar, .or-resume-banner,
-  .or-next .ip-btn, .md-nav, #or-chatbot, .or-chatbot-toggle { display: none !important; }
+  .md-content__button, .md-nav, #or-chatbot, .or-chatbot-toggle { display: none !important; }
   .md-main__inner, .md-content { margin: 0 !important; }
   .md-content__inner { padding: 0 !important; }
   a[href]::after { content: ""; }  /* don't append URLs after links */
-  .or-pill, .ip-topic { border: 1px solid #999 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .ip-topic { border: 1px solid #999 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { font-size: 11pt; }
 }
 
@@ -1156,93 +815,6 @@
 .kb-cites a:hover { text-decoration: underline; }
 .kb-cite-go { font-size: .8em; opacity: .7; }
 .kb-cites-hint { font-size: .72rem; opacity: .6; margin-top: .35rem; }
-
-/* "Was this analysis helpful?" feedback row on the Analyze result. */
-.or-feedback {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: .5rem;
-  margin: .9rem 0 .25rem;
-  font-size: .9rem;
-}
-.or-feedback-q { font-weight: 600; margin-right: .2rem; }
-.or-feedback .ip-btn { margin: 0; padding: .3rem .7rem; font-size: .85rem; }
-.or-feedback-thanks { color: var(--kb-green, #22c07a); font-weight: 600; }
-
-/* Practice: "Read the full topic" link under a revealed answer. */
-.ip-source-link {
-  display: inline-block;
-  margin-top: .7rem;
-  font-size: .85rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-.ip-source-link:hover { text-decoration: underline; }
-
-/* Practice: weakest-topics nudge on the setup screen. */
-.ip-weak-hint {
-  margin: .2rem 0 1rem;
-  padding: .6rem .85rem;
-  border-radius: 8px;
-  border-left: 4px solid var(--kb-blue, #1f6fb2);
-  background: rgba(31, 111, 178, .08);
-  font-size: .9rem;
-}
-
-/* ============================================================
-   Auth (Phase 2): sign-in slot + header state
-   ============================================================ */
-#or-auth-slot { margin: 1rem 0; }
-.or-auth-form { display: flex; flex-direction: column; gap: .5rem; max-width: 22rem; }
-.or-auth-form .or-input {
-  font-size: .95rem; padding: .5rem .7rem;
-  border: 1.5px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.15));
-  border-radius: 8px; background: var(--md-default-bg-color, #fff);
-  color: var(--md-default-fg-color, #16305c);
-}
-.or-auth-form .or-input:focus { outline: none; border-color: var(--kb-blue, #1f6fb2); }
-.or-auth-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
-.or-auth-row .ip-btn { margin: 0; }
-.or-linkbtn { background: none; border: none; color: var(--kb-blue, #1f6fb2); cursor: pointer; font-size: .85rem; text-decoration: underline; padding: 0; }
-.or-auth-msg { font-size: .85rem; color: var(--kb-green, #22c07a); min-height: 1.1em; }
-.or-auth-msg.or-auth-err { color: #c0392b; }
-.or-auth-who { font-weight: 600; margin-right: .5rem; }
-.or-auth-note { font-size: .85rem; opacity: .7; }
-
-/* ============================================================
-   Scenario engine (Phase 3): cards, lock badge, paywall
-   ============================================================ */
-.or-scn-card {
-  border: 1px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.12));
-  border-radius: 12px; padding: 1rem 1.2rem; margin: .9rem 0;
-  background: var(--md-code-bg-color, rgba(0,0,0,.02));
-}
-.or-scn-card h3 { margin: .3rem 0 .5rem; }
-.or-scn-card ul { margin: .3rem 0 .6rem 1.1rem; }
-.or-scn-lock {
-  font-family: var(--md-code-font, monospace); font-size: .78rem; font-weight: 600;
-  color: var(--kb-blue, #1f6fb2); border: 1px solid rgba(31,111,178,.35);
-  background: rgba(31,111,178,.1); border-radius: 999px; padding: 2px 9px; align-self: center;
-}
-/* Role filter chips on the scenarios list. */
-.or-scn-filter { display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0 1rem; }
-.or-scn-chip {
-  font-size: .82rem; font-weight: 600; padding: .3rem .8rem; border-radius: 999px; cursor: pointer;
-  border: 1.5px solid var(--md-default-fg-color--lightest, rgba(0,0,0,.15));
-  background: transparent; color: var(--md-default-fg-color, #16305c); transition: .12s;
-}
-.or-scn-chip:hover { border-color: var(--kb-blue, #1f6fb2); }
-.or-scn-chip.on { background: var(--kb-navy, #16305c); border-color: var(--kb-navy, #16305c); color: #fff; }
-.or-paywall {
-  border: 1px solid var(--kb-green, #22c07a); border-left: 4px solid var(--kb-green, #22c07a);
-  border-radius: 12px; padding: 1.2rem 1.4rem; margin: 1rem 0;
-  background: rgba(34,192,122,.06);
-}
-.or-paywall h2 { margin-top: 0; }
-.or-paywall .ip-btn { margin-top: .4rem; }
-.or-check { display: block; margin: .3rem 0; font-size: .92rem; }
-.or-check input { margin-right: .5rem; }
 
 /* Interview-hub feature cards are anchors (<a class="ig-feature ig-link">) so
    the whole card is reliably clickable without fragile markdown link-wrapping.
@@ -1269,433 +841,6 @@ a.ig-feature.ig-link .ig-d {
 }
 /* The markdown link wrapper shouldn't add its own inline-link styling. */
 .ig-features a { text-decoration: none; color: inherit; display: block; }
-
-/* ============================================================
-   Progress dashboard: "Next up" loop panel (Analyze -> drills)
-   ============================================================ */
-.ip-nextup {
-  border-left: 4px solid var(--kb-green, #22c07a);
-  background: rgba(34, 192, 122, .06);
-}
-.ip-nextup h2 { margin-top: 0; }
-.ip-nextup .ip-controls { margin-top: .6rem; gap: .5rem; flex-wrap: wrap; }
-.ip-nextup .ip-btn { margin: 0; text-decoration: none; }
-.ip-gaps { margin: .4rem 0 .2rem 1.1rem; }
-.ip-gaps li { margin: .15rem 0; font-size: .92rem; }
-
-
-/* ============================================================
-   Footer legal/contact links (theme override: overrides/partials/copyright.html)
-   Terms/Privacy/Disclaimer/Contact were moved out of the top nav "More" menu
-   into the footer, mirroring the standalone pricing page footer.
-   ============================================================ */
-.or-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px 18px;
-  flex-wrap: wrap;
-  width: 100%;
-  /* Keep the copyright row off the decorative band below it. */
-  padding-bottom: 1rem;
-}
-/* Brighter copyright text so it stays legible on the navy footer. */
-.or-footer__copy { color: rgba(255, 255, 255, 0.92); opacity: 1; }
-.or-footer__links {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  font-size: .72rem;
-}
-.or-footer__links a {
-  color: #4aa3df;               /* brand blue, readable on the navy footer */
-  text-decoration: none;
-  white-space: nowrap;
-}
-.or-footer__links a:hover,
-.or-footer__links a:focus { text-decoration: underline; }
-.or-footer__sep { opacity: .5; }
-@media (max-width: 480px) {
-  .or-footer { justify-content: center; text-align: center; }
-  .or-footer__links { justify-content: center; }
-}
-
-/* ============================================================
-   Master Interview Simulator (simulator.js, mounts #simulator-app)
-   Reuses the ip-* practice styles; these are the extra bits it adds.
-   ============================================================ */
-#simulator-app .ip-select {
-  font-size: 0.9rem;
-  padding: 0.4rem 0.6rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--md-default-fg-color--lighter);
-  background: var(--md-default-bg-color);
-  color: var(--md-default-fg-color);
-  width: 100%;
-  max-width: 22rem;
-}
-#simulator-app .ip-area-checks {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
-  gap: 0.3rem 0.9rem;
-  margin: 0.3rem 0 0.1rem;
-}
-#simulator-app .ip-check {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.82rem;
-  cursor: pointer;
-}
-#simulator-app .ip-check input { margin: 0; }
-
-/* Count-up timer on each question. */
-#simulator-app .ip-timer {
-  display: inline-block;
-  margin: 0.5rem 0 0.2rem;
-  font-family: var(--md-code-font-family, monospace);
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--md-default-fg-color--light);
-}
-#simulator-app .ip-timer-over { color: #e53935; }
-
-/* Reveal block: what's tested / strong / weak / depth. */
-#simulator-app .ip-tested { margin: 0 0 0.6rem; }
-#simulator-app .ip-model .ip-weak-h { color: #c62828; }
-#simulator-app .ip-model ul.ip-weak { margin: 0 0 0.4rem; }
-#simulator-app .ip-model ul.ip-weak li { color: var(--md-default-fg-color--light); }
-#simulator-app .ip-depth {
-  margin: 0.5rem 0 0;
-  font-size: 0.85rem;
-  color: var(--md-default-fg-color--light);
-}
-#simulator-app .ip-followup {
-  border-left-color: var(--kb-green, #22c07a);
-  background: rgba(34, 192, 122, 0.06);
-}
-#simulator-app .ip-followup h4 { color: var(--kb-green, #22c07a) !important; }
-
-/* ============================================================
-   Sample Readiness Walkthrough (walkthrough.js, mounts #walkthrough-app)
-   Guided step-through; reuses ip-card / ip-bar / ip-btn / ip-topic.
-   ============================================================ */
-#walkthrough-app .wt-steps { display: flex; gap: 0.5rem; margin: 0 0 0.6rem; flex-wrap: wrap; }
-#walkthrough-app .wt-step {
-  width: 1.8rem; height: 1.8rem; border-radius: 50%;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 0.8rem; font-weight: 700; cursor: pointer;
-  background: var(--md-default-fg-color--lightest); color: var(--md-default-fg-color--light);
-  border: 1px solid var(--md-default-fg-color--lighter);
-}
-#walkthrough-app .wt-step-active { background: var(--kb-navy, #16305c); color: #fff; border-color: var(--kb-navy, #16305c); }
-#walkthrough-app .wt-step-done { background: var(--kb-green, #22c07a); color: #08301f; border-color: var(--kb-green, #22c07a); }
-#walkthrough-app .wt-title { margin: 0.4rem 0 0.6rem; font-size: 1.05rem; }
-#walkthrough-app .wt-body { font-size: 0.92rem; line-height: 1.6; }
-#walkthrough-app .wt-note { font-size: 0.85rem; color: var(--md-default-fg-color--light); }
-#walkthrough-app .wt-body blockquote {
-  border-left: 4px solid var(--kb-blue, #1f6fb2);
-  margin: 0.6rem 0; padding: 0.4rem 0.9rem;
-  background: var(--md-default-fg-color--lightest); font-size: 0.88rem;
-}
-#walkthrough-app .wt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.6rem 1.4rem; }
-#walkthrough-app .wt-grid h4 { margin: 0.3rem 0 0.2rem; font-size: 0.85rem; color: var(--md-primary-fg-color); }
-#walkthrough-app .wt-grid ul { margin: 0 0 0.4rem 1.1rem; font-size: 0.85rem; }
-#walkthrough-app .wt-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 0.5rem 0; }
-#walkthrough-app .wt-table th, #walkthrough-app .wt-table td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--md-default-fg-color--lightest); }
-#walkthrough-app .wt-plan-item {
-  border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0.6rem; padding: 0.7rem 0.9rem; margin: 0.5rem 0;
-  transition: border-color 120ms ease, background 120ms ease;
-}
-#walkthrough-app .wt-plan-item.wt-done { border-color: var(--kb-green, #22c07a); background: rgba(34, 192, 122, 0.06); }
-#walkthrough-app .wt-plan-check { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.9rem; cursor: pointer; }
-#walkthrough-app .wt-plan-why { margin: 0.3rem 0 0.2rem 1.6rem; font-size: 0.82rem; color: var(--md-default-fg-color--light); }
-#walkthrough-app .wt-plan-links { margin: 0 0 0 1.6rem; font-size: 0.82rem; }
-
-/* ============================================================
-   My Jobs dashboard (jobs.js) + Save-to-My-Jobs (analyze.js)
-   ============================================================ */
-.or-jobs-head {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: .75rem; flex-wrap: wrap; margin: .25rem 0 1rem;
-}
-.or-jobs-head h2 { margin: 0; }
-/* Row-wise list: one job per row so many jobs fit on screen and scan easily.
-   Each card is a horizontal strip (title/meta · stats · date · actions). */
-.or-jobs-grid {
-  display: flex; flex-direction: column; gap: .6rem;
-}
-.or-job-card {
-  border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
-  border-radius: .6rem; padding: .75rem 1rem; background: var(--md-default-bg-color);
-  display: flex; flex-direction: row; align-items: center; flex-wrap: wrap;
-  gap: .5rem 1.25rem;
-}
-/* Title + meta occupy the flexible left column; they stack together. */
-.or-job-titlerow {
-  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
-  flex: 1 1 14rem; min-width: 11rem; order: 1;
-}
-.or-job-card h3 { margin: 0; font-size: 1.02rem; }
-/* Active-job marker: the job other pages are currently operating on. */
-.or-job-active { border-color: var(--md-primary-fg-color, #1f9d63); box-shadow: inset 3px 0 0 var(--md-primary-fg-color, #1f9d63); }
-.or-job-activebadge {
-  font-size: .62rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
-  color: #fff; background: var(--md-primary-fg-color, #1f9d63);
-  padding: .12rem .45rem; border-radius: 999px; line-height: 1.4;
-}
-.or-job-meta {
-  color: var(--md-default-fg-color--light); font-size: .8rem;
-  flex: 0 0 100%; order: 2; margin: -.3rem 0 .1rem;
-}
-.or-job-stats { flex: 0 0 auto; order: 3; }
-.or-job-date { color: var(--md-default-fg-color--light); font-size: .78rem; flex: 0 0 auto; order: 4; white-space: nowrap; }
-.or-job-actions { display: flex; gap: .5rem; flex: 0 0 auto; order: 5; margin: 0; }
-/* Interview-pipeline checklist: full-width line under the top row, reads as
-   "where am I with this role". */
-.or-job-pipeline {
-  flex: 0 0 100%; order: 6; display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .15rem;
-}
-.or-job-step {
-  font-size: .72rem; font-weight: 600; padding: .12rem .5rem; border-radius: 999px;
-  border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
-}
-.or-job-step-done { color: var(--md-primary-fg-color, #1f9d63); border-color: color-mix(in srgb, var(--md-primary-fg-color, #1f9d63) 40%, transparent); background: color-mix(in srgb, var(--md-primary-fg-color, #1f9d63) 8%, transparent); }
-.or-job-step-todo { color: var(--md-default-fg-color--light); }
-/* Per-card Next Action — the single most useful step for this job. */
-.or-job-next { flex: 0 0 100%; order: 7; display: flex; align-items: baseline; gap: .5rem; margin-top: .1rem; }
-.or-job-next-label {
-  font-size: .64rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
-  color: var(--md-default-fg-color--light);
-}
-.or-job-nextlink { font-size: .9rem; font-weight: 700; color: var(--md-primary-fg-color, #1f9d63); text-decoration: none; }
-.or-job-nextlink:hover { text-decoration: underline; }
-/* Inline delete confirmation (replaces window.confirm) — full-width within the
-   card, styled like the app. */
-.or-job-delconfirm {
-  flex: 0 0 100%; order: 8; margin-top: .25rem; padding: .6rem .75rem;
-  border: 1px solid #e0b4b4; border-radius: .5rem;
-  background: color-mix(in srgb, #c62828 6%, transparent);
-}
-.or-job-delq { font-size: .88rem; margin-bottom: .5rem; }
-.or-job-delbtns { display: flex; gap: .5rem; flex-wrap: wrap; }
-.or-job-delerr:empty { display: none; }
-.or-job-delerr { margin-top: .4rem; }
-.or-btn-danger, .ip-btn.or-btn-danger {
-  background: #c62828; color: #fff; border-color: #c62828;
-}
-.or-btn-danger:hover, .ip-btn.or-btn-danger:hover { background: #a81f1f; border-color: #a81f1f; }
-.or-save-msg { display: block; margin-top: .5rem; font-size: .9rem; }
-
-/* My Jobs: controls (search + sort) shown once the list grows large enough
-   to need scanning help. Collapses to a single column on narrow screens. */
-.or-jobs-controls {
-  display: flex; gap: .75rem; align-items: flex-end; flex-wrap: wrap;
-  margin: 0 0 .75rem;
-}
-.or-jobs-search { flex: 1 1 16rem; min-width: 12rem; }
-.or-jobs-search-input { margin: 0; }
-.or-jobs-sort { display: flex; flex-direction: column; gap: .15rem; }
-.or-jobs-sort-label {
-  font-size: .72rem; font-weight: 700; letter-spacing: .03em;
-  text-transform: uppercase; color: var(--md-default-fg-color--light);
-}
-.or-jobs-sort-select { margin: 0; min-width: 11rem; }
-.or-jobs-count { margin: 0 0 .6rem; }
-.or-jobs-more { display: flex; justify-content: center; margin: 1rem 0 .25rem; }
-
-/* ============================================================
-   Homepage "How it works" flow strip (write_index .or-flow)
-   ============================================================ */
-.or-flow {
-  display: flex; flex-wrap: wrap; align-items: center; gap: .4rem;
-  font-size: .95rem; line-height: 1.9;
-}
-.or-flow span {
-  display: inline-block; padding: .2rem .6rem; border-radius: 999px;
-  background: var(--md-code-bg-color, #f2f4f8);
-  border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
-  font-weight: 600; white-space: nowrap;
-}
-
-/* ============================================================
-   Onboarding card (onboarding.js) — job-first entry
-   ============================================================ */
-.or-onboard {
-  border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
-  border-radius: .7rem; padding: 1.1rem 1.2rem; margin: .5rem 0 1rem;
-  background: var(--md-code-bg-color, #f7f9fc);
-}
-.or-onboard-step { font-weight: 700; margin: .3rem 0 .5rem; }
-.or-onboard-chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
-.or-onboard-chip {
-  padding: .35rem .8rem; border-radius: 999px; cursor: pointer;
-  border: 1px solid var(--md-default-fg-color--lighter, #cfcfcf);
-  background: var(--md-default-bg-color); font-size: .9rem;
-}
-.or-onboard-chip.on {
-  background: var(--kb-green, #22c07a); color: #fff;
-  border-color: var(--kb-green, #22c07a); font-weight: 600;
-}
-.or-onboard-go { display: inline-block; margin: .6rem 0 .2rem; }
-
-/* ============================================================
-   Defend page: "matched to your analyzed job" note (scenario.js)
-   ============================================================ */
-.or-scn-match {
-  border: 1px solid var(--kb-green, #22c07a);
-  background: rgba(34, 192, 122, .08);
-  border-radius: .5rem; padding: .55rem .8rem; margin: .25rem 0 .75rem;
-  font-size: .92rem;
-}
-.or-scn-match a.or-scn-clear { margin-left: .3rem; }
-
-/* "Why these questions" panel on the Questions page — the honest, job-level
-   reason the set exists (role tech + identified gaps). */
-.or-why .or-why-block { margin-top: .6rem; }
-.or-why .or-why-head {
-  font-size: .78rem; font-weight: 700; color: var(--or-text-secondary, #5b6b85); margin-bottom: .3rem;
-}
-/* Coverage chips: a checkmark = the term is referenced by a returned question;
-   an open circle = it isn't. Evidence, not just a claim. */
-.or-why-chip-on {
-  color: #2e7d32;
-  background: color-mix(in srgb, #2e7d32 10%, transparent);
-  border-color: color-mix(in srgb, #2e7d32 35%, transparent);
-}
-.or-why-chip-off { opacity: .75; }
-.or-why-coverage { margin: .6rem 0 0; color: var(--or-text-secondary, #5b6b85); font-weight: 600; }
-.or-why-nudge { margin-top: .4rem; }
-
-/* "What this tests" rubric shown before the user answers a scenario node, so
-   the step feels purposeful (they know what a strong answer must show up front).
-   A quiet framed callout that doesn't compete with the prompt. */
-.or-scn-tests {
-  margin: .6rem 0 .8rem; padding: .6rem .85rem;
-  border: 1px solid var(--or-border, #e5e9f0);
-  border-left: 3px solid var(--md-primary-fg-color, #1f9d63);
-  border-radius: .5rem; background: var(--md-code-bg-color, rgba(0,0,0,.02));
-}
-.or-scn-tests .or-field-label { margin: 0 0 .25rem; }
-.or-scn-tests-list { margin: 0 0 0 1.1rem; font-size: .88rem; }
-.or-scn-tests-list li { margin: .1rem 0; }
-
-/* ============================================================
-   OAuth (Google / GitHub) buttons on the sign-in form (auth.js)
-   ============================================================ */
-.or-oauth-row { display: flex; flex-direction: column; gap: .5rem; max-width: 22rem; }
-.or-oauth-btn {
-  display: block; width: 100%; padding: .55rem .8rem; cursor: pointer;
-  border: 1px solid var(--md-default-fg-color--lighter, #cfcfcf);
-  border-radius: .5rem; background: var(--md-default-bg-color);
-  font-size: .92rem; font-weight: 600; color: var(--md-default-fg-color);
-}
-.or-oauth-btn:hover { border-color: var(--kb-green, #22c07a); }
-.or-auth-divider {
-  display: flex; align-items: center; gap: .6rem; max-width: 22rem;
-  margin: .6rem 0; color: var(--md-default-fg-color--light); font-size: .8rem;
-}
-.or-auth-divider::before, .or-auth-divider::after {
-  content: ""; flex: 1; height: 1px; background: var(--md-default-fg-color--lightest, #e0e0e0);
-}
-
-/* ===========================================================================
-   Interview Readiness Platform — SaaS components (cards, bars, chips, stats).
-   Reused by Gap Analysis, Readiness Dashboard, and Question Generator.
-   Works in both light and Material "slate" dark scheme via theme variables.
-   =========================================================================== */
-.or-card {
-  background: var(--md-default-bg-color);
-  border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 0.8rem;
-  padding: 1.1rem 1.25rem;
-  margin: 0 0 1rem;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-}
-.or-card h2, .or-card h3 { margin-top: 0; }
-.or-muted { color: var(--md-default-fg-color--light); }
-.or-small { font-size: 0.82rem; }
-.or-error { color: #c62828; font-weight: 600; margin: 0.4rem 0; }
-
-/* Inputs */
-.or-input {
-  width: 100%; box-sizing: border-box;
-  border: 1px solid var(--md-default-fg-color--lighter);
-  border-radius: 0.5rem; padding: 0.55rem 0.7rem;
-  background: var(--md-default-bg-color); color: var(--md-default-fg-color);
-  font: inherit; margin: 0.15rem 0 0.8rem;
-}
-.or-textarea { resize: vertical; line-height: 1.5; }
-.or-field-label { font-size: 0.8rem; font-weight: 700; color: var(--md-default-fg-color--light); text-transform: uppercase; letter-spacing: 0.03em; margin-top: 0.4rem; }
-.or-filerow { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin: 0.2rem 0 0.4rem; }
-.or-file { font: inherit; }
-
-/* Buttons */
-.or-btn {
-  display: inline-block; border: 1px solid var(--md-default-fg-color--lighter);
-  background: transparent; color: var(--md-default-fg-color);
-  border-radius: 0.55rem; padding: 0.5rem 1rem; cursor: pointer; font: inherit;
-  text-decoration: none; margin: 0.3rem 0.4rem 0.3rem 0;
-}
-.or-btn:hover { border-color: var(--md-primary-fg-color); }
-.or-btn-primary { background: var(--md-primary-fg-color); color: #fff; border-color: var(--md-primary-fg-color); }
-.or-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
-
-/* Score header */
-.or-score-head { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-.or-score-num { font-size: 2.6rem; font-weight: 800; line-height: 1; }
-.or-score-label { flex: 1; min-width: 200px; }
-.or-good { color: #2e7d32; }
-.or-mid  { color: #ed9a1c; }
-.or-weak { color: #c62828; }
-
-/* Progress bars */
-.or-bar-row { display: flex; align-items: center; gap: 0.7rem; margin: 0.5rem 0; }
-.or-bar-label { width: 110px; font-size: 0.85rem; font-weight: 600; }
-.or-bar-track { flex: 1; height: 10px; border-radius: 999px; background: var(--md-default-fg-color--lightest); overflow: hidden; }
-.or-bar-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
-.or-bar-fill.or-good { background: #2e7d32; }
-.or-bar-fill.or-mid  { background: #ed9a1c; }
-.or-bar-fill.or-weak { background: #c62828; }
-.or-bar-pct { width: 46px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.85rem; }
-
-/* Chips */
-.or-chips-block { margin: 0.6rem 0; }
-.or-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.3rem; }
-.or-chip { display: inline-block; padding: 0.28rem 0.6rem; border-radius: 999px; font-size: 0.82rem; border: 1px solid var(--md-default-fg-color--lighter); }
-.or-chip-ok { background: color-mix(in srgb, #2e7d32 12%, transparent); border-color: #2e7d32; }
-.or-chip-warn { background: color-mix(in srgb, #ed9a1c 14%, transparent); border-color: #ed9a1c; }
-
-/* Stat cards grid (dashboard) */
-.or-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.9rem; margin: 0 0 1rem; }
-.or-stat { background: var(--md-default-bg-color); border: 1px solid var(--md-default-fg-color--lightest); border-radius: 0.8rem; padding: 1rem 1.1rem; }
-.or-stat-num { font-size: 1.9rem; font-weight: 800; line-height: 1; }
-.or-stat-label { font-size: 0.8rem; color: var(--md-default-fg-color--light); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.03em; }
-
-@media (max-width: 480px) {
-  .or-score-num { font-size: 2rem; }
-  .or-bar-label { width: 88px; }
-}
-
-/* Question generator — categorized lists + difficulty badges. */
-/* Restored-set count line: prominent so "already generated" reads at a glance. */
-.md-typeset .or-qcount { margin: 0.2rem 0 0.1rem; font-weight: 700; font-size: 1.05rem; }
-.or-qlist { margin: 0.3rem 0 0; padding-left: 1.3rem; }
-.or-qitem { margin: 0.5rem 0; line-height: 1.5; }
-.or-diff {
-  display: inline-block; font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
-  letter-spacing: 0.04em; padding: 0.1rem 0.45rem; border-radius: 999px; margin-right: 0.4rem;
-  vertical-align: middle;
-}
-.or-diff-easy { background: color-mix(in srgb, #2e7d32 16%, transparent); color: #2e7d32; }
-.or-diff-med  { background: color-mix(in srgb, #ed9a1c 18%, transparent); color: #b6790f; }
-.or-diff-hard { background: color-mix(in srgb, #c62828 16%, transparent); color: #c62828; }
-
-/* Dashboard readiness-trend sparkline. */
-.or-spark { width: 100%; max-width: 260px; height: auto; display: block; margin-top: 0.3rem; }
-
 
 /* ============================================================
    CALM REFACTOR (design-system pass) — appended last so it wins.
@@ -1731,22 +876,7 @@ a.ig-feature.ig-link .ig-d {
 }
 .md-typeset .or-hero::before { display: none !important; }
 .md-typeset .or-hero h1 { font-size: clamp(2.4rem, 5vw, 3.2rem); letter-spacing: -0.02em; }
-.md-typeset .or-hero .home-stats > span {
-  background: rgba(255,255,255,0.08) !important;
-  border: 1px solid rgba(255,255,255,0.18) !important;
-  backdrop-filter: none !important;
-  box-shadow: none !important;
-}
 
-/* ---- 3. Flatten home stat pills + "how it works" flow into calm chips ---- */
-.home-stats > span,
-.or-flow span {
-  background: var(--or-surface) !important;
-  color: var(--or-text) !important;
-  border: 1px solid var(--or-border) !important;
-  box-shadow: none !important;
-  font-weight: 600;
-}
 .home-cta .md-button--primary {
   box-shadow: none !important;
   background: var(--or-navy);
@@ -1774,168 +904,29 @@ a.ig-feature.ig-link .ig-d {
 }
 .ip-btn.ip-ghost:hover { border-color: var(--or-navy) !important; }
 
-/* Same anchor-vs-link-color guard for the or-* button family. A primary
-   or-btn is solid navy; when rendered as <a> it must keep white text (Material
-   link color would otherwise paint navy-on-navy). The outline or-btn keeps the
-   normal text color on a transparent background. */
-.md-typeset a.or-btn-primary,
-.or-btn-primary, .or-btn-primary:visited { color: #fff !important; }
-.md-typeset a.or-btn:not(.or-btn-primary) { color: var(--or-text) !important; }
-
 /* ---- 5. Progress bars + score chips: flat soft green, no gradient ---- */
 .ip-bar > div,
-.ip-score,
-.ip-stat-v,
-.or-bar-fill.or-good { background: var(--or-green) !important; }
+.ip-score { background: var(--or-green) !important; }
 .ip-score {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   background-clip: border-box !important;
 }
-.ip-stat-v {
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: var(--or-navy) !important;
-  -webkit-text-fill-color: var(--or-navy) !important;
-  background: none !important;
-}
 
 /* ---- 6. Cards: hairline border, barely-there shadow ---- */
 .md-typeset .grid.cards > ul > li,
-.ip-card, .or-scn-card {
+.ip-card {
   box-shadow: var(--or-shadow) !important;
   border-color: var(--or-border) !important;
 }
 
-/* ---- 7. Footer: solid navy, no gradient ---- */
-.md-footer-meta { background: var(--or-navy) !important; }
-
-/* ---- 8. Section headings: lighter rule + more air (editorial rhythm) ---- */
-.md-typeset h2 {
-  border-bottom: 1px solid var(--or-border);
-  margin-top: 2.8rem;
-  font-size: clamp(1.5rem, 2.6vw, 1.9rem);
-  letter-spacing: -0.01em;
-}
-.md-typeset h3 { margin-top: 1.8rem; }
-
 /* ---- 9. Unified chip/pill language (one look, many classes) ---------------
    Rounded, 1px border, no shadow, small type. Variants carry meaning via a
    soft tint; the default is neutral slate. */
-.or-chip, .or-pill, .or-tag, .or-scn-chip, .or-onboard-chip, .ip-topic {
+.ip-topic {
   box-shadow: none !important;
   font-weight: 600;
 }
-/* The inline brand chip previously used a navy gradient + white text; calm it. */
-.or-chip {
-  background: var(--or-surface);
-  color: var(--or-text);
-  border: 1px solid var(--or-border);
-  padding: 0.22rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-}
-.or-chip.or-chip-ok   { background: var(--or-green-soft); border-color: var(--or-green); color: #15663f; }
-.or-chip.or-chip-warn { background: rgba(237,154,28,0.12); border-color: #e0a53a; color: #8a5a00; }
-/* Status pills: softer tints instead of saturated solid blocks. */
-.or-pill.or-ok   { background: var(--or-green-soft); color: #15663f; }
-.or-pill.or-warn { background: rgba(237,154,28,0.14); color: #8a5a00; }
-.or-pill.or-gap  { background: rgba(198,40,40,0.12); color: #a62121; }
-
-/* ---- 10. Whitespace: let the readiness UI breathe ---- */
-#dashboard-app .or-card,
-#jobs-app .or-job-card,
-#gap-app .or-card,
-#questions-app .or-card {
-  padding: 1.4rem 1.5rem;
-  margin-bottom: 1.4rem;
-  box-shadow: var(--or-shadow);
-}
-
-/* ============================================================
-   Phase 1.5 components that had no styles yet — add them calm.
-   (Current Job banner, readiness factor list, recent-practice table,
-    small button, next-step block.)
-   ============================================================ */
-
-/* Current Job banner — context before metrics. Reads as an editorial header,
-   not a card: a soft rule under a small label + the job title. */
-.or-jobbanner {
-  display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem;
-  padding: 0 0 0.9rem;
-  margin: 0 0 1.4rem;
-  border-bottom: 1px solid var(--or-border);
-  font-size: 1.05rem;
-}
-.or-jobbanner strong { color: var(--or-text); font-weight: 700; }
-.or-jobbanner-label {
-  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--or-text-secondary);
-}
-.or-jobbanner .or-small, .or-small { font-size: 0.82rem; color: var(--or-text-secondary); }
-
-/* Small inline button (used in the banner's "Choose a job"). */
-.or-btn-small { padding: 0.25rem 0.7rem; font-size: 0.82rem; margin: 0 0 0 0.2rem; }
-
-/* "Based on" readiness factor list — typography-first, no card-in-card. */
-.or-readiness-factors { margin: 1rem 0 0.4rem; }
-.or-factor {
-  display: flex; align-items: baseline; gap: 0.5rem;
-  padding: 0.4rem 0; font-size: 0.95rem;
-  border-top: 1px solid var(--or-border);
-}
-.or-factor:first-of-type { border-top: 0; }
-.or-factor-mark { font-weight: 800; width: 1.1rem; display: inline-block; text-align: center; }
-.or-factor.or-factor-on  .or-factor-mark { color: var(--or-green); }
-.or-factor.or-factor-off .or-factor-mark { color: var(--or-text-secondary); }
-.or-factor.or-factor-off { color: var(--or-text-secondary); }
-
-/* Recent-practice table — minimal, hairline rows, generous cells. */
-.or-practice-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-.or-practice-table th {
-  text-align: left; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--or-text-secondary);
-  padding: 0.35rem 0.6rem 0.35rem 0; border-bottom: 1px solid var(--or-border);
-}
-.or-practice-table td {
-  padding: 0.55rem 0.6rem 0.55rem 0; border-bottom: 1px solid var(--or-border);
-  color: var(--or-text);
-}
-.or-practice-table tr:last-child td { border-bottom: 0; }
-
-/* Next-step block after a gap analysis — quiet, directional. */
-.or-next { margin-top: 1.4rem; }
-.or-next .or-field-label { color: var(--or-text-secondary); }
-
-/* Analyze result — "Next step: Check My Fit" primary block. More prominent
-   than the Resources list below it: brand-tinted card, clear heading, one
-   solid primary CTA. Prominence does not rely on color alone (heading + card
-   framing + button weight carry it). */
-.md-typeset .or-next-fit {
-  border: 1px solid rgba(31, 157, 99, 0.45);
-  background: rgba(31, 157, 99, 0.06);
-  border-left: 4px solid var(--kb-green, #1f9d63);
-  border-radius: 0.6rem;
-  padding: 1rem 1.1rem 1.1rem;
-}
-.md-typeset .or-next-fit h3 { margin: 0 0 0.3rem; font-size: 1.1rem; }
-.md-typeset .or-next-fit .or-actions { margin: 0.6rem 0 0.2rem; }
-/* Primary CTA emphasis for the Check My Fit action. */
-.md-typeset a.ip-btn.or-cta-primary,
-.md-typeset button.ip-btn.or-cta-primary,
-.ip-btn.or-cta-primary {
-  font-size: 1rem;
-  padding: 0.6rem 1.3rem;
-}
-
-/* Context chips row on the dashboard header (added in readiness.js). */
-.or-contextchips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0 0 1.4rem; }
-.or-contextchips .or-chip { font-size: 0.8rem; }
-
-/* Soften the two accent score colors toward the calm palette. */
-.or-score-num.or-good, .or-bar-pct { color: var(--or-green); }
-
-
 /* ---- 11. OfferReady Help widget (chatbot): flat navy, calm shadow ---- */
 #kb-fab {
   background: var(--or-navy) !important;
@@ -1953,7 +944,6 @@ a.ig-feature.ig-link .ig-d {
   font-size: 0.68rem; font-weight: 500; opacity: 0.75; letter-spacing: 0.02em;
 }
 
-
 /* ---- 12. Homepage: more whitespace, typography-first, single path ----
    The home page is now hero -> workflow strip -> Start with your job ->
    one worked example. Give each section room so the one primary action is
@@ -1962,197 +952,34 @@ a.ig-feature.ig-link .ig-d {
 .md-typeset .or-hero .home-hero { font-size: 1.15rem; line-height: 1.6; max-width: 42rem; }
 .md-typeset .or-hero .home-cta { margin: 1.4rem 0 0; }
 
-/* Breathing room between the home sections. */
-#analyze-app { margin-top: 0.5rem; }
-.md-typeset h2 + .or-flow { margin-top: 0.6rem; }
-
-/* Workflow strip: the strongest section — make it legible and roomy. */
-/* Beautified flow strip. Markup: .or-flow > .or-step(> span.pill + i.or-arrow).
-   Each .or-step keeps its pill + connector together so arrows never orphan. */
-.or-flow {
-  gap: 0.55rem 0.3rem;
-  font-size: 1rem;
-  margin: 0.9rem 0 1.3rem;
-  align-items: center;
-}
-/* Wrapper: pill + arrow stay on one line together. */
-.md-typeset .or-flow .or-step {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: none;
-  border: 0;
-  padding: 0;
-  box-shadow: none;
-  white-space: nowrap;
-}
-/* The pill itself. */
-.md-typeset .or-flow .or-step > span {
-  display: inline-block;
-  padding: 0.46rem 0.95rem;
-  background: var(--or-surface);
-  border: 1px solid var(--or-border);
-  color: var(--or-text);
-  border-radius: 999px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  box-shadow: 0 1px 2px rgba(15, 35, 66, 0.05);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-}
-.md-typeset .or-flow .or-step > span:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(15, 35, 66, 0.10);
-  border-color: var(--kb-green, #1f9d63);
-}
-/* Final step is the destination — tint it brand green so the eye lands there. */
-.md-typeset .or-flow .or-step:last-child > span {
-  background: rgba(31, 157, 99, 0.10);
-  border-color: rgba(31, 157, 99, 0.45);
-  color: #0f6b43;
-}
-/* Muted connector between steps. */
-.md-typeset .or-flow .or-arrow {
-  color: var(--or-muted, #6b7a90);
-  font-style: normal;
-  font-size: 1.05rem;
-  opacity: 0.7;
-}
-
-/* ---- "How it works" as a four-step CARD GRID (replaces the pill strip) ---- */
-.or-steps {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.9rem;
-  margin: 1rem 0 1.4rem;
-}
-@media screen and (max-width: 59.9em) {
-  .or-steps { grid-template-columns: repeat(2, 1fr); }
-}
-@media screen and (max-width: 29.9em) {
-  .or-steps { grid-template-columns: 1fr; }
-}
-.md-typeset .or-stepcard {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  padding: 1rem 1.05rem 1.1rem;
-  background: var(--or-surface, #f6f8fb);
-  border: 1px solid var(--or-border, #e2e8f1);
-  border-radius: 0.7rem;
-  box-shadow: 0 1px 2px rgba(15, 35, 66, 0.04);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-}
-.md-typeset .or-stepcard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(15, 35, 66, 0.10);
-  border-color: var(--kb-green, #1f9d63);
-}
-.md-typeset .or-stepnum {
-  font-family: var(--md-code-font, monospace);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--or-muted, #6b7a90);
-}
-.md-typeset .or-steptitle {
-  font-size: 1.02rem;
-  font-weight: 700;
-  color: var(--or-text, #16305c);
-  letter-spacing: -0.01em;
-}
-.md-typeset .or-stepdesc {
-  font-size: 0.86rem;
-  line-height: 1.45;
-  color: var(--or-muted, #51607a);
-}
-/* Final step is the destination — tinted brand green. */
-.md-typeset .or-stepcard-goal {
-  background: rgba(31, 157, 99, 0.08);
-  border-color: rgba(31, 157, 99, 0.40);
-}
-.md-typeset .or-stepcard-goal .or-steptitle { color: #0f6b43; }
-.md-typeset .or-stepcard-goal .or-stepnum { color: #1f9d63; }
-
-
-/* ---- 13. Decorative editorial footer band (global, aria-hidden) ----
-   Calm muted line-art scene under the footer copyright/links row. Purely
-   visual; original artwork in the OfferReady palette. Full-bleed, capped
-   height, hidden on print and for reduced-motion/compact contexts. */
-.or-footer-scene {
-  width: 100%;
-  margin-top: 1.1rem;
-  line-height: 0;
-  overflow: hidden;
-  /* Divider so the light band reads as a distinct zone from the navy
-     copyright row above it (prevents the text sitting on the artwork). */
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
-}
-.or-footer-scene svg {
-  display: block;
-  width: 100%;
-  height: clamp(96px, 12vw, 170px);
-}
-@media print {
-  .or-footer-scene { display: none !important; }
-}
-
-
 /* ============================================================
-   Sidebar visual hierarchy — Workflow primary, Resources secondary.
-   IA is unchanged; this is presentation only. In the primary left nav the
-   7 Practice activities sit at nesting level 2 (direct children of Practice);
-   the entire knowledge library lives under the collapsed "Resources" group,
-   i.e. level 3 and deeper. We give the deep library a lighter, denser,
-   secondary treatment so Practice reads as primary and Resources feels
-   optional — without touching structure, URLs, or page order.
+   Sidebar typography. With navigation.tabs the left sidebar shows only the
+   current section (Learn, Build, Interview Prep...), so group labels are
+   level-2 toggles and pages sit at level 3+. One font size everywhere;
+   group labels semibold, pages regular, the current page highlighted.
    ============================================================ */
 
-/* Top-level workflow items (Dashboard, Jobs, Analysis, Practice, Account) and
-   Practice's direct activity children: confident weight. */
+/* Direct items of a section: confident weight. */
 .md-nav--primary .md-nav__item > .md-nav__link {
   font-weight: 600;
 }
 
-/* The Resources group + everything inside it (level 3+) = secondary.
-   Material renders nested sections as <nav class="md-nav" data-md-level="N">.
-   Level >= 3 is only ever reached through Resources, so this cleanly scopes
-   the whole library without needing a name hook.
-
-   IMPORTANT: this "recede" treatment is DESKTOP-ONLY. On the persistent
-   left sidebar the muted/denser style helps Practice read as primary. In the
-   MOBILE DRAWER the same selectors made the deep items look greyed-out/disabled
-   and — combined with the tighter padding + Material's drawer transitions —
-   caused list items to overlap. We now gate it behind Material's sidebar
-   breakpoint so the mobile drawer uses the theme's correct full-contrast,
-   full-spacing rendering. Opacity is also raised so the desktop library reads
-   as calm, not shadowed. Structure/URLs/order are unchanged. */
+/* Pages inside a group (level 3+): regular weight, denser rows. Desktop only;
+   in the mobile drawer the same treatment made rows overlap, so the drawer
+   keeps Material's full-spacing rendering (see the mobile block below). */
 @media screen and (min-width: 76.25em) {
-  /* Force EVERY primary-nav link — top-level AND all nested Resources depths —
-     to the same explicit font-size. Material scales nested .md-nav font-size
-     down via inheritance, which is why the Resources drill-down looked like a
-     smaller typeface. Pinning an absolute value (with !important to beat the
-     inherited scaling) makes the whole sidebar one consistent size. The only
-     remaining distinction between library and workflow items is font-weight. */
-  /* Match Material's TOP-LEVEL item size exactly. Material sets
-     `.md-nav__item { font-size: .8rem }` on direct items, but nested navs
-     inherit the smaller base `.md-nav { font-size: .7rem }`, so Resources'
-     children rendered at .7rem — visibly smaller. Pin every primary-nav item
-     and link to .8rem so the whole sidebar is one consistent size. */
+  /* Material shrinks nested navs to .7rem by inheritance; pin one size. */
   .md-nav--primary .md-nav__item,
   .md-nav--primary .md-nav__link {
-    font-size: 0.8rem !important;
+    font-size: 0.72rem !important;
   }
   .md-nav--primary .md-nav[data-md-level="3"],
   .md-nav--primary .md-nav[data-md-level="4"],
   .md-nav--primary .md-nav[data-md-level="5"],
   .md-nav--primary .md-nav[data-md-level="6"] {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     opacity: 1;                      /* full strength — not greyed/shadowed */
   }
-  /* Resources library links read as REAL, legible links: full primary text
-     colour, just a touch lighter in weight/size than the top-level workflow
-     items so Practice still reads as primary. (Previously these used the muted
-     slate --or-text-secondary, which looked disabled/"shadowed".) */
   .md-nav--primary .md-nav[data-md-level="3"] .md-nav__link,
   .md-nav--primary .md-nav[data-md-level="4"] .md-nav__link,
   .md-nav--primary .md-nav[data-md-level="5"] .md-nav__link,
@@ -2163,8 +990,6 @@ a.ig-feature.ig-link .ig-d {
     padding-top: 0.22rem;
     padding-bottom: 0.22rem;
   }
-  /* The active library page still gets a clear highlight (don't mute the one
-     you're on). */
   .md-nav--primary .md-nav[data-md-level="3"] .md-nav__link--active,
   .md-nav--primary .md-nav[data-md-level="4"] .md-nav__link--active,
   .md-nav--primary .md-nav[data-md-level="5"] .md-nav__link--active,
@@ -2193,8 +1018,8 @@ a.ig-feature.ig-link .ig-d {
   }
 }
 
-/* Section toggle labels (Analysis, Practice, Learn, Build, …) read as calm
-   group headers, not competing links. */
+/* Section toggle labels (Foundations, Setup Guides, Choose Your Path...) read
+   as calm group headers, not competing links. */
 .md-nav--primary .md-nav__item--nested > label.md-nav__link {
   color: var(--or-text);
   font-weight: 600;
@@ -2214,28 +1039,21 @@ a.ig-feature.ig-link .ig-d {
    analysis/question pages scan like a product, not a doc dump. */
 .md-typeset { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 .md-typeset p { line-height: 1.65; }
-/* Keep content from stretching too wide on large screens (readability). */
-.md-grid { max-width: 72rem; }
 
 /* ---- 2. Accessible, consistent focus rings ----
    One visible focus style for keyboard users across every interactive control
    in the apps (buttons, inputs, chips, cards-as-links). Mouse clicks are
    unaffected (:focus-visible only). */
 .ip-btn:focus-visible,
-.or-btn:focus-visible,
-.or-input:focus-visible,
 .ip-answerbox:focus-visible,
-.or-scn-chip:focus-visible,
-.or-onboard-chip:focus-visible,
 .ig-feature.ig-link:focus-visible,
-.or-oauth-btn:focus-visible,
 .md-nav__link:focus-visible {
   outline: 2px solid var(--or-green, #1f9d63);
   outline-offset: 2px;
   border-radius: 0.4rem;
 }
 /* Inputs: calm green focus border (replaces the heavier default). */
-.or-input:focus, .ip-answerbox:focus {
+.ip-answerbox:focus {
   outline: none;
   border-color: var(--or-green, #1f9d63);
   box-shadow: 0 0 0 3px var(--or-green-soft, rgba(31,157,99,0.10));
@@ -2244,111 +1062,43 @@ a.ig-feature.ig-link .ig-d {
 /* ---- 3. Touch-friendly controls (WCAG ~44px targets on touch devices) ----
    Only on coarse pointers so desktop density is preserved. */
 @media (pointer: coarse) {
-  .ip-btn, .or-btn, .or-cta, .pr-cta,
-  .or-scn-chip, .or-onboard-chip, .or-oauth-btn,
-  .ip-rate .ip-star, .ip-rate .ip-btn {
+  .ip-btn, .pr-cta {
     min-height: 44px;
   }
-  .ip-rate { gap: 0.5rem; }
   /* Comfortable spacing between stacked actions so fat-finger taps don't
      hit the wrong button. */
-  .or-actions, .ip-controls, .or-job-actions { gap: 0.6rem; }
-  /* Per-card "Next" link on My Jobs reads as an easy tap target on touch. */
-  .or-job-nextlink { min-height: 32px; display: inline-flex; align-items: center; }
+  .ip-controls { gap: 0.6rem; }
 }
 
 /* ---- 4. Mobile audit: no horizontal scroll, clean stacking ----
    Applies to EVERY JS-rendered app surface. Phones first. */
 @media screen and (max-width: 44.9375em) {
   /* Nothing in an app should force the page wider than the viewport. */
-  #analyze-app, #gap-app, #questions-app, #scenario-app, #dashboard-app,
-  #jobs-app, #ip-app, #ip-dash, #simulator-app, #walkthrough-app, #why-app {
+  #why-app {
     max-width: 100%;
     overflow-x: hidden;
   }
 
-  /* Any wide data table inside an app scrolls inside its own box, not the page. */
-  #analyze-app table, #gap-app table, #questions-app table,
-  #dashboard-app table, #ip-dash table, #walkthrough-app .wt-table,
-  .or-practice-table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
   /* Card + stat grids collapse to a single column for comfortable reading. */
-  .or-jobs-grid,
-  .or-grid,
-  .ip-dash-stats,
   .ip-setup,
-  #simulator-app .ip-area-checks,
-  #walkthrough-app .wt-grid,
   .ig-features, .pr-tiers, .pr-quotes {
     grid-template-columns: 1fr !important;
   }
 
   /* Action rows stack full-width so buttons are easy to tap and never clip. */
-  .or-actions, .or-job-actions, .ip-controls {
+  .ip-controls {
     flex-direction: column;
     align-items: stretch;
   }
-  .or-actions > .ip-btn, .or-actions > .or-btn,
-  .or-job-actions > .ip-btn, .ip-controls > .ip-btn {
+  .ip-controls > .ip-btn {
     width: 100%;
     text-align: center;
     margin: 0;
   }
-  /* But keep genuinely inline control rows (selects, rating buttons) wrapping,
-     not forced full-width columns. */
-  .ip-rate { flex-direction: row; flex-wrap: wrap; }
-  .ip-rate .ip-btn, .ip-rate .ip-star { width: auto; }
-
-  /* Score header stacks: big number above its label. */
-  .or-score-head { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
-
-  /* Chip rows wrap tightly without overflow. */
-  .or-chips, .or-chips-block, .or-scn-filter, .or-contextchips, .or-job-stats {
-    flex-wrap: wrap;
-  }
-
-  /* My Jobs row-wise card: on phones the horizontal strip stacks vertically so
-     title, stats, pipeline, next action, and buttons read top-to-bottom with
-     comfortable tap targets instead of cramming into a row. */
-  .or-job-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: .55rem;
-  }
-  .or-job-titlerow, .or-job-stats, .or-job-pipeline, .or-job-next, .or-job-date {
-    flex-basis: auto;
-    min-width: 0;
-  }
-  .or-job-stats { gap: .4rem; }
-  .or-job-stats .or-jobstat { flex: 1 1 0; }     /* even 3-up tiles on narrow cards */
-  /* Pipeline chips + Next action get a bit more breathing room when tapped. */
-  .or-job-pipeline { gap: .4rem; }
-  .or-job-next { padding-top: .1rem; }
-  /* The per-card Next link is an easy, obvious tap target. */
-  .or-job-nextlink { padding: .2rem 0; display: inline-block; }
-
-  /* "What this tests" + "Why these questions" panels keep comfortable padding
-     and never force horizontal scroll. */
-  .or-scn-tests, .or-why { padding-left: .85rem; padding-right: .85rem; }
-  .or-scn-tests-list { margin-left: 1rem; }
-
-  /* Readiness bar rows: let the label shrink so the bar + pct stay on-screen. */
-  .or-bar-row { gap: 0.5rem; }
-  .or-bar-label { width: 84px; font-size: 0.8rem; }
-
   /* App cards: a touch less inner padding to reclaim width on small screens. */
-  #dashboard-app .or-card, #jobs-app .or-job-card,
-  #gap-app .or-card, #questions-app .or-card, .ip-card {
+  .ip-card {
     padding: 1rem 1.05rem;
   }
-
-  /* Current Job banner wraps gracefully instead of truncating. */
-  .or-jobbanner { font-size: 0.98rem; }
 
   /* The Defend completion summary number shouldn't overflow narrow screens. */
   .ip-summary { padding: 1.1rem; }
@@ -2358,15 +1108,9 @@ a.ig-feature.ig-link .ig-d {
   .ip-q { font-size: 1.05rem; }
 }
 
-/* ---- 5. Very small phones (<=23.4em): tighten the dashboard topic rows. */
-@media screen and (max-width: 23.4em) {
-  .ip-topicrow { grid-template-columns: 6rem 1fr 2.4rem; }
-  .or-stat-num, .or-score-num { font-size: 1.7rem; }
-}
-
 /* ---- 6. Responsive tags/badges: never let a long skill tag overflow ----
    Allow wrapping inside the tag and keep the row flexible. */
-.or-chip, .or-pill, .or-tag, .or-diff, .ip-topic, .or-scn-lock {
+.ip-topic {
   max-width: 100%;
   white-space: normal;
   overflow-wrap: anywhere;
@@ -2375,412 +1119,508 @@ a.ig-feature.ig-link .ig-d {
 /* ---- 7. Card hierarchy consistency ----
    One consistent radius + hairline across the app card families so Analyze,
    Gap, Questions, Dashboard, My Jobs read as one product. */
-.ip-card, .or-card, .or-scn-card, .or-job-card {
+.ip-card {
   border-radius: 0.75rem;
 }
 
 /* ---- 8. Images/SVG never cause horizontal scroll. */
 .md-typeset img, .md-typeset svg { max-width: 100%; height: auto; }
-.or-spark, .ip-chart { max-width: 100%; }
 
 /* ============================================================
-   UI/UX SPRINT — PHASE 2: header + footer polish.
-   Presentation-only. No nav structure, route, or logic changes.
+   SITE CHROME — header, section tabs, typography, sidebar, footer.
+   Markup: overrides/partials/header.html (wordmark + "Library" label +
+   "Open the app" CTA), overrides/partials/tabs.html, and
+   overrides/partials/footer.html (multi-column footer). Appended last so it
+   wins over the older layers above. Heights stay at Material's defaults
+   (2.4rem header, 2.4rem tabs) so sticky sidebars stay aligned.
    ============================================================ */
 
-/* ---- Footer: compact professional block ----
-   Left: wordmark + one-line descriptor + copyright. Right: utility/legal links.
-   Reuses the existing .or-footer flex (space-between, wrap) from Phase-0 CSS. */
-.or-footer__brand {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 12rem;
-}
-.or-footer__name {
-  font-weight: 800;
-  font-size: 0.95rem;
-  letter-spacing: -0.01em;
-  color: #fff;
-}
-/* "Ready" picks up the brand green, matching the header + hero wordmark. */
-.or-footer__name .or-ready { color: var(--kb-green, #1f9d63); }
-.or-footer__tag {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.82);
-}
-.or-footer__copy {
-  font-size: 0.72rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin-top: 0.15rem;
-}
-/* Links row: comfortable spacing, readable brand-blue on navy. */
-.or-footer__links { gap: 6px 10px; }
+/* ---- Content width ---- */
+.md-grid { max-width: 72rem; }
 
-/* Mobile: stack brand over links, centered, with room between. */
-@media (max-width: 480px) {
-  .or-footer { flex-direction: column; align-items: center; text-align: center; gap: 0.8rem; }
-  .or-footer__brand { align-items: center; min-width: 0; }
-  .or-footer__links { justify-content: center; }
+/* ---- Header bar ---- */
+.md-header {
+  background: var(--or-ink);
+  color: var(--or-on-ink-strong);
+  box-shadow: none;
 }
+.md-header--shadow,
+.md-header--lifted.md-header--shadow {
+  box-shadow: 0 1px 0 var(--or-on-ink-line), 0 6px 18px rgba(8, 18, 38, 0.18);
+}
+.md-header__inner { padding: 0 0.4rem; }
 
-/* ---- Header: clearer current-page title + responsive polish ----
-   Material shows the page title in the header once you scroll past the H1
-   (navigation.tracking is enabled). Give that title confident, legible weight
-   so "where am I" is always answerable from the top bar. Logic/markup unchanged. */
-.md-header__title--active .md-header__topic:first-child .md-ellipsis {
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.96);
-}
-/* Keep the brand wordmark (the OTHER topic) visually distinct from the page
-   title when both are present. */
-.md-header__title .md-header__topic ~ .md-header__topic .md-ellipsis {
-  font-weight: 600;
-}
-
-/* Search field: calmer, rounded, so the header reads premium not utilitarian. */
-.md-search__form {
-  border-radius: 2rem;
-  background: rgba(255, 255, 255, 0.14);
-}
-.md-search__form:hover { background: rgba(255, 255, 255, 0.2); }
-[data-md-toggle="search"]:checked ~ .md-header .md-search__form {
-  background: #fff;
-}
-
-/* Header action icons (search, menu, repo): comfortable tap size on touch. */
-@media (pointer: coarse) {
-  .md-header__button { min-width: 44px; min-height: 44px; }
-}
-
-/* Mobile header: hamburger | logo+wordmark | (title). Material already renders
-   the drawer toggle (hamburger) + logo on small screens; make sure the
-   wordmark stays visible next to the mark and nothing is clipped. */
-@media screen and (max-width: 76.1875em) {
-  .md-header__title { font-size: 0.95rem; }
-  .md-header__button.md-logo { margin-right: 0.5rem; }
-}
-
-/* ---- Logo = the always-visible "go home" button ----
-   The header mark links to index.html, so it is also the primary "back to
-   start" affordance on deep pages (e.g. Practice History) where the drawer
-   only shows one leaf. Guarantee it is always rendered and tappable: never let
-   it collapse to zero, and keep the image visible regardless of the generic
-   `svg { color:#fff }` header rule above (the mark uses explicit stroke colors,
-   not currentColor, so it stays painted). Presentation-only. */
+/* Logo mark + wordmark: one tight, predictable gap (no Material padding). */
 .md-header__button.md-logo {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  margin: 0 0.55rem 0 0.4rem;
+  flex: 0 0 auto;
   opacity: 1 !important;
   visibility: visible !important;
 }
 .md-header__button.md-logo img,
 .md-header__button.md-logo svg {
   display: block;
-  width: 1.875rem !important;
-  height: 1.875rem !important;
+  width: 1.6rem !important;
+  height: 1.6rem !important;
 }
-@media screen and (max-width: 29.9em) {
-  /* Very narrow: keep the wordmark but let it ellipsize rather than push the
-     search/menu icons off-screen (prevents header overflow). */
+.md-header__title {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  margin-right: 0.4rem;
+}
+.md-header__title .md-header__topic,
+.md-header__title .md-header__topic .md-ellipsis {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+/* Wordmark: "Offer" white + green "Ready" (span injected by brand.js). */
+.md-header__topic:first-child {
+  align-items: center;
+  font-weight: 800;
+}
+.md-header__topic:first-child .md-ellipsis {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: #fff;
+}
+.md-header__title .md-ellipsis .or-ready { color: #2bc07f; }
+/* "Library" label after the wordmark, set off by a hairline divider. */
+.or-header-label {
+  flex: 0 0 auto;
+  margin-left: 0.6rem;
+  padding-left: 0.6rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.1rem;
+  color: var(--or-on-ink);
+}
+/* Page title (shown in place of the wordmark after scrolling past the H1). */
+.md-header__topic + .md-header__topic .md-ellipsis {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Header icon buttons (menu, palette toggle, search on small screens). */
+.md-header__button.md-icon { color: var(--or-on-ink); }
+.md-header__button.md-icon:hover,
+.md-header__button.md-icon:focus-visible { color: #fff; opacity: 1; }
+.md-header__option { margin-left: 0.2rem; }
+@media (pointer: coarse) {
+  .md-header__button { min-width: 44px; min-height: 44px; }
+}
+
+/* ---- Search (desktop field) ---- */
+@media screen and (min-width: 60em) {
+  .md-search__form {
+    height: 1.7rem;
+    border-radius: 0.45rem;
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+    transition: background 120ms ease, box-shadow 120ms ease;
+  }
+  .md-search__form:hover {
+    background: rgba(255, 255, 255, 0.11);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+  }
+  .md-search__input,
+  .md-search__suggest { font-size: 0.7rem; }
+  .md-search__input::placeholder { color: rgba(255, 255, 255, 0.6); }
+  .md-search__input + .md-search__icon { color: rgba(255, 255, 255, 0.6); }
+  .md-search__icon[for="__search"] { top: 0.15rem; }
+  /* Keyboard hint ("/" focuses search in Material); hidden once open. */
+  .md-search__form::after {
+    content: "/";
+    position: absolute;
+    top: 50%;
+    right: 0.45rem;
+    transform: translateY(-50%);
+    min-width: 1rem;
+    padding: 0 0.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 0.25rem;
+    font: 600 0.55rem/0.95rem var(--md-code-font-family, monospace);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    pointer-events: none;
+  }
+  [data-md-toggle="search"]:checked ~ .md-header .md-search__form {
+    background: var(--md-default-bg-color);
+    box-shadow: 0 8px 24px rgba(8, 18, 38, 0.22);
+    border-radius: 0.45rem 0.45rem 0 0;
+  }
+  [data-md-toggle="search"]:checked ~ .md-header .md-search__form::after { display: none; }
+  [data-md-toggle="search"]:checked ~ .md-header .md-search__input::placeholder {
+    color: var(--md-default-fg-color--light);
+  }
+  [data-md-toggle="search"]:checked ~ .md-header .md-search__input + .md-search__icon {
+    color: var(--md-default-fg-color--light);
+  }
+}
+
+/* ---- "Open the app" CTA (header partial) ---- */
+.or-header-cta {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 1.7rem;
+  margin: 0 0.4rem 0 0.6rem;
+  padding: 0 0.75rem;
+  border-radius: 0.45rem;
+  background: var(--or-signal);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background 120ms ease;
+}
+.or-header-cta:hover,
+.or-header-cta:focus-visible { background: var(--or-signal-hover); color: #fff; }
+.or-header-cta:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.or-header-cta__icon { width: 0.8rem; height: 0.8rem; transition: transform 120ms ease; }
+.or-header-cta:hover .or-header-cta__icon { transform: translateX(2px); }
+.or-header-cta__short { display: none; }
+
+/* ---- Section tabs (desktop) ---- */
+.md-tabs {
+  background: var(--or-ink);
+  color: var(--or-on-ink-strong);
+  box-shadow: inset 0 1px 0 var(--or-on-ink-line);
+}
+.md-tabs__list { margin-left: 0.2rem; }
+.md-tabs__item {
+  position: relative;
+  height: 2.4rem;
+  padding: 0 0.7rem;
+}
+.md-tabs__link {
+  margin-top: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--or-on-ink);
+  opacity: 1;
+  transition: color 120ms ease;
+}
+.md-tabs__link:hover,
+.md-tabs__link:focus-visible { color: #fff; opacity: 1; }
+.md-tabs__item--active .md-tabs__link { color: #fff; font-weight: 600; }
+.md-tabs__item--active::after {
+  content: "";
+  position: absolute;
+  left: 0.7rem;
+  right: 0.7rem;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--or-signal);
+}
+
+/* ---- Phones / tablets: compact header ---- */
+@media screen and (max-width: 76.1875em) {
+  .md-header__button.md-logo { margin: 0 0.45rem 0 0.1rem; }
+}
+@media screen and (max-width: 59.9375em) {
+  .or-header-label { display: none; }
+  .or-header-cta { margin: 0 0.3rem 0 0.2rem; padding: 0 0.6rem; }
+}
+@media screen and (max-width: 44.9375em) {
+  /* "Open the app" collapses to a compact "App" pill. */
+  .or-header-cta__long { display: none; }
+  .or-header-cta__short { display: inline; }
+  .or-header-cta { padding: 0 0.5rem; gap: 0.2rem; height: 1.6rem; font-size: 0.65rem; }
+  .md-header__title { margin-right: 0.1rem; }
   .md-header__title .md-ellipsis {
-    max-width: 42vw;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .md-header__button.md-icon { margin-left: 0.05rem; margin-right: 0.05rem; }
+}
+@media screen and (max-width: 22.5em) {
+  /* Very narrow (<=360px): the arrow alone carries the CTA. */
+  .or-header-cta__short { display: none; }
+  .or-header-cta { padding: 0 0.4rem; }
 }
 
-/* ============================================================
-   UI/UX SPRINT — PHASE 3: per-page app polish.
-   Presentation-only (CSS + markup-class tweaks in the render fns).
-   No logic, persistence, route, or readiness-formula changes.
-   ============================================================ */
+/* ---- Typography rhythm ---- */
+.md-typeset a { color: var(--or-link); }
+.md-typeset a:hover,
+.md-typeset a:focus { color: var(--or-link); text-decoration: underline; text-underline-offset: 0.15em; }
+.md-typeset .md-button { color: var(--md-primary-fg-color); }
+.md-typeset .md-button:hover { text-decoration: none; }
+.md-typeset .md-button--primary,
+.md-typeset .md-button--primary:hover { color: #fff; }
 
-/* Screen-reader-only utility (keep a plain status line for a11y while showing
-   a richer visual panel). */
-.or-visually-hidden {
-  position: absolute !important;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0 0 0 0);
-  white-space: nowrap; border: 0;
-}
-
-/* ---- Defend: completion panel ----
-   Clear "done" state so the user knows the scenario saved and what's next.
-   Calm brand-green framing + a short "what happened" checklist. */
-.or-complete {
-  margin: 0.6rem 0 0.4rem;
-  padding: 1rem 1.1rem;
-  border: 1px solid rgba(31, 157, 99, 0.45);
-  border-left: 4px solid var(--or-green, #1f9d63);
-  border-radius: 0.6rem;
-  background: var(--or-green-soft, rgba(31, 157, 99, 0.10));
-}
-.or-complete-badge {
-  font-size: 1.1rem;
+.md-typeset h1 {
+  margin: 0 0 1rem;
+  font-size: 2em;
   font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: var(--md-default-fg-color);
+}
+.md-typeset h2 {
+  margin: 2.4em 0 0.7em;
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid var(--or-border);
+  font-size: 1.45em;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+.md-typeset h3 {
+  margin: 1.8em 0 0.6em;
+  font-size: 1.15em;
+  font-weight: 650;
+  line-height: 1.4;
   letter-spacing: -0.01em;
-  color: #0f6b43;
 }
-.or-complete-list {
-  list-style: none;
-  margin: 0.6rem 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  font-size: 0.92rem;
-}
-.or-complete-list li { position: relative; padding-left: 1.5rem; }
-.or-complete-list li.or-complete-ok::before {
-  content: "\2713";
-  position: absolute; left: 0; top: 0;
-  font-weight: 800; color: var(--or-green, #1f9d63);
-}
-.or-complete-list strong { color: var(--or-text, #16233b); }
+.md-typeset h4 { margin: 1.5em 0 0.5em; font-weight: 700; letter-spacing: 0; }
+.md-typeset h1 + h2,
+.md-typeset h1 + p + h2 { margin-top: 1.6em; }
+/* The home hero H1 keeps its own white, oversized treatment. */
+.md-typeset .or-hero h1 { color: #fff; margin: 0 0 0.2rem; }
 
-/* Make the Defend summary read as a result card, not a loading state:
-   center the actions and give the primary CTA clear dominance. */
-.ip-summary .or-actions { justify-content: center; margin-top: 1rem; }
-.ip-summary .or-complete { text-align: left; }
+/* Lists + paragraphs share one vertical rhythm. */
+.md-typeset ul li, .md-typeset ol li { margin-bottom: 0.35em; }
 
-/* ---- Dashboard: prominent "Next recommended action" block ----
-   A labeled, framed panel so the single next step is unmissable. */
-.or-nextaction {
-  margin: 0 0 1.6rem;
-  padding: 0.9rem 1.1rem;
-  border: 1px solid rgba(31, 157, 99, 0.40);
-  border-left: 4px solid var(--or-green, #1f9d63);
-  border-radius: 0.6rem;
-  background: var(--or-green-soft, rgba(31, 157, 99, 0.08));
-}
-.or-nextaction-label {
+/* ---- Tables ---- */
+.md-typeset table:not([class]) {
   font-size: 0.72rem;
+  border: 1px solid var(--or-border);
+  border-radius: 0.6rem;
+  box-shadow: none;
+}
+.md-typeset table:not([class]) th {
+  background: var(--or-canvas);
+  font-weight: 650;
+  color: var(--md-default-fg-color);
+  border-bottom: 1px solid var(--or-border);
+}
+.md-typeset table:not([class]) td { border-top: 1px solid var(--or-border); vertical-align: top; }
+.md-typeset table:not([class]) tbody tr:first-child td { border-top: 0; }
+.md-typeset table:not([class]) tbody tr:hover { background: var(--or-surface); box-shadow: none; }
+
+/* ---- Admonitions / details ---- */
+.md-typeset .admonition,
+.md-typeset details {
+  font-size: 0.72rem;
+  border-width: 1px;
+  border-left-width: 4px;
+  border-radius: 0.6rem;
+  box-shadow: none;
+}
+.md-typeset .admonition-title,
+.md-typeset summary { font-weight: 650; }
+
+/* ---- Code ---- */
+.md-typeset code { border-radius: 0.3rem; font-size: 0.85em; }
+.md-typeset pre > code { border-radius: 0.6rem; }
+.md-typeset .highlight,
+.md-typeset pre { border-radius: 0.6rem; }
+[data-md-color-scheme="default"] {
+  --md-code-bg-color: var(--or-canvas);
+}
+.md-typeset pre > code { box-shadow: inset 0 0 0 1px var(--or-border); }
+
+/* ---- Grid cards ---- */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid > .card {
+  border: 1px solid var(--or-border) !important;
+  border-radius: 0.75rem;
+  background: var(--md-default-bg-color);
+}
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid > .card:hover { border-color: var(--or-signal) !important; }
+
+/* ---- Sidebars ---- */
+.md-nav__link { transition: color 120ms ease; }
+.md-nav__link:hover,
+.md-nav__item .md-nav__link:hover { color: var(--or-link) !important; }
+.md-nav__item .md-nav__link--active,
+.md-nav--primary .md-nav__link--active,
+.md-nav--primary .md-nav[data-md-level] .md-nav__link--active {
+  color: var(--or-link) !important;
+  font-weight: 600 !important;
+}
+/* Right-hand "On this page" TOC: smaller, muted, active item highlighted. */
+.md-nav--secondary .md-nav__title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--or-text-secondary);
+  box-shadow: none;
+  background: transparent;
+}
+.md-nav--secondary .md-nav__link { font-size: 0.68rem; color: var(--or-text-secondary); }
+.md-nav--secondary .md-nav__link--passed { color: var(--or-text-secondary); }
+@media screen and (min-width: 76.25em) {
+  /* Thin separator between the left sidebar and the content. */
+  .md-sidebar--primary .md-sidebar__scrollwrap { border-right: 1px solid var(--or-border); }
+}
+
+/* ---- Footer: previous / next page ---- */
+.md-footer {
+  background: var(--or-ink);
+  color: var(--or-on-ink-strong);
+}
+.md-footer__inner { padding: 0.8rem 0.4rem 0.2rem; }
+.md-footer__link {
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  opacity: 1;
+  color: var(--or-on-ink);
+}
+.md-footer__link:hover,
+.md-footer__link:focus { color: #fff; opacity: 1; }
+.md-footer__direction { opacity: 0.75; }
+
+/* ---- Footer: multi-column site footer ---- */
+.md-footer-meta.or-site-footer {
+  background: var(--or-ink);
+  color: var(--or-on-ink);
+  border-top: 1px solid var(--or-on-ink-line);
+}
+.or-site-footer__inner { padding: 2.4rem 1.2rem 0; }
+.or-site-footer__top {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1.25fr) 4fr;
+  gap: 2.5rem;
+}
+.or-site-footer__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fff;
+}
+.or-site-footer__logo img { width: 1.4rem; height: 1.4rem; display: block; }
+.or-site-footer__wordmark {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: #fff;
+}
+.or-site-footer__wordmark .or-ready { color: #2bc07f; }
+.or-site-footer__desc {
+  max-width: 17rem;
+  margin: 0.8rem 0 1rem;
+  font-size: 0.66rem;
+  line-height: 1.6;
+  color: var(--or-on-ink);
+}
+.or-site-footer__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 0.45rem;
+  font-size: 0.64rem;
+  font-weight: 600;
+  color: #fff;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.or-site-footer__cta:hover,
+.or-site-footer__cta:focus-visible {
+  border-color: var(--or-signal);
+  background: rgba(26, 158, 100, 0.14);
+  color: #fff;
+}
+.or-site-footer__cols {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.or-site-footer__heading {
+  margin: 0 0 0.8rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--or-text-secondary, #5b6b85);
-  margin-bottom: 0.5rem;
+  color: #fff;
 }
-.or-nextaction-row {
+.or-site-footer__col ul { margin: 0; padding: 0; list-style: none; }
+.or-site-footer__col li { margin: 0 0 0.55rem; }
+.or-site-footer__col a {
+  font-size: 0.66rem;
+  line-height: 1.4;
+  color: var(--or-on-ink);
+  transition: color 120ms ease;
+}
+.or-site-footer__col a:hover,
+.or-site-footer__col a:focus-visible { color: #fff; text-decoration: underline; text-underline-offset: 0.2em; }
+.or-site-footer__bottom {
   display: flex;
-  align-items: center;
-  gap: 0.9rem;
   flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem 1.5rem;
+  margin-top: 2.2rem;
+  padding: 1rem 0 1.2rem;
+  border-top: 1px solid var(--or-on-ink-line);
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.55);
 }
-.or-nextaction-row .or-btn { margin: 0; }
-.or-nextaction-why {
-  font-size: 0.9rem;
-  color: var(--or-text, #16233b);
-  flex: 1;
-  min-width: 12rem;
+.or-site-footer__bottom p { margin: 0; }
+.or-site-footer a:focus-visible { outline: 2px solid var(--or-signal); outline-offset: 2px; border-radius: 0.2rem; }
+
+@media screen and (max-width: 76.1875em) {
+  .or-site-footer__top { grid-template-columns: 1fr; gap: 2rem; }
+  .or-site-footer__desc { max-width: 32rem; }
 }
 @media screen and (max-width: 44.9375em) {
-  .or-nextaction-row { flex-direction: column; align-items: stretch; }
-  .or-nextaction-row .or-btn { width: 100%; text-align: center; }
-  .or-nextaction-why { min-width: 0; }
+  .or-site-footer__inner { padding: 2rem 1rem 0; }
+  .or-site-footer__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem 1rem; }
+  .or-site-footer__col a { font-size: 0.7rem; }
+  .or-site-footer__col li { margin-bottom: 0.65rem; }
+  .or-site-footer__bottom { flex-direction: column; }
+}
+@media print {
+  .or-site-footer, .or-header-cta { display: none !important; }
 }
 
-/* ---- Dashboard: "Based on" factors read as distinct blocks ----
-   Resume Match / Practice Activity / Preparation Completion each get a clear
-   on/off state so the reader can see at a glance what's counting. */
-.or-readiness-factors .or-factor {
-  padding: 0.6rem 0;
-}
-.or-factor.or-factor-on {
-  /* a subtle left tick-rail reinforces "this is counting toward readiness" */
-  padding-left: 0.1rem;
+/* Tabs: text only (section index pages carry icons that only some tabs have). */
+.md-tabs__link svg { display: none; }
+
+/* Desktop: when the current tab is a single page (Home), the left sidebar
+   would hold one lonely link. Hide it so the page uses the full width. The
+   mobile drawer is unaffected (this only applies at the desktop breakpoint). */
+@media screen and (min-width: 76.25em) {
+  .md-sidebar--primary:has(.md-nav--primary > .md-nav__list > .md-nav__item--active:not(.md-nav__item--nested)) {
+    display: none;
+  }
 }
 
-/* ---- My Jobs: card stat tiles ----
-   Replace inline topic chips with a clean 3-up stat row (value + label) so each
-   saved job scans at a glance. Stacks responsively on narrow cards. */
-.or-job-card .or-job-stats {
-  display: flex;
-  gap: 0.4rem;
-  margin: 0;
+/* Dark scheme surfaces: navy-tinted instead of Material's neutral grey. */
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: #0f1729;
+  --md-code-bg-color: #16203a;
 }
-.or-jobstat {
-  text-align: center;
-  min-width: 3.1rem;
-  padding: 0.35rem 0.45rem;
-  border: 1px solid var(--or-border, #e5e9f0);
-  border-radius: 0.5rem;
-  background: var(--or-surface, #f7f9fc);
-}
-.or-jobstat-num {
-  font-size: 1.05rem;
-  font-weight: 800;
-  line-height: 1.1;
-  color: var(--or-text, #16233b);
-}
-.or-jobstat-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--or-text-secondary, #5b6b85);
-  margin-top: 0.15rem;
-}
-/* Row layout: actions stay compact on the right (no full-width stretch). */
-.or-job-card .or-job-actions { margin: 0; }
-.or-job-card .or-job-actions .ip-btn { white-space: nowrap; }
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4 { color: var(--md-default-fg-color); }
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4 { color: var(--or-text); }
+.md-typeset .or-hero h1 { color: #fff; }
 
-/* ---- Analyze result: section cards ----
-   Each analysis section (Role Summary, Requirements, Signals, Next Step, …)
-   is framed as a calm card so the result reads as distinct, scannable blocks.
-   Scoped to #analyze-app so it can't affect doc-page h2 rhythm elsewhere. */
-#analyze-app .or-section {
-  border: 1px solid var(--or-border, #e5e9f0);
-  border-radius: 0.75rem;
-  background: var(--or-bg, #fff);
-  padding: 1.1rem 1.25rem;
-  margin: 0 0 1rem;
-  box-shadow: var(--or-shadow, 0 1px 2px rgba(16,35,59,0.05));
-}
-#analyze-app .or-section-title {
-  margin: 0 0 0.6rem;
-  padding: 0;
-  border: 0;                 /* drop the global h2 underline inside the card */
-  font-size: 1.15rem;
-  letter-spacing: -0.01em;
-}
-/* Skill / technology chips: give the chip rows breathing room + a soft tint so
-   they read as tags, not plain text. (ip-topic is reused across apps; only
-   restyle within the Analyze requirements context.) */
-#analyze-app .or-chips { gap: 0.4rem; margin: 0.3rem 0 0.8rem; }
-#analyze-app .or-chips .ip-topic {
-  background: var(--or-surface, #f7f9fc);
-  border: 1px solid var(--or-border, #e5e9f0);
-  color: var(--or-text, #16233b);
-  font-weight: 600;
-}
-/* Keep the EXPLICIT/implied type tag subtle next to a skill. */
-#analyze-app .or-chips .ip-topic .or-tag { margin-left: 0.3rem; }
-
-/* ---- Check My Fit: Strengths vs Missing Evidence callouts ----
-   Split the single detail block into two tinted callout cards so "what I have"
-   (green) and "what to prepare" (amber) are scannable at a glance. */
-.or-callout { border-left: 4px solid var(--or-border, #e5e9f0); }
-.or-callout-ok {
-  border-left-color: var(--or-green, #1f9d63);
-  background: var(--or-green-soft, rgba(31, 157, 99, 0.06));
-}
-.or-callout-warn {
-  border-left-color: #e0a53a;
-  background: rgba(237, 154, 28, 0.07);
-}
-.or-callout .or-chips-block:last-child,
-.or-callout .or-chips:last-child { margin-bottom: 0; }
-
-/* ---- Practice Questions: distinct category sections ----
-   Each category card gets a colored left accent + a matching heading tint so
-   Technical / Behavioral / System Design / Leadership are visually separable. */
-.or-qcat { border-left: 4px solid var(--or-border, #e5e9f0); }
-.or-qcat-title { margin-top: 0; }
-.or-qcat-technical    { border-left-color: #1f6fb2; }   /* blue   */
-.or-qcat-behavioral   { border-left-color: #1f9d63; }   /* green  */
-.or-qcat-system_design{ border-left-color: #7a5cc0; }   /* violet */
-.or-qcat-leadership   { border-left-color: #e0a53a; }   /* amber  */
-.or-qcat-technical    .or-qcat-title { color: #175a92; }
-.or-qcat-behavioral   .or-qcat-title { color: #15663f; }
-.or-qcat-system_design .or-qcat-title { color: #5a44a0; }
-.or-qcat-leadership   .or-qcat-title { color: #8a5a00; }
-/* Comfortable spacing between questions in the list. */
-.or-qlist .or-qitem { margin: 0.55rem 0; line-height: 1.55; }
-
-/* ---- Practice History: Readiness-vs-Local legend + empty state ----
-   A two-item legend with colored dots makes the distinction between
-   job-scoped Readiness Activity (green) and browser-only Local Practice
-   (slate) obvious at a glance. */
-.or-ptlegend { display: flex; flex-direction: column; gap: 0.6rem; margin: 0.6rem 0 0.2rem; }
-.or-ptlegend-item { display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.92rem; line-height: 1.5; }
-.or-ptlegend-dot {
-  flex: 0 0 auto;
-  width: 0.8rem; height: 0.8rem; margin-top: 0.3rem;
-  border-radius: 50%;
-}
-.or-ptlegend-readiness .or-ptlegend-dot { background: var(--or-green, #1f9d63); }
-.or-ptlegend-local .or-ptlegend-dot { background: var(--or-text-secondary, #5b6b85); }
-
-/* Friendly empty state (centered icon + title + copy + actions). */
-.or-empty { text-align: center; padding: 1.8rem 1.2rem; }
-.or-empty-ico { font-size: 2rem; line-height: 1; }
-.or-empty-title {
-  font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em;
-  margin: 0.5rem 0 0.3rem; color: var(--or-text, #16233b);
-}
-.or-empty-text {
-  max-width: 32rem; margin: 0 auto 0.9rem;
-  color: var(--or-text-secondary, #5b6b85); font-size: 0.92rem;
-}
-.or-empty-actions { margin: 0; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
-
-/* ============================================================
-   HOME — "Why OfferReady, not just ChatGPT?" differentiation.
-   Two side-by-side cards (general chat vs OfferReady) that answer a new
-   visitor's first objection. Presentation-only; rendered from the home-page
-   markup generated by sync_docs.py (.or-why). Stacks on phones.
-   ============================================================ */
-.or-why {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin: 1.2rem 0 1.4rem;
-}
-.or-why-col {
-  border: 1px solid var(--md-default-fg-color--lightest, #e3e6ec);
-  border-radius: 0.9rem;
-  padding: 1.1rem 1.2rem;
-  background: var(--md-default-bg-color, #fff);
-}
-.or-why-them {
-  background: color-mix(in srgb, var(--md-default-fg-color) 4%, transparent);
-}
-.or-why-us {
-  border-color: color-mix(in srgb, var(--or-green, #1f9d63) 45%, transparent);
-  box-shadow: 0 1px 10px color-mix(in srgb, var(--or-green, #1f9d63) 12%, transparent);
-}
-.or-why-head {
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  margin: 0 0 0.6rem;
-  font-size: 1.02rem;
-}
-.or-why-them .or-why-head { color: var(--or-text-secondary, #5b6b85); }
-.or-why-us .or-why-head { color: var(--or-green, #1f9d63); }
-.or-why-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.or-why-list li {
-  position: relative;
-  padding: 0.3rem 0 0.3rem 1.5rem;
-  font-size: 0.92rem;
-  line-height: 1.45;
-  color: var(--or-text, #16233b);
-}
-.or-why-list li + li {
-  border-top: 1px solid var(--md-default-fg-color--lightest, #eef0f4);
-}
-.or-why-them .or-why-list li::before {
-  content: "\00d7";               /* × */
-  position: absolute;
-  left: 0.2rem;
-  color: var(--or-text-secondary, #99a3b4);
-  font-weight: 700;
-}
-.or-why-us .or-why-list li::before {
-  content: "\2713";               /* ✓ */
-  position: absolute;
-  left: 0.2rem;
-  color: var(--or-green, #1f9d63);
-  font-weight: 800;
-}
+/* Home hero on phones: smaller panel padding + wordmark so "OfferReady" never
+   breaks mid-word and both CTAs fit on one line each. */
 @media screen and (max-width: 44.9375em) {
-  .or-why { grid-template-columns: 1fr; }
+  .md-typeset .or-hero { padding: 1.8rem 1.2rem; border-radius: 12px; margin-bottom: 2rem; }
+  .md-typeset .or-hero h1 { font-size: 2.1rem; }
+  .md-typeset .or-hero .home-hero { font-size: 1rem; }
+  .md-typeset .or-hero .home-cta .md-button { padding: 0.55em 1.2em; }
 }

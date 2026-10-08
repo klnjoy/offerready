@@ -4,6 +4,8 @@ icon: material/shield-lock
 
 # Security, Governance, Cost & Observability
 
+*Last reviewed: October 2026*
+
 The operational half of a Cortex system — the part that separates a demo from
 something you'd run in production. An interviewer at senior/staff level spends
 most of the time here: *how is it governed, what does it cost, how do you know
@@ -69,8 +71,21 @@ differ from ordinary SQL. Interviewers probe whether you'd notice a runaway bill
   calling an LLM function — don't summarize rows you'll discard.
 - **Batch with Streams + Tasks** for set-based enrichment instead of re-running
   ad hoc.
+- **Watch AI spend directly.** Resource monitors only govern **warehouse**
+  credits. Cortex AI Function tokens are billed separately (credits per million
+  tokens), so a resource monitor will not stop a runaway `AI_COMPLETE` job. Use
+  `SNOWFLAKE.ACCOUNT_USAGE.CORTEX_AI_FUNCTIONS_USAGE_HISTORY` (and the other
+  Cortex usage views) with scheduled alerts, per-user limits enforced by
+  revoking a dedicated AI role, and a task that cancels queries above a credit
+  threshold. Revoke the default `SNOWFLAKE.CORTEX_USER` grant from `PUBLIC` so
+  users can't bypass those controls.
 - **Resource monitors** with credit quotas + alerts on the warehouses backing
-  Cortex; separate warehouses per workload (ETL vs Search vs interactive agent).
+  Cortex (Search refresh, Analyst SQL, enrichment tasks); separate warehouses per
+  workload (ETL vs Search vs interactive agent). Snowflake recommends a
+  warehouse no larger than MEDIUM for AI functions, since a bigger one doesn't
+  speed them up.
+- **Count before you call.** `AI_COUNT_TOKENS` estimates tokens for a prompt and
+  model so you can size a batch job's cost up front.
 - **Tune Search target lag** to the freshness the use case actually needs, not
   "real-time" by reflex.
 - **Cache / reuse.** Persist enrichment results in a table; don't re-infer
@@ -78,17 +93,19 @@ differ from ordinary SQL. Interviewers probe whether you'd notice a runaway bill
 
 !!! tip "Interview soundbite"
     *"AI cost is token volume times model tier. I filter with cheap SQL before
-    inference, route easy cases to small models, batch with Tasks, and put
-    resource monitors on the Cortex warehouses so a runaway loop trips an alert,
-    not a surprise invoice."*
+    inference, route easy cases to small models, batch with Tasks, and alert on
+    the Cortex usage-history views, because resource monitors only cap warehouse
+    credits, not AI token spend."*
 
 ---
 
 ## Observability & evaluation
 
 You can't ship an agent you can't measure. Cortex supports **monitoring, end-user
-feedback, and evaluations** to refine agent behavior after deployment — build on
-that plus Snowflake's native telemetry.
+feedback, and evaluations** to refine agent behavior after deployment: **AI
+Observability** (GA July 2025) for tracing and evaluating AI apps, and **Cortex
+Agent evaluations** (GA March 2026). Build on those plus Snowflake's native
+telemetry.
 
 **What to watch**
 
@@ -127,13 +144,15 @@ flowchart LR
 Scenario drills interviewers use. For each: **diagnose → mitigate → prevent.**
 
 ??? question "The monthly Cortex bill tripled overnight. What happened and what do you do?"
-    **Diagnose:** check `QUERY_HISTORY` / warehouse metering for the Cortex
-    warehouses — look for a new job calling an LLM function over a large column,
+    **Diagnose:** check `CORTEX_AI_FUNCTIONS_USAGE_HISTORY` (token credits by
+    user, model, and query) and warehouse metering — look for a new job calling an
+    LLM function over a large column,
     a lowered Search target lag causing constant re-indexing, or an agent stuck
-    looping. **Mitigate:** pause the offending task, cap the warehouse with a
-    resource monitor, switch the call to a smaller model. **Prevent:** resource
-    monitors with alert thresholds, pre-inference SQL filters, model routing, and
-    a cost-per-question dashboard so drift is visible before invoice time.
+    looping. **Mitigate:** pause the offending task, cancel running queries, switch the
+    call to a smaller model. **Prevent:** alerts on the Cortex usage views,
+    per-user AI limits, resource monitors on the warehouses, pre-inference SQL
+    filters, model routing, and a cost-per-question dashboard so drift is visible
+    before invoice time.
 
 ??? question "Cortex Analyst started returning wrong numbers after a schema change. Fix?"
     **Diagnose:** inspect the SQL Analyst generated — a renamed column, changed
@@ -180,7 +199,7 @@ Scenario drills interviewers use. For each: **diagnose → mitigate → prevent.
 | Does masking apply to Analyst results? | Yes — masking/row-access policies travel into AI results |
 | Biggest cost driver? | Token volume × model tier (large model over big columns × many rows) |
 | First cost control? | Filter rows with cheap SQL *before* inference; route to smaller models |
-| Guardrail against runaway spend? | Resource monitors + alerts on the Cortex warehouses |
+| Guardrail against runaway spend? | Alerts on Cortex usage-history views + per-user AI limits; resource monitors cover warehouse credits only |
 | Is agent output guaranteed correct? | No — validate/review before serving |
 | Wrong Analyst numbers after schema change? | Fix the semantic view; run eval set in CI |
 | Agent leaked data — usual cause? | Governance gap (over-broad role / missing policy / elevated tool), not the model |

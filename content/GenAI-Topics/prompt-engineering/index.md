@@ -4,6 +4,20 @@ icon: material/text-box-edit
 
 # Prompt Engineering
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **Reasoning models changed chain-of-thought.** Models that think before
+      answering need less "think step by step" prompting, and hand-written
+      reasoning steps can even hurt. Give clear goals, constraints, and success
+      criteria instead, and tune the reasoning-effort setting.
+    - **Schema-enforced structured output is widely available.** Major providers
+      can constrain output to a JSON Schema, so "return ONLY valid JSON" prompting
+      is a fallback, not the main tool.
+    - **Prompts became versioned artifacts.** Teams manage them in registries,
+      gate changes on evals, and increasingly use automated prompt optimization
+      (DSPy-style) against a metric.
+
 Prompt engineering is designing inputs that reliably get high-quality output from
 an LLM — through clear instructions, examples, reasoning strategies, and
 structured output constraints.
@@ -25,7 +39,7 @@ flowchart TB
 |-----------|-------------|
 | **Zero-shot** | Simple, well-known tasks |
 | **Few-shot** | Show the format/style you want with 2–5 examples |
-| **Chain-of-Thought** | Multi-step reasoning, math, logic |
+| **Chain-of-Thought** | Multi-step reasoning on non-reasoning models (reasoning models do this internally) |
 | **ReAct** | Agentic tasks that interleave reasoning and tool calls |
 
 ## Anatomy of a good prompt
@@ -44,8 +58,11 @@ Return ONLY valid JSON:
 { "category": "<billing|technical|other>", "priority": "<low|med|high>" }
 ```
 
-Constrain the output shape so downstream code can parse it. Many providers offer
-JSON/function-calling modes that enforce a schema.
+Constrain the output shape so downstream code can parse it. Prefer the
+provider's **schema-enforced structured output** or strict tool calling, which
+constrains decoding to your JSON Schema. Prompt-only "return JSON" is a fallback,
+and you still validate (for example with Pydantic) because a schema guarantees
+shape, not correctness.
 
 ## Text-to-SQL notes
 
@@ -108,6 +125,7 @@ A common enterprise use case (and a full course project):
 - Forgetting "say you don't know" → hallucination.
 - Ignoring prompt injection from retrieved content.
 - Not lowering temperature for deterministic tasks.
+- Forcing verbose chain-of-thought onto reasoning models (cost, no gain).
 
 ### Rapid-fire
 
@@ -118,3 +136,29 @@ A common enterprise use case (and a full course project):
 | ReAct? | Interleave reasoning + tool actions |
 | Enforce JSON? | Structured output / function calling + validation |
 | Prompt injection defense? | Treat context as data, least-privilege tools, output checks |
+
+## How interviewers probe this
+
+??? question "How do you manage prompts across 30 features and five teams?"
+    A strong answer covers: prompts in version control or a registry with owners;
+    templates with typed variables; an eval set per prompt that gates changes in
+    CI; canary rollout; the prompt version logged on every trace; and rollback
+    independent of code deploys.
+
+??? question "A prompt that worked on the old model regressed on the new one. What do you do?"
+    Run the eval suite on both models to find where it regressed, read the new
+    model's prompting guidance (reasoning models often want less scaffolding),
+    adjust and re-evaluate, and pin the old model for that feature until the new
+    prompt passes. Treat model upgrades as releases.
+
+??? question "Structured output is on, but downstream still breaks. Why?"
+    The schema guarantees shape, not meaning: values can be wrong, enums can be
+    semantically misused, or fields can be empty. Add semantic validation,
+    business-rule checks, a repair or retry path, and evals on field-level
+    accuracy. Also watch for truncation from low max-token limits.
+
+??? question "How would you systematically improve a prompt instead of guessing?"
+    Define a metric and a labeled dataset, establish a baseline, change one thing
+    at a time (instructions, examples, order, output format), and keep what moves
+    the metric. Automated optimizers can search over instructions and few-shot
+    examples against the same metric.

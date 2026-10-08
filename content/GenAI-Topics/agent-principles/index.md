@@ -4,6 +4,8 @@ icon: material/robot-industrial
 
 # Building AI Agents — Principles & Patterns (Deep Dive)
 
+*Last reviewed: October 2026*
+
 A detailed, code-level guide to *how* production agents are actually built — the
 principles that keep them reliable and the patterns that structure their control
 flow. This goes below the survey level: mechanism, code, trade-offs, and the
@@ -108,7 +110,9 @@ and surface the stop reason. **Anti-pattern:** `while not done:` with no cap.
 routing) should be reproducible. Reproducibility is how you debug and trust it.
 
 **Mechanism:** temperature 0 for decisions; structured (JSON) outputs validated
-against a schema; pin the model version.
+against a schema; pin the model version. Some reasoning models fix or ignore
+sampling parameters, so don't rely on temperature alone. Reproducibility comes
+from schemas, validation, pinned versions, and logged inputs.
 
 ```python
 resp = llm.complete(prompt, temperature=0.0, response_format="json")
@@ -298,7 +302,7 @@ conditional) = transitions; a **checkpointer** persists state.
 ```python
 g = StateGraph(AgentState)
 g.add_node("plan", plan); g.add_node("act", act); g.add_node("review", review)
-g.set_entry_point("plan")
+g.add_edge(START, "plan")                # START/END from langgraph.graph
 g.add_conditional_edges("plan", route, {"act": "act", "done": END})
 g.add_edge("act", "review")
 g.add_edge("review", "plan")               # loop with an exit condition
@@ -379,3 +383,39 @@ Before an agent goes live, can you say yes to all?
     Tools/transport: [MCP](../mcp/index.md) · Coordination: [A2A](../a2a/index.md) ·
     Quality: [Observability & Eval](../observability/index.md) ·
     Practice: [Agents Interview Q&A](../../Personal-SourceCode/Agents_Interview_QA.md)
+
+## How interviewers probe this
+
+??? question "Your agent can move money. Where exactly does the deterministic layer sit?"
+    A strong answer puts it **between proposal and execution**: the model emits a
+    structured action, and code validates it against a schema and business rules
+    (amount ≤ charge, account ownership, limits), checks policy and approval
+    state, and only then calls the side-effecting API with an idempotency key. The
+    model never holds the credentials. Every proposal and decision is audited.
+
+??? question "How do you test an agent before it reaches production?"
+    Use golden *tasks*, not just golden answers. Score the final outcome and the
+    **trajectory** (tool choice, arguments, step count). Mock tools for
+    determinism, replay recorded production traces, run an adversarial
+    prompt-injection suite, and gate prompt, model, and tool changes on regression
+    against the current version.
+
+??? question "The agent passes evals but fails on long real-world tasks. What's going on?"
+    Likely causes: context growth and lossy compaction dropping key facts, step
+    caps tuned on short tasks, tool latency and timeouts compounding, or state
+    lost across interruptions. Fixes include checkpointed state, structured memory
+    for durable facts, compaction that keeps decisions and IDs, per-workload caps,
+    and long-horizon tasks added to the eval set.
+
+??? question "ReAct or plan-and-execute for this workflow? Defend the choice."
+    Use plan-and-execute when the task's shape is stable (cheaper, predictable,
+    parallelizable, re-plans on failure). Use ReAct when each step depends on what
+    the last one found. Hybrids are common: plan coarse steps, then run ReAct
+    within each. Tie the choice to measured cost, latency, and task success, not
+    preference.
+
+??? question "In a design review, what would make you reject a multi-agent proposal?"
+    Domains that aren't actually distinct, no clear owner of the final answer, no
+    delegation-depth or budget limits, hand-offs that drop context, or no
+    cross-agent tracing. Ask for evidence that a single well-scoped agent with
+    better tools was tried and fell short.

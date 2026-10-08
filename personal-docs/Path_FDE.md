@@ -4,6 +4,8 @@ icon: material/airplane-takeoff
 
 # Path: Forward Deployed Engineer (FDE)
 
+*Last reviewed: October 2026*
+
 A curated preparation path for **Forward Deployed Engineer** interviews — roles
 where you turn a vague customer need into working software, fast, in a messy real
 environment, and explain it to non-engineers. This page is your *plan*; it routes
@@ -80,7 +82,7 @@ FDE rewards breadth + speed, so this path is wider and more hands-on.
   and narrate the fix as if the customer is watching.
 - **Translate drill:** explain your last design to a non-engineer in 60 seconds
   ([Behavioral / STAR](Behavioral_STAR_Interview_QA.md)).
-- **Full run:** [Master Interview Simulator](Interview_Master_Simulator.md) +
+- **Full run:** [Mock Interview](Interview_Master_Simulator.md) (OfferReady app) +
   [Master Cheat Sheets](Interview_Cheat_Sheets.md).
 
 ---

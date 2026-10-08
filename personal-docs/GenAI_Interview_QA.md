@@ -4,6 +4,16 @@ icon: material/robot-happy
 
 # GenAI Interview Questions & Answers
 
+*Last reviewed: October 2026*
+
+!!! note "Model names in project answers"
+    Section 1 and Section 3 describe a project built on Claude 3.5 Sonnet via
+    Bedrock. That model was retired on the Anthropic API in October 2025 (Bedrock
+    runs its own lifecycle). In an interview, say which model you used *then*
+    and how you would migrate: re-run the eval set against the current Claude
+    Sonnet/Haiku tier, then switch behind a flag. Check current model IDs on the
+    provider's model page instead of memorizing them.
+
 ---
 
 ## Section 1: Multi-Bot Platform Architecture Q&A
@@ -15,7 +25,7 @@ A: Full-stack conversational AI on AWS. Frontend is React/TypeScript (Vite + Tai
 A: User sends message via WebSocket -> API Gateway WebSocket endpoint -> Publisher Lambda stores connection ID -> Backend Lambda picks up message -> Calls Bedrock invoke_model with prompt (including conversation history) -> Streams response chunk-by-chunk via WebSocket post_to_connection -> Frontend renders tokens in real-time.
 
 ### Q3: Which LLM model are you using and why?
-A: Claude 3.5 Sonnet (anthropic.claude-3-5-sonnet-20240620-v1:0) via Amazon Bedrock. Chosen for strong reasoning, fast response, large context window. Accessed through VPC endpoint for security - no public internet traffic.
+A: Claude 3.5 Sonnet (anthropic.claude-3-5-sonnet-20240620-v1:0) via Amazon Bedrock. Chosen for strong reasoning, fast response, large context window. Accessed through VPC endpoint for security - no public internet traffic. (2026 note: that model is now retired; a current build would use a current Claude Sonnet model, ideally via a Bedrock inference profile, after re-running the eval set.)
 
 ### Q4: How do you handle multiple bot types in a single platform?
 A: Bot template system. Each bot has custom instructions, knowledge sources, and configs in DynamoDB. The platform supports several bot types - policy Q&A, IT helpdesk, SQL agent, field-crew dispatch, document processing, and campaign assistance - all routed through the same backend with different prompt templates.
@@ -42,7 +52,7 @@ A: AWS Cognito for user auth. Frontend gets JWT after login. Every request inclu
 A: Jenkins pipeline builds Docker images, pushes to ECR, deploys via AWS CDK. Separate environments (sand/dev/test/prod) with environment-specific configs. CDK provisions Lambda, API Gateway, DynamoDB, S3, Cognito, VPC, IAM roles.
 
 ### Q12: Challenge you faced and how you solved it?
-A: Lambda 29-second API Gateway timeout for long LLM responses. Solved by WebSocket streaming - Lambda streams tokens as generated, user sees response immediately. Also VPC networking - set up VPC endpoints for Bedrock and DynamoDB to keep traffic private.
+A: Lambda behind API Gateway hit the 29-second integration timeout for long LLM responses. (Since mid-2024, Regional and private REST APIs can request a longer timeout, and Lambda response streaming is another option.) Solved by WebSocket streaming - Lambda streams tokens as generated, user sees response immediately. Also VPC networking - set up VPC endpoints for Bedrock and DynamoDB to keep traffic private.
 
 ### Q13: How do you handle file uploads?
 A: Presigned S3 URLs (PUT) for frontend direct upload - avoids large files through Lambda. Support PDF, DOCX, XLSX, images, audio (WAV/MP3). Textract for document extraction. Checksum check avoids reprocessing duplicates.
@@ -104,18 +114,21 @@ with open('file.bin', 'rb') as f: data = f.read()
 
 ### 8. Creating Pinecone Index
 ```python
-import pinecone
-pinecone.init(api_key="key", environment="env")
-pinecone.create_index("my-index", dimension=1536, metric="cosine")
-index = pinecone.Index("my-index")
-index.upsert(vectors=[("id1", [0.1, 0.2, ...], {"metadata": "value"})])
-results = index.query(vector=[0.1, 0.2, ...], top_k=5)
+# Current SDK (`pip install pinecone`); pinecone.init(...) is the removed v2 API
+from pinecone import Pinecone, ServerlessSpec
+
+pc = Pinecone(api_key="...")
+pc.create_index(name="my-index", dimension=1536, metric="cosine",
+                spec=ServerlessSpec(cloud="aws", region="us-east-1"))
+index = pc.Index("my-index")
+index.upsert(vectors=[{"id": "id1", "values": [0.1, 0.2, ...], "metadata": {"k": "v"}}])
+results = index.query(vector=[0.1, 0.2, ...], top_k=5, include_metadata=True)
 ```
 
 ### 9. Types of Pinecone Metrics
 - Cosine: Measures angle between vectors (most common for text embeddings)
 - Euclidean (L2): Measures straight-line distance
-- Dotproduct: Measures magnitude + direction (use when vectors are normalized)
+- Dotproduct: Measures magnitude + direction (for normalized vectors it ranks the same as cosine and is cheaper)
 
 ---
 
@@ -132,7 +145,7 @@ A: Typical response time 3-8 seconds (LLM generation + SQL execution). Responses
 
 ### 4. LLM Optimization
 A: 
-- Temperature 0.0 for deterministic SQL generation
+- Temperature 0.0 for repeatable (not guaranteed deterministic) SQL generation
 - Prompt caching for repeated schema context
 - Chunking large datasets (20 rows per LLM call)
 - Parallel processing with ThreadPoolExecutor (40 workers)
@@ -153,7 +166,9 @@ A: Tracking the RAG pipeline: query logged, retrieved chunks logged (with releva
 
 ### 9. How to make AI Model cost effective in production?
 A: 
-- Use smaller models for simple tasks (Claude Instant for classification, Sonnet for complex)
+- Use smaller models for simple tasks (a Haiku-class model for classification, Sonnet-class for complex; Claude Instant is long retired)
+- Provider prompt caching for the stable prefix (system prompt, schema, tools)
+- Batch APIs for offline/nightly jobs (typically about half price)
 - Caching: Store frequent Q&A pairs, avoid repeated LLM calls
 - Batching: Process multiple requests together
 - Prompt optimization: Shorter prompts = fewer tokens = less cost
@@ -225,7 +240,7 @@ Benefits: Streaming support built-in, async support, parallel execution, retries
 
 ### 6. LangGraph Vs LangChain
 - LangChain: Linear chains of LLM calls. Good for simple prompt -> response flows.
-- LangGraph: Adds cycles, conditional branching, state management. Good for agents that need to loop, reflect, make decisions. Built on top of LangChain.
+- LangGraph: Adds cycles, conditional branching, state management, checkpointing. Good for agents that need to loop, reflect, make decisions. From the LangChain team and integrates with it, but usable on its own; LangChain 1.x `create_agent` itself runs on LangGraph.
 - Use LangChain for straightforward RAG/QA. Use LangGraph for multi-step agents with decision logic.
 
 ### 7. Tell us about your latest project
@@ -237,7 +252,7 @@ A: Built a multi-bot GenAI platform for an energy utility. Conversational platfo
   - Automatic OpenAPI/Swagger docs
   - Type validation via Pydantic
   - Async support (ASGI)
-  - 10x faster than Flask
+  - Typically higher throughput than Flask for I/O-bound work thanks to async (benchmarks vary; avoid quoting "10x")
   - Auto request/response serialization
   - Dependency injection
 
@@ -320,7 +335,7 @@ Q8. What is RLHF?
 A: Reinforcement Learning with Human Feedback. Generate responses -> Humans rank -> Train reward model -> Optimize LLM.
 
 Q9. Context windows?
-A: Max tokens LLM can process. Claude 3.5 Sonnet = 200K. GPT-4 = 128K.
+A: Max tokens (input + output) the model can attend to in one call. As of 2026, frontier Claude, GPT and Gemini models offer roughly 1M-token windows at the top tier; smaller and open models are often 128K. Usable quality degrades well before the limit, so long context does not replace retrieval.
 
 Q10. What are embeddings?
 A: Vector representations of text. Similar meaning = close vectors in space.
@@ -496,23 +511,46 @@ correct answer and a senior one.
     itself changed. **Senior tell:** most "model drift" in LLM apps is stale
     retrieval, not stale weights.
 
+??? question "Reasoning models vs standard models — when do you pay for thinking?"
+    Reasoning models (and "extended thinking" modes) spend extra hidden or
+    summarized tokens planning before they answer. They win on multi-step math,
+    code, planning and agentic tool use; they lose on latency and cost for simple
+    extraction, classification or chat, where a fast model is as accurate.
+    **Controls:** most providers expose a reasoning-effort or thinking-budget
+    setting, and reasoning tokens bill as output, so tune it per route. Many
+    reasoning models ignore or reject `temperature`, so repeatability comes from
+    structured output and evals, not sampling settings. **Senior tell:** route by
+    task difficulty and measure accuracy per dollar on your eval set rather than
+    defaulting every call to the biggest thinking model.
+
+??? question "Models now have ~1M-token context windows. Do you still need RAG?"
+    Usually yes. Long context is great for one-off analysis of a few large
+    documents, but for a changing corpus RAG is still cheaper per query (you send
+    thousands of tokens, not a million), faster, gives citations, and enforces
+    access control per document. Quality also degrades as context grows
+    ("context rot", lost-in-the-middle), so even with a big window you curate
+    what goes in. The 2026 pattern is a hybrid: retrieve or let an agent search
+    just in time, then use the long window for the few documents that matter,
+    with prompt caching for content reused across turns.
+
 ---
 
 ## Section 7: Snowflake Cortex AI — Interview Q&A
 
 ### Q1: What is Snowflake Cortex and how does it differ from using external LLMs?
-A: Cortex is Snowflake's built-in AI layer. The key difference: your data never leaves Snowflake. No copying to S3, no external API calls to OpenAI or Bedrock. The LLM runs inside Snowflake's infrastructure, governed by your existing RBAC and data policies. Three main pieces: Cortex LLM Functions (text generation, summarization, classification), Cortex Search (semantic search without managing embeddings yourself), and Cortex Analyst (natural-language to analytics on structured data).
+A: Cortex is Snowflake's built-in AI layer. The key difference: your data never leaves Snowflake. No copying to S3, no external API calls to OpenAI or Bedrock. The LLM runs inside Snowflake's infrastructure, governed by your existing RBAC and data policies. Main pieces: **Cortex AI Functions** (formerly "LLM functions"/AISQL: AI_COMPLETE, AI_CLASSIFY, AI_FILTER, AI_AGG, AI_EXTRACT and more), **Cortex Search** (managed hybrid search without running your own embedding pipeline), **Cortex Analyst** (natural language to SQL over semantic views), and **Cortex Agents** / **Snowflake Intelligence** (GA November 2025), which orchestrate Analyst and Search as tools. In August 2026 Snowflake recommended moving new Analyst integrations to Cortex Agents.
 
 ### Q2: How do Cortex LLM Functions work? Give a real example.
 A: SQL functions you call directly on your data. For example:
 ```sql
-SELECT 
+SELECT
   document_id,
-  SNOWFLAKE.CORTEX.SUMMARIZE(document_text) as summary,
-  SNOWFLAKE.CORTEX.CLASSIFY_TEXT(document_text, 
-    ['policy', 'procedure', 'guideline', 'regulation']) as doc_type
+  AI_SUMMARIZE(document_text)                       AS summary,
+  AI_CLASSIFY(document_text,
+    ['policy', 'procedure', 'guideline', 'regulation']):labels[0]::string AS doc_type
 FROM enterprise_documents
 WHERE upload_date = CURRENT_DATE();
+-- Older equivalents still seen in code: SNOWFLAKE.CORTEX.SUMMARIZE / CLASSIFY_TEXT
 ```
 No Python, no Lambda, no external services. Runs where the data lives. A common use is to auto-classify incoming policy documents and generate summaries for an operations team.
 
@@ -524,22 +562,26 @@ Use it when: your users don't know exact keywords, when meaning matters more tha
 You can replace an external search service (e.g. Kendra) for certain use cases with Cortex Search — fewer moving parts, no separate infrastructure to manage.
 
 ```sql
-CREATE CORTEX SEARCH SERVICE policy_search
+CREATE OR REPLACE CORTEX SEARCH SERVICE policy_search
   ON policy_text
-  WAREHOUSE = 'GENAI_WH'
-  TARGET_LAG = '1 hour';
+  ATTRIBUTES doc_type
+  WAREHOUSE = genai_wh
+  TARGET_LAG = '1 hour'
+  AS (SELECT policy_text, doc_title, doc_type FROM policies);
 
--- Query it
-SELECT * FROM TABLE(
+-- Test it from SQL (SEARCH_PREVIEW returns a JSON string and takes literals only;
+-- serve real apps through the Python or REST API)
+SELECT r.value:doc_title::string AS doc_title, r.value:policy_text::string AS policy_text
+FROM TABLE(FLATTEN(PARSE_JSON(
   SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
     'policy_search',
     '{"query": "what is the overtime approval process?", "columns": ["policy_text", "doc_title"], "limit": 5}'
   )
-);
+)['results'])) r;
 ```
 
 ### Q4: Explain Cortex Analyst. How is it different from a Text-to-SQL agent?
-A: Cortex Analyst is Snowflake's built-in natural-language-to-analytics tool. You give it a semantic model (YAML file describing your tables, columns, measures, dimensions in business terms) and users ask questions in plain English.
+A: Cortex Analyst is Snowflake's built-in natural-language-to-analytics tool. You give it a semantic layer (now preferably a **semantic view** object; legacy YAML semantic models on a stage still work) describing your tables, dimensions, facts and metrics in business terms, and users ask questions in plain English. In 2026 it is usually invoked as a tool inside **Cortex Agents** rather than through the standalone API.
 
 Difference from a Text-to-SQL agent (like what we built with LangChain):
 - Cortex Analyst: managed by Snowflake, uses their semantic model, no code to maintain, handles ambiguity using the semantic layer
@@ -548,35 +590,39 @@ Difference from a Text-to-SQL agent (like what we built with LangChain):
 You can use both: Cortex Analyst for self-service dashboarding questions from non-technical users, and a LangChain agent for complex multi-step queries that need custom logic (joining across databases, applying business rules).
 
 ### Q5: How do you set up a semantic model for Cortex Analyst?
-A: YAML file that describes your data in business terms:
+A: Today the preferred route is `CREATE SEMANTIC VIEW` (or generate one in Snowsight). The legacy YAML format looks like this (structure abbreviated; check the current spec):
 ```yaml
 name: sales_model
 tables:
-  - name: DAILY_SALES
+  - name: daily_sales
     description: "Daily sales by region"
-    columns:
-      - name: FORECAST_AMT
-        description: "Forecasted sales amount"
+    base_table: {database: SALES, schema: MART, table: DAILY_SALES}
+    time_dimensions:
+      - name: sales_date
+        expr: SALES_DATE
+        data_type: DATE
+    facts:
+      - name: forecast_amt
+        expr: FORECAST_AMT
         synonyms: ["forecast", "expected sales"]
-      - name: ACTUAL_AMT
-        description: "Actual observed sales amount"
-      - name: SALES_DATE
-        description: "Date of the sale"
-    measures:
+      - name: actual_amt
+        expr: ACTUAL_AMT
+    metrics:
       - name: avg_forecast_error
-        expression: "AVG(ABS(FORECAST_AMT - ACTUAL_AMT))"
+        expr: AVG(ABS(daily_sales.forecast_amt - daily_sales.actual_amt))
         description: "Average absolute forecast error"
+verified_queries: []   # add vetted question/SQL pairs to raise accuracy
 ```
-Upload to a stage, point Cortex Analyst at it. Users then ask: "What was the average forecast error last week?" and get results.
+Upload the YAML to a stage (or create a semantic view) and point Cortex Analyst or a Cortex Agent at it. Users then ask: "What was the average forecast error last week?" and get results.
 
 ### Q6: What are the limitations of Cortex AI?
 A: Honest answer:
-- Region availability — not in all Snowflake regions yet
-- Model selection is limited compared to Bedrock/Azure (you get what Snowflake offers)
+- Region availability — not every model is in every region (cross-region inference can be enabled, with data-residency implications)
+- Model selection is narrower than calling providers directly, though it now includes Anthropic, OpenAI, Meta, Mistral and others
 - Cortex Search lag — there's a target_lag, not truly real-time for rapidly changing data
 - Cortex Analyst needs a well-defined semantic model — garbage in, garbage out
 - Token limits on LLM functions — large documents need chunking first
-- Cost — Cortex credits are separate from compute credits, need to budget for it
+- Cost — AI functions are billed per token in credits on top of warehouse compute; budget and monitor them (CORTEX usage views)
 
 That said, for data that already lives in Snowflake, the governance and simplicity benefits outweigh these.
 
@@ -588,23 +634,21 @@ A: Full Snowflake-native RAG stack:
 4. Pass retrieved context + user question to SNOWFLAKE.CORTEX.COMPLETE() for generation
 5. Return answer with source references
 
-```sql
--- Retrieve
-WITH relevant_docs AS (
-  SELECT doc_text, doc_title, score
-  FROM TABLE(SNOWFLAKE.CORTEX.SEARCH_PREVIEW('my_search_service', 
-    '{"query": "' || :user_question || '", "limit": 3}'))
-)
--- Generate
-SELECT SNOWFLAKE.CORTEX.COMPLETE(
-  'mistral-large',
-  'Based on the following context, answer the question.\n\nContext: ' || 
-  LISTAGG(doc_text, '\n---\n') || '\n\nQuestion: ' || :user_question
-) as answer
-FROM relevant_docs;
+```python
+# Serve retrieval through the Cortex Search Python API (SEARCH_PREVIEW is for testing
+# and accepts only string literals), then generate with AI_COMPLETE.
+from snowflake.core import Root
+svc = (Root(session).databases["KB"].schemas["PUBLIC"]
+       .cortex_search_services["my_search_service"])
+hits = svc.search(query=user_question, columns=["doc_text", "doc_title"], limit=3).results
+context = "\n---\n".join(h["doc_text"] for h in hits)
+answer = session.sql(
+    "SELECT AI_COMPLETE('claude-sonnet-4-5', ?) AS answer",   # pick a model enabled in your region
+    params=[f"Answer only from the context.\n\nContext: {context}\n\nQuestion: {user_question}"],
+).collect()[0]["ANSWER"]
 ```
 
-No Python, no Lambda, no vector DB. Pure SQL.
+No external vector DB or embedding pipeline; everything stays inside Snowflake. (Or skip the glue entirely: a Cortex Agent with a Cortex Search tool does retrieval and generation for you.)
 
 ### Q8: How does Cortex AI handle data governance compared to external LLMs?
 A: This is the main selling point:
@@ -618,11 +662,7 @@ A: This is the main selling point:
 Compare to calling Bedrock or OpenAI: you're sending data over the wire, relying on their retention policies, managing separate access controls.
 
 ### Q9: What Cortex LLM models are available and how do you choose?
-A: As of now:
-- **mistral-large** — good general purpose, fast
-- **llama3.1-70b/405b** — open source, strong reasoning
-- **snowflake-arctic** — Snowflake's own model, optimized for enterprise tasks
-- **claude (via partnership)** — strong reasoning
+A: The catalog changes often and varies by region, so check the Cortex docs before naming models. As of 2026 it includes models from Anthropic (Claude), OpenAI, Meta (Llama), Mistral, DeepSeek and others, plus Snowflake's own Arctic embedding models.
 
 How I choose: 
 - Classification/extraction → smaller model (faster, cheaper)
@@ -646,15 +686,16 @@ A: Yes, and it's a common pattern. Use Cortex for data-side operations (summariz
 
 The split: if the task is "do something with data already in Snowflake" → Cortex. If the task is "have a real-time conversation with a user" → external LLM with streaming.
 
-Cortex doesn't support streaming responses or multi-turn conversation state natively — that's where your application layer (FastAPI + Bedrock) still matters.
+The SQL functions don't stream; the Cortex REST APIs (Complete, Agents) can stream, and Cortex Agents keep conversation threads. For a custom real-time chat UX with your own state and guardrails, your application layer (FastAPI + Bedrock or the Cortex REST API) still matters.
 
-### Q12: What's the difference between COMPLETE(), SUMMARIZE(), and CLASSIFY_TEXT()?
-A: All are Cortex LLM Functions but different abstraction levels:
-- **COMPLETE(model, prompt)** — raw prompt → response. You write the full prompt. Most flexible.
-- **SUMMARIZE(text)** — one-liner. Give it text, get a summary. No prompt engineering needed.
-- **CLASSIFY_TEXT(text, categories)** — give text + list of categories, returns the matching category.
+### Q12: What's the difference between AI_COMPLETE(), AI_SUMMARIZE(), and AI_CLASSIFY()?
+A: All are Cortex AI Functions (the newer AI_* names supersede SNOWFLAKE.CORTEX.COMPLETE / SUMMARIZE / CLASSIFY_TEXT) at different abstraction levels:
+- **AI_COMPLETE(model, prompt)** — raw prompt → response. You write the full prompt; supports structured output. Most flexible.
+- **AI_SUMMARIZE(text)** / **AI_SUMMARIZE_AGG(col)** — summary of one value or across many rows.
+- **AI_CLASSIFY(text, categories)** — returns the matching label(s); supports multi-label.
+- **AI_FILTER(predicate)** / **AI_AGG(col, instruction)** — LLM-powered WHERE clauses and aggregations.
 
-SUMMARIZE and CLASSIFY_TEXT are convenience wrappers. Under the hood they're calling COMPLETE with a well-tuned prompt. Use the wrappers for standard tasks. Use COMPLETE when you need custom logic or specific output formats.
+The task-specific functions are convenience wrappers tuned by Snowflake. Use the wrappers for standard tasks. Use COMPLETE when you need custom logic or specific output formats.
 
 ---
 
@@ -697,7 +738,8 @@ A: Hierarchy: Account Admin → Security Admin → role hierarchy. A typical set
 - Row access policies for multi-tenant data
 - Network policies to restrict access by IP
 - All changes tracked in access_history view for auditing
----------
+
+---
 
 ## Section 9: Cloud & AI Practice Lead Interview Q&A (Consulting Role)
 
@@ -715,7 +757,7 @@ A: You can't convince with advice alone. You need numbers from their own data:
 - Pull their actual usage metrics: how many devs are actively using it vs just have a license sitting idle
 - Check acceptance rates - if devs are rejecting 80% of suggestions, the tool isn't configured right for their codebase
 - Compare velocity: are teams shipping faster or not? Pick 2 teams - one using it heavily, one not. Compare their sprint output.
-- If the data shows it's not helping, don't fight it. Recommend reducing licenses to just the teams getting value, and invest the savings in training the others on how to actually use it (prompt patterns, context setup, .cursorrules/.github/copilot-instructions)
+- If the data shows it's not helping, don't fight it. Recommend reducing licenses to just the teams getting value, and invest the savings in training the others on how to actually use it (prompt patterns, context setup, repo instruction files such as `.github/copilot-instructions.md`, `AGENTS.md`, or `.cursor/rules`)
 
 Honest point: if after training and proper setup it still shows no value, maybe their codebase or workflow isn't a good fit. Not every org gets the same ROI from coding assistants. Better to admit that than oversell.
 
@@ -834,19 +876,20 @@ A: Four key instrumentation points:
 
 Setup is simple:
 ```python
-from langchain import *
-from langsmith import *
+import os
+from langsmith import traceable
 
-# Initialize LangSmith tracing
-os.environ["LANGCHAIN_TRACING_V2"] = "true"
+# Enable tracing (older code used LANGCHAIN_TRACING_V2 / LANGCHAIN_API_KEY)
+os.environ["LANGSMITH_TRACING"] = "true"
+os.environ["LANGSMITH_API_KEY"] = "..."        # from a secret store, not source code
 
-# Create observable agent
-@traceable
+@traceable(name="agent_run", metadata={"env": "prod"})
 def agent_run(query):
-    result = llm.invoke(query)
+    result = llm.invoke(query)       # LangChain/LangGraph calls nest under this run
     tools.execute(result)
     return finalize(result)
 ```
+LangSmith also ingests OpenTelemetry traces, so non-LangChain code can report to it.
 
 ### Q3: How do you trace failures and do root cause analysis on AI agents?
 A: Each step in the agent pipeline gets a pass/fail status. When something breaks, you walk the chain:
@@ -860,7 +903,7 @@ Root cause identified:
 - Impact: User query failed - no response generated
 - Owner: Backend / Database Team
 - Suggested Fix: Increase connection pool size, add retry logic with exponential backoff
-- Confidence: 92% - based on 47 similar past incidents
+- Confidence: 92% - based on 47 similar past incidents (illustrative numbers)
 
 This is the kind of observability you need when running agents in prod. Without it you're just guessing why things broke.
 
@@ -872,7 +915,7 @@ A:
 With logging you see: "ERROR: timeout in db_query"
 With observability you see: "User asked X -> agent planned 3 steps -> step 1 and 2 succeeded in 2s -> step 3 (db_query) failed after 30s timeout -> this is the 47th time this week -> the fix is connection pool sizing -> assign to backend team"
 
-Tools: LangSmith, LangFuse, Arize Phoenix, OpenTelemetry (for custom setups)
+Tools: LangSmith, Langfuse, Arize Phoenix, Braintrust, and OpenTelemetry with the GenAI semantic conventions (vendor-neutral spans for model and tool calls)
 
 ### Q5: How does this relate to what you built?
 A: A typical platform has application-level observability (CloudWatch logs, DynamoDB conversation tracking, user feedback, keyword trends). What's often missing is LLM-trace-level observability like LangSmith provides.

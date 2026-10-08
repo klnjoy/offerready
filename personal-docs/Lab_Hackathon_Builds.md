@@ -4,6 +4,8 @@ icon: material/rocket-launch-outline
 
 # Hackathon Build Challenges
 
+*Last reviewed: October 2026*
+
 End-to-end, time-boxed builds — the format where you ship something *working*
 under pressure, then demo and defend it. Great for learning-by-doing and for the
 "take-home / build day" rounds. Each challenge gives you a **scope**, **timed
@@ -120,7 +122,8 @@ safe action against a small dataset/API.
 
     - Define 2–3 **typed tools** (e.g. `search`, `get_record`, and one gated
       `update`).
-    - A **plan → act → observe** loop (LangGraph) with a step cap.
+    - A **plan → act → observe** loop (LangGraph, or LangChain 1.x `create_agent`
+      with human-in-the-loop middleware) with a step cap.
     - Read tools open; the write tool **validated + approval-gated**.
     - CLI or chat UI showing intermediate steps.
 
@@ -140,7 +143,9 @@ safe action against a small dataset/API.
 
 === "Stretch"
 
-    - Multi-agent supervisor routing; expose tools over **MCP**.
+    - Multi-agent supervisor routing; expose tools over **MCP** (Python SDK
+      `FastMCP`; stdio locally, Streamable HTTP + OAuth if remote).
+    - An agent eval: 5 tasks × 3 trials each, scored on outcome and steps used.
     - Outcome verification (confirm the action's effect against real state).
     - An eval of routing accuracy.
 
@@ -156,10 +161,10 @@ the account.
 
 === "Scope"
 
-    - Pick a table with text; use **Cortex** LLM functions (`SUMMARIZE`,
-      `CLASSIFY_TEXT`, or `AI_COMPLETE`) in SQL.
+    - Pick a table with text; use **Cortex AI functions** (`AI_SUMMARIZE`,
+      `AI_CLASSIFY`, `AI_FILTER`, or `AI_COMPLETE` with a JSON schema) in SQL.
     - Or stand up a **Cortex Search** service and query it.
-    - Or a minimal **Cortex Analyst** semantic model (YAML) + a NL question.
+    - Or a minimal **semantic view** + a Cortex Analyst / Cortex Agent NL question.
 
 === "Milestones"
 
@@ -170,13 +175,14 @@ the account.
 
 === "What good looks like"
 
-    - Runs **in-account** (governance/no-egress story is the whole point).
+    - Runs **inside Snowflake's perimeter** under your RBAC (the governance story is the whole point).
     - You can explain when to use Cortex vs an external LLM.
 
 === "Stretch"
 
-    - Full Snowflake-native RAG (Search → `COMPLETE`) in pure SQL.
-    - Cost awareness (Cortex credits vs compute).
+    - Full Snowflake-native RAG (Cortex Search → `AI_COMPLETE`), or a Cortex Agent
+      with a Search tool.
+    - Cost awareness (per-token AI credits on top of warehouse compute; `AI_COUNT_TOKENS`).
 
 See: [Snowflake](Snowflake_Interview_QA.md) ·
 [Technologies → Snowflake](../Technologies/snowflake/index.md)

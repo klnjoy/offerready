@@ -4,6 +4,8 @@ icon: material/database-cog
 
 # Path: Data & AI / Platform Engineer
 
+*Last reviewed: October 2026*
+
 A curated preparation path for **Data & AI / Platform Engineer** interviews —
 roles where you own the data and platform side of AI systems: warehousing, ELT,
 governance, and the native-AI features that run next to the data. This page is
@@ -46,10 +48,12 @@ Work top to bottom. Each step notes **what to emphasize**.
    compute separation), micro-partitions/pruning, Streams & Tasks, Time Travel,
    performance + cost tuning.
 4. **[Databricks](../Technologies/databricks/index.md)** — Lakehouse, Spark
-   internals (shuffle, joins, AQE), Delta, Unity Catalog; emphasize the
-   shuffle/skew and DBU-cost stories.
+   internals (shuffle, joins, AQE), Delta + liquid clustering, Unity Catalog,
+   Lakeflow Declarative Pipelines (formerly DLT); emphasize the shuffle/skew and
+   DBU-cost stories.
 5. **[dbt](../Technologies/dbt/index.md)** — models, materializations,
-   incremental strategies, tests/contracts, slim CI.
+   incremental strategies (incl. microbatch), data + unit tests, contracts,
+   slim CI.
 
 ### Week 2 — Native AI, governance & scenarios
 
@@ -83,7 +87,7 @@ Work top to bottom. Each step notes **what to emphasize**.
 - **Q&A banks:** [Snowflake](Snowflake_Interview_QA.md) ·
   [Databricks](Databricks_Interview_QA.md) · [dbt](dbt_Interview_QA.md) ·
   [Python](Python_Interview_QA.md).
-- **Full run:** [Master Interview Simulator](Interview_Master_Simulator.md) +
+- **Full run:** [Mock Interview](Interview_Master_Simulator.md) (OfferReady app) +
   [Master Cheat Sheets](Interview_Cheat_Sheets.md).
 
 ---
@@ -96,6 +100,7 @@ Work top to bottom. Each step notes **what to emphasize**.
 - [ ] I build governed, tested, incremental transformations (dbt).
 - [ ] I can explain native AI (Cortex/Mosaic) and why it avoids data egress.
 - [ ] I apply RBAC, masking, and lineage across both data and the AI path.
+- [ ] I can explain when open table formats (Iceberg) and a shared catalog beat native tables.
 
 If most boxes are checked, you're solid on the data/platform side. To push toward
 **Staff/Principal**, add build-vs-buy, cost economics, and org governance — see

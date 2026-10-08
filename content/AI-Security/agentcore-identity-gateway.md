@@ -4,6 +4,21 @@ icon: material/shield-account
 
 # AgentCore Identity & Gateway (securing agents with enterprise IAM)
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **AgentCore went GA in October 2025**, and Identity and Gateway are core
+      services of it.
+    - **AgentCore Policy** (GA March 2026) adds deterministic authorization on
+      Gateway tool calls, written in **Cedar** or natural language, with a
+      log-only mode for testing. Gateway can also call **interceptor** Lambda
+      functions to inspect or change requests.
+    - **Gateway targets now include existing MCP servers**, alongside OpenAPI,
+      Smithy, and Lambda targets, so one gateway can front many tool sources.
+    - **AgentCore Identity added a managed consent portal** (September 2026), so
+      you no longer build the OAuth callback and session-binding plumbing
+      yourself.
+
 The exact pairing enterprise GenAI job specs are asking for: *"Leverage
 AgentCore Identity and AgentCore Gateway capabilities to build secure AI
 solutions"* on **AWS Bedrock**, with **Okta / Microsoft Entra ID** and
@@ -85,7 +100,8 @@ don't build custom identity infrastructure. It supports **SigV4**, standard
   keyed to `(workload_identity, user_id)`. The agent fetches a fresh token per
   call; secrets never enter the model context or logs.
 - **Session binding** — associates an OAuth grant with the user who authorized
-  it. AgentCore Identity now offers a **managed Consent portal** so you don't
+  it. AgentCore Identity now offers (since September 2026) a **managed Consent
+  portal** so you don't
   build the callback/redirect/session-binding infrastructure yourself; the user
   authenticates with your IdP, reviews what the agent can access, and grants
   consent per provider. Useful for MCP/IDE clients (Kiro, Claude Code, Cursor,
@@ -123,8 +139,14 @@ flowchart TB
 |------|-----------|-----|
 | **OAuth (JWT)** | Validate a bearer JWT (`CUSTOM_JWT`) from any OAuth 2.0 IdP | Token-based access from apps/MCP clients |
 | **IAM (SigV4)** | AWS Signature v4 | AWS identity-based access |
-| **Authenticate only** | Validate the token, delegate authorization to the target | Target enforces fine-grained authz |
-| **No auth** | — | Dev/testing only |
+| **Authenticate only** (`AUTHENTICATE_ONLY`) | Verify the caller's IAM SigV4 identity but make **no** authorization decision | Authz enforced elsewhere: a Policy engine, an interceptor Lambda, or the target |
+| **No auth** (`NONE`) | — | Dev/testing only |
+
+!!! warning "Offloaded authorization is not authorization"
+    With authenticate-only or no-auth, *any* authenticated (or any) caller
+    reaches your targets unless something downstream says no. Pair these modes
+    with an AgentCore **Policy** engine or an interceptor, or enforce authz in the
+    target itself.
 
 The gateway acts as an **MCP resource server**: with an inbound authorization-code
 (3LO) OAuth setup it requires a valid identity token before an AI client can
@@ -163,6 +185,7 @@ Mapping the job spec's responsibilities to a concrete design:
 | Machine-to-machine calls | 2LO client credentials via a gateway target's credential provider |
 | No secrets in the agent | Token vault + workload access token; short-lived tokens fetched per call |
 | Expose internal APIs as tools | AgentCore Gateway targets (REST/OpenAPI/Lambda) with inbound+outbound auth |
+| Hard limits on tool use | **AgentCore Policy** (Cedar) on Gateway tool calls, e.g. refund amount caps or per-role tool access |
 | Governance / audit | IAM + audit logging of tool calls; consent tracked; tie to [RBAC](../Enterprise/rbac/index.md) |
 
 ```mermaid
@@ -249,7 +272,8 @@ retrieved content as data-not-instructions, and validate outputs.
 | Act for a user? | **3LO** authorization code + user-id header (OBO-style) |
 | User consent infra? | Managed **Consent portal** + **session binding** |
 | Gateway turns APIs into…? | **MCP tools** (REST/OpenAPI/Lambda targets) |
-| Gateway inbound types? | OAuth (JWT), IAM (SigV4), authenticate-only, none |
+| Gateway inbound types? | OAuth (`CUSTOM_JWT`), IAM (SigV4), authenticate-only (SigV4, no authz), none |
+| Deterministic tool-call rules? | **AgentCore Policy** (Cedar), enforced at the Gateway |
 | Supported IdPs? | Okta, Microsoft Entra ID, Cognito, Auth0, private in-VPC OIDC |
 | Secrets in the prompt? | **Never** — vault + short-lived tokens per call |
 

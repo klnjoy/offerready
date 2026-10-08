@@ -4,6 +4,23 @@ icon: material/snowflake
 
 # Snowflake
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **Cortex grew into an agent platform.** Cortex Agents orchestrate Cortex
+      Analyst, Cortex Search, code execution, custom tools, and MCP connectors.
+      End users reach them in **Snowflake CoWork** (renamed from Snowflake
+      Intelligence in June 2026). See the [Snowflake Cortex section](../../Snowflake-Cortex/index.md).
+    - **The SQL AI surface is now "Cortex AI Functions"** (`AI_COMPLETE`,
+      `AI_CLASSIFY`, `AI_FILTER`, `AI_AGG`, `AI_EXTRACT`, `AI_PARSE_DOCUMENT`,
+      `AI_TRANSCRIBE`, `AI_REDACT`, and more). The older `SNOWFLAKE.CORTEX.*`
+      functions still work.
+    - **Document AI was decommissioned on March 16, 2026.** Use `AI_EXTRACT`
+      instead. **Snowflake Copilot is being replaced by Cortex Code**, the
+      AI coding assistant in Snowsight.
+    - **A Snowflake-managed MCP server** (GA November 2025) exposes Cortex
+      Analyst, Search, and agents to external MCP clients.
+
 Snowflake is a cloud data platform with a **multi-cluster, shared-data**
 architecture that separates storage, compute, and cloud services so each scales
 independently. This page covers the architecture, SQL patterns, the newer
@@ -124,27 +141,29 @@ flowchart TB
       LLM[Cortex LLM Functions]
       SEARCH[Cortex Search - RAG retrieval]
       ANALYST[Cortex Analyst - text to SQL]
-      DOC[Document AI]
-      COPILOT[Snowflake Copilot]
+      AISQL[AI_EXTRACT / AI_PARSE_DOCUMENT]
+      AGENTS[Cortex Agents]
+      CODE[Cortex Code]
     end
-    CORTEX --> APPS[Streamlit apps / BI / agents]
+    CORTEX --> APPS[CoWork / Streamlit apps / BI / your app via REST or MCP]
 ```
 
 | Feature | What it does | Example |
 |---------|--------------|---------|
-| **Cortex LLM Functions** | Call LLMs in SQL: summarize, translate, sentiment, classify, complete | `SELECT SNOWFLAKE.CORTEX.SUMMARIZE(review) FROM feedback;` |
+| **Cortex AI Functions** | Call LLMs in SQL: complete, classify, filter, aggregate, summarize, translate, sentiment, redact | `SELECT AI_CLASSIFY(review, ['praise','complaint']) FROM feedback;` |
 | **Cortex Search** | Managed hybrid (vector + keyword) retrieval — the RAG engine | Powers semantic search & grounding for chatbots |
 | **Cortex Analyst** | Natural-language → SQL over a semantic model | "What were Q3 sales by region?" returns governed SQL |
-| **Document AI** | Extract structured fields from PDFs/images | Pull totals/dates from invoices into tables |
-| **Snowflake Copilot** | In-editor SQL assistant (write/explain/optimize) | "Write a query for top 10 customers by revenue" |
+| **`AI_EXTRACT` / `AI_PARSE_DOCUMENT`** | Extract structured fields or layout-aware text from PDFs/images (replaces Document AI) | Pull totals/dates from invoices into tables |
+| **Cortex Agents** | Managed agents that combine Analyst, Search, code, and custom/MCP tools | "Why did churn rise in EMEA, and what do contracts say?" |
+| **Cortex Code** | AI coding assistant in Snowsight (replacing Snowflake Copilot) | "Write a query for top 10 customers by revenue" |
 
 ```sql
 -- LLM functions run right in SQL, on governed data
 SELECT
     id,
-    SNOWFLAKE.CORTEX.SENTIMENT(comment)                        AS sentiment,
-    SNOWFLAKE.CORTEX.SUMMARIZE(comment)                        AS summary,
-    SNOWFLAKE.CORTEX.COMPLETE('mistral-large',
+    AI_SENTIMENT(comment)                                      AS sentiment,
+    SNOWFLAKE.CORTEX.SUMMARIZE(comment)                        AS summary,  -- legacy name, still works
+    AI_COMPLETE('claude-sonnet-4-5',                           -- model availability varies by region
         'Classify this ticket: ' || comment)                  AS category
 FROM support_tickets;
 ```
@@ -160,7 +179,8 @@ need.
   (multi-cluster) for concurrency. Set `AUTO_SUSPEND` low and `AUTO_RESUME` on.
 - **Pruning**: cluster keys / natural load order so micro-partition pruning skips
   data. Check `SYSTEM$CLUSTERING_INFORMATION`.
-- **Result cache**: identical queries return instantly for 24h with no compute.
+- **Result cache**: identical queries return instantly for 24h with no compute
+  (the window resets on reuse, up to 31 days).
 - **Avoid** `SELECT *`, exploding joins, and tiny frequent warehouses; use
   `QUERY_HISTORY` and the Query Profile to find spillage and scan bottlenecks.
 - **Separate warehouses** per workload (ETL vs BI vs ML) so they don't contend.
@@ -290,8 +310,9 @@ Crisp framings to sound fluent, not memorized:
   independent warehouses — scale up for a heavy query, out for concurrency, pay
   per second, and clone with zero copy.
 - **"Micro-partitions + pruning are the performance story."** Data is stored in
-  immutable ~16 MB columnar micro-partitions with min/max metadata, so the
-  optimizer skips partitions that can't match — no manual indexes.
+  immutable columnar micro-partitions (50–500 MB of uncompressed data each,
+  stored compressed) with min/max metadata, so the optimizer skips partitions
+  that can't match — no manual indexes.
 - **"Cortex means governed GenAI with no data egress."** LLM functions, Search,
   and Analyst run inside the RBAC/masking/tag boundary.
 
@@ -313,7 +334,9 @@ Crisp framings to sound fluent, not memorized:
 
 ??? question "How would you control cost on a Snowflake account used by many teams?"
     Separate **warehouses per workload** (ETL/BI/ML) with tight `AUTO_SUSPEND`;
-    use **resource monitors** with credit quotas and alerts; right-size (start
+    use **resource monitors** with credit quotas and alerts on warehouses (they
+    don't cap serverless or Cortex AI token spend, so add budgets and
+    usage-history alerts for those); right-size (start
     small, scale on evidence); enable **multi-cluster** only where concurrency
     demands it; review `WAREHOUSE_METERING_HISTORY` and the most expensive queries
     in `QUERY_HISTORY`.
@@ -347,4 +370,5 @@ Crisp framings to sound fluent, not memorized:
 | What's Fail-safe? | 7-day, non-configurable, Snowflake-managed recovery |
 | Scale **up** vs **out**? | Up = bigger warehouse (heavy query); out = more clusters (concurrency) |
 | Result cache duration? | 24 hours if underlying data unchanged |
-| Micro-partition size? | ~50–500 MB uncompressed (~16 MB compressed), columnar |
+| Micro-partition size? | 50–500 MB of uncompressed data (stored compressed, smaller), columnar |
+| Document AI replacement? | `AI_EXTRACT` (Document AI decommissioned Mar 2026) |

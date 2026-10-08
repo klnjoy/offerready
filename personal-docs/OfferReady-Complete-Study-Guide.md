@@ -4,6 +4,8 @@ icon: material/book-open-page-variant
 
 # OfferReady Complete Study Guide
 
+*Last reviewed: October 2026*
+
 A single, structured path from fundamentals to shipping production GenAI — written
 for OfferReady. Every chapter is **original OfferReady content**: our own
 explanations, our own diagrams, and fresh code you can run. It pairs with the
@@ -34,9 +36,9 @@ deeper topic pages under **Learn** and the practice banks under **Interview Prep
 
 ---
 
-# Chapter 1 — AI, ML & Generative AI foundations
+## Chapter 1 — AI, ML & Generative AI foundations
 
-## The hierarchy
+### The hierarchy
 
 Start by placing the terms so nothing is fuzzy later.
 
@@ -54,7 +56,7 @@ flowchart TB
 - **Generative AI** — models that *produce* content rather than only classify or predict.
 - **LLMs** — the text branch of GenAI; the engine behind most of this guide.
 
-### The three classic ML styles
+#### The three classic ML styles
 
 | Style | Learns from | Everyday example | Where it shows up in GenAI |
 |-------|-------------|------------------|-----------------------------|
@@ -62,7 +64,7 @@ flowchart TB
 | Unsupervised | Unlabeled data (find structure) | Customer segments, anomaly detection | Pre-training on raw text; embeddings/clustering |
 | Reinforcement | Rewards from acting in an environment | Game agents, robotics | RLHF — aligning an LLM to human preferences |
 
-### How an LLM is actually built (three stages)
+#### How an LLM is actually built (three stages)
 
 Knowing the training pipeline explains a lot of model behavior you'll be asked about.
 
@@ -89,7 +91,7 @@ flowchart LR
     preference-aligned on top. That alignment layer — not the raw weights — is why it
     follows instructions and refuses unsafe ones."*
 
-## What a large language model actually is
+### What a large language model actually is
 
 An LLM is a next-token predictor trained on huge text corpora. Given the tokens so
 far, it outputs a probability distribution over the next token, samples one, appends
@@ -105,7 +107,7 @@ flowchart LR
     OUT --> MODEL
 ```
 
-### Why the transformer matters
+#### Why the transformer matters
 
 The transformer replaced sequential recurrence with **self-attention**: every token
 can look at every other token in one step, so the model captures long-range
@@ -115,7 +117,7 @@ relationships and trains efficiently in parallel. Three shapes to know:
 - **Decoder-only** (e.g. GPT-style) — generation: chat, completion. Most LLMs today.
 - **Encoder-decoder** (e.g. T5-style) — translation/summarization where input maps to output.
 
-### Self-attention in one honest paragraph
+#### Self-attention in one honest paragraph
 
 Each token is turned into three vectors: a **query**, a **key**, and a **value**. To
 decide how much token A should "pay attention to" token B, the model compares A's query
@@ -137,7 +139,7 @@ flowchart LR
     BLEND --> REP[Context-aware representation]
 ```
 
-### Decoding: how the next token is actually chosen
+#### Decoding: how the next token is actually chosen
 
 The model outputs a probability for every possible next token; **decoding** is how you
 pick. This is where `temperature` and friends live — worth knowing precisely because
@@ -145,18 +147,19 @@ you tune them constantly.
 
 | Knob | Effect | Use |
 |------|--------|-----|
-| **temperature** | Scales randomness. 0 = deterministic/greedy; higher = more varied | Low for extraction/code; higher for brainstorming |
+| **temperature** | Scales randomness. 0 ≈ greedy (repeatable, not guaranteed identical); higher = more varied. Many reasoning models fix or ignore it | Low for extraction/code; higher for brainstorming |
 | **top-p (nucleus)** | Sample only from the smallest set of tokens whose probability sums to p | Common default (e.g. 0.9) to cut off the long tail |
 | **top-k** | Sample only from the k most likely tokens | Alternative cap on randomness |
 | **max tokens** | Hard cap on output length | Control cost + prevent truncated JSON |
 | **stop sequences** | Halt generation at a marker | End cleanly at a delimiter |
 
 !!! warning "The classic bug"
-    Deterministic tasks (extraction, classification, JSON) want **temperature 0**. A
+    Deterministic tasks (extraction, classification, JSON) want **temperature 0** (where
+    the model supports it) and the provider's **structured-output** mode. A
     truncated JSON response is almost always **max_tokens too low**, not a model
     problem — raise the cap or shrink the requested output.
 
-### Embeddings — the other half of GenAI
+#### Embeddings — the other half of GenAI
 
 An **embedding** turns text into a vector so that *similar meaning → nearby vectors*.
 This powers semantic search, clustering, and RAG retrieval. Different job from
@@ -173,7 +176,7 @@ def cosine(a, b):
 # "cancel my plan" and "terminate subscription" would score high even with no shared words.
 ```
 
-### Hallucination — why it happens and what actually helps
+#### Hallucination — why it happens and what actually helps
 
 An LLM generates the *most plausible continuation*, not the *true* one — it has no
 built-in notion of truth. So it can state false things fluently ("hallucinate").
@@ -185,13 +188,15 @@ What reduces it, in order of leverage:
 3. **Lower temperature** for factual tasks.
 4. **Verify downstream** — validate structured output; don't trust free-form claims.
 
-## Tokens, context window, and cost
+### Tokens, context window, and cost
 
 - **Token** — a chunk of text (~¾ of a word on average). Models read and bill in tokens.
 - **Context window** — the maximum tokens the model can consider at once (prompt +
   output). Exceed it and earlier content is dropped or must be summarized.
-- **Cost** — you pay per input token and per output token; larger models cost more per
-  token. This is the single biggest lever on a GenAI bill.
+- **Cost** — you pay per input token and per output token (output usually costs several
+  times more, and reasoning models bill their thinking tokens as output); larger models
+  cost more per token. Repeated prompt prefixes can be **cached** at a discount. This is
+  the single biggest lever on a GenAI bill.
 
 ```python
 # A rough token budget check before you call an API.
@@ -211,15 +216,16 @@ assert fits_context("Summarize this ticket...", 300, window=8192)
     context**, and **capping output length** — long before you reach for anything
     fancier.
 
-## Prompt engineering vs context engineering
+### Prompt engineering vs context engineering
 
 - **Prompt engineering** — crafting the instruction: role, task, constraints,
   examples, output format.
 - **Context engineering** — controlling *what information* is in the window:
-  retrieval, memory, tool results, trimming. As systems grow, context engineering
-  matters more than clever wording.
+  retrieval, memory, tool results, tool definitions, trimming and compaction. As
+  systems (especially long-running agents) grow, context engineering matters more
+  than clever wording — even with 1M-token windows, quality degrades as context fills.
 
-## Fine-tuning vs RAG vs prompting — pick the cheapest that works
+### Fine-tuning vs RAG vs prompting — pick the cheapest that works
 
 A question you *will* be asked. The instinct interviewers want: reach for the
 lightest tool first.
@@ -240,7 +246,7 @@ lightest tool first.
     doesn't know our data,' that's RAG. If it's 'the model won't reliably follow our
     format/tone,' that's fine-tuning — after prompting fails."*
 
-## Evaluating an LLM system
+### Evaluating an LLM system
 
 You can't ship what you can't measure. Token-level "looks good" is not evaluation.
 
@@ -251,7 +257,7 @@ You can't ship what you can't measure. Token-level "looks good" is not evaluatio
   trace to sources?), and regression when you change model/prompt/retrieval.
 - **Run it in CI** — re-run the eval set on every change so quality doesn't silently drift.
 
-## Chapter 1 key takeaways
+### Chapter 1 key takeaways
 
 - AI ⊃ ML ⊃ DL ⊃ GenAI ⊃ LLMs — know where each term sits.
 - An LLM predicts the next token; capability emerges from scale + the transformer's attention.
@@ -263,7 +269,7 @@ You can't ship what you can't measure. Token-level "looks good" is not evaluatio
 
 ---
 
-# Chapter 2 — AWS cloud foundations for AI apps
+## Chapter 2 — AWS cloud foundations for AI apps
 
 You don't need all of AWS to ship GenAI — you need a handful of services and the
 identity model that ties them together.
@@ -279,7 +285,7 @@ flowchart TB
     IAM -.governs.- BEDROCK
 ```
 
-## Identity & Access Management (IAM) — the foundation
+### Identity & Access Management (IAM) — the foundation
 
 IAM decides *who* (principal) can do *what* (action) on *which resource*. Everything
 else assumes you got this right.
@@ -296,8 +302,8 @@ else assumes you got this right.
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": ["bedrock:InvokeModel"],
-      "Resource": "arn:aws:bedrock:us-west-2::foundation-model/*"
+      "Action": ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
+      "Resource": "arn:aws:bedrock:us-west-2::foundation-model/amazon.nova-lite-v1:0"
     },
     {
       "Effect": "Allow",
@@ -307,6 +313,10 @@ else assumes you got this right.
   ]
 }
 ```
+
+#The Converse API is authorized by `bedrock:InvokeModel` (and the streaming action for
+`ConverseStream`). If you call a cross-region **inference profile**, the policy must also
+allow the inference-profile ARN, not just the foundation model.
 
 ### The IAM vocabulary you must be fluent in
 
@@ -318,7 +328,7 @@ else assumes you got this right.
 | **Trust policy** | Says *who may assume* a role (e.g. "the Lambda service") |
 | **Managed vs inline policy** | Reusable/attachable vs embedded in one identity |
 
-### How IAM decides (the evaluation rule)
+#### How IAM decides (the evaluation rule)
 
 The mental model that answers most IAM interview questions:
 
@@ -334,7 +344,7 @@ somewhere (a boundary, an SCP, or another policy) is overriding it.
     access keys. The service assumes the role and gets short-lived, auto-rotated
     credentials. Long-lived keys in env vars or code are the #1 credential leak."*
 
-## The core services for a GenAI app
+### The core services for a GenAI app
 
 | Service | Role in a GenAI app |
 |---------|---------------------|
@@ -347,7 +357,7 @@ somewhere (a boundary, an SCP, or another policy) is overriding it.
 | **ECR + Docker** | Package code (and heavy deps) as container images for Lambda/ECS |
 | **Bedrock** | Managed foundation-model inference (Chapter 10) |
 
-### A minimal serverless GenAI handler
+#### A minimal serverless GenAI handler
 
 ```python
 # Lambda handler: validate input, call a model, persist the turn. Illustrative.
@@ -362,17 +372,19 @@ def handler(event, _ctx):
     if not question:
         return {"statusCode": 400, "body": json.dumps({"error": "question required"})}
 
-    resp = bedrock.invoke_model(
+    # Converse API: one request/response shape across model families (Chapter 10)
+    resp = bedrock.converse(
         modelId=os.environ.get("MODEL_ID", "amazon.nova-lite-v1:0"),
-        body=json.dumps({"messages": [{"role": "user", "content": question}]}),
+        messages=[{"role": "user", "content": [{"text": question}]}],
+        inferenceConfig={"maxTokens": 500},
     )
-    answer = json.loads(resp["body"].read())  # shape depends on the model family
+    answer = resp["output"]["message"]["content"][0]["text"]
 
     table.put_item(Item={"id": event["requestContext"]["requestId"], "q": question})
     return {"statusCode": 200, "body": json.dumps({"answer": answer})}
 ```
 
-### Lambda — the serverless compute model
+#### Lambda — the serverless compute model
 
 - **Event-driven, scales to zero** — you pay per invocation + duration, nothing when idle.
 - **Stateless** — no local state between invocations; put state in DynamoDB/S3.
@@ -383,7 +395,7 @@ def handler(event, _ctx):
 - **Concurrency** — Lambda scales out by running many instances; guard downstream
   resources (DBs) with connection limits/pooling.
 
-### API Gateway — the front door
+#### API Gateway — the front door
 
 Sits in front of Lambda to expose an HTTPS endpoint. Handles **auth** (JWT/OIDC
 authorizers, IAM), **throttling/rate limits**, request validation, and CORS. For a
@@ -391,7 +403,7 @@ GenAI app it's where you enforce who may call the model and cap request rate to 
 cost — pairs directly with the identity material in
 [AI Security](../AI-Security/identity-api-security.md).
 
-### S3 — object storage
+#### S3 — object storage
 
 - Stores documents, embeddings dumps, model artifacts, uploads. Effectively unlimited,
   cheap, durable.
@@ -401,7 +413,7 @@ cost — pairs directly with the identity material in
 - Common GenAI use: the document corpus for RAG lands in S3, then an ingestion job
   chunks + embeds it.
 
-### DynamoDB — fast NoSQL for app state
+#### DynamoDB — fast NoSQL for app state
 
 - Single-digit-millisecond key-value/document store; scales without you managing servers.
 - **Design around access patterns**, not entities — pick a partition key that spreads
@@ -409,7 +421,7 @@ cost — pairs directly with the identity material in
 - Great for conversation history, session state, per-user metadata. Not for ad-hoc
   joins or analytics — that's RDS/warehouse territory.
 
-### RDS — when you actually need SQL
+#### RDS — when you actually need SQL
 
 Reach for RDS (Postgres/MySQL) when you need **joins, transactions, complex queries, or
 strong relational integrity**. Rule of thumb: DynamoDB for high-scale app state with
@@ -422,7 +434,7 @@ flowchart LR
     Q -->|Files, docs, artifacts| S3[(S3)]
 ```
 
-## Containers: Docker + ECR in one breath
+### Containers: Docker + ECR in one breath
 
 When your dependencies are too big for a zipped Lambda (common with ML libs), you ship
 a **container image**: write a `Dockerfile`, build it, push to **ECR**, and point
@@ -436,7 +448,7 @@ COPY app.py ${LAMBDA_TASK_ROOT}
 CMD ["app.handler"]
 ```
 
-## Chapter 2 key takeaways
+### Chapter 2 key takeaways
 
 - IAM least-privilege roles are the backbone — get identity right first.
 - A serverless GenAI app is usually API Gateway → Lambda → Bedrock (+ S3/DynamoDB).
@@ -448,12 +460,12 @@ CMD ["app.handler"]
 
 ---
 
-# Chapter 3 — Python for AI engineering
+## Chapter 3 — Python for AI engineering
 
 Python is the lingua franca of AI because of its ecosystem and readability. For
 engineering work, focus on the parts that show up in production code.
 
-## The essentials that matter in AI code
+### The essentials that matter in AI code
 
 - **Data structures** — lists, dicts, sets, tuples; know when each is right.
 - **Functions & comprehensions** — small, testable units; comprehensions for transforms.
@@ -461,7 +473,7 @@ engineering work, focus on the parts that show up in production code.
 - **Error handling & logging** — external calls (models, APIs) fail; handle and log.
 - **`async`** — concurrency for I/O-bound work (many model/API calls at once).
 
-### Validate model I/O with pydantic
+#### Validate model I/O with pydantic
 
 Structured validation turns "hope the JSON is right" into a guarantee.
 
@@ -482,7 +494,7 @@ def parse_model_output(raw_json: str) -> Analysis | None:
         return None
 ```
 
-### Data structures — pick the right one
+#### Data structures — pick the right one
 
 | Structure | Ordered? | Use for | Note |
 |-----------|----------|---------|------|
@@ -494,7 +506,7 @@ def parse_model_output(raw_json: str) -> Analysis | None:
 A tiny instinct that matters at scale: checking `x in big_list` is O(n); convert to a
 `set` first if you test membership repeatedly.
 
-### Resilience: retries, timeouts, backoff
+#### Resilience: retries, timeouts, backoff
 
 Every model/API call *will* fail sometimes (429 rate limits, timeouts, transient 5xx).
 Production code wraps them with a timeout and bounded exponential backoff.
@@ -517,7 +529,7 @@ def call_with_retry(fn, *, attempts=4, base=0.5, timeout_errors=(TimeoutError,))
 - **Backoff on 429/5xx**, not on 4xx you caused (fix those instead).
 - **Idempotency** — make retries safe (don't double-charge, double-insert).
 
-### Async for parallel model calls
+#### Async for parallel model calls
 
 Python's `async` shines for **I/O-bound** fan-out (many model/API calls). It's a single
 thread cooperatively switching while waiting on I/O — not CPU parallelism (for CPU work,
@@ -539,7 +551,7 @@ async def analyze_many(client, texts):
     compute) → **processes** (the GIL blocks true CPU parallelism in threads). Most
     GenAI app code is I/O-bound, so async is the usual win.
 
-## Object-oriented building blocks
+### Object-oriented building blocks
 
 You'll model tools, agents, and clients as classes. Know the four pillars in plain
 terms: **encapsulation** (hide internals behind a clean interface), **inheritance**
@@ -566,7 +578,7 @@ def summarize(client: LLMClient, text: str) -> str:   # depends on the abstracti
     return client.complete(f"Summarize:\n{text}")
 ```
 
-## Chapter 3 key takeaways
+### Chapter 3 key takeaways
 
 - Master dicts/lists/sets, comprehensions, functions — the daily tools.
 - Use type hints + pydantic to validate LLM and API data at the boundary.
@@ -577,9 +589,9 @@ def summarize(client: LLMClient, text: str) -> str:   # depends on the abstracti
 
 ---
 
-# Chapter 4 — Prompt & context engineering
+## Chapter 4 — Prompt & context engineering
 
-## Anatomy of a strong prompt
+### Anatomy of a strong prompt
 
 ```mermaid
 flowchart TB
@@ -594,7 +606,7 @@ flowchart TB
 - **Constraints** — output format (JSON), length, what NOT to do.
 - **Examples** — few-shot demonstrations for tricky formats.
 
-## Techniques, with when-and-why
+### Techniques, with when-and-why
 
 | Technique | What it is | Use when |
 |-----------|-----------|----------|
@@ -605,7 +617,7 @@ flowchart TB
 | **Role/persona** | Set who the model is | Steer tone and expertise |
 | **Decomposition** | Split a big task into smaller prompts | Complex tasks that one prompt does poorly |
 
-### Few-shot in practice
+#### Few-shot in practice
 
 Examples teach format far more reliably than description. Keep them short, diverse, and
 representative of the edge cases you care about.
@@ -623,7 +635,7 @@ def build_prompt(ticket):
     return f"{SYSTEM}\n\n{shots}\n\nTicket: {ticket}\nUrgency:"
 ```
 
-### Structured output — the pipeline default
+#### Structured output — the pipeline default
 
 For anything a program consumes downstream, force a schema instead of parsing prose.
 
@@ -634,10 +646,12 @@ SYSTEM = (
 )
 ```
 
-Set **temperature 0**, give a **sufficient max_tokens** so the JSON isn't truncated, and
+Better still, use the provider's **structured-output / JSON-schema mode** (or a tool
+call with a schema) so the model is constrained to valid JSON. Set **temperature 0**
+where supported, give a **sufficient max_tokens** so the JSON isn't truncated, and
 **validate** the result (pydantic — Chapter 3) before trusting it.
 
-### Common prompt pitfalls interviewers probe
+#### Common prompt pitfalls interviewers probe
 
 - **Doing two jobs in one prompt** — split "summarize AND translate AND rate" into steps.
 - **Vague constraints** — "be concise" is weak; "≤ 3 bullet points" is enforceable.
@@ -645,7 +659,7 @@ Set **temperature 0**, give a **sufficient max_tokens** so the JSON isn't trunca
 - **Over-long few-shots** — they cost tokens every call; keep them minimal.
 - **Relying on wording to stop injection** — that's an architecture problem (below).
 
-## Context engineering — the part that scales
+### Context engineering — the part that scales
 
 As apps grow, *what's in the window* beats *how you phrased it*. The window is finite
 and every token costs money, so you engineer **what goes in**:
@@ -656,7 +670,7 @@ and every token costs money, so you engineer **what goes in**:
   prompt says to treat as data.
 - **Trim aggressively** — drop stale turns; keep the system prompt + recent + retrieved.
 
-### Memory strategies for multi-turn apps
+#### Memory strategies for multi-turn apps
 
 | Strategy | How | Trade-off |
 |----------|-----|-----------|
@@ -673,7 +687,7 @@ facts.
     [AI Security](../AI-Security/index.md) — prompt injection is the flagship risk, and
     no amount of prompt wording fully stops it; you contain it by architecture.
 
-## Chapter 4 key takeaways
+### Chapter 4 key takeaways
 
 - Structure prompts: role → context → task → constraints, with examples when needed.
 - Prefer structured (schema-enforced) output over parsing prose.
@@ -684,7 +698,7 @@ facts.
 
 ---
 
-# Chapter 5 — Retrieval-Augmented Generation (RAG)
+## Chapter 5 — Retrieval-Augmented Generation (RAG)
 
 RAG grounds a model in *your* data: retrieve relevant text, put it in the prompt, and
 have the model answer from it — reducing hallucination and letting you cite sources.
@@ -700,7 +714,7 @@ flowchart LR
     LLM --> ANS[Grounded answer + citations]
 ```
 
-## The pipeline, stage by stage
+### The pipeline, stage by stage
 
 1. **Ingest & chunk** — split documents into passages (size + overlap matter; too big
    dilutes relevance, too small loses context).
@@ -722,7 +736,7 @@ def rag_answer(question, store, llm, k=5):
     return llm.complete(prompt), [c.source for c in chunks]  # answer + citations
 ```
 
-## Chunking — the decision that quietly decides quality
+### Chunking — the decision that quietly decides quality
 
 Retrieval can only return what you chunked well. Get this wrong and no model saves you.
 
@@ -741,14 +755,14 @@ def chunk(text, size=800, overlap=150):
     return [text[i:i+size] for i in range(0, len(text), step)]
 ```
 
-## Embeddings + the vector store
+### Embeddings + the vector store
 
 - **Embed** each chunk into a vector (Chapter 1). Store vectors + text + metadata.
 - **Similarity** is usually cosine distance; the store does approximate nearest-neighbor
   (ANN) search so it's fast at scale.
 - **Match dimensions** to the embedding model; re-embed everything if you change models.
 
-## Making retrieval actually good
+### Making retrieval actually good
 
 - **Hybrid search** — combine **vector** similarity (meaning: "cancel plan" ≈ "terminate
   subscription") with **keyword/BM25** (exact terms: error codes, IDs, SKUs). Pure vector
@@ -768,7 +782,7 @@ flowchart LR
     TOPK --> LLM[Generate grounded answer]
 ```
 
-## RAG failure modes (diagnose → fix)
+### RAG failure modes (diagnose → fix)
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
@@ -778,7 +792,7 @@ flowchart LR
 | Leaks another tenant's data | Missing metadata filter | Enforce per-user/tenant filter at retrieval |
 | Confident but unsupported claims | No grounding instruction / no citations | Require citations; validate groundedness |
 
-## Evaluating RAG
+### Evaluating RAG
 
 Measure the two halves separately so you know *where* it breaks:
 
@@ -789,7 +803,7 @@ Measure the two halves separately so you know *where* it breaks:
 Run a fixed eval set in CI so changing the chunker, embedder, k, or model can't silently
 regress quality.
 
-## Chapter 5 key takeaways
+### Chapter 5 key takeaways
 
 - RAG = retrieve relevant chunks → ground the model → answer with citations.
 - Quality lives in **chunking + retrieval**, not just the LLM.
@@ -802,7 +816,7 @@ regress quality.
 
 ---
 
-# Chapter 6 — LangChain
+## Chapter 6 — LangChain
 
 LangChain is a framework for composing LLM apps: prompts, models, retrievers, tools,
 and memory wired into pipelines, with a standard interface across providers.
@@ -816,7 +830,7 @@ flowchart LR
     PARSE --> RESULT[Structured result]
 ```
 
-## Core pieces
+### Core pieces
 
 | Piece | What it does |
 |-------|--------------|
@@ -825,10 +839,10 @@ flowchart LR
 | **Output parsers** | Coerce responses into typed/structured data (often via pydantic) |
 | **Retrievers** | Pluggable RAG sources (vector store, hybrid, etc.) |
 | **Tools** | Functions the model can call (search, DB, API) |
-| **Memory** | Carry conversation state across turns |
+| **Memory** | Carry conversation state across turns (in LangChain 1.x: LangGraph checkpointer + store) |
 | **Chains / LCEL** | Compose the above into a runnable pipeline |
 
-### LCEL — the pipe composition model
+#### LCEL — the pipe composition model
 
 LangChain Expression Language uses `|` to pipe components; each implements a common
 Runnable interface (`invoke`, `stream`, `batch`), so composition is uniform.
@@ -843,7 +857,7 @@ for token in chain.stream({"question": "..."}): ...
 results = chain.batch([{"question": "a"}, {"question": "b"}])
 ```
 
-### A RAG chain, end to end
+#### A RAG chain, end to end
 
 ```python
 # Retriever feeds context into the prompt; model answers; parser structures it.
@@ -858,7 +872,7 @@ rag_chain = (
 answer = rag_chain.invoke("How do refunds work?")
 ```
 
-### Tools and tool-calling
+#### Tools and tool-calling
 
 A **tool** is a function plus a schema the model reads to decide when/how to call it.
 The model proposes a call; your code executes it and feeds the result back.
@@ -875,18 +889,24 @@ def get_order(order_id: str) -> dict:
 Keep tools **narrow and least-privilege** (Chapter 10 / AI Security) — the model
 decides *whether* to call; a deterministic layer decides *what actually runs*.
 
-### Observability & callbacks
+#### Observability & callbacks
 
 LangChain's callback system emits events (LLM start/end, tokens, tool calls, errors) so
 you can trace latency, token cost, and failures. In production, wire this to your
 tracing/eval stack — you can't debug or cost-control what you can't see.
+
+!!! note "LangChain 1.x in one paragraph"
+    LangChain 1.0 (late 2025) refocused the package on agents: `create_agent` builds a
+    tool-calling agent on LangGraph, customized with **middleware** (summarization, PII
+    redaction, human approval). Legacy chains and memory classes moved to
+    `langchain-classic`. LCEL still works for linear pipelines like the one above.
 
 !!! note "When not to reach for a framework"
     For a single model call, plain SDK code is clearer and has fewer moving parts. Adopt
     LangChain when you're genuinely composing retrieval + tools + memory and want the
     shared Runnable interface, streaming, and callbacks for free.
 
-## Chapter 6 key takeaways
+### Chapter 6 key takeaways
 
 - LangChain composes prompt → model → parser, plus retrievers and memory.
 - LCEL pipes components into runnable chains with a consistent interface.
@@ -897,7 +917,7 @@ tracing/eval stack — you can't debug or cost-control what you can't see.
 
 ---
 
-# Chapter 7 — Graph databases for AI
+## Chapter 7 — Graph databases for AI
 
 Some questions are about **relationships** ("which suppliers connect to a flagged
 account, two hops out?"). Graph databases store nodes and edges so those traversals
@@ -912,7 +932,7 @@ flowchart LR
     C -->|referred| C2((Customer))
 ```
 
-### The graph data model
+#### The graph data model
 
 - **Nodes** = entities (Customer, Order, Product), each with a label and properties.
 - **Edges (relationships)** = typed, directed connections (`PLACED`, `CONTAINS`), and
@@ -921,7 +941,7 @@ flowchart LR
   multi-join. Traversing "friends of friends of friends" stays cheap as depth grows,
   which is exactly where relational joins blow up.
 
-### Cypher patterns worth knowing
+#### Cypher patterns worth knowing
 
 Cypher reads like ASCII-art of the pattern you want to match: `(node)-[:REL]->(node)`.
 
@@ -939,7 +959,7 @@ MATCH (:Product)-[:SUPPLIED_BY]->(s:Supplier)
 RETURN s.name, count(*) AS products ORDER BY products DESC LIMIT 5
 ```
 
-### Graph vs vector — when to use which
+#### Graph vs vector — when to use which
 
 | Question shape | Reach for |
 |----------------|-----------|
@@ -949,7 +969,7 @@ RETURN s.name, count(*) AS products ORDER BY products DESC LIMIT 5
 | "Find passages about refunds" | **Vector** |
 | Both meaning *and* relationships | **GraphRAG** (below) |
 
-### GraphRAG — retrieval that follows relationships
+#### GraphRAG — retrieval that follows relationships
 
 Pure vector RAG retrieves *similar chunks* independently; it struggles with questions
 whose answer is spread across **connected** facts. GraphRAG instead retrieves a relevant
@@ -967,7 +987,7 @@ flowchart LR
 Strong for multi-hop, "how are these related", and root-cause questions. Often combined
 with vector search (vector to find entry-point entities, graph to expand the neighborhood).
 
-## Chapter 7 key takeaways
+### Chapter 7 key takeaways
 
 - Graph DBs model entities + relationships; traversals are first-class.
 - Cypher expresses multi-hop queries cleanly.
@@ -977,7 +997,7 @@ with vector search (vector to find entry-point entities, graph to expand the nei
 
 ---
 
-# Chapter 8 — LangGraph: agentic workflows
+## Chapter 8 — LangGraph: agentic workflows
 
 LangChain composes linear pipelines; **LangGraph** models apps as a **graph of nodes
 with state**, so you can branch, loop, and add cycles — exactly what agents need
@@ -993,7 +1013,7 @@ flowchart TB
     DECIDE -- yes --> END([Respond])
 ```
 
-## Why a graph, not a chain
+### Why a graph, not a chain
 
 - **State** — a shared, typed object flows through nodes; each node reads and returns
   updates to it (merged via reducers, e.g. "append to the messages list").
@@ -1007,6 +1027,7 @@ flowchart TB
 # State + nodes + edges. Nodes return partial state updates; edges route flow.
 from typing import TypedDict, Annotated
 import operator
+from langgraph.graph import END
 
 class State(TypedDict):
     messages: Annotated[list, operator.add]   # reducer: new msgs are appended
@@ -1022,12 +1043,12 @@ def act(state: State) -> dict:
 
 def route(state: State) -> str:
     # conditional edge: stop if done or over the step cap, else loop
-    return "END" if done(state) or state["steps"] >= 6 else "plan"
+    return END if done(state) or state["steps"] >= 6 else "plan"
 
 # graph: START -> plan -> act -> route -> (plan | END)
 ```
 
-## Checkpointing, human-in-the-loop, and durability
+### Checkpointing, human-in-the-loop, and durability
 
 Because state is explicit, LangGraph can **checkpoint** it after each node. That unlocks:
 
@@ -1042,14 +1063,14 @@ Because state is explicit, LangGraph can **checkpoint** it after each node. That
     trips. Put a hard **step/iteration cap** on the routing edge (as above) and a cost
     budget around the run.
 
-## Single-agent vs multi-agent
+### Single-agent vs multi-agent
 
 Start **single-agent**. Go multi-agent (a planner/supervisor delegating to specialist
 sub-agents) only when one agent's tool set and context become unwieldy — coordination
 adds real complexity and new failure modes. In LangGraph, sub-agents are just nodes
 (or nested graphs) with a supervisor node routing between them.
 
-## Chapter 8 key takeaways
+### Chapter 8 key takeaways
 
 - LangGraph = stateful graph with branches and loops — the right shape for agents.
 - Explicit nodes/edges make agent control flow inspectable and testable.
@@ -1060,7 +1081,7 @@ adds real complexity and new failure modes. In LangGraph, sub-agents are just no
 
 ---
 
-# Chapter 9 — Model Context Protocol (MCP)
+## Chapter 9 — Model Context Protocol (MCP)
 
 MCP is an open standard that lets an AI application discover and call **tools** from
 external **servers** over a uniform protocol — instead of hand-wiring every
@@ -1078,7 +1099,7 @@ flowchart LR
 - **Client** — the MCP connector inside the host (one client per server connection).
 - **Server** — exposes capabilities (a database, a filesystem, a SaaS API).
 
-### What a server exposes (the three primitives)
+#### What a server exposes (the three primitives)
 
 | Primitive | What it is | Example |
 |-----------|-----------|---------|
@@ -1086,26 +1107,29 @@ flowchart LR
 | **Resources** | Readable data the host can pull in as context | a file, a DB row, a doc |
 | **Prompts** | Reusable prompt templates the server offers | "summarize this ticket" workflow |
 
-### How a session works
+#### How a session works
 
-The client and server do a **capability handshake** (what protocol version + features
-each supports), then the client can **list** tools/resources and **call** them. Messages
-use JSON-RPC over a **transport** — stdio for a local server (a subprocess) or HTTP/SSE
-for a remote one.
+Messages are JSON-RPC over a **transport** — stdio for a local server (a subprocess) or
+**Streamable HTTP** for a remote one (the older HTTP+SSE transport is deprecated). Up to
+the 2025-11-25 spec, a session opened with an `initialize` capability handshake. The
+current **2026-07-28** spec is **stateless**: there is no handshake or session; every
+request carries its protocol version and client capabilities in `_meta`, and a client
+may call `server/discover` first to learn what the server supports. Then the client
+**lists** tools/resources and **calls** them.
 
 ```mermaid
 sequenceDiagram
     participant H as Host + Client
     participant S as MCP Server
-    H->>S: initialize (capability handshake)
-    S-->>H: capabilities (tools, resources, prompts)
+    H->>S: server/discover (optional; older specs: initialize)
+    S-->>H: versions + capabilities (tools, resources, prompts)
     H->>S: tools/list
     S-->>H: [ tool schemas ]
     H->>S: tools/call (name, args)
     S-->>H: result
 ```
 
-### Why MCP matters
+#### Why MCP matters
 
 Before MCP, every app↔tool integration was bespoke. MCP makes tools **portable**: write
 an MCP server once, and any MCP-capable host (Claude, IDEs, your agent) can use it — the
@@ -1121,7 +1145,7 @@ tooling you'll build on.
     instructions. See [AI Security](../AI-Security/index.md) and
     [AgentCore Identity & Gateway](../AI-Security/agentcore-identity-gateway.md).
 
-## Chapter 9 key takeaways
+### Chapter 9 key takeaways
 
 - MCP standardizes how apps discover and call external tools.
 - Host → client → server; the client lists and invokes tools.
@@ -1131,7 +1155,7 @@ tooling you'll build on.
 
 ---
 
-# Chapter 10 — AWS Bedrock & AgentCore
+## Chapter 10 — AWS Bedrock & AgentCore
 
 **Bedrock** is AWS's managed foundation-model service: call multiple providers'
 models through one API, inside your AWS security perimeter. **AgentCore** adds the
@@ -1141,7 +1165,7 @@ observability.
 ```mermaid
 flowchart TB
     APP[Your app] --> BR[Bedrock<br/>model inference]
-    APP --> AC[AgentCore]
+    APP --> AC
     subgraph AC[AgentCore]
         RT[Runtime: agent loop] --- MEM[Memory]
         RT --- GW[Gateway: APIs->tools]
@@ -1152,7 +1176,7 @@ flowchart TB
     ID -.governs.- TOOLS
 ```
 
-## Bedrock — the managed inference layer
+### Bedrock — the managed inference layer
 
 - **Multiple providers, one API** — Anthropic, Meta, Mistral, Amazon (Nova), and others
   behind a single `bedrock-runtime` interface. Swap models by changing a model id.
@@ -1163,8 +1187,10 @@ flowchart TB
   both input and output — an in-account policy layer, not prompt wording.
 - **Knowledge Bases** — managed RAG: point at an S3 corpus, Bedrock handles chunking,
   embedding, and retrieval so you don't hand-build the pipeline (Chapter 5).
-- **In your perimeter** — inference runs in your AWS account; data doesn't leave to a
-  third-party endpoint, so IAM/VPC/logging apply.
+- **In your perimeter** — you call Bedrock through your AWS account (IAM, VPC endpoints,
+  CloudTrail apply); prompts and outputs aren't shared with the model providers or used
+  to train their models. Cross-region inference profiles may route requests to other
+  regions, which matters for data residency.
 
 ```python
 # Converse API: same message shape regardless of the underlying model.
@@ -1178,7 +1204,7 @@ resp = brt.converse(
 print(resp["output"]["message"]["content"][0]["text"])
 ```
 
-## AgentCore — production runtime for agents
+### AgentCore — production runtime for agents
 
 | Piece | What it does |
 |-------|--------------|
@@ -1188,7 +1214,7 @@ print(resp["output"]["message"]["content"][0]["text"])
 | **Identity** | Inbound (who may call the agent) + outbound (creds to call tools) auth |
 | **Observability** | Trace steps, tool calls, latency, cost, failures |
 
-### Identity is the make-or-break for enterprise agents
+#### Identity is the make-or-break for enterprise agents
 
 An agent is a non-human OAuth client. The two seams:
 
@@ -1211,7 +1237,7 @@ This is exactly the skill set enterprise GenAI roles ask for; the full treatment
 2LO/3LO/OBO, PKCE, JWT validation, Gateway inbound/outbound auth — is on
 [AgentCore Identity & Gateway](../AI-Security/agentcore-identity-gateway.md).
 
-## Chapter 10 key takeaways
+### Chapter 10 key takeaways
 
 - Bedrock = managed, multi-provider inference inside your AWS perimeter.
 - AgentCore = runtime + memory + gateway + identity + observability for production agents.
@@ -1223,7 +1249,7 @@ This is exactly the skill set enterprise GenAI roles ask for; the full treatment
 
 ---
 
-# Chapter 11 — Kubernetes & containers for AI
+## Chapter 11 — Kubernetes & containers for AI
 
 When serverless isn't enough (long-running services, GPU workloads, custom
 networking), you run containers on **Kubernetes** (EKS on AWS). Know the mental model,
@@ -1243,7 +1269,7 @@ flowchart TB
     ING[Ingress] --> SVC
 ```
 
-### The core objects
+#### The core objects
 
 | Object | What it does |
 |--------|--------------|
@@ -1254,7 +1280,7 @@ flowchart TB
 | **ConfigMap / Secret** | Inject config / sensitive values into pods |
 | **HPA** | Horizontal Pod Autoscaler — scale replicas on CPU/GPU/custom metrics |
 
-### A minimal Deployment + Service
+#### A minimal Deployment + Service
 
 Kubernetes is **declarative**: you describe the desired state; the control loop makes
 reality match it.
@@ -1293,7 +1319,7 @@ spec:
 - **Rolling update** — a new image version rolls out pod-by-pod with zero downtime; you
   can roll back to the previous ReplicaSet instantly.
 
-### AI-specific concerns
+#### AI-specific concerns
 
 - **GPU scheduling** — request `nvidia.com/gpu` on nodes with GPUs; model-serving pods
   land on GPU nodes. This is a top reason AI workloads leave serverless.
@@ -1304,7 +1330,7 @@ spec:
 - **When to choose K8s over serverless** — long-running/streaming inference, GPUs,
   custom networking, or steady high traffic where always-on beats per-invocation cost.
 
-## Chapter 11 key takeaways
+### Chapter 11 key takeaways
 
 - Pod → Deployment → Service → Ingress is the core chain; HPA autoscales.
 - Containers = reproducible env for heavy ML deps.
@@ -1315,12 +1341,12 @@ spec:
 
 ---
 
-# Chapter 12 — Capstone: ship one production workflow
+## Chapter 12 — Capstone: ship one production workflow
 
 Tie it together by taking **one** workflow end to end. Don't build everything — build
 one thing that's real, governed, observed, and evaluated.
 
-## A worked example: a governed "ask your docs" assistant
+### A worked example: a governed "ask your docs" assistant
 
 ```mermaid
 flowchart TB
@@ -1336,7 +1362,7 @@ flowchart TB
     API -.governed by.- OPS
 ```
 
-### Request flow, end to end
+#### Request flow, end to end
 
 ```mermaid
 sequenceDiagram
@@ -1354,7 +1380,7 @@ sequenceDiagram
     API-->>U: answer + citations
 ```
 
-### Build it in phases (don't boil the ocean)
+#### Build it in phases (don't boil the ocean)
 
 1. **Thin slice** — one endpoint: JWT auth → retrieve → generate → answer with citations.
 2. **Ground it well** — hybrid retrieval + re-ranking + "answer only from context".
@@ -1363,7 +1389,7 @@ sequenceDiagram
 4. **Operate** — tracing, cost monitors + caps, an eval set in CI, a rollback plan.
 5. *Only then* consider extras (agents, more tools) — and justify each.
 
-### The checklist that separates a demo from production
+#### The checklist that separates a demo from production
 
 - **Identity** — authenticate users (OIDC), enforce their access at retrieval so RAG
   can't surface docs they can't see.
@@ -1380,7 +1406,7 @@ sequenceDiagram
     security, cost, failure modes, eval — before you're asked. Naming trade-offs
     (managed vs DIY, model tier vs cost, freshness vs spend) is what reads as senior.
 
-## Chapter 12 key takeaways
+### Chapter 12 key takeaways
 
 - Ship one real workflow, fully governed — not a pile of half-features.
 - The production checklist: identity, grounding, security, cost, observability, eval, rollback.

@@ -1155,7 +1155,7 @@ def write_nav(md_catalog, modules) -> None:
 
     # Legal / utility pages (Privacy, Terms, Disclaimer, Contact) are intentionally
     # NOT added to the top nav. They are surfaced in the site FOOTER instead, via
-    # the Material theme override at overrides/partials/copyright.html (declutters
+    # the Material theme override at overrides/partials/footer.html (declutters
     # the top nav; matches the standalone pricing page footer). The pages are still
     # built and reachable by URL — MkDocs emits an informational "not in nav" note
     # only (strict mode is off), which is expected here.

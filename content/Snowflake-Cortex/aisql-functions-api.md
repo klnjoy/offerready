@@ -4,6 +4,8 @@ icon: material/function-variant
 
 # AISQL Functions & the Agents API (technical reference)
 
+*Last reviewed: October 2026*
+
 The other pages in this section build the mental models. This page is the
 **concrete technical layer** an interviewer drills into once they believe you
 understand the concepts: the actual function surface, the options that control
@@ -11,8 +13,9 @@ understand the concepts: the actual function surface, the options that control
 call from an application.
 
 !!! info "Currency + naming note"
-    Cortex ships fast and **function names are migrating**. The newer, preferred
-    surface is the **`AI_*`** family (`AI_COMPLETE`, `AI_CLASSIFY`, `AI_FILTER`,
+    Cortex ships fast and **function names are migrating**. Snowflake's docs now
+    call this surface **Cortex AI Functions** ("AISQL" survives in URLs and older
+    material). The newer, preferred surface is the **`AI_*`** family (`AI_COMPLETE`, `AI_CLASSIFY`, `AI_FILTER`,
     `AI_AGG`, `AI_EMBED`, `AI_SIMILARITY`, …); the older **`SNOWFLAKE.CORTEX.*`**
     functions (`COMPLETE`, `SENTIMENT`, `SUMMARIZE`, `EXTRACT_ANSWER`,
     `EMBED_TEXT_*`) still work. Availability and exact signatures vary by region
@@ -32,13 +35,18 @@ Python via Snowpark / Snowflake ML). Group them by job:
 | Generate text / reason | `AI_COMPLETE` | `COMPLETE`, `TRY_COMPLETE` | The workhorse. Multimodal (text + image). `TRY_COMPLETE` returns `NULL` instead of erroring. |
 | Classify into categories | `AI_CLASSIFY` | `CLASSIFY_TEXT` | Single- or multi-label; plain-language category definitions. Works on text or images. |
 | Boolean filter / join predicate | `AI_FILTER` | — | Returns a boolean; use it in `WHERE` / `JOIN` to filter rows by a natural-language condition. |
-| Aggregate/reduce a column | `AI_AGG`, `AI_SUMMARIZE_AGG` | `SUMMARIZE` | Reduce many rows of text under one instruction (e.g. "summarize all complaints"). |
+| Aggregate/reduce a column | `AI_AGG`, `AI_SUMMARIZE_AGG` | — | Reduce many rows of text under one instruction (e.g. "summarize all complaints"). |
 | Embeddings (vectors) | `AI_EMBED` | `EMBED_TEXT_768`, `EMBED_TEXT_1024` | Produce a `VECTOR` for similarity search / clustering. |
 | Similarity between inputs | `AI_SIMILARITY` | — | Convenience similarity score between two inputs. |
-| Extract an answer from text | — | `EXTRACT_ANSWER` | Pull a specific answer span from a passage. |
-| Sentiment | — | `SENTIMENT`, `ENTITY_SENTIMENT` | Score sentiment (overall or per entity). |
-| Transcribe audio | `AI_TRANSCRIBE` | — | Speech → text (multimodal). |
-| Translate | — | `TRANSLATE` | Language translation. |
+| Extract fields / answers | `AI_EXTRACT` | `EXTRACT_ANSWER` | Pull fields from text, images, or documents (replaces Document AI, decommissioned March 2026). |
+| Parse documents | `AI_PARSE_DOCUMENT` | `PARSE_DOCUMENT` | Text or layout-aware text (OCR/layout) from staged PDFs and images. |
+| Summarize | `AI_SUMMARIZE` | `SUMMARIZE` | Summarize a single value (text, images, documents). |
+| Sentiment | `AI_SENTIMENT` | `SENTIMENT`, `ENTITY_SENTIMENT` | Score sentiment (overall or per aspect). |
+| Redact PII | `AI_REDACT` | — | Remove personally identifiable information from text. |
+| Transcribe audio/video | `AI_TRANSCRIBE` | — | Speech → text with timestamps and speakers. |
+| Translate | `AI_TRANSLATE` | `TRANSLATE` | Language translation. |
+| Multimodal embeddings | `AI_MULTI_EMBED` | — | Embeddings across text, images, audio, or video. |
+| Count tokens | `AI_COUNT_TOKENS` | `COUNT_TOKENS` | Estimate tokens (and cost) before running a function. |
 | Run an agent from SQL | `AGENT_RUN`, `DATA_AGENT_RUN` | — | Non-streaming JSON; wrappers over the Agents REST API (see below). |
 
 !!! tip "Interview framing for the two families"
@@ -48,8 +56,9 @@ Python via Snowpark / Snowflake ML). Group them by job:
     pipelines against `AI_COMPLETE`/`AI_CLASSIFY`/`AI_FILTER` and treat the legacy
     names as still-supported aliases."*
 
-Models available through these functions come from multiple providers (OpenAI,
-Anthropic, Meta/Llama, Mistral, DeepSeek and others) — **curated by Snowflake**,
+Models available through these functions come from multiple providers
+(Anthropic, OpenAI, Google, Meta/Llama, Mistral, xAI, Qwen and others; the list
+changes often and varies by region) — **curated by Snowflake**,
 not "any model on the internet." You pass the model name as a string, or let
 Snowflake auto-select for some functions.
 
@@ -60,7 +69,8 @@ Snowflake auto-select for some functions.
 Simplest form is a model + a prompt string:
 
 ```sql
-SELECT AI_COMPLETE('claude-3-5-sonnet', 'Explain RAG in two sentences.');
+SELECT AI_COMPLETE('claude-sonnet-4-5', 'Explain RAG in two sentences.');
+-- Model names change often; check the regional availability page.
 ```
 
 The power is in the **options object** (third argument), which controls
@@ -68,8 +78,8 @@ generation and shapes the output. The interview-relevant knobs:
 
 | Option | What it does |
 |--------|--------------|
-| `temperature` | 0–1 randomness. Low (0.2) = deterministic/focused; high (0.7) = diverse. Use **low** for extraction/classification. |
-| `max_tokens` | Caps output length (Snowpark default 4096, max 8192 for `complete`). Too small ⇒ **truncated** JSON — a classic bug. |
+| `temperature` | 0–1 randomness (default 0 for `AI_COMPLETE`). Keep it **low** for extraction/classification; raise it for diverse output. |
+| `max_tokens` | Caps output length (default 4096; the maximum depends on the model). Too small ⇒ **truncated** JSON — a classic bug. |
 | `top_p` | Nucleus sampling alternative to temperature. |
 | `response_format` / type literal | **Structured output** — force the response to match a JSON schema or SQL `TYPE` literal (below). |
 | `guardrails` | Enable Cortex Guard to filter unsafe content on eligible models. |
@@ -86,7 +96,7 @@ json_object` — it removes brittle prompt-and-pray JSON parsing.
 ```sql
 -- Force a typed object back, not free-form prose.
 SELECT AI_COMPLETE(
-  model  => 'claude-3-5-sonnet',
+  model  => 'claude-sonnet-4-5',
   prompt => 'Extract the ticket fields: ' || body,
   model_parameters => {'temperature': 0, 'max_tokens': 400},
   response_format => {
@@ -115,8 +125,8 @@ FROM support_tickets;
 
 ### Multimodal
 
-`AI_COMPLETE` (and `AI_CLASSIFY`, `AI_EMBED`, `AI_SIMILARITY`, `AI_TRANSCRIBE`)
-accept **files** — images, documents, audio — via `FILE` objects on a stage.
+`AI_COMPLETE` (and `AI_CLASSIFY`, `AI_FILTER`, `AI_EMBED`, `AI_SIMILARITY`,
+`AI_EXTRACT`, `AI_TRANSCRIBE`) accept **files** — images, documents, audio — via `FILE` objects on a stage.
 So "analyze this scanned invoice" or "classify this product photo" is the same
 governed SQL surface, no separate vision pipeline.
 
@@ -184,9 +194,15 @@ What to know:
 - **Streaming by default.** `agent:run` streams **server-sent events (SSE)** —
   you consume `plan`, tool-call, and response events as they happen. Set
   `stream: false` to get a **single JSON** response instead.
-- **Long / background runs.** Requests time out after ~15 minutes by default; set
-  `background: true` for long jobs (which can run up to ~6 hours) and reconnect
-  via the **Stream Agent Run** endpoint.
+- **Long / background runs.** Synchronous requests time out after 15 minutes by
+  default; set `background: true` for long jobs (up to 6 hours, even if the
+  client disconnects; requires threads) and reconnect via the **Stream Agent
+  Run** endpoint (`GET /api/v2/cortex/agent/runs/{run_id}`). Events stay
+  available only briefly after a run completes; after that, read the result
+  from the thread.
+- **Agent object vs inline config.** `POST /api/v2/databases/{db}/schemas/{schema}/agents/{name}:run`
+  runs a saved agent; `POST /api/v2/cortex/agent:run` takes the full
+  configuration inline.
 - **Threads = server-side state.** Use the Threads API so multi-turn context
   ("and for last quarter?") is maintained by Snowflake — the API streams
   metadata events for each user/assistant message; listen for both.
@@ -281,7 +297,8 @@ sequenceDiagram
 
 | Q | A |
 |---|---|
-| Preferred function family? | `AI_*` (`AI_COMPLETE`, `AI_CLASSIFY`, `AI_FILTER`, `AI_AGG`, `AI_EMBED`, `AI_SIMILARITY`) |
+| Preferred function family? | `AI_*` (`AI_COMPLETE`, `AI_CLASSIFY`, `AI_FILTER`, `AI_AGG`, `AI_EMBED`, `AI_EXTRACT`, `AI_SIMILARITY`, …) |
+| Official name now? | Cortex AI Functions (formerly marketed as AISQL) |
 | Legacy family (still works)? | `SNOWFLAKE.CORTEX.*` (`COMPLETE`, `SENTIMENT`, `SUMMARIZE`, `EMBED_TEXT_*`) |
 | Error-safe completion? | `TRY_COMPLETE` (returns `NULL` instead of raising) |
 | Force typed JSON output? | Structured outputs — JSON schema / SQL `TYPE` literal |
@@ -294,8 +311,8 @@ sequenceDiagram
 
 ---
 
-**Sources (verify current):** Snowflake official docs — Cortex AISQL / LLM
-functions, `AI_COMPLETE` (single string, structured outputs, prompt object),
+**Sources (verify current):** Snowflake official docs — Cortex AI Functions
+(AISQL) / LLM functions, `AI_COMPLETE` (single string, structured outputs, prompt object),
 `AGENT_RUN` / `DATA_AGENT_RUN`, and Cortex Agents Run REST API
 (docs.snowflake.com). *Content was rephrased for compliance with licensing
 restrictions.*

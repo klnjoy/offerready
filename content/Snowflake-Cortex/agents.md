@@ -4,6 +4,8 @@ icon: material/robot-industrial
 
 # Cortex Agents — deep dive
 
+*Last reviewed: October 2026*
+
 **Cortex Agents** is Snowflake's fully managed agentic platform: you define an
 agent as a reusable object (a model + tools + orchestration instructions), and
 Snowflake runs the reasoning loop, tool calls, and code sandbox for you — no
@@ -63,12 +65,14 @@ knowledge — it can't query anything in your account.
 |------|---------|
 | **Cortex Analyst** | Generate governed SQL over structured data via a semantic view |
 | **Cortex Search** | Retrieve from unstructured sources (docs, policies, transcripts, contracts) |
+| **Analytical search** *(preview)* | Search-style retrieval combined with aggregation over results |
 | **Code execution (Python sandbox)** | Run Python in a secure isolated sandbox to process data / do calculations |
 | **Data to Chart** | Generate visualizations from result data |
 | **Custom tools** | Stored procedures / UDFs that call backend systems or your own business logic |
-| **Packaged agent skills** | Modular bundles of instructions + scripts for repeatable, task-specific behavior |
-| **MCP connectors** | Reach remote MCP servers (e.g. Jira, Salesforce, your own apps) to discover and invoke their tools |
-| **Web search** | Pull real-time information from the public internet |
+| **Packaged agent skills** | Modular bundles of instructions + scripts for repeatable, task-specific behavior (can add cost beyond orchestration) |
+| **MCP connectors** | Reach remote MCP servers (e.g. Jira, Salesforce, your own apps) to discover and invoke their tools; traffic goes over the public internet |
+| **Agent toolsets** | Bundles of tools packaged for reuse across agents (newer; confirm current scope in the docs) |
+| **Web search** | Pull real-time information from the public internet (enabled at the account level) |
 
 ```mermaid
 flowchart TB
@@ -117,7 +121,11 @@ instructions. You can create one:
 - or via the **REST API**.
 
 You steer behavior with **natural-language orchestration instructions** and
-either pick the model or let Snowflake auto-select. Users interact via
+either pick the model or choose **`auto`**, which Snowflake recommends: it
+selects the best model available to your account (Anthropic, OpenAI, and Google
+models are offered, subject to region and cross-region inference settings).
+For experiments you can also pass a full agent configuration on each
+`agent:run` call without creating an agent object. Users interact via
 **Snowflake CoWork** and **Cortex Code**, or you integrate the agent into your
 own application through the **REST API**.
 

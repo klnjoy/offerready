@@ -4,6 +4,8 @@ icon: material/office-building-cog
 
 # Production Case Studies
 
+*Last reviewed: October 2026*
+
 Deep, end-to-end architectures for real enterprise AI systems, the kind you're
 asked to design (and defend) in senior/staff/principal loops. Each study follows
 the same template so you learn the *shape* of a production answer, not a one-off.
@@ -56,7 +58,8 @@ flowchart TB
 - **Reliability:** timeouts + backoff, fallback model, rate limits, bounded loop.
 - **Observability:** latency by hop, tokens, cost/req, tool failures, retrieval
   quality, safety hits, task success.
-- **Cost:** routing + prompt caching + token budgets; monitor cost/req.
+- **Cost:** routing + prompt caching + token budgets; monitor cost per resolved
+  question, not just cost per request.
 - **Trade-off:** single agent + gated tools (reliable, safe) over a flashier
   multi-agent design that adds failure surface for no clear win here.
 
@@ -108,9 +111,11 @@ and get trustworthy numbers.
 **Requirements:** correctness is paramount (a wrong number erodes trust);
 governance/masking on sensitive columns; read-only; cost control on scans.
 
-- **Approach:** prefer a **semantic model** (e.g. Snowflake Cortex Analyst) over
-  raw text-to-SQL — the semantic layer constrains ambiguity and improves
-  correctness. LangChain SQL agent for complex custom logic.
+- **Approach:** prefer a **semantic layer** (e.g. Snowflake semantic views with
+  Cortex Analyst, usually called through a Cortex Agent; or dbt's MetricFlow
+  Semantic Layer) over raw text-to-SQL — the semantic layer constrains ambiguity
+  and improves correctness. A custom SQL agent (LangGraph/LangChain) for complex
+  custom logic.
 - **Trust:** return the **SQL that ran** + cite it; validate/limit the query;
   read-only least-privilege role; guardrail on destructive SQL.
 - **Governance:** RBAC + masking + row access apply to the agent's role, so it
@@ -138,8 +143,10 @@ low-confidence items to human review.
 
 - **Pipeline:** ingest → OCR/parse → LLM/Doc-AI extract → **schema-validate** →
   confidence score → auto-accept high / **route low to human review**.
-- **Scale:** queue-based fan-out (one message per doc), batch inference, idempotent
-  writes; back-pressure on the queue.
+- **Scale:** queue-based fan-out (one message per doc), provider batch inference
+  (typically about half the on-demand price), idempotent writes; back-pressure on
+  the queue. Use the provider's structured-output mode so extractions match the
+  schema.
 - **Eval:** labeled set measuring per-field extraction accuracy; block a model/
   prompt change that regresses it.
 - **Security:** PII masking, provenance, restricted storage.
@@ -178,7 +185,9 @@ flowchart TB
   single well-scoped agent wins.
 - **Reliability:** validate hand-offs, bound delegation depth, per-agent step/cost
   caps, trace the whole trajectory.
-- **Security:** each agent least-privilege; the API/write agent gated.
+- **Security:** each agent least-privilege; the API/write agent gated. Tools sit
+  behind MCP servers with per-agent scopes; if agents are separate services owned
+  by different teams, A2A gives them a standard way to discover and delegate.
 - **Trade-off:** flexibility/separation vs routing errors + latency + failure
   surface. Start single-agent; graduate only on evidence.
 

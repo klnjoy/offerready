@@ -4,6 +4,8 @@ icon: material/shield-refresh
 
 # Reliability & Distributed Systems
 
+*Last reviewed: October 2026*
+
 An AI system is a distributed system with an unusually flaky dependency (the
 model/tool layer) bolted on. This page covers the reliability patterns every
 senior engineer must apply, then the **AI-specific failure modes** and how each

@@ -4,6 +4,19 @@ icon: material/graph-outline
 
 # Graph DB & GraphRAG
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **GQL is an ISO standard** (ISO/IEC 39075, 2024), the first new ISO database
+      query language since SQL. It is heavily influenced by Cypher, and vendors are
+      converging on it.
+    - **GraphRAG matured into variants.** Microsoft's GraphRAG (entity graph +
+      community summaries, with *local* and *global* search) was followed by
+      cheaper approaches such as LazyGraphRAG that defer LLM summarization to
+      query time.
+    - **Managed GraphRAG arrived in cloud platforms.** For example, Amazon Bedrock
+      Knowledge Bases can build and query a graph in Neptune Analytics.
+
 Graph databases store data as **nodes** and **relationships**, making connected
 queries (paths, neighbors, patterns) natural and fast. In GenAI they power
 **knowledge graphs** and **GraphRAG** — retrieval that follows relationships, not
@@ -22,8 +35,9 @@ flowchart LR
 ```
 
 Everything is a node (with labels/properties) or a relationship (typed,
-directional, with properties). Traversing relationships is a first-class,
-index-free operation.
+directional, with properties). Traversing relationships is a first-class
+operation. In native graph stores like Neo4j it follows stored pointers
+("index-free adjacency") instead of joining tables.
 
 ## Query languages
 
@@ -32,6 +46,13 @@ index-free operation.
     ```cypher
     MATCH (a:Person)-[:KNOWS]->(b:Person)-[:WORKS_AT]->(c:Company)
     WHERE a.name = 'Alice'
+    RETURN b.name, c.name
+    ```
+
+=== "GQL (ISO standard)"
+
+    ```sql
+    MATCH (a:Person WHERE a.name = 'Alice')-[:KNOWS]->(b:Person)-[:WORKS_AT]->(c:Company)
     RETURN b.name, c.name
     ```
 
@@ -49,6 +70,17 @@ Instead of only fetching similar text chunks, GraphRAG retrieves an entity's
 questions ("which suppliers are affected if factory X goes down?") where the
 answer depends on relationships, not just semantic similarity.
 
+Two common flavors:
+
+| Flavor | How it works | Good for |
+|--------|--------------|----------|
+| **Local / entity-centric** | Vector search finds entry entities, then the graph is expanded N hops for context | "What is connected to X?" multi-hop questions |
+| **Global / community summaries** (Microsoft GraphRAG) | Cluster the graph into communities, pre-summarize each with an LLM, answer from the summaries | "What are the main themes across the corpus?" |
+
+The cost is in **building** the graph: LLM entity and relationship extraction
+over the whole corpus, plus entity resolution (deduplicating "IBM" and
+"International Business Machines"). Budget for it and evaluate extraction quality.
+
 ## When to use a graph DB
 
 - Highly connected data (social, org charts, supply chains, fraud rings).
@@ -58,9 +90,10 @@ answer depends on relationships, not just semantic similarity.
 ## Interview questions
 
 ??? question "Graph DB vs relational for connected data?"
-    Graphs treat relationships as first-class and traverse them in constant time
-    per hop, avoiding expensive multi-join queries; relational is better for
-    tabular, set-based analytics.
+    Graphs treat relationships as first-class, so each hop costs roughly the
+    neighbors you touch rather than a join over whole tables. That makes deep,
+    variable-length traversals far cheaper than multi-join SQL. Relational is
+    better for tabular, set-based analytics.
 
 ??? question "What is GraphRAG and when does it beat vector RAG?"
     Retrieval that walks a knowledge graph for connected context. It wins on
@@ -77,8 +110,8 @@ answer depends on relationships, not just semantic similarity.
 
 ### 60-second talking points
 
-- **"Relationships are first-class."** Traversing connections is a constant-time
-  hop, not an expensive join — ideal for connected data.
+- **"Relationships are first-class."** Traversing a connection costs about the
+  neighbors touched, not a table-wide join — ideal for connected data.
 - **"GraphRAG follows the graph, not just similarity."** Great for multi-hop,
   relationship-dependent questions.
 
@@ -111,6 +144,33 @@ answer depends on relationships, not just semantic similarity.
 | Q | A |
 |---|---|
 | Graph vs relational? | First-class relationships, cheap multi-hop traversal |
-| Query languages? | Cypher (Neo4j, declarative), Gremlin (traversal) |
+| Query languages? | Cypher (Neo4j, declarative), GQL (ISO standard), Gremlin (traversal) |
 | GraphRAG? | Retrieve connected context by walking a knowledge graph |
 | Best fit data? | Connected: fraud, supply chain, social, recommendations |
+
+## How interviewers probe this
+
+??? question "Build a GraphRAG system over 50k contracts. What's the pipeline and what does it cost?"
+    A strong answer covers: chunking, LLM-based entity and relationship
+    extraction with a defined schema (parties, obligations, dates, clauses),
+    entity resolution, loading into the graph with provenance back to source
+    chunks, a hybrid retrieval path (vectors to find entry nodes, graph to
+    expand), and an eval set of multi-hop questions. It estimates extraction
+    tokens up front and plans incremental updates, not full rebuilds.
+
+??? question "How do you know GraphRAG is worth it over hybrid vector search plus reranking?"
+    Run both on the same eval set and split results by question type. GraphRAG
+    usually wins on multi-hop and corpus-wide "themes" questions and loses or ties
+    on single-fact lookups, while costing more to build and maintain. Recommend it
+    only for the question types where the measured gain justifies that cost.
+
+??? question "Your graph has duplicate entities and answers are fragmented. Fix it."
+    This is an entity-resolution problem: normalize names, use identifiers where
+    they exist, merge with embedding similarity plus rules, keep alias edges, and
+    re-run resolution as new data lands. Track a duplicate rate as a data-quality
+    metric.
+
+??? question "How do you model time and change in a knowledge graph?"
+    Use relationship properties (`valid_from` / `valid_to`), versioned nodes, or
+    event nodes, depending on query needs, so you can answer "as of" questions
+    without overwriting history.
