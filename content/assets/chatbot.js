@@ -29,10 +29,12 @@
   const ON_LOCALHOST = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
   const IS_HOSTED = Boolean(HOSTED) || !ON_LOCALHOST;
   const ASK_PATH = IS_HOSTED ? "/api/ask" : "/ask";
-  const AREAS_PATH = IS_HOSTED ? "/api/areas" : "/areas";
   const CAN_STREAM = IS_HOSTED && typeof ReadableStream !== "undefined" && typeof TextDecoder !== "undefined";
   const APP_URL = (window.OFFERREADY_APP_URL || "https://klnjoy.github.io/offerready-app").replace(/\/$/, "");
-  const SESSION_KEY = "offerready.studyhelp.v2";
+  const SESSION_KEY = "offerready.studyhelp.v2"; // legacy, imported once
+  const STORE_KEY = "offerready.studyhelp.chats.v3";
+  const UI_KEY = "offerready.studyhelp.ui.v1"; // open/wide: per tab
+  const MAX_CHATS = 20;
   const FEEDBACK_KEY = "offerready.studyhelp.feedback.v1";
   const MAX_CHARS = 800;
   const HISTORY_TURNS = 8;
@@ -86,6 +88,9 @@
     out: '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
     copy: '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
     up: '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v10H4V10zM7 10l4-7a2 2 0 0 1 3 2l-1 5h6a2 2 0 0 1 2 2.3l-1.3 6A2 2 0 0 1 17.7 20H7"/></svg>',
+    history: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+    back: '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H6M11 6l-6 6 6 6"/></svg>',
     down: '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 14V4H4v10zM7 14l4 7a2 2 0 0 0 3-2l-1-5h6a2 2 0 0 0 2-2.3l-1.3-6A2 2 0 0 0 17.7 4H7"/></svg>',
   };
 
@@ -176,31 +181,58 @@
     return p === "/" || p === "/index.html";
   }
 
+  // [pattern, label used in starter questions, topic id sent to the API]
   const TOPICS = [
-    [/\brag\b|retrieval[- ]augmented/i, "RAG"],
-    [/retrieval[- ]tuning|rerank/i, "retrieval tuning"],
-    [/vector/i, "vector databases"],
-    [/\bmcp\b|model context protocol/i, "MCP"],
-    [/agent/i, "AI agents"],
-    [/snowflake|cortex/i, "Snowflake Cortex"],
-    [/databricks|lakehouse/i, "Databricks"],
-    [/\bdbt\b/i, "dbt"],
-    [/\bsql\b/i, "SQL"],
-    [/kubernetes|\bk8s\b/i, "Kubernetes"],
-    [/observab|eval/i, "LLM evaluation"],
-    [/llmops|deploy/i, "LLMOps"],
-    [/security|guardrail|injection/i, "AI security"],
-    [/prompt|context engineering/i, "prompt engineering"],
-    [/\bllm\b|fundamental/i, "LLM fundamentals"],
-    [/system design|architecture/i, "system design"],
-    [/behavio|star\b/i, "behavioral interviews"],
-    [/python|fastapi/i, "Python"],
-    [/\baws\b|bedrock/i, "AWS"],
+    [/retrieval[- ]tuning|rerank/i, "retrieval tuning", "retrieval-tuning"],
+    [/\brag\b|retrieval[- ]augmented/i, "RAG", "rag"],
+    [/vector/i, "vector databases", "vector-db"],
+    [/\bmcp\b|model context protocol/i, "MCP", "mcp"],
+    [/langchain|langgraph/i, "LangChain and LangGraph", "langchain"],
+    [/forward[- ]deployed|\bfde\b/i, "Forward Deployed Engineer interviews", "fde"],
+    [/agent/i, "AI agents", "agents"],
+    [/snowflake|cortex/i, "Snowflake Cortex", "snowflake"],
+    [/databricks|lakehouse/i, "Databricks", "databricks"],
+    [/\bdbt\b/i, "dbt", "dbt"],
+    [/\bsql\b/i, "SQL", "sql"],
+    [/kubernetes|\bk8s\b/i, "Kubernetes", "kubernetes"],
+    [/observab|eval/i, "LLM evaluation", "observability"],
+    [/llmops|deploy/i, "LLMOps", "llmops"],
+    [/cost/i, "LLM cost optimization", "cost-optimization"],
+    [/reliab/i, "reliability", "reliability"],
+    [/security|guardrail|injection|rbac|compliance|audit/i, "AI security", "security"],
+    [/prompt|context[- ]engineering/i, "prompt engineering", "prompt-engineering"],
+    [/\bllm\b|fundamental/i, "LLM fundamentals", "llm-fundamentals"],
+    [/system design|architecture/i, "system design", "system-design"],
+    [/behavio|\bstar\b/i, "behavioral interviews", "behavioral"],
+    [/python|fastapi/i, "Python", "python"],
+    [/\baws\b|bedrock/i, "AWS", "aws"],
+    [/data[- ]engineering|pipeline/i, "data engineering", "data-engineering"],
   ];
-  function pageTopic() {
+  function pageMatch() {
     const hay = pageTitle() + " " + location.pathname;
-    for (const [re, label] of TOPICS) if (re.test(hay)) return label;
+    for (const t of TOPICS) if (t[0].test(hay)) return t;
+    return null;
+  }
+  function pageTopic() { const t = pageMatch(); return t ? t[1] : ""; }
+  function pageTopicId() { const t = pageMatch(); return t ? t[2] : ""; }
+
+  // Topic focus picker (ids match /api/areas).
+  const TOPIC_GROUPS = [
+    ["GenAI foundations", [["llm-fundamentals", "LLM fundamentals"], ["prompt-engineering", "Prompt & context engineering"], ["rag", "RAG"], ["retrieval-tuning", "Retrieval tuning"], ["vector-db", "Vector databases"]]],
+    ["Agents & tools", [["agents", "AI agents"], ["agent-engineering", "Agent engineering"], ["mcp", "MCP"], ["langchain", "LangChain & LangGraph"], ["bedrock", "Amazon Bedrock"]]],
+    ["Production", [["observability", "Observability & evals"], ["llmops", "LLMOps & deployment"], ["reliability", "Reliability"], ["cost-optimization", "Cost optimization"], ["kubernetes", "Kubernetes"], ["devops-ai", "DevOps for AI"], ["security", "AI security"]]],
+    ["Data & cloud", [["snowflake", "Snowflake & Cortex"], ["databricks", "Databricks"], ["dbt", "dbt"], ["sql", "SQL"], ["python", "Python"], ["aws", "AWS"], ["data-engineering", "Data engineering"]]],
+    ["Interviews", [["system-design", "System design"], ["behavioral", "Behavioral (STAR)"], ["fde", "Forward Deployed Engineer"]]],
+  ];
+  function topicLabel(id) {
+    for (const g of TOPIC_GROUPS) for (const t of g[1]) if (t[0] === id) return t[1];
     return "";
+  }
+  /** The area actually sent: "auto" follows the page. */
+  function effectiveArea(c) {
+    const a = (c && c.area) || "auto";
+    if (a === "auto") return pageTopicId() || "all";
+    return a;
   }
   function starters() {
     if (isHome()) {
@@ -217,28 +249,78 @@
   }
 
   // ---- session state ------------------------------------------------------
+  // Several conversations, kept in localStorage so they survive new tabs and
+  // browser restarts (this device only). One answer can stream per chat, so a
+  // chat keeps answering while you open another.
   let state = load();
-  let busy = false;
-  let abortCtrl = null;
+  const controllers = {}; // chatId -> AbortController of its running answer
+  let view = "chat"; // "chat" | "history"
 
+  function cleanMsgs(list) {
+    return (Array.isArray(list) ? list : [])
+      .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+      .map((m) => (m.streaming ? Object.assign({}, m, { streaming: false, stopped: true }) : m));
+  }
+  function newChatObj() {
+    return { id: uid(), title: "", area: "auto", updatedAt: Date.now(), msgs: [] };
+  }
   function load() {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(STORE_KEY) || "null"); } catch (_) { s = null; }
+    if (s && s.v === 3 && Array.isArray(s.chats)) {
+      s.chats = s.chats.filter((c) => c && c.id).map((c) => Object.assign({ area: "auto", title: "" }, c, { msgs: cleanMsgs(c.msgs) }));
+    } else {
+      s = { v: 3, open: false, wide: false, activeId: "", chats: [] };
+      // One-time import of the old single conversation (sessionStorage).
+      try {
+        const old = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
+        if (old && Array.isArray(old.msgs) && old.msgs.length) {
+          const c = newChatObj();
+          c.msgs = cleanMsgs(old.msgs);
+          c.title = titleFor(c);
+          s.chats.push(c);
+          s.open = !!old.open;
+          s.wide = !!old.wide;
+        }
+      } catch (_) { /* ignore */ }
+    }
+    // Panel open/size is per tab (sessionStorage); chats are shared.
     try {
-      const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
-      if (s && s.v === 2 && Array.isArray(s.msgs)) {
-        s.msgs = s.msgs
-          .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
-          .map((m) => (m.streaming ? Object.assign({}, m, { streaming: false, stopped: true }) : m));
-        return s;
-      }
-    } catch (_) { /* blocked or corrupt */ }
-    return { v: 2, msgs: [], open: false, wide: false, area: "all" };
+      const ui = JSON.parse(sessionStorage.getItem(UI_KEY) || "null");
+      if (ui) { s.open = !!ui.open; s.wide = !!ui.wide; } else s.open = false;
+    } catch (_) { s.open = false; }
+    if (!s.chats.some((c) => c.id === s.activeId)) {
+      const empty = s.chats.find((c) => !c.msgs.length);
+      if (empty) s.activeId = empty.id;
+      else { const c = newChatObj(); s.chats.unshift(c); s.activeId = c.id; }
+    }
+    return s;
+  }
+  function chat() {
+    let c = state.chats.find((x) => x.id === state.activeId);
+    if (!c) { c = newChatObj(); state.chats.unshift(c); state.activeId = c.id; }
+    return c;
+  }
+  function titleFor(c) {
+    const first = c.msgs.find((m) => m.role === "user");
+    const t = first ? first.content.replace(/\s+/g, " ").trim() : "";
+    return t.length > 60 ? t.slice(0, 57) + "…" : t;
   }
   function save() {
     try {
-      const msgs = state.msgs.filter((m) => !m.streaming || m.content).slice(-MAX_STORED);
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(Object.assign({}, state, { msgs })));
+      // Newest first; keep the active chat and the most recent others.
+      state.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+      const keep = state.chats.filter((c) => c.msgs.length || c.id === state.activeId).slice(0, MAX_CHATS);
+      if (!keep.some((c) => c.id === state.activeId)) keep.push(chat());
+      state.chats = keep;
+      try { sessionStorage.setItem(UI_KEY, JSON.stringify({ open: !!state.open, wide: !!state.wide })); } catch (_) { /* ignore */ }
+      const out = Object.assign({}, state, { open: undefined,
+        chats: keep.map((c) => Object.assign({}, c, { msgs: c.msgs.filter((m) => !m.streaming || m.content).slice(-MAX_STORED) })),
+      });
+      localStorage.setItem(STORE_KEY, JSON.stringify(out));
     } catch (_) { /* non-fatal */ }
   }
+  const isBusy = (c) => !!controllers[(c || chat()).id];
 
   // ---- DOM ------------------------------------------------------------------
   const root = el("div", "orh");
@@ -250,12 +332,16 @@
           '<div class="orh-title-row"><span class="orh-mark" aria-hidden="true">' + ICON.chat + '</span>' +
           '<h2 id="orh-title" class="orh-title">OfferReady Help</h2></div>' +
           '<div class="orh-tools">' +
-            '<button type="button" class="orh-tool orh-new" title="Start a new chat">' + ICON.plus + "<span>New chat</span></button>" +
+            '<button type="button" class="orh-tool orh-hist" aria-pressed="false" title="Your chats">' + ICON.history + '<span>Chats</span><span class="orh-hist-n" hidden></span></button>' +
+            '<button type="button" class="orh-tool orh-new" title="Start a new chat">' + ICON.plus + "<span>New</span></button>" +
             '<button type="button" class="orh-tool orh-expand" aria-pressed="false" aria-label="Use a larger panel">' + ICON.expand + "</button>" +
             '<button type="button" class="orh-tool orh-close" aria-label="Close help">' + ICON.close + "</button>" +
           "</div>" +
         "</div>" +
-        '<p class="orh-pill"><span class="orh-pill-dot" aria-hidden="true"></span><span class="orh-pill-text"></span></p>' +
+        '<div class="orh-subhead">' +
+          '<p class="orh-pill"><span class="orh-pill-dot" aria-hidden="true"></span><span class="orh-pill-text"></span></p>' +
+          '<label class="orh-topic"><span class="orh-topic-label">Focus</span><select class="orh-topic-select" aria-label="Topic focus"></select></label>' +
+        "</div>" +
       "</header>" +
       '<div class="orh-log" role="log" aria-label="Conversation"></div>' +
       '<div class="orh-sr" aria-live="polite" aria-atomic="true"></div>' +
@@ -281,24 +367,12 @@
   const live = $(".orh-sr");
   const newBtn = $(".orh-new");
   const expandBtn = $(".orh-expand");
+  const histBtn = $(".orh-hist");
+  const histN = $(".orh-hist-n");
+  const topicSel = $(".orh-topic-select");
 
   function mount() {
     if (!document.body.contains(root)) document.body.appendChild(root);
-  }
-
-  // ---- areas (best effort) ---------------------------------------------------
-  let areas = [];
-  let areasLoaded = false;
-  function loadAreas() {
-    if (areasLoaded) return;
-    areasLoaded = true;
-    fetch(API + AREAS_PATH)
-      .then((r) => r.json())
-      .then((d) => {
-        areas = (d && Array.isArray(d.areas) ? d.areas : []).filter((a) => typeof a === "string" && a !== "all");
-        if (!state.msgs.length) renderLog();
-      })
-      .catch(() => {});
   }
 
   // ---- rendering ------------------------------------------------------------
@@ -311,28 +385,111 @@
   function renderHeader() {
     pillText.textContent = "On: " + pageTitle();
     pillText.parentNode.title = pageTitle();
-    newBtn.disabled = state.msgs.length === 0;
+    const c = chat();
+    newBtn.disabled = c.msgs.length === 0;
+    const others = state.chats.filter((x) => x.msgs.length).length;
+    histN.hidden = !others;
+    histN.textContent = String(others);
+    histBtn.setAttribute("aria-pressed", view === "history" ? "true" : "false");
+    histBtn.classList.toggle("orh-tool--on", view === "history");
+    renderTopic();
     panel.classList.toggle("orh-panel--wide", !!state.wide);
     expandBtn.setAttribute("aria-pressed", state.wide ? "true" : "false");
     expandBtn.setAttribute("aria-label", state.wide ? "Use a smaller panel" : "Use a larger panel");
     expandBtn.innerHTML = state.wide ? ICON.collapse : ICON.expand;
   }
 
+  function renderTopic() {
+    const c = chat();
+    const auto = topicLabel(pageTopicId());
+    topicSel.textContent = "";
+    const add = (parent, value, label) => { const o = el("option", null, label); o.value = value; parent.appendChild(o); };
+    add(topicSel, "auto", auto ? "Auto · " + auto : "Auto · this page");
+    add(topicSel, "all", "All topics");
+    TOPIC_GROUPS.forEach((g) => {
+      const og = document.createElement("optgroup");
+      og.label = g[0];
+      g[1].forEach((t) => add(og, t[0], t[1]));
+      topicSel.appendChild(og);
+    });
+    topicSel.value = c.area || "auto";
+    if (topicSel.value !== (c.area || "auto")) topicSel.value = "auto";
+    topicSel.parentNode.title = "Answers focus on: " + (topicLabel(effectiveArea(c)) || "all topics");
+  }
+
+  function ago(t) {
+    const s = Math.max(0, Math.round((Date.now() - t) / 1000));
+    if (s < 60) return "just now";
+    if (s < 3600) return Math.round(s / 60) + " min ago";
+    if (s < 86400) return Math.round(s / 3600) + " h ago";
+    const d = Math.round(s / 86400);
+    return d === 1 ? "yesterday" : d + " days ago";
+  }
+
+  function renderHistory() {
+    const wrap = el("div", "orh-history");
+    const top = el("div", "orh-history-top");
+    const back = el("button", "orh-mini orh-back");
+    back.type = "button";
+    back.innerHTML = ICON.back + "<span>Back to chat</span>";
+    back.addEventListener("click", () => { view = "chat"; renderLog(); input.focus(); });
+    top.appendChild(back);
+    wrap.appendChild(top);
+    wrap.appendChild(el("p", "orh-history-title", "Your chats"));
+    const list = state.chats.filter((c) => c.msgs.length).sort((a, b) => b.updatedAt - a.updatedAt);
+    if (!list.length) {
+      wrap.appendChild(el("p", "orh-note", "No chats yet. Your conversations are saved here on this device."));
+      return log.appendChild(wrap);
+    }
+    const ul = el("ul", "orh-chats");
+    list.forEach((c) => {
+      const li = el("li", "orh-chat" + (c.id === state.activeId ? " orh-chat--active" : ""));
+      const open = el("button", "orh-chat-open");
+      open.type = "button";
+      open.appendChild(el("span", "orh-chat-title", c.title || titleFor(c) || "Untitled chat"));
+      const n = c.msgs.filter((m) => m.role === "user").length;
+      const meta = el("span", "orh-chat-meta",
+        (isBusy(c) ? "Answering… · " : "") + n + (n === 1 ? " question" : " questions") + " · " + ago(c.updatedAt) +
+        (c.area && c.area !== "auto" && c.area !== "all" ? " · " + topicLabel(c.area) : ""));
+      if (isBusy(c)) meta.classList.add("orh-chat-live");
+      open.appendChild(meta);
+      open.addEventListener("click", () => { state.activeId = c.id; view = "chat"; stick = true; save(); renderLog(); input.focus(); });
+      const del = el("button", "orh-mini orh-chat-del");
+      del.type = "button";
+      del.setAttribute("aria-label", "Delete chat: " + (c.title || "untitled"));
+      del.innerHTML = ICON.trash;
+      del.addEventListener("click", () => {
+        if (controllers[c.id]) controllers[c.id].abort();
+        state.chats = state.chats.filter((x) => x.id !== c.id);
+        if (state.activeId === c.id) { const f = newChatObj(); state.chats.unshift(f); state.activeId = f.id; }
+        save();
+        renderLog();
+      });
+      li.appendChild(open);
+      li.appendChild(del);
+      ul.appendChild(li);
+    });
+    wrap.appendChild(ul);
+    const clear = el("button", "orh-mini orh-clear", "Delete all chats");
+    clear.type = "button";
+    clear.addEventListener("click", () => {
+      if (!window.confirm("Delete all saved chats on this device?")) return;
+      Object.keys(controllers).forEach((k) => controllers[k].abort());
+      const f = newChatObj();
+      state.chats = [f];
+      state.activeId = f.id;
+      view = "chat";
+      save();
+      renderLog();
+    });
+    wrap.appendChild(clear);
+    log.appendChild(wrap);
+  }
+
   function renderWelcome() {
     const w = el("div", "orh-welcome");
     w.appendChild(el("p", "orh-welcome-title", "How can I help?"));
     w.appendChild(el("p", null, "Ask about this page, an interview topic, or how to prepare with OfferReady."));
-    if (areas.length) {
-      const lab = el("label", "orh-area");
-      lab.appendChild(el("span", null, "Topic"));
-      const sel = el("select");
-      const all = el("option", null, "All topics"); all.value = "all"; sel.appendChild(all);
-      areas.forEach((a) => { const o = el("option", null, a.replace(/-/g, " ")); o.value = a; sel.appendChild(o); });
-      sel.value = state.area || "all";
-      sel.addEventListener("change", () => { state.area = sel.value; save(); });
-      lab.appendChild(sel);
-      w.appendChild(lab);
-    }
     const list = el("div", "orh-starters");
     list.setAttribute("role", "group");
     list.setAttribute("aria-label", "Suggested questions");
@@ -349,7 +506,8 @@
   }
 
   function lastAssistantId() {
-    for (let i = state.msgs.length - 1; i >= 0; i--) if (state.msgs[i].role === "assistant") return state.msgs[i].id;
+    const msgs = chat().msgs;
+    for (let i = msgs.length - 1; i >= 0; i--) if (msgs[i].role === "assistant") return msgs[i].id;
     return "";
   }
 
@@ -452,7 +610,7 @@
       m.followups.forEach((q) => {
         const b = el("button", "orh-follow", q);
         b.type = "button";
-        b.disabled = busy;
+        b.disabled = isBusy();
         b.addEventListener("click", () => ask(q));
         f.appendChild(b);
       });
@@ -462,23 +620,28 @@
 
   function renderLog() {
     log.textContent = "";
-    if (!state.msgs.length) log.appendChild(renderWelcome());
-    state.msgs.forEach((m) => log.appendChild(renderMsg(m)));
+    if (view === "history") { renderHistory(); renderHeader(); return; }
+    const c = chat();
+    if (!c.msgs.length) log.appendChild(renderWelcome());
+    c.msgs.forEach((m) => log.appendChild(renderMsg(m)));
     renderHeader();
+    syncBusy();
     scrollDown();
   }
 
   function rerender(m) {
+    if (view !== "chat") return;
     const node = log.querySelector('.orh-bot[data-id="' + m.id + '"]');
-    if (!node) { renderLog(); return; }
+    if (!node) { if (chat().msgs.indexOf(m) >= 0) renderLog(); return; }
     node.className = "orh-msg orh-bot" + (m.error ? " orh-err" : "") + (m.streaming ? " orh-streaming" : "");
     if (m.streaming) node.setAttribute("aria-busy", "true"); else node.removeAttribute("aria-busy");
     fillBot(node, m);
     scrollDown();
   }
 
-  function setBusy(b) {
-    busy = b;
+  /** The send button turns into Stop while the visible chat is answering. */
+  function syncBusy() {
+    const b = isBusy();
     sendBtn.classList.toggle("orh-stop", b);
     sendBtn.type = b ? "button" : "submit";
     sendBtn.setAttribute("aria-label", b ? "Stop generating" : "Send");
@@ -491,7 +654,7 @@
     input.style.height = Math.min(input.scrollHeight, 140) + "px";
     const n = input.value.length;
     countEl.textContent = n > MAX_CHARS - 200 ? n + "/" + MAX_CHARS : "";
-    if (!busy) sendBtn.disabled = !input.value.trim();
+    if (!isBusy()) sendBtn.disabled = !input.value.trim();
     else sendBtn.disabled = false;
   }
 
@@ -505,7 +668,6 @@
     fab.querySelector(".orh-fab-label").textContent = open ? "Close" : "Ask OfferReady";
     fab.querySelector(".orh-fab-icon").innerHTML = open ? ICON.close : ICON.chat;
     if (open) {
-      loadAreas();
       renderLog();
       updateInput(); // measure the textarea now that it is visible
       if (!(opts && opts.restore)) setTimeout(() => input.focus(), 30);
@@ -518,12 +680,29 @@
   $(".orh-close").addEventListener("click", () => setOpen(false));
   expandBtn.addEventListener("click", () => { state.wide = !state.wide; save(); renderHeader(); });
   newBtn.addEventListener("click", () => {
-    if (abortCtrl) abortCtrl.abort();
-    state.msgs = [];
+    // The current chat (and any answer still streaming in it) is kept under Chats.
+    const cur = chat();
+    view = "chat";
+    if (cur.msgs.length) {
+      const c = newChatObj();
+      c.area = cur.area === "auto" ? "auto" : cur.area;
+      state.chats.unshift(c);
+      state.activeId = c.id;
+    }
     save();
     live.textContent = "";
     renderLog();
     input.focus();
+  });
+  histBtn.addEventListener("click", () => {
+    view = view === "history" ? "chat" : "history";
+    renderLog();
+    if (view === "chat") input.focus();
+  });
+  topicSel.addEventListener("change", () => {
+    chat().area = topicSel.value;
+    save();
+    if (!chat().msgs.length) renderLog();
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !panel.hidden) setOpen(false);
@@ -537,7 +716,7 @@
   });
   form.addEventListener("submit", (e) => { e.preventDefault(); ask(input.value); });
   sendBtn.addEventListener("click", (e) => {
-    if (busy) { e.preventDefault(); if (abortCtrl) abortCtrl.abort(); }
+    if (isBusy()) { e.preventDefault(); const ctl = controllers[chat().id]; if (ctl) ctl.abort(); }
   });
 
   // ---- copy + feedback --------------------------------------------------------
@@ -677,26 +856,31 @@
 
   async function ask(q) {
     const question = String(q || "").trim().slice(0, MAX_CHARS);
-    if (!question || busy) return;
-    const history = state.msgs
+    const c = chat();
+    if (!question || isBusy(c)) return;
+    view = "chat";
+    const history = c.msgs
       .filter((m) => !m.error && m.content && m.content.trim())
       .slice(-HISTORY_TURNS)
       .map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }));
-    const payload = { question, area: state.area || "all", history, context: currentContext() };
+    const payload = { question, area: effectiveArea(c), history, context: currentContext() };
 
-    state.msgs.push({ id: uid(), role: "user", content: question });
+    c.msgs.push({ id: uid(), role: "user", content: question });
     const bot = { id: uid(), role: "assistant", content: "", streaming: true, q: question };
-    state.msgs.push(bot);
+    c.msgs.push(bot);
+    if (!c.title) c.title = titleFor(c);
+    c.updatedAt = Date.now();
     input.value = "";
     stick = true;
-    setBusy(true);
+    if (!CAN_STREAM) controllers[c.id] = new AbortController();
     renderLog();
     save();
+    const visible = () => view === "chat" && state.activeId === c.id;
 
     const finishPlain = (res) => {
       if (res.status === 200 && res.body && res.body.answer) {
         Object.assign(bot, { content: String(res.body.answer).trim(), streaming: false }, cleanExtras(res.body));
-        live.textContent = bot.content.slice(0, 600);
+        if (visible()) live.textContent = bot.content.slice(0, 600);
       } else {
         const e = errorMessage(res.status, res.body && res.body.error);
         Object.assign(bot, { content: e.text, hint: e.hint, error: true, streaming: false });
@@ -706,17 +890,18 @@
     if (!CAN_STREAM) {
       finishPlain(await plainAnswer(payload));
     } else {
-      abortCtrl = new AbortController();
+      const ctl = new AbortController();
+      controllers[c.id] = ctl;
+      syncBusy();
       let frame = 0;
       const out = await streamAnswer(payload, (t) => {
         bot.content += t;
         if (!frame) frame = requestAnimationFrame(() => { frame = 0; rerender(bot); });
-      }, abortCtrl.signal);
+      }, ctl.signal);
       if (frame) cancelAnimationFrame(frame);
-      abortCtrl = null;
       if (out.kind === "done") {
         Object.assign(bot, { content: bot.content.trimEnd(), streaming: false }, cleanExtras(out.extras));
-        live.textContent = bot.content.slice(0, 600);
+        if (visible()) live.textContent = bot.content.slice(0, 600);
       } else if (out.kind === "aborted") {
         Object.assign(bot, { content: bot.content.trimEnd(), streaming: false, stopped: true });
       } else if (out.gotDelta) {
@@ -728,10 +913,16 @@
         Object.assign(bot, { content: e.text, error: true, streaming: false });
       }
     }
-    setBusy(false);
+    delete controllers[c.id];
+    c.updatedAt = Date.now();
     save();
-    if (state.msgs.indexOf(bot) >= 0) renderLog(); // "New chat" may have cleared it
-    if (!panel.hidden) setTimeout(() => input.focus(), 30);
+    if (visible()) {
+      renderLog();
+      if (!panel.hidden) setTimeout(() => input.focus(), 30);
+    } else {
+      renderHeader();
+      if (view === "history") renderLog(); // refresh the "Answering…" badge
+    }
   }
 
   // ---- boot + instant navigation -------------------------------------------
@@ -739,9 +930,22 @@
     mount();
     if (!panel.hidden) {
       renderHeader();
-      if (!state.msgs.length) renderLog(); // starters follow the page
+      if (view === "history" || !chat().msgs.length) renderLog(); // starters follow the page
     }
   }
+
+  // Another tab changed the saved chats: pick them up (unless this tab is mid-answer).
+  window.addEventListener("storage", (e) => {
+    if (e.key !== STORE_KEY || Object.keys(controllers).length) return;
+    const activeId = state.activeId;
+    const open = state.open;
+    const wide = state.wide;
+    state = load();
+    if (state.chats.some((c) => c.id === activeId)) state.activeId = activeId;
+    state.open = open;
+    state.wide = wide;
+    if (!panel.hidden) renderLog(); else renderHeader();
+  });
 
   mount();
   if (state.open && !isMobile()) setOpen(true, { restore: true });

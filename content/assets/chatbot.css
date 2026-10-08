@@ -200,3 +200,40 @@
   .orh .orh-fab, .orh .orh-starter, .orh .orh-starter svg, .orh .orh-input, .orh .orh-send { transition: none; }
 }
 @media print { .orh { display: none !important; } }
+
+/* ---- header: context + topic focus ---- */
+.orh .orh-subhead { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.orh .orh-subhead .orh-pill { flex: 1 1 140px; min-width: 0; max-width: max-content; }
+.orh .orh-topic { position: relative; display: inline-flex; align-items: center; gap: 6px; flex: 0 1 auto; min-width: 0; height: 26px; padding: 0 4px 0 10px; border-radius: 999px; background: rgba(34, 192, 122, 0.14); border: 1px solid rgba(34, 192, 122, 0.4); color: #c9f2dd; font-size: 12px; cursor: pointer; }
+.orh .orh-topic:hover { background: rgba(34, 192, 122, 0.22); }
+.orh .orh-topic-label { font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; font-size: 10.5px; color: #8fe3b9; }
+.orh .orh-topic select { appearance: none; -webkit-appearance: none; border: 0; background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23c9f2dd' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 6px center; color: #fff; font: inherit; font-weight: 600; padding: 0 22px 0 0; height: 24px; max-width: 190px; text-overflow: ellipsis; cursor: pointer; outline: none; }
+.orh .orh-topic select option, .orh .orh-topic select optgroup { color: #15233b; background: #fff; font-weight: 500; }
+.orh .orh-topic select optgroup { font-weight: 700; }
+.orh .orh-topic:focus-within { outline: 2px solid var(--orh-signal); outline-offset: 2px; }
+
+/* ---- chats (history) ---- */
+.orh .orh-tool--on { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.orh .orh-hist-n { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 999px; background: var(--orh-signal); color: #fff; font-size: 10.5px; font-weight: 700; }
+.orh .orh-hist-n[hidden] { display: none; }
+.orh .orh-history { display: flex; flex-direction: column; gap: 10px; }
+.orh .orh-history-top { display: flex; }
+.orh .orh-back { color: var(--orh-text-2); padding-left: 2px; }
+.orh .orh-back:hover { color: var(--orh-text); }
+.orh .orh-history-title { margin: 0; font-weight: 700; font-size: 15.5px; color: var(--orh-text); }
+.orh .orh-chats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.orh .orh-chat { display: flex; align-items: stretch; gap: 4px; margin: 0; border: 1px solid var(--orh-border); background: var(--orh-surface); border-radius: 10px; transition: border-color 0.15s ease; }
+.orh .orh-chat:hover { border-color: var(--orh-ink-2); }
+.orh .orh-chat--active { border-color: var(--orh-signal); box-shadow: inset 3px 0 0 var(--orh-signal); }
+.orh .orh-chat-open { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 9px 12px; border: 0; background: transparent; color: var(--orh-text); cursor: pointer; border-radius: 10px; }
+.orh .orh-chat-title { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orh .orh-chat-meta { font-size: 12px; color: var(--orh-text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orh .orh-chat-live { color: var(--orh-signal); font-weight: 600; }
+.orh .orh-chat-del { align-self: center; margin-right: 6px; }
+.orh .orh-chat-del:hover { color: #c0392b; background: rgba(192, 57, 43, 0.08); }
+.orh .orh-clear { align-self: flex-start; margin-top: 4px; }
+.orh .orh-clear:hover { color: #c0392b; }
+@media (max-width: 639px) {
+  .orh .orh-topic select { max-width: 150px; }
+  .orh .orh-tool span:not(.orh-hist-n) { display: none; }
+}
