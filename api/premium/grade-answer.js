@@ -5,10 +5,10 @@
  * real interviewer (score + what held up + what was missing + one follow-up).
  * This is the feature that makes Pro an AI interviewer, not a study guide.
  *
- * Access matrix (mirrors the other premium endpoints — spec §20/§28/§34):
+ * Access matrix (plans.js `ai_grading` quota — Free 5/month, Pro 400/month):
  *   anonymous                        -> 401
- *   authenticated, no entitlement    -> 403 (upgrade required)
- *   authenticated, entitled          -> 200 + feedback
+ *   authenticated, over the quota    -> 403 { error, upgrade, feature, used, limit, plan }
+ *   authenticated, within the quota  -> 200 + feedback (use recorded after success)
  *   no OPENAI_API_KEY                -> 503 { fallback:true } (client shows model answer only)
  *   generation / validation error    -> 502/422/500, fail closed (no fake feedback)
  *
@@ -22,14 +22,14 @@
 
 const { setCors, send } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
-const { hasEntitlement } = require('../_lib/entitlements');
+const { checkQuota, recordUse, quotaError } = require('../_lib/plans');
 const { SYSTEM_PROMPT, buildUserMessage, validateGrade } = require('../_lib/gradeAnswer');
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const REQUEST_TIMEOUT_MS = 30000;
 const MAX_OUTPUT_TOKENS = 700;
-const REQUIRED_ENTITLEMENT = 'system_design_pro';
+const FEATURE = 'ai_grading';
 
 function safeParseJson(str) {
   if (typeof str !== 'string') return null;
@@ -48,16 +48,9 @@ module.exports = async function handler(req, res) {
   const user = await getUser(req);
   if (!user) { send(res, 401, { error: 'Sign in to have your answer graded.' }); return; }
 
-  // 2) Authorization — Pro (fail closed).
-  const entitled = await hasEntitlement(user.id, REQUIRED_ENTITLEMENT);
-  if (!entitled) {
-    send(res, 403, {
-      error: 'AI answer feedback is part of OfferReady Pro.',
-      upgrade: true,
-      required_entitlement: REQUIRED_ENTITLEMENT,
-    });
-    return;
-  }
+  // 2) Plan quota (Free includes a few gradings a month; fails open on storage errors).
+  const quota = await checkQuota(user.id, FEATURE);
+  if (!quota.ok) { send(res, 403, quotaError(quota, FEATURE)); return; }
 
   // 3) No key -> client falls back to showing the model answer only.
   if (!process.env.OPENAI_API_KEY) {
@@ -117,6 +110,7 @@ module.exports = async function handler(req, res) {
       return;
     }
 
+    await recordUse(user.id, FEATURE);
     send(res, 200, { ok: true, model, feedback: result.feedback });
   } catch (err) {
     if (err && err.name === 'AbortError') {

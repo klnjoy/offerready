@@ -17,12 +17,19 @@
  *     NOT require Pro (gap analysis + question generation are core funnel value,
  *     shown before the paywall per the product's "value before signup" stance);
  *     persistence + Pro-only depth live behind their own gates elsewhere.
+ *   - Plans (api/_lib/plans.js): a SIGNED-IN analyze_jd counts toward the
+ *     monthly `analyses` quota (403 {upgrade:true,...} when over; recorded only
+ *     after a successful analysis). Anonymous runs are bounded by rate limit.
+ *   - Rate limit (api/_lib/rateLimit.js): best-effort per instance, per IP and
+ *     per user; 429 + Retry-After.
  */
 
 'use strict';
 
 const { setCors, send } = require('./_lib/http');
-const { getUser } = require('./_lib/supabaseAuth');
+const { getUser, bearerToken } = require('./_lib/supabaseAuth');
+const { checkQuota, recordUse, quotaError } = require('./_lib/plans');
+const rateLimit = require('./_lib/rateLimit');
 const { SYSTEM_PROMPT: JD_SYSTEM_PROMPT, buildUserMessage: buildJdUserMessage } = require('./_lib/prompt');
 const { validateInput, safeParseModelJson, normalizeAnalysis } = require('./_lib/validate');
 const { mapSkillsToResources, lookupResource } = require('./_lib/skillMap');
@@ -96,9 +103,15 @@ function attachResources(analysis) {
   return Object.assign({}, analysis, { preparationPlan: plan, offerReadyResources: resources });
 }
 
-async function handleAnalyzeJd(body, res) {
+async function handleAnalyzeJd(body, res, user) {
   const v = validateInput(body);
   if (!v.ok) { send(res, v.status, { error: v.error }); return; }
+  // Monthly quota for signed-in users (anonymous "value before signup" runs
+  // are bounded by the per-IP rate limit instead). Fails open on storage errors.
+  if (user) {
+    const q = await checkQuota(user.id, 'analyses');
+    if (!q.ok) { send(res, 403, quotaError(q, 'analyses')); return; }
+  }
   const { jobDescription, targetRole, resume } = v.value;
   // Token budget: the analysis JSON is large (roleSummary + several arrays +
   // preparationPlan). With a resume it ALSO returns the per-requirement
@@ -120,6 +133,7 @@ async function handleAnalyzeJd(body, res) {
     send(res, 502, { error: 'The analysis could not be understood. Please try again.' }); return;
   }
   const analysis = attachResources(normalizeAnalysis(parsed, Boolean(resume)));
+  if (user) await recordUse(user.id, 'analyses'); // only after a successful analysis
   send(res, 200, { ok: true, action: 'analyze_jd', analysis });
 }
 
@@ -228,6 +242,9 @@ module.exports = async function handler(req, res) {
   setCors(res, req.headers && req.headers.origin);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (req.method !== 'POST') { send(res, 405, { error: 'Method not allowed.' }); return; }
+  // Burst/abuse guard (best-effort, per instance): 60/min per IP here, then
+  // 20/min per user once identity is known.
+  if (!rateLimit.enforce(req, res, { scope: 'ai' })) return;
 
   if (!process.env.OPENAI_API_KEY) {
     send(res, 503, { demo: true, error: 'AI is not configured on this deployment.' });
@@ -243,13 +260,17 @@ module.exports = async function handler(req, res) {
   // analyze_jd is public (value before signup). The others require identity so
   // results can be attributed/persisted to the user's jobs.
   if (action === 'analyze_jd') {
-    await handleAnalyzeJd(body, res);
+    // Optional identity: a signed-in caller's analyses count toward their plan.
+    const user = bearerToken(req) ? await getUser(req) : null;
+    if (user && !rateLimit.enforce(req, res, { scope: 'ai', userId: user.id })) return;
+    await handleAnalyzeJd(body, res, user);
     return;
   }
 
   if (action === 'gap_analysis' || action === 'generate_questions') {
     const user = await getUser(req);
     if (!user) { send(res, 401, { error: 'Sign in to use this feature.' }); return; }
+    if (!rateLimit.enforce(req, res, { scope: 'ai', userId: user.id })) return;
     if (action === 'gap_analysis') { await handleGapAnalysis(body, res, user); return; }
     await handleGenerateQuestions(body, res, user);
     return;
