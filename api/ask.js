@@ -32,6 +32,8 @@
 
 'use strict';
 
+const { AREAS } = require('./_lib/areas');
+
 const { lookupResource, RESOURCES } = require('./_lib/skillMap');
 const { suggestActions } = require('./_lib/helpActions');
 
@@ -94,7 +96,7 @@ function setCors(res, origin) {
   const value = reqOrigin && reqOrigin === allowed ? origin : allowed;
   res.setHeader('Access-Control-Allow-Origin', value);
   res.setHeader('Vary', 'Origin');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 function send(res, status, payload) {
@@ -382,7 +384,16 @@ async function readOpenAIStream(body, onText) {
 async function handler(req, res) {
   setCors(res, req.headers && req.headers.origin);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
+  // GET serves the topic list (formerly api/areas.js; /api/areas is rewritten
+  // here in vercel.json so the project stays within the Hobby function limit).
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    send(res, 200, { areas: ['all'].concat(AREAS) });
+    return;
+  }
   if (req.method !== 'POST') { send(res, 405, { error: 'Method not allowed.' }); return; }
+  // Anonymous endpoint: best-effort 60 requests/minute per IP (see _lib/rateLimit.js).
+  if (!require('./_lib/rateLimit').enforce(req, res, { scope: 'ask' })) return;
   if (!process.env.OPENAI_API_KEY) { send(res, 503, { error: 'Ask is not configured on this deployment.' }); return; }
 
   let body = req.body;

@@ -8,21 +8,18 @@
  * access is scoped to that user id. Never trusts a client-supplied user id.
  *
  * Free-tier limit (spec §17): non-Pro users may keep a limited number of saved
- * jobs. The limit is enforced HERE (server-side), not in the browser. A user
- * with the `interview_pro` entitlement (any Pro feature) is treated as Pro.
+ * jobs. The limit is enforced HERE (server-side), not in the browser, using
+ * api/_lib/plans.js (LIMITS.free.saved_jobs; Pro = unlimited; Pro = any active
+ * entitlement from the Stripe Pro bundle). Saved jobs count jobs rows, not
+ * usage events. Fails open if storage can't be read.
  */
 
 'use strict';
 
 const { setCors, send } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
-const { hasEntitlement } = require('../_lib/entitlements');
-const { listJobs, countJobs, insertJob, deriveJobTitle } = require('../_lib/jobs');
-
-// Free users may save this many jobs; Pro is effectively unlimited.
-const FREE_JOB_LIMIT = 1;
-// Any of these entitlements unlocks "unlimited saved jobs".
-const PRO_FEATURES = ['interview_pro', 'architecture_pro', 'system_design_pro'];
+const { listJobs, insertJob, deriveJobTitle } = require('../_lib/jobs');
+const { checkQuota, quotaError } = require('../_lib/plans');
 
 function str(v, max) {
   if (v == null) return null;
@@ -40,14 +37,6 @@ function summarize(analysis) {
   const skillsCount = Array.from(skills).filter(Boolean).length;
   const gapsCount = (a.potentialGaps || []).length;
   return { skillsCount, gapsCount };
-}
-
-async function isPro(userId) {
-  for (const f of PRO_FEATURES) {
-    // eslint-disable-next-line no-await-in-loop
-    if (await hasEntitlement(userId, f)) return true;
-  }
-  return false;
 }
 
 module.exports = async function handler(req, res) {
@@ -75,18 +64,8 @@ module.exports = async function handler(req, res) {
     }
 
     // Free-tier enforcement (server-side, cannot be bypassed by the client).
-    const pro = await isPro(user.id);
-    if (!pro) {
-      const existing = await countJobs(user.id);
-      if (existing >= FREE_JOB_LIMIT) {
-        send(res, 403, {
-          error: 'Free includes one saved job. Upgrade to Pro to save more.',
-          upgrade: true,
-          limit: FREE_JOB_LIMIT,
-        });
-        return;
-      }
-    }
+    const quota = await checkQuota(user.id, 'saved_jobs');
+    if (!quota.ok) { send(res, 403, quotaError(quota, 'saved_jobs')); return; }
 
     const { skillsCount, gapsCount } = summarize(analysis);
     const row = {

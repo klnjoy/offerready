@@ -9,6 +9,15 @@
     },
     "api/ask.js": {
       "maxDuration": 60
+    },
+    "api/premium/mock-turn.js": {
+      "maxDuration": 60
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/areas",
+      "destination": "/api/ask"
+    }
+  ]
 }
