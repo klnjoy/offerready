@@ -1361,6 +1361,11 @@ a.ig-feature.ig-link .ig-d {
 .md-typeset .md-button:hover { text-decoration: none; }
 .md-typeset .md-button--primary,
 .md-typeset .md-button--primary:hover { color: #fff; }
+/* Buttons on dark heroes: keep them readable over the generic rules above. */
+.md-typeset .ig-hero .md-button { color: #fff; border-color: rgba(255, 255, 255, 0.7); }
+.md-typeset .ig-hero .md-button:hover { color: #fff; background: rgba(255, 255, 255, 0.12); border-color: #fff; }
+.md-typeset .ig-hero .md-button--primary,
+.md-typeset .ig-hero .md-button--primary:hover { background: #fff; color: #0c1c38; border-color: #fff; }
 
 .md-typeset h1 {
   margin: 0 0 1rem;
