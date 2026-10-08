@@ -4,6 +4,8 @@ icon: material/robot-industrial
 
 # Agentic AI / Agents Interview Q&A — Advanced
 
+*Last reviewed: October 2026*
+
 Deep, senior-level questions on agent systems: architectures, planning, memory,
 tool use, multi-agent orchestration, failure modes, evaluation, and running
 agents in production. Assumes you know the basics (this is the depth layer).
@@ -24,7 +26,7 @@ Can you explain each without notes?
 
 - [ ] The agent loop and where each step can fail
 - [ ] ReAct vs plan-and-execute vs reflection
-- [ ] Short-term vs long-term vs episodic memory, and context budgeting
+- [ ] Short-term vs long-term vs episodic memory, and context engineering
 - [ ] Tool design for reliability (schemas, least privilege, gating)
 - [ ] Single-agent vs supervisor/multi-agent trade-offs
 - [ ] Orchestration as a state machine / graph (LangGraph)
@@ -145,6 +147,22 @@ Can you explain each without notes?
     decisions/results rather than raw transcript, and checkpoint state so it survives
     across turns. Design the loop to carry a compact state, not the whole history.
 
+??? question "What is context engineering, and how is it different from prompt engineering?"
+    Prompt engineering tunes the instructions; **context engineering** designs
+    *everything* that lands in the window on each turn: system prompt, tool
+    definitions, retrieved documents, memory, prior tool results and the
+    conversation. For long-running agents it is the main reliability lever. Core
+    techniques: **just-in-time retrieval** (give the agent search/read tools and
+    lightweight references such as file paths or IDs instead of pre-loading
+    everything); **compaction** (summarize old turns and clear stale tool results
+    while keeping decisions and open issues); **structured note-taking** (the agent
+    writes a progress/todo file outside the window and re-reads it); **sub-agents**
+    with clean windows that return condensed results; and **small, non-overlapping
+    tool sets** (every tool definition costs tokens and adds selection confusion).
+    Order stable content first so **prompt caching** hits. Measure it: track
+    tokens per step and task success as the context grows, since quality degrades
+    well before the hard limit ("context rot").
+
 ??? question "How do you give an agent durable memory across sessions?"
     Persist facts/outcomes to an external store (vector DB for semantic recall,
     key-value for structured facts) keyed by user/task; at the start of a session,
@@ -242,6 +260,27 @@ Can you explain each without notes?
     trajectory quality, human-calibrated. Track success rate, cost/task, and
     latency over time to catch regressions.
 
+??? question "Design an evaluation harness for a production agent. What goes in it?"
+    1. **Task suite** from real traffic and incidents: input, environment
+       state, and a *checkable* success criterion (final DB state, test pass, a
+       rubric), not just a reference string. Include adversarial and
+       prompt-injection cases.
+    2. **Graders** in order of preference: code-based checks of the end state,
+       then LLM-as-judge with a rubric (calibrated against human labels and
+       re-checked when you change the judge model), then human review for a
+       sample.
+    3. **Multiple trials per task** because agents are non-deterministic: report
+       pass@k (succeeds at least once) and pass^k (succeeds every time), since
+       production reliability needs the second.
+    4. **Trajectory metrics:** tool-call accuracy, wasted steps, policy
+       violations, cost and latency per task.
+    5. **Sandboxed, reset environments** so runs are isolated and repeatable.
+    6. **Gates:** run offline in CI on every prompt/model/tool change, then
+       shadow or canary online with tracing; feed production failures back
+       into the suite.
+    Watch for eval contamination (tasks leaked into prompts) and graders that
+    reward a plausible narrative over a verified outcome.
+
 ??? question "How do you make an agent's behavior reproducible enough to debug?"
     **Trace every step** (inputs, chosen action, tool args, observation, tokens),
     pin model versions, lower temperature where determinism matters, and persist the
@@ -255,7 +294,13 @@ Can you explain each without notes?
     (semantic + tool-result); **parallelize** independent sub-tasks; trim context
     aggressively (compact history, retrieve less). Prefer a **fixed chain** over an
     agent when the path is knowable — the cheapest agent step is the one you didn't
-    need to take.
+    need to take. In 2026 the biggest levers are usually **prompt caching** (keep
+    the system prompt and tool definitions stable and first; cached input is billed
+    at a fraction of the normal rate), the **batch** APIs for offline work (roughly
+    half price), **reasoning-effort / thinking-budget** settings on reasoning
+    models, and trimming the tool catalog. Report **cost per successful task**, not
+    cost per call, so a cheap model that needs three retries doesn't look like a
+    win.
 
 ??? question "You're productionizing an agent that sometimes takes destructive actions incorrectly. Design the safeguards."
     Layered: (1) **least-privilege tools** — the agent can't call the destructive op
@@ -285,6 +330,9 @@ Can you explain each without notes?
 | Eval an agent? | outcome + trajectory + component metrics |
 | HITL belongs where? | high-consequence, low-reversibility actions |
 | Cheapest agent step? | the one you didn't need (use a fixed chain) |
+| Context engineering? | curating everything in the window each turn |
+| pass@k vs pass^k? | succeeds once in k tries vs every time in k tries |
+| Agent ↔ tools standard? | MCP; agent ↔ agent: A2A |
 
 ---
 
@@ -312,6 +360,8 @@ Can you explain each without notes?
 8. Four levers to cut an agent's cost and latency.
 9. How do you make a flaky agent run reproducible enough to debug?
 10. How do you contain prompt injection arriving through a tool result?
+11. What would you put in an agent's context on turn 50 of a long task, and what would you drop?
+12. Why report pass^k rather than a single-run success rate for a customer-facing agent?
 
 !!! note "Cross-links"
     Deep dives: [Agent Engineering](../GenAI-Topics/agent-engineering/index.md) ·

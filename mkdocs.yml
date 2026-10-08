@@ -19,8 +19,11 @@ exclude_docs: |
 theme:
   name: material
   # Theme overrides live in overrides/ (tracked in git; survives sync_docs.py &
-  # `mkdocs build --clean`). Used for the footer partial that surfaces the
-  # Privacy/Terms/Disclaimer/Contact links instead of a top-nav "More" menu.
+  # `mkdocs build --clean`):
+  #   partials/header.html - adds the "Library" label + "Open the app" button
+  #   partials/tabs.html   - skips external top-level nav links as tabs
+  #   partials/footer.html - multi-column site footer (Learn / Build /
+  #                          Interview Prep / Product / Company) + copyright bar
   custom_dir: overrides
   logo: assets/logo.svg
   favicon: assets/favicon.svg
@@ -51,6 +54,14 @@ theme:
     - navigation.instant
     - navigation.instant.progress
     - navigation.tracking
+    # Top-level nav items (Home, Learn, Build, Interview Prep, Study Guide)
+    # render as section tabs under the header on desktop; the left sidebar then
+    # shows only the current section. Sticky = tabs stay visible on scroll.
+    # On phones the tabs are hidden and the drawer lists the full nav.
+    - navigation.tabs
+    - navigation.tabs.sticky
+    # Previous / next page links above the site footer.
+    - navigation.footer
     # Plain collapsible left-sidebar nav: groups start COLLAPSED and expand when
     # you click the chevron (no navigation.sections which broke drill-down, and
     # no navigation.expand which force-opened everything on every refresh).
@@ -72,7 +83,9 @@ plugins:
 extra_css:
   # ?v=N cache-buster — bump when extra.css changes so browsers don't serve a
   # stale cached stylesheet after a deploy.
-  - assets/extra.css?v=47
+  - assets/extra.css?v=48
+  # Help assistant styles (after extra.css so they win over the old #kb rules).
+  - assets/chatbot.css?v=1
 
 extra_javascript:
   # Must load first: sets window.OFFERREADY_API_BASE + Supabase config for the
@@ -87,9 +100,9 @@ extra_javascript:
   # their files stay in assets/ but are no longer loaded here.
   - assets/api-config.js?v=7
   - assets/progress-store.js?v=4
-  - assets/brand.js?v=4
-  - assets/mermaid-init.js?v=3
-  - assets/chatbot.js?v=4
+  - assets/brand.js?v=5
+  - assets/mermaid-init.js?v=4
+  - assets/chatbot.js?v=5
   - assets/why.js?v=3
 
 markdown_extensions:

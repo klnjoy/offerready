@@ -4,6 +4,8 @@ icon: material/aws
 
 # AWS Interview Q&A — Advanced & Scenario-Based
 
+*Last reviewed: October 2026*
+
 Senior AWS for data/AI engineering: compute choices, serverless data pipelines,
 IAM/security, networking for private inference, and cost. Study at a glance,
 then open each question for depth.
@@ -27,8 +29,9 @@ Can you explain each without notes?
 - [ ] A serverless event-driven data pipeline (S3→Lambda→...)
 - [ ] SQS vs SNS vs EventBridge vs Kinesis
 - [ ] Secrets Manager vs Parameter Store
-- [ ] Bedrock access patterns (private, guardrails)
-- [ ] The Lambda 15-min / API Gateway 29-sec limits and workarounds
+- [ ] Bedrock access patterns (private, guardrails, inference profiles, batch)
+- [ ] Bedrock AgentCore for hosting agents; S3 Vectors / S3 Tables
+- [ ] The Lambda 15-min / API Gateway 29-sec default limits and workarounds
 - [ ] Cost levers across compute/storage/egress
 
 ---
@@ -95,7 +98,9 @@ Can you explain each without notes?
     **Reasoning:**
     1. **Trigger:** EventBridge cron.
     2. **Fan-out:** a dispatcher Lambda enqueues one **SQS** message per record →
-       parallel, retry-safe, idempotent per unit.
+       parallel, retry-safe, idempotent per unit. If results aren't needed
+       within minutes, **Bedrock batch inference** (JSONL in S3 → results in S3)
+       is simpler and typically about half the on-demand price.
     3. **Worker:** Lambda (or Fargate if per-item work is long or the container is
        heavy) reads the queue and calls **Bedrock via a VPC endpoint**.
     4. **Store:** results to S3 + DynamoDB; **DLQ** for failures.
@@ -113,10 +118,13 @@ Can you explain each without notes?
     shape.
 
 ??? question "How do you handle Lambda's timeout limits for long LLM responses?"
-    Lambda caps at 15 min and **API Gateway REST** at ~29s. For long/streaming LLM
+    Lambda caps at 15 min. **API Gateway REST** defaults to a 29s integration
+    timeout (since 2024, Regional and private REST APIs can request a higher limit,
+    traded against throttle quota); HTTP APIs cap at 30s. For long/streaming LLM
     responses, use **WebSocket API Gateway** and stream tokens as they generate
-    (Lambda posts chunks to the connection), or move to **Fargate** for genuinely
-    long jobs, or **async** patterns (enqueue, process, notify). Don't hold a
+    (Lambda posts chunks to the connection), **Lambda response streaming** via a
+    function URL, **Fargate** behind an ALB for genuinely long jobs, or **async**
+    patterns (enqueue, process, notify). Don't hold a
     synchronous HTTP request open past the limit.
 
 ??? question "SQS vs SNS vs EventBridge vs Kinesis?"
@@ -125,6 +133,28 @@ Can you explain each without notes?
     with routing rules/schedules, SaaS + AWS event integration. **Kinesis**: ordered,
     replayable streaming for high-throughput real-time data. Batch work → SQS;
     broadcast → SNS; routing/schedules → EventBridge; streaming analytics → Kinesis.
+
+??? question "How do you run a production agent on AWS in 2026?"
+    Options from most to least managed: **Bedrock Agents** (configured agents with
+    action groups and knowledge bases); **Bedrock AgentCore** (GA October 2025),
+    which hosts agents built in any framework (LangGraph, Strands, CrewAI, custom)
+    and provides Runtime (isolated, long-running sessions), Gateway (turns APIs and
+    Lambdas into MCP tools), Identity (OAuth to downstream services), Memory,
+    built-in code interpreter and browser tools, and Observability via
+    OpenTelemetry; or self-host on ECS/EKS. Around it: **Bedrock Guardrails** for
+    content and PII filters, **cross-region inference profiles** for capacity,
+    least-privilege IAM per tool, and VPC endpoints. Choose AgentCore when you
+    want managed session isolation and identity without giving up your framework.
+
+??? question "Where do you store embeddings for RAG on AWS?"
+    **OpenSearch Serverless / OpenSearch** for low-latency hybrid (BM25 + vector)
+    search at high QPS; **Aurora/RDS PostgreSQL with pgvector** when vectors
+    should live beside relational data; **S3 Vectors** (GA December 2025) for very
+    large, cost-sensitive indexes with modest query rates (durable, cheap,
+    sub-second rather than millisecond latency), often paired with OpenSearch for
+    hot data. **Bedrock Knowledge Bases** can manage ingestion, chunking and sync
+    on top of these stores. Choose on latency, QPS, scale, hybrid-search needs and
+    cost per million vectors.
 
 ---
 
@@ -175,7 +205,10 @@ Can you explain each without notes?
 | Q | A |
 |---|---|
 | Lambda max timeout? | 15 minutes |
-| API Gateway REST timeout? | ~29 seconds (use WebSocket for streaming) |
+| API Gateway REST timeout? | 29s default (raisable for Regional/private); use WebSocket/streaming |
+| Cheapest bulk LLM calls? | Bedrock batch inference |
+| Managed agent hosting? | Bedrock AgentCore |
+| Cheap large vector store? | S3 Vectors |
 | Role vs user? | role = assumed short-lived; user = long-lived identity |
 | S3 for unknown access pattern? | Intelligent-Tiering |
 | Retry-safe fan-out? | SQS (one message per unit) |

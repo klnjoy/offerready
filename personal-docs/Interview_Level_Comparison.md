@@ -4,6 +4,8 @@ icon: material/stairs-up
 
 # Senior vs Staff vs Principal vs FDE
 
+*Last reviewed: October 2026*
+
 The same question ("design a RAG system") is graded very differently at each
 level. This page explains **what interviewers are really listening for** at each
 level so you can pitch your answers correctly. It describes what strong answers
@@ -43,8 +45,8 @@ solid implementation, and knowing the failure modes of the tools you use.
 - Real debugging instinct ("I'd read the Query Profile / the trace and look for
   X").
 - Knowing the trade-offs *of your components* (why this embedding model, why
-  temperature 0).
-- Testing + basic eval.
+  temperature 0 or a lower reasoning effort, why this chunk size).
+- Testing + a real eval set (for agents: multiple trials per task, not one lucky run).
 
 **What's missing at this level (and fine):** org-wide strategy, cross-team
 concerns, cost economics at scale.
@@ -82,12 +84,13 @@ design.
 
 - **Framing the decision**, not just the design: build vs buy, when *not* to use
   an agent/LLM at all, what the business actually needs.
-- **Economics** — cost modeling, the quality/latency/reliability/cost balance,
-  and the long-term TCO, not just "it works."
+- **Economics** — cost modeling (cost per successful task, not per call), the
+  quality/latency/reliability/cost balance, and the long-term TCO, not just "it works."
 - **Governance + risk** — data governance, AI security posture, compliance,
   blast radius, org-wide standards.
-- **Long-horizon** — how this ages, migration paths, avoiding lock-in, what the
-  platform looks like in two years.
+- **Long-horizon** — how this ages, migration paths (models get retired on a
+  schedule; protocols like MCP revise), avoiding lock-in, what the platform looks
+  like in two years.
 - Enabling many teams (reference architectures, paved roads) rather than one
   system.
 
@@ -142,5 +145,5 @@ Take a Senior-level answer and push it up:
 !!! note "Related"
     [Requirements → Production](Interview_Requirements_to_Production.md) ·
     [The Interviewer Keeps Asking Why](Interview_Why_Chains.md) ·
-    [Master Interview Simulator](Interview_Master_Simulator.md) ·
+    [Mock Interview (OfferReady app)](Interview_Master_Simulator.md) ·
     [Behavioral / STAR](Behavioral_STAR_Interview_QA.md)

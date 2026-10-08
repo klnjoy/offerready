@@ -4,6 +4,8 @@ icon: material/account-tie
 
 # Forward Deployed Engineer (FDE) — Interview Questions & Answers
 
+*Last reviewed: October 2026*
+
 ## About the Role
 A Forward Deployed Engineer works directly with customers to deploy AI/ML solutions, solve complex technical problems, and bridge the gap between cutting-edge AI capabilities and real business outcomes. FDEs combine deep AI/ML engineering skills, strong software engineering, customer-facing communication, and rapid problem-solving ability.
 
@@ -203,13 +205,18 @@ Benefits: Add a new table by inserting one row into the control table + creating
 
 ---
 
----
-
 ## 6. AI/GenAI & LLM Engineering
 
 **Q: Describe an AI/GenAI solution you built end-to-end and deployed to production.**
 
 A: I built a **multi-purpose enterprise AI chatbot platform** for an energy utility, serving thousands of employees:
+
+!!! note "2026 update for this story"
+    Claude 3.5 Sonnet (used below) was retired on the Anthropic API in October 2025, and
+    LangChain's `create_sql_agent` / ReAct agent types are now legacy. Tell the story as
+    built, then add what you'd do today: re-run the eval set on a current Claude model
+    (via a Bedrock inference profile), move the SQL agent to LangChain 1.x `create_agent`
+    or LangGraph, and expose tools through MCP.
 
 - **Architecture:** React frontend → WebSocket API Gateway → FastAPI backend (Docker on ECS) → Amazon Bedrock (Claude 3.5 Sonnet) → DynamoDB for conversation persistence
 - **LLM:** Claude 3.5 Sonnet via Amazon Bedrock, accessed through a VPC endpoint for security
@@ -240,7 +247,7 @@ A: Decision framework:
 **Q: How do you handle LLM hallucinations in a production system?**
 
 A: Multiple layers:
-1. **Temperature 0** — For deterministic, factual tasks (audit checks), I use temperature=0.0 to minimize creativity
+1. **Temperature 0** — For factual tasks (audit checks), I use temperature=0.0 to minimize variability (it reduces randomness; it doesn't guarantee correctness or identical outputs)
 2. **Structured output** — Force the LLM to return Pass/Fail/NA with a reason. Constrained output space = fewer hallucinations
 3. **Grounding** — Provide all relevant data in the prompt context (PO details, line items, attachments). The LLM evaluates what's there, not what it imagines
 4. **Validation layer** — Post-process LLM output with rules (e.g., if amount field is $0 and LLM says "Pass" for amount check, override)
@@ -283,11 +290,11 @@ A: I built a **Policy Q&A feature** using RAG with a managed retrieval service (
 
 A:
 - **Task-specific metrics:** For the procurement audit, I measure precision/recall of Pass/Fail decisions against human auditor ground truth
-- **Consistency:** Run the same PO through the system multiple times — with temperature=0, outputs should be identical
+- **Consistency:** Run the same PO through the system multiple times — with temperature=0, verdicts should match almost always (not guaranteed byte-identical); a flipping verdict marks an ambiguous prompt or borderline case
 - **Edge cases:** Track cases where the LLM returns NA or unexpected outputs — these reveal prompt gaps
 - **Cost monitoring:** Track token usage per PO, cost per audit. Optimize prompts to reduce tokens without losing accuracy
 - **Latency:** P50/P95 response times. Our parallel processing (40 workers) keeps total batch time under 30 minutes for hundreds of POs
-- **Drift detection:** Compare weekly LLM outputs against baseline — if accuracy drops, the model may have been updated or prompts need tuning
+- **Drift detection:** Compare weekly LLM outputs against baseline — if accuracy drops, the model may have been updated or prompts need tuning. Pin model versions and re-run the ground-truth set before any model migration (model retirements force these on a schedule)
 
 ---
 
@@ -295,7 +302,7 @@ A:
 
 A:
 - **Template-driven:** Use PromptTemplate (LangChain) with variables for dynamic content. The audit checklist prompt is a template that receives PO data as variables.
-- **Version control:** Store prompts in code (not hardcoded strings) so they're versioned with the application
+- **Version control:** Store prompts as versioned files/templates alongside the code (not strings scattered through it) so every change is reviewed and tied to an eval run
 - **Chain-of-thought:** For complex evaluations, I structure prompts to force step-by-step reasoning before the final verdict
 - **Few-shot examples:** Include 2-3 examples of good Pass/Fail responses in the prompt to calibrate the model
 - **Separation of concerns:** One prompt per audit check (9 separate LLM calls) rather than one mega-prompt. Easier to debug, iterate, and parallelize.

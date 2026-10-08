@@ -4,6 +4,8 @@ icon: material/database
 
 # Databricks Interview Q&A — Advanced & Scenario-Based
 
+*Last reviewed: October 2026*
+
 Senior lakehouse questions: Spark performance, Delta Lake internals, data skew,
 Unity Catalog governance, and streaming. Study at a glance, then open each
 question for depth.
@@ -28,7 +30,9 @@ Can you explain each without notes?
 - [ ] The small-file problem, OPTIMIZE, ZORDER, VACUUM
 - [ ] Partitioning vs Z-order vs liquid clustering
 - [ ] Structured Streaming: checkpoints, watermarks, exactly-once
-- [ ] Unity Catalog: what it centralizes
+- [ ] Unity Catalog: what it centralizes (incl. Iceberg/open access)
+- [ ] Lakeflow Declarative Pipelines (formerly DLT) and Lakeflow Jobs
+- [ ] Building and evaluating agents on Databricks (Mosaic AI)
 
 ---
 
@@ -161,7 +165,9 @@ Can you explain each without notes?
 === "Maintenance"
 
     ```sql
-    OPTIMIZE sales ZORDER BY (customer_id);   -- compact + cluster for skipping
+    OPTIMIZE sales ZORDER BY (customer_id);   -- compact + cluster (pre-liquid tables)
+    ALTER TABLE sales CLUSTER BY (customer_id); -- liquid clustering (or CLUSTER BY AUTO)
+    OPTIMIZE sales;                           -- on liquid tables: incremental clustering
     VACUUM sales RETAIN 168 HOURS;            -- reclaim old files past retention
     DESCRIBE HISTORY sales;                   -- audit versions
     RESTORE TABLE sales TO VERSION AS OF 42;  -- roll back a bad write
@@ -184,8 +190,12 @@ Can you explain each without notes?
     **Partitioning** physically splits by a low-cardinality column (date) — good for
     pruning but over-partitioning creates small files. **Z-ordering** co-locates
     related data across multiple columns for skipping within files. **Liquid
-    clustering** is the newer adaptive approach that avoids fixed-partition rigidity
-    and Z-order maintenance. Prefer liquid clustering for evolving query patterns.
+    clustering** (`CLUSTER BY`) is the current recommendation for new tables: it
+    replaces both partitioning and Z-order, clusters incrementally, and lets you
+    change keys without rewriting the table. With `CLUSTER BY AUTO` plus
+    **predictive optimization** on Unity Catalog managed tables, Databricks picks
+    keys from query patterns and runs OPTIMIZE/VACUUM for you. Liquid clustering
+    and Z-order/partitioning are mutually exclusive on a table.
 
 ??? question "How does time travel work and when do you use it?"
     Delta keeps versioned commits, so you can query `VERSION AS OF` / `TIMESTAMP AS
@@ -196,8 +206,11 @@ Can you explain each without notes?
     Delta uses **optimistic concurrency**: each writer reads a snapshot, does its
     work, and commits by appending to the log. If another commit landed first that
     conflicts (overlapping files), the later writer's commit fails and it must
-    retry against the new snapshot. Non-conflicting appends succeed. Design writers
-    to be retry-safe.
+    retry against the new snapshot. Non-conflicting appends succeed. With
+    **deletion vectors** and **row-level concurrency** (Databricks Runtime 14.2+
+    on liquid-clustered or unpartitioned tables), concurrent MERGE/UPDATE/DELETE on
+    *different rows* of the same files no longer conflict. Design writers to be
+    retry-safe anyway.
 
 ---
 
@@ -210,10 +223,15 @@ Can you explain each without notes?
     trigger interval for the latency/cost trade-off.
 
 ??? question "What are Delta Live Tables / declarative pipelines for?"
-    Declarative pipeline framework: define tables (bronze/silver/gold) with quality
-    **expectations**, and the framework manages orchestration, incremental
-    processing, retries, and lineage. Less orchestration code than hand-rolled jobs,
-    with built-in data-quality enforcement.
+    Declarative pipeline framework: define streaming tables and materialized views
+    (bronze/silver/gold) with quality **expectations**, and the framework manages
+    orchestration, incremental processing, retries, and lineage. Less orchestration
+    code than hand-rolled jobs, with built-in data-quality enforcement. **Naming
+    note:** DLT was rebranded in 2025 as **Lakeflow Declarative Pipelines** (docs now
+    say "Lakeflow pipelines"), and the core API was contributed to Apache Spark as
+    **Spark Declarative Pipelines** (Spark 4.1+). New Python code uses
+    `from pyspark import pipelines as dp`; `import dlt` still works. Workflows are
+    now **Lakeflow Jobs**, and managed ingestion is **Lakeflow Connect**.
 
 ??? question "Explain the medallion (bronze/silver/gold) architecture."
     **Bronze** = raw ingested data (append-only, schema-on-read). **Silver** =
@@ -230,12 +248,28 @@ Can you explain each without notes?
     (`catalog.schema.table`), fine-grained grants, automated **column/row-level**
     security, **data lineage**, audit, and discovery. Access is consistent
     everywhere instead of per-workspace ACLs. It also governs ML models, volumes,
-    and functions.
+    functions and AI agents/tools. Unity Catalog is open source, exposes tables to
+    external engines through an Iceberg REST catalog interface, and can federate
+    external catalogs (Hive metastore, Glue, Snowflake Horizon).
+
+??? question "How would you build and evaluate a GenAI agent on Databricks?"
+    Data and tools live in Unity Catalog (tables, Vector Search indexes, UC
+    functions as tools, MCP servers). Build the agent with any framework
+    (LangGraph, OpenAI Agents SDK, plain Python) via the **Mosaic AI Agent
+    Framework**, or use **Agent Bricks** for common patterns (knowledge assistant,
+    information extraction, multi-agent supervisor) that auto-generate evals. Log
+    and version it with **MLflow 3**, evaluate with MLflow's GenAI evaluation (LLM
+    judges plus custom scorers on a labeled set), deploy to **Model Serving**, and
+    route model calls through **AI Gateway** for rate limits, guardrails, usage
+    tracking and inference tables. Production traces flow back into MLflow so
+    failures become new eval cases.
 
 ??? question "Databricks vs Snowflake — how do you frame the choice?"
     Databricks leads for **Spark/ML, unstructured data, and code-heavy data
     engineering** on open Delta format. Snowflake leads for **SQL analytics, ease of
-    operations, and near-zero tuning**. Both overlap now (Snowpark, Databricks SQL).
+    operations, and near-zero tuning**. They overlap heavily now (Snowpark and
+    Iceberg tables on one side; Databricks SQL serverless warehouses, Unity Catalog
+    Iceberg support and Lakebase Postgres on the other).
     Choose on workload center of gravity, existing skills, and openness vs
     managed-simplicity — not a feature checklist.
 
@@ -255,6 +289,8 @@ Can you explain each without notes?
 | Bronze/silver/gold? | raw → cleaned/conformed → business aggregates |
 | Delta concurrency model? | optimistic — conflicting commit retries |
 | Target partition size? | ~100–200 MB |
+| DLT's current name? | Lakeflow Declarative Pipelines (Spark Declarative Pipelines in OSS) |
+| New-table layout default? | liquid clustering (`CLUSTER BY` / `CLUSTER BY AUTO`) |
 
 ---
 
@@ -279,6 +315,7 @@ Can you explain each without notes?
 6. What does Unity Catalog centralize that workspace ACLs don't?
 7. Broadcast vs sort-merge join — when does each apply?
 8. What happens when two jobs write the same Delta table at once?
+9. How do you evaluate an agent before promoting it to Model Serving?
 
 !!! note "Cross-links"
     Deep dive: [Technologies → Databricks](../Technologies/databricks/index.md) ·

@@ -4,6 +4,21 @@ icon: material/vector-triangle
 
 # Vector Databases
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **Filtered search got much better.** pgvector 0.8 added iterative index
+      scans so filtered HNSW queries keep returning enough rows, and most engines
+      now integrate filters into ANN traversal instead of post-filtering.
+    - **Object-storage vector stores arrived.** Amazon S3 Vectors (GA December
+      2025) trades some latency for much lower cost on large, colder corpora, and
+      can back Bedrock Knowledge Bases or tier behind OpenSearch.
+    - **Quantization is routine.** Scalar (int8), binary, and product
+      quantization, often with rescoring, cut memory several-fold. Disk-based
+      indexes (DiskANN-style) handle corpora larger than RAM.
+    - **Hybrid search is built in** across Postgres extensions, OpenSearch,
+      Elasticsearch, Qdrant, Weaviate, Milvus, and the warehouse-native options.
+
 A vector database stores **embeddings** — numeric vectors that capture the
 *meaning* of text, images, or other data — and finds the ones most similar to a
 query vector. They're the storage/retrieval engine behind semantic search and
@@ -53,6 +68,7 @@ for huge speed:
 | **HNSW** | Hierarchical navigable small-world graph | Fast + accurate; more memory |
 | **IVF** | Partition into clusters, search a few | Faster build; tune `nprobe` |
 | **IVF-PQ** | IVF + product quantization (compress) | Low memory; some recall loss |
+| **DiskANN-style** | Graph index on SSD | Corpora bigger than RAM; slightly higher latency |
 | **Flat** | Brute force, exact | Small datasets / ground truth |
 
 **Recall vs latency** is the core tuning dial: higher recall (more accurate)
@@ -67,6 +83,8 @@ control it.
 | **FAISS** | Library (in-process) | Fast, local, no server; you manage persistence |
 | **Chroma** | Lightweight, embedded/local | Easy for prototyping |
 | **Pinecone** | Managed cloud | Zero-ops, scales; paid |
+| **OpenSearch / Elasticsearch** | Search engine with vector support | Strong hybrid (BM25 + vector) if you already run it |
+| **Amazon S3 Vectors** | Vector storage in object storage | Very low cost at scale; higher latency than in-memory indexes |
 | **Milvus / Weaviate / Qdrant** | Self-host or managed | Feature-rich, filtering, hybrid |
 | **Snowflake Cortex Search** | In-warehouse | Governed, no data movement |
 | **Databricks Vector Search** | In-lakehouse | Governed alongside Delta data |
@@ -173,3 +191,30 @@ LIMIT 5;
 | Metric for text? | Cosine similarity |
 | Recall vs latency knob? | HNSW `ef_search` / IVF `nprobe` |
 | Change embedding model → | Re-embed everything |
+| Filtered queries returning too few rows? | Use filter-aware ANN / iterative scans (pgvector 0.8+), not post-filtering |
+
+## How interviewers probe this
+
+??? question "Estimate the infrastructure for 500M chunks at 1024 dimensions."
+    A strong answer does the math: 500M × 1024 × 4 bytes ≈ 2 TB of raw float32,
+    plus HNSW graph overhead. Then it reduces that with int8 or binary
+    quantization and rescoring, truncated dimensions, sharding, or disk-based or
+    object-storage tiers, and checks recall at each step against a labeled set.
+
+??? question "Postgres + pgvector or a dedicated vector database? Defend it."
+    pgvector wins when data already lives in Postgres, scale is moderate, and you
+    want transactions, joins, and row-level security in one place. A dedicated
+    engine wins at very large scale, high QPS, heavy filtering plus hybrid search,
+    or when you want managed scaling. Name the operational cost of running a
+    second datastore.
+
+??? question "How do you guarantee tenant isolation in a shared vector index?"
+    Enforce the tenant filter server-side in every query (never trust the
+    client), consider namespaces or separate collections for large or regulated
+    tenants, test with cross-tenant canary documents, and audit retrieved IDs
+    against the caller's tenant.
+
+??? question "Index rebuilds take hours and block deploys. What do you change?"
+    Build new indexes side by side and switch an alias, ingest incrementally
+    rather than rebuilding, tune build parameters (`M`, `ef_construction`) against
+    recall needs, and separate the index build pipeline from application deploys.

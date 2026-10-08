@@ -1,0 +1,18 @@
+{#-
+  OfferReady tabs override (copied from mkdocs-material 9.7.x partials/tabs.html).
+  OfferReady: top-level EXTERNAL links (the "Open the app" nav item) are not
+  rendered as tabs, because the header already has a dedicated "Open the app"
+  button. They stay in the mobile drawer, which still lists the full nav.
+-#}
+{% import "partials/tabs-item.html" as item with context %}
+<nav class="md-tabs" aria-label="{{ lang.t('tabs') }}" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      {% for nav_item in nav.items %}
+        {% if nav_item.children or not (nav_item.url | string).startswith("http") %}
+          {{ item.render(nav_item) }}
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+</nav>

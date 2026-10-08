@@ -4,6 +4,8 @@ icon: material/comment-question
 
 # The Interviewer Keeps Asking "Why"
 
+*Last reviewed: October 2026*
+
 Senior and principal interviews aren't about definitions, they're about whether
 you can **defend a decision** three, five, seven layers deep. Every answer earns
 another "why?" or "what if?" This page trains that muscle: chains of follow-ups
@@ -93,7 +95,12 @@ with the reasoning a strong candidate gives at each level.
     re-review on change, least-privilege short-lived creds held by the server,
     sandbox with egress control, audit all I/O. → *Why treat the tool description
     as untrusted?* It enters the model's context, it can carry hidden instructions.
-    → *Where do credentials live?* In the server, never the prompt.
+    → *Where do credentials live?* In the server, never the prompt. → *How does a
+    remote server know who's calling?* OAuth 2.1: the server is a resource server,
+    tokens are audience-bound to it, and it never passes the user's token through
+    to downstream APIs. → *Why did the 2026-07-28 spec go stateless?* Sessions
+    forced sticky routing; stateless requests let remote servers scale like any
+    HTTP API, so cross-call state becomes explicit handles.
 
 ---
 
@@ -102,9 +109,11 @@ with the reasoning a strong candidate gives at each level.
 ??? question "Why keep the GenAI inside Snowflake (Cortex) rather than an external LLM?"
     Data never leaves the governance boundary, existing RBAC/masking/row-access
     apply, no egress. → *Why does that matter?* Compliance and blast radius; you
-    don't re-implement access control per tool. → *When would you use an external
-    model instead?* Streaming multi-turn chat, a capability Cortex doesn't offer,
-    or a model you specifically need. → *A dashboard got slow after 10x growth,
+    don't re-implement access control per tool. (Caveat: if cross-region inference
+    is enabled, requests can be processed in another region.) → *When would you use
+    an external model instead?* A custom real-time chat UX with your own state and
+    guardrails, a capability Cortex doesn't offer, or a model that isn't in the
+    Cortex catalog for your region. → *A dashboard got slow after 10x growth,
     why, and how do you find it?* Read the Query Profile: poor pruning (cluster on
     the filter), spill (size up), exploding joins (grain bug). → *Why cluster
     instead of "add an index"?* Snowflake has no b-tree indexes; pruning of
@@ -134,8 +143,9 @@ with the reasoning a strong candidate gives at each level.
 ??? question "Why did your AI feature's cost triple, and how do you defend the fix?"
     Usually tokens: bigger context, no caching, a runaway agent loop, or routing
     everything to the strong model. → *Why start with routing?* Most queries are
-    easy; a cheaper model passes eval for them. → *Why not just cache?* Cache too,
-    exact + semantic, but caching alone won't fix over-sized context or loops. →
+    easy; a cheaper model passes eval for them. → *Why not just cache?* Cache too
+    (provider prompt caching for the stable prefix, plus exact/semantic response
+    caching), but caching alone won't fix over-sized context or loops. →
     *Won't cutting context hurt quality?* Only if you cut *relevant* context;
     retrieve less-but-right and measure on the eval set. → *How do you prove you
     didn't regress?* Regression eval before/after; watch quality + cost + latency

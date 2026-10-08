@@ -4,6 +4,8 @@ icon: material/card-text
 
 # Cheat Sheet + 30-Day Cortex Ramp
 
+*Last reviewed: October 2026*
+
 Last-mile revision: the facts, the snippets, and a focused plan. Pairs with the
 site-wide [Master Cheat Sheets](../Personal-SourceCode/Interview_Cheat_Sheets.md)
 and [30-Day Prep Plan](../Personal-SourceCode/Interview_30_Day_Plan.md).
@@ -37,6 +39,8 @@ flowchart LR
 | Agent loop | **Plan → Use tools → Reflect and respond**, repeated |
 | Agent = | Reusable object: model + tools + orchestration instructions |
 | Agent tools | Analyst, Search, code sandbox, Data-to-Chart, custom (SP/UDF), agent skills, MCP connectors, web search |
+| Function family name | Cortex AI Functions (`AI_*`); legacy `SNOWFLAKE.CORTEX.*` still works |
+| Document extraction | `AI_EXTRACT` / `AI_PARSE_DOCUMENT` (Document AI decommissioned Mar 2026) |
 | Conversation state | **Threads** (server-side, managed) |
 | Create an agent | Snowsight / Cortex Agents SQL / REST API |
 | User surfaces | Snowflake CoWork, Cortex Code, your app (REST API) |
@@ -46,7 +50,7 @@ flowchart LR
 | Governance | RBAC, dynamic masking, row-access policies, tags, Access History — inherited |
 | Inaccessible tool | Run continues with the tools the caller's role *can* use |
 | Cost driver | Token volume × model tier; Search refresh; agent fan-out |
-| Cost controls | Pre-inference filters, model routing, batch via Tasks, resource monitors |
+| Cost controls | Pre-inference filters, model routing, batch via Tasks, alerts on Cortex usage views + per-user AI limits; resource monitors (warehouses only) |
 | Output guarantee | None — validate/review before serving |
 | Top attack | Indirect prompt injection via retrieved content |
 | Top control | Retrieved content is **data, not instructions**; gate write tools |
@@ -56,11 +60,12 @@ flowchart LR
 ## SQL snippets to recognize
 
 ```sql
--- LLM functions in SQL (AISQL)
-SELECT SNOWFLAKE.CORTEX.SUMMARIZE(review)                      AS summary,
-       SNOWFLAKE.CORTEX.SENTIMENT(review)                      AS sentiment,
-       SNOWFLAKE.CORTEX.COMPLETE('<model>', 'Classify: '||body) AS label,
-       AI_FILTER(prompt => 'Is this a complaint? ' || body)    AS is_complaint
+-- Cortex AI Functions in SQL (AISQL)
+SELECT AI_SUMMARIZE(review)                                    AS summary,
+       AI_SENTIMENT(review)                                    AS sentiment,
+       AI_COMPLETE('<model>', 'Classify: '||body)              AS label,
+       AI_FILTER(prompt => 'Is this a complaint? ' || body)    AS is_complaint,
+       SNOWFLAKE.CORTEX.SENTIMENT(review)                      AS sentiment_legacy  -- older name, still works
 FROM feedback;
 
 -- Cortex Search service over a text column (native RAG)
@@ -83,7 +88,7 @@ CREATE OR REPLACE TASK t_enrich
   WHEN SYSTEM$STREAM_HAS_DATA('s_new')
 AS
   INSERT INTO enriched
-  SELECT id, SNOWFLAKE.CORTEX.SENTIMENT(body) FROM s_new;
+  SELECT id, AI_SENTIMENT(body) FROM s_new;
 ```
 
 !!! warning "Say the caveat"
@@ -99,8 +104,9 @@ AS
 - *"Native RAG means no separate vector store to secure, sync, and pay for."*
 - *"Governance is inherited; my job is to apply masking/roles to the AI path, not
   rebuild access control in an app tier."*
-- *"AI cost is token volume times model tier — I filter before inference and put
-  monitors on the Cortex warehouses."*
+- *"AI cost is token volume times model tier — I filter before inference, alert
+  on the Cortex usage views, and remember resource monitors only cap warehouse
+  credits."*
 - *"Retrieved content is data, not instructions — that one rule contains most
   agent attacks."*
 - *"Use an agent for interactive multi-step questions; use AISQL batch for
@@ -117,9 +123,9 @@ A focused plan assuming you already know core Snowflake (see
 ### Week 1 — Foundations & AISQL
 
 - [ ] Read this section's [index](index.md); internalize the layer-picking rule.
-- [ ] Learn the LLM functions: `COMPLETE`, `SUMMARIZE`, `SENTIMENT`, `EXTRACT_ANSWER`, `AI_FILTER`, `EMBED_TEXT_*`.
+- [ ] Learn the Cortex AI Functions: `AI_COMPLETE`, `AI_CLASSIFY`, `AI_FILTER`, `AI_AGG`, `AI_EXTRACT`, `AI_EMBED` (and the legacy `SNOWFLAKE.CORTEX.*` names).
 - [ ] Write batch enrichment: turn a text column into structured signals, then query with SQL.
-- [ ] Understand the cost model (tokens × model tier) and resource monitors.
+- [ ] Understand the cost model (tokens × model tier), `CORTEX_AI_FUNCTIONS_USAGE_HISTORY`, and why resource monitors don't cap AI token spend.
 - [ ] Re-read [AI Security](../AI-Security/index.md) — you'll map every control back to it.
 
 ### Week 2 — Analyst, semantic models & Search

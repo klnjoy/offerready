@@ -4,6 +4,8 @@ icon: material/cube-outline
 
 # dbt Interview Q&A — Advanced & Scenario-Based
 
+*Last reviewed: October 2026*
+
 Senior analytics-engineering questions on dbt: incremental models, testing,
 project structure, performance, and how dbt fits a governed warehouse. Study at a
 glance, then open each question for depth.
@@ -23,7 +25,8 @@ Can you explain each without notes?
 - [ ] View vs table vs incremental materialization
 - [ ] Incremental strategies + late-arriving data handling
 - [ ] `on_schema_change` behavior
-- [ ] Schema tests vs singular vs custom generic tests
+- [ ] Data tests (generic/singular) vs unit tests (dbt 1.8+)
+- [ ] The `microbatch` incremental strategy (dbt 1.9+)
 - [ ] Model contracts and why they help
 - [ ] Snapshots (SCD2)
 - [ ] Project layering (staging / intermediate / marts)
@@ -84,14 +87,30 @@ Can you explain each without notes?
     {% endif %}
     ```
 
-=== "Snapshot (SCD2)"
+=== "Microbatch (dbt 1.9+)"
 
     ```sql
-    {% snapshot orders_snapshot %}
-    {{ config(target_schema='snapshots', unique_key='order_id',
-              strategy='timestamp', updated_at='updated_at') }}
-    SELECT * FROM {{ source('erp', 'orders') }}
-    {% endsnapshot %}
+    {{ config(materialized='incremental', incremental_strategy='microbatch',
+              event_time='event_at', batch_size='day',
+              begin='2024-01-01', lookback=2) }}
+    -- No is_incremental() block: dbt filters each batch by event_time,
+    -- runs batches independently, and can retry/backfill one batch at a time
+    SELECT * FROM {{ ref('stg_events') }}
+    ```
+
+=== "Snapshot (SCD2)"
+
+    ```yaml
+    # dbt 1.9+: snapshots are configured in YAML (legacy {% snapshot %} blocks still run)
+    snapshots:
+      - name: orders_snapshot
+        relation: source('erp', 'orders')
+        config:
+          schema: snapshots
+          unique_key: order_id
+          strategy: timestamp
+          updated_at: updated_at
+          hard_deletes: invalidate
     ```
 
 === "Build only what changed (CI)"
@@ -120,7 +139,9 @@ Can you explain each without notes?
     **View**: cheap, always fresh, no storage — light transforms/staging. **Table**:
     full rebuild each run — simple, good when small or logic changes often.
     **Incremental**: only new/changed rows — large fact tables where full rebuilds
-    are too slow/costly. Incremental adds complexity (late data, backfills, schema
+    are too slow/costly. For large time-series facts, the **microbatch** strategy
+    (dbt 1.9+) splits work into independent time batches with built-in lookback and
+    per-batch retries and backfills. Incremental adds complexity (late data, backfills, schema
     drift), so only when full refresh actually hurts.
 
 ??? question "An incremental model is silently missing rows. What's wrong?"
@@ -146,9 +167,9 @@ Can you explain each without notes?
       - name: fct_orders
         columns:
           - name: order_id
-            tests: [unique, not_null]
+            data_tests: [unique, not_null]   # `tests:` still works; `data_tests:` since 1.8
           - name: customer_id
-            tests:
+            data_tests:
               - relationships: {to: ref('dim_customers'), field: customer_id}
     ```
 
@@ -175,6 +196,15 @@ Can you explain each without notes?
     **Singular** tests are one-off SQL returning zero rows on success (e.g. "no
     negative amounts"). Write a **custom generic** test when you repeat the same
     singular logic across models.
+
+??? question "What are dbt unit tests and how do they differ from data tests?"
+    **Data tests** (generic/singular) run against real warehouse data after a model
+    builds and check its *output* (unique, not null, relationships). **Unit tests**
+    (dbt 1.8+) check the model's *logic* against small mocked inputs defined in
+    YAML (`given` rows for each `ref`/`source`, `expect` rows), before or without
+    real data. Use them for tricky SQL: window functions, regex parsing, edge cases
+    in CASE logic, incremental branches (you can override `is_incremental`). Run
+    unit tests in CI only, since they validate code, not data.
 
 ??? question "How do you test freshness and completeness, not just validity?"
     **Source freshness** (`loaded_at_field` + `warn/error after`) catches stale
@@ -213,6 +243,18 @@ Can you explain each without notes?
 
 ## Governance & collaboration
 
+??? question "What are dbt Mesh, the Semantic Layer and the Fusion engine?"
+    **dbt Mesh** splits a monolith into multiple projects owned by domains:
+    cross-project `ref`, model **access** levels (private/protected/public),
+    **groups**, **contracts** and **versions** make public models act like APIs.
+    The **Semantic Layer** (MetricFlow) defines metrics once in YAML so BI tools and
+    AI agents query consistent definitions instead of re-implementing SQL; dbt Labs
+    open-sourced MetricFlow under Apache 2.0 in late 2025. **Fusion** is the new
+    Rust-based dbt engine: much faster parsing, real SQL comprehension (catches
+    column errors before hitting the warehouse) and state-aware orchestration; check
+    its adapter coverage and status before committing a migration. dbt Labs has
+    since merged with Fivetran; dbt Core remains open source.
+
 ??? question "How do dbt and Snowflake governance fit together?"
     dbt generates SQL/DDL but runs **as a role** in Snowflake — RBAC, masking, and
     row access policies still apply. Keep dbt's role least-privilege, separate
@@ -240,6 +282,8 @@ Can you explain each without notes?
 | Exposure? | documents a downstream consumer for lineage |
 | dbt-utils? | community macro package (surrogate keys, tests, helpers) |
 | Contract? | enforces column names/types at build time |
+| Unit test? | mocked inputs → expected output; tests logic, not data |
+| Microbatch? | incremental by independent time batches (`event_time`, `batch_size`) |
 | `state:modified+`? | build changed models + their downstream |
 | Source freshness? | warn/error when upstream data is stale |
 
@@ -266,6 +310,8 @@ Can you explain each without notes?
 6. What exactly does `ref()` enable that a table name doesn't?
 7. How do dbt and Snowflake RBAC interact?
 8. How do you deploy models to prod with instant rollback?
+9. When would you write a unit test instead of a data test?
+10. When does microbatch beat a merge-based incremental model?
 
 !!! note "Cross-links"
     Deep dive: [Technologies → dbt](../Technologies/dbt/index.md) ·

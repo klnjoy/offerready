@@ -4,6 +4,23 @@ icon: material/key-chain
 
 # Enterprise Identity & API Security (OAuth · OIDC · SAML · Okta · Entra)
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **OAuth 2.1 is still an IETF draft** (revised through 2026), but its rules
+      are already the baseline: PKCE for every authorization-code flow, no
+      implicit or password grants, exact redirect-URI matching. **RFC 9700**
+      (OAuth 2.0 Security Best Current Practice, January 2025) is the normative
+      reference to cite.
+    - **Audience-bound tokens are standard for agents.** MCP's authorization
+      spec uses protected-resource metadata (**RFC 9728**) and resource
+      indicators (**RFC 8707**) so a token works only at the server it was
+      issued for, and it forbids token passthrough.
+    - **Agents are getting first-class identities in IdPs.** Microsoft Entra
+      Agent ID and similar offerings register agents as their own principals
+      with Conditional Access and lifecycle management, instead of reusing app
+      registrations or service accounts.
+
 The identity half of AI security — and increasingly a **hard requirement** on
 GenAI/agent job specs. Real postings now ask for *"Authentication & Authorization
 (OAuth, OIDC, SAML, 2LO, 3LO, OBO)"*, *"Okta, Microsoft Entra ID or similar
@@ -102,7 +119,7 @@ sequenceDiagram
 |-------|------|---------------|-------------|
 | **Authorization Code (+ PKCE)** | **3-legged (3LO)** | A **user** consents | Web/mobile/agent acting **for a user**. PKCE is mandatory for public clients. |
 | **Client Credentials** | **2-legged (2LO)** | **No user** — app↔API | Machine-to-machine, backend services, an agent acting **as itself** |
-| **On-Behalf-Of (OBO)** | token exchange | User's token → downstream token | A service/API that must call *another* API **as the original user** |
+| **On-Behalf-Of (OBO)** / **Token Exchange** | token exchange | User's token → downstream token | A service/API that must call *another* API **as the original user** |
 | **Device Code** | user on 2nd device | User, no browser on client | CLIs, TVs, IoT |
 | ~~Implicit~~ / ~~ROPC~~ | — | — | **Deprecated** — don't propose these |
 
@@ -118,8 +135,11 @@ sequenceDiagram
   the client receives a code and exchanges it (with a **PKCE** verifier) for
   tokens. Use whenever the agent acts *for a specific user* and must respect that
   user's permissions.
-- **OBO (On-Behalf-Of / token exchange, RFC 8693):** service A holds the user's
-  access token, and needs to call service B **as that user**. A exchanges the
+- **OBO (On-Behalf-Of / token exchange):** service A holds the user's access
+  token and needs to call service B **as that user**. The IETF standard is
+  **OAuth 2.0 Token Exchange (RFC 8693)**, which Okta and other IdPs support.
+  Microsoft Entra's **OBO flow** does the same job with its own
+  `jwt-bearer` grant. A exchanges the
   incoming token at the IdP for a new token audience-scoped to B, preserving the
   user identity through the chain. This is the pattern that keeps
   *user-scoped access* intact across a multi-hop agent/API call — critical so a
@@ -177,7 +197,7 @@ The IdP is the authorization server + user directory. Two dominate the specs:
 | App integration | Okta Integration Network, custom OIDC/SAML apps | App registrations, enterprise apps |
 | Tokens | Access/ID/refresh; custom authz servers, scopes/claims | Access/ID tokens; **app roles**, scopes, **OBO** first-class |
 | MFA / policy | Adaptive MFA, sign-on policies | Conditional Access, MFA, PIM |
-| Agent/API fit | Custom authorization server per API audience | `azure ad` OBO flow, managed identities for Azure workloads |
+| Agent/API fit | Custom authorization server per API audience | Entra **OBO** flow, managed identities for Azure workloads |
 
 **What to know for the job:** register the app/agent as a client in the IdP,
 define **scopes/app-roles** (least privilege), pick the right grant (2LO for
@@ -231,8 +251,9 @@ exactly these — see the dedicated deep dive:
     carry it downstream), not a broad service token.
 
 ??? question "What is the On-Behalf-Of flow and why does it matter for multi-hop agents?"
-    OBO (token exchange, RFC 8693) lets a service that received a user's token
-    exchange it for a new token scoped to a **downstream** API, preserving the
+    OBO (Entra's On-Behalf-Of flow, or standard Token Exchange, RFC 8693) lets
+    a service that received a user's token exchange it for a new token scoped to
+    a **downstream** API, preserving the
     user's identity through the chain. It matters because a multi-hop agent
     (agent → API A → API B) must keep the *end user's* authorization intact;
     without OBO you'd fall back to a service account that sees everything, which
@@ -251,8 +272,8 @@ exactly these — see the dedicated deep dive:
     CLIs, agents) that can't keep a secret. The client sends a hashed
     `code_challenge` up front and the plaintext `code_verifier` at token
     exchange, so an intercepted authorization code is useless to an attacker who
-    lacks the verifier. Use it for every public client; it's now recommended even
-    for confidential ones.
+    lacks the verifier. Use it for every public client; OAuth 2.1 and RFC 9700
+    recommend it for confidential clients too.
 
 ??? question "OIDC vs SAML — which and when?"
     Both do SSO. **SAML** is XML assertions over browser redirects/POST, entrenched
@@ -281,7 +302,9 @@ exactly these — see the dedicated deep dive:
 | SAML is…? | XML assertion-based enterprise **SSO** (authn + SSO) |
 | 2LO = ? | Client Credentials — no user, agent acts **as itself** |
 | 3LO = ? | Authorization Code — **user** authenticates + consents |
-| OBO = ? | Token exchange — carry the **user's** identity to a downstream API |
+| OBO = ? | Token exchange — carry the **user's** identity to a downstream API (RFC 8693; Entra OBO) |
+| Audience-bound tokens? | Resource indicators (RFC 8707) + validate `aud`; required by MCP auth |
+| OAuth security reference? | RFC 9700 (Security BCP); OAuth 2.1 is still a draft |
 | PKCE for…? | Public clients (SPA/mobile/CLI/agent) — protects the code flow |
 | Validate a JWT? | Signature (JWKS) + `iss` + `aud` + `exp` + scopes/ownership |
 | Deprecated grants? | Implicit, Resource Owner Password Credentials (ROPC) |
@@ -291,7 +314,8 @@ exactly these — see the dedicated deep dive:
 ---
 
 **Sources (verify current):** OAuth 2.0 (RFC 6749), Token Exchange/OBO
-(RFC 8693), PKCE (RFC 7636), OpenID Connect Core, SAML 2.0, and Okta /
+(RFC 8693), PKCE (RFC 7636), OAuth 2.0 Security BCP (RFC 9700), Protected
+Resource Metadata (RFC 9728), Resource Indicators (RFC 8707), OpenID Connect Core, SAML 2.0, and Okta /
 Microsoft Entra ID official documentation. *Content was rephrased for compliance
 with licensing restrictions.*
 

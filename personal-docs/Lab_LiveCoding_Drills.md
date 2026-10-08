@@ -4,6 +4,8 @@ icon: material/code-braces-box
 
 # Live-Coding Drills
 
+*Last reviewed: October 2026*
+
 Timed, hands-on coding problems for the kind of live rounds data & GenAI loops
 actually use — SQL puzzles, Python data wrangling, a pipeline function, and a
 small LangChain/agent task. Not LeetCode tricks; **production-shaped** problems
@@ -47,7 +49,7 @@ stuck; silence reads as panic, reasoning reads as competence.
              DENSE_RANK() OVER (PARTITION BY department
                                 ORDER BY salary DESC) AS rnk
       FROM employees
-    )
+    ) ranked              -- derived-table alias: required in Postgres/MySQL/SQL Server
     WHERE rnk = 2;
     ```
 
@@ -64,7 +66,7 @@ stuck; silence reads as panic, reasoning reads as competence.
              ROW_NUMBER() OVER (PARTITION BY natural_key
                                 ORDER BY updated_at DESC) AS rn
       FROM events e
-    )
+    ) d
     WHERE rn = 1;   -- or QUALIFY rn = 1 in Snowflake
     ```
 
@@ -81,7 +83,7 @@ stuck; silence reads as panic, reasoning reads as competence.
              DATEADD('day',
                -ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY day), day) AS grp
       FROM activity
-    )
+    ) g
     GROUP BY user_id, grp;
     ```
 
@@ -133,7 +135,7 @@ stuck; silence reads as panic, reasoning reads as competence.
 
     async def fetch(session, url, sem):
         async with sem:                              # cap concurrency
-            async with session.get(url, timeout=10) as r:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as r:
                 return await r.text()
 
     async def main(urls):
@@ -148,6 +150,8 @@ stuck; silence reads as panic, reasoning reads as competence.
     **Talk about:** I/O-bound → concurrency not parallelism (GIL is fine here);
     the semaphore prevents socket exhaustion / rate-limit trips; `timeout` and
     `return_exceptions` for resilience; add retry-with-backoff for transient errors.
+    If they ask for "cancel everything on the first failure," switch to
+    `asyncio.TaskGroup` (3.11+).
 
 ??? question "Stream-process a file too big for memory."
     ```python
@@ -210,7 +214,8 @@ stuck; silence reads as panic, reasoning reads as competence.
     def refund_order(order_id: str, amount_cents: int) -> dict:
         """Issue a refund. WRITE — requires prior human approval.
         amount_cents must be <= original charge."""
-        assert amount_cents <= db.charge_of(order_id)   # server-side validation
+        if amount_cents > db.charge_of(order_id):       # server-side validation
+            raise ValueError("refund exceeds original charge")  # not assert: -O strips it
         return db.refund(order_id, amount_cents)
     ```
 
@@ -230,6 +235,6 @@ stuck; silence reads as panic, reasoning reads as competence.
 
 !!! note "More labs"
     See also: [Scenario Drills](Lab_Scenario_Drills.md) ·
-    Hackathon build challenges (next). Concept refreshers:
+    [Hackathon Build Challenges](Lab_Hackathon_Builds.md). Concept refreshers:
     [SQL](SQL_Interview_QA.md) · [Python](Python_Interview_QA.md) ·
     [AI Engineer](AI_Engineer_Interview_QA.md).

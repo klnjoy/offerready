@@ -4,6 +4,8 @@ icon: material/snowflake
 
 # Snowflake Interview Q&A — Advanced & Scenario-Based
 
+*Last reviewed: October 2026*
+
 Senior-level, real-world Snowflake questions: performance forensics, cost
 control, architecture trade-offs, and the failures that actually happen in
 production. Study at a glance with the talking points, then open each question
@@ -28,7 +30,8 @@ Can you explain each of these without notes?
 - [ ] Time Travel vs Fail-safe vs zero-copy clone
 - [ ] Streams + Tasks vs Dynamic Tables for CDC/incremental
 - [ ] Tag-based masking + row access policies for governance at scale
-- [ ] Cortex Analyst vs Cortex Search vs LLM functions
+- [ ] Cortex Analyst vs Cortex Search vs AI functions vs Cortex Agents
+- [ ] Iceberg tables and open catalogs (when data must stay open-format)
 - [ ] How to find and stop runaway cost
 
 ---
@@ -43,8 +46,9 @@ Crisp framings to sound fluent, not memorized:
 - **"Micro-partitions + pruning are the performance story."** ~16 MB compressed
   columnar micro-partitions with min/max metadata; the optimizer skips partitions
   that can't match. No manual indexes.
-- **"Cortex is governed GenAI with no data egress."** LLM functions, Cortex
-  Search, and Cortex Analyst run inside the RBAC/masking/tag boundary.
+- **"Cortex is governed GenAI inside the Snowflake perimeter."** AI functions,
+  Cortex Search, Cortex Analyst and Cortex Agents run under the same
+  RBAC/masking/tag boundary (watch cross-region inference for residency).
 
 ---
 
@@ -163,6 +167,16 @@ Crisp framings to sound fluent, not memorized:
     pays off on large tables (hundreds of GB+) queried with selective predicates on
     the cluster key. Measure with clustering info before and after.
 
+??? question "What are Gen2 warehouses and when would you switch?"
+    Gen2 standard warehouses (GA in 2025) run on newer hardware with engine
+    improvements, especially for DML-heavy work (MERGE, UPDATE, DELETE) and
+    large scans. They cost more credits per hour than Gen1 of the same size, so
+    switch when benchmarks show the speedup more than pays for the rate: run
+    representative workloads on both and compare credits per job, not runtime
+    alone. (Adaptive warehouses, which size compute automatically, were
+    announced at the same time; check their current availability before relying
+    on them.)
+
 ??? question "Scale up vs scale out — give a concrete example of each."
     **Up** (bigger warehouse): a single nightly transformation joins two huge
     tables and spills — move XS→L so it has more memory/CPU per query. **Out**
@@ -231,7 +245,9 @@ Crisp framings to sound fluent, not memorized:
       WHEN SYSTEM$STREAM_HAS_DATA('s_orders')
     AS
       MERGE INTO current.orders tgt
-      USING s_orders src ON tgt.id = src.id
+      USING (SELECT * FROM s_orders          -- an UPDATE appears as DELETE+INSERT pair;
+             WHERE NOT (metadata$action = 'DELETE' AND metadata$isupdate)) src
+        ON tgt.id = src.id                   -- drop the DELETE half to keep one row per key
       WHEN MATCHED AND src.metadata$action = 'DELETE' THEN DELETE
       WHEN MATCHED THEN UPDATE SET tgt.val = src.val, tgt.updated = src.ts
       WHEN NOT MATCHED THEN INSERT (id, val, updated)
@@ -282,7 +298,7 @@ Crisp framings to sound fluent, not memorized:
 
 ??? question "What's the difference between a materialized view and a dynamic table?"
     A **materialized view** precomputes and auto-maintains results for a *single*
-    base table with limits (no joins in many cases). A **dynamic table** can
+    base table with limits (no joins, restricted functions; Enterprise Edition). A **dynamic table** can
     express multi-table transformations (joins, aggregations) and refreshes
     incrementally toward a `TARGET_LAG` you set — effectively a declarative
     pipeline. Use MVs for simple single-table acceleration; dynamic tables for
@@ -331,16 +347,42 @@ Crisp framings to sound fluent, not memorized:
 ## Cortex / AI
 
 ??? question "How would you add GenAI to a Snowflake platform without moving data out?"
-    Use **Cortex**: LLM functions (`AI_COMPLETE`, `SUMMARIZE`, `SENTIMENT`) run in
-    SQL; **Cortex Search** for hybrid retrieval/RAG; **Cortex Analyst** for
-    natural-language → governed SQL over a semantic model. All processing stays
-    inside Snowflake under existing RBAC, masking, and tags — no egress.
+    Use **Cortex**: AI functions (`AI_COMPLETE`, `AI_CLASSIFY`, `AI_FILTER`,
+    `AI_SUMMARIZE_AGG`, `AI_EXTRACT`; older code uses `SNOWFLAKE.CORTEX.COMPLETE`
+    etc.) run in SQL; **Cortex Search** for hybrid retrieval/RAG; **Cortex Analyst**
+    for natural-language → governed SQL over a **semantic view**; and **Cortex
+    Agents** / **Snowflake Intelligence** to orchestrate Analyst and Search as tools
+    for a chat experience. Processing stays inside Snowflake's perimeter under
+    existing RBAC, masking, and tags. Check cross-region inference settings if data
+    residency matters.
 
 ??? question "Cortex Analyst vs Cortex Search — what's the difference?"
     **Analyst** answers questions over **structured** data by generating SQL from a
-    semantic model (YAML describing tables, joins, metrics). **Search** does
-    retrieval over **unstructured** text (chunks + embeddings, hybrid vector +
-    keyword). A conversational assistant often uses both, orchestrated by an agent.
+    semantic view (or legacy YAML semantic model describing tables, relationships,
+    metrics and verified queries). **Search** does retrieval over **unstructured**
+    text (managed hybrid vector + keyword with reranking). A conversational
+    assistant often uses both, orchestrated by a **Cortex Agent**; since August
+    2026 Snowflake recommends new Analyst integrations go through Cortex Agents.
+
+??? question "How do you control and attribute Cortex AI spend?"
+    AI functions bill per token in credits, separately from the warehouse running
+    the query, so a cheap-looking query over 10M rows can be expensive. Attribute
+    with the Cortex usage views in `ACCOUNT_USAGE` (per function, model and query),
+    test on a sample before a full-table run, filter rows first so the LLM sees
+    only what it must, prefer task-specific functions or smaller models where
+    accuracy allows, use `AI_COUNT_TOKENS` to estimate, and restrict which roles
+    and models can be used (model allow-lists). For Cortex Search, the service
+    also bills for serving and refresh, so right-size `TARGET_LAG`.
+
+??? question "A client wants open-format data that Spark and Snowflake can both read. What do you propose?"
+    **Apache Iceberg tables.** Snowflake-managed Iceberg tables store Parquet and
+    Iceberg metadata in your cloud storage while Snowflake handles writes and
+    maintenance; external engines read them through an Iceberg REST catalog
+    (Snowflake Open Catalog / Horizon's catalog endpoint, or an external catalog
+    such as AWS Glue or Unity Catalog). Trade-offs: some native-table features
+    and optimizations differ, you pay your own cloud storage, and you must pick
+    one writer of record per table to avoid catalog conflicts. Use native tables
+    when only Snowflake touches the data.
 
 ---
 
@@ -368,7 +410,7 @@ Crisp framings to sound fluent, not memorized:
 - One giant warehouse for everything (contention) — or hundreds of tiny ones.
 - Leaving `AUTO_SUSPEND` high so warehouses burn idle credits.
 - Treating Time Travel as backup (Fail-safe is disaster-only, not self-serve).
-- Assuming Cortex sends data to an external API (it runs in-account).
+- Assuming Cortex sends data to an external API (it runs inside Snowflake's perimeter; check cross-region inference).
 
 ---
 
@@ -384,6 +426,8 @@ Answer out loud; if you hesitate, reread that section.
 6. Why does clustering help some tables and hurt others?
 7. How do you share live data with a non-Snowflake partner?
 8. What keeps Cortex data inside the governance boundary?
+9. How would you stop an `AI_COMPLETE` backfill from burning the monthly budget?
+10. When would you choose Iceberg tables over native Snowflake tables?
 
 !!! note "Cross-links"
     Deep dive: [Technologies → Snowflake](../Technologies/snowflake/index.md) ·

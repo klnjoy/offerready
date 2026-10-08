@@ -4,6 +4,8 @@ icon: material/comment-question-outline
 
 # "Keep Asking Why" — interactive
 
+*Last reviewed: October 2026*
+
 The single skill that separates a memorized answer from a senior one: **defending
 a decision under escalating follow-ups.** This interactive drill plays the
 interviewer. You pick a decision, face a chain of progressively harder "why?"
@@ -35,5 +37,5 @@ full explanation and more chains, and this to practice under pressure.
 !!! note "Related"
     [Requirements → Production](Interview_Requirements_to_Production.md) ·
     [Production Incident Interviews](Interview_Production_Incidents.md) ·
-    [Master Interview Simulator](Interview_Master_Simulator.md) ·
+    [Mock Interview (OfferReady app)](Interview_Master_Simulator.md) ·
     [Level Comparison](Interview_Level_Comparison.md)

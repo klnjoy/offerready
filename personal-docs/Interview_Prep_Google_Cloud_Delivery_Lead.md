@@ -4,6 +4,13 @@ icon: material/account-supervisor
 
 # Interview Preparation: Google Cloud Senior Delivery Lead / Technical Delivery Manager
 
+*Last reviewed: October 2026*
+
+!!! note "Model note"
+    The project below ran on Claude 3.5 Sonnet, which was retired on the Anthropic API in
+    October 2025. Describe it as built, and say you would re-run the eval set and migrate
+    to a current model behind a flag.
+
 ---
 
 ## Part 1: Role Summary & What to Expect
@@ -112,7 +119,7 @@ Built a custom MCP server for Snowflake (`snowflake_agent.py`) that exposes:
 |----------------|-----|-----------------|
 | **Google Cloud (BigQuery, Vertex AI, Dataflow)** | I'm on AWS (Bedrock, Lambda, DynamoDB) | "Same patterns, different cloud. BigQuery ↔ Snowflake, Vertex AI ↔ Bedrock, Dataflow ↔ Lambda+SQS pipelines. Concepts transfer directly." |
 | **Google Cloud Certifications** | Likely none currently | "I'm pursuing GCP Professional Data Engineer certification. My AWS production experience maps directly to GCP services." |
-| **Gemini Agent Platform / ADK / A2A** | No direct experience | "I have hands-on MCP experience (which is listed in your requirements). MCP, A2A, and ADK are all agent communication protocols — same mental model, different implementations." |
+| **Gemini Enterprise Agent Platform / ADK / A2A** | No direct experience | "I have hands-on MCP experience (which is listed in your requirements). MCP (agent ↔ tools) and A2A (agent ↔ agent) are open protocols, and ADK is Google's framework that speaks both — same mental model as my LangChain + MCP work." |
 | **Client-facing delivery leadership at scale** | I build and deliver, less formal PM | "I own end-to-end delivery of an enterprise AI platform — requirements, architecture, implementation, deployment, stakeholder demos, production support." |
 | **Looker / Connected Sheets** | Not directly used | "I've built analytics layers via SQL Agent that serve similar purposes — making data accessible to business users through natural language." |
 
@@ -157,7 +164,7 @@ The conversational platform handles real users daily — consent tracking, pre-i
 
 **A:** "Multiple layers:
 - **Pre-inference:** Guardrail check classifies every prompt before reaching the LLM — blocks malicious/restricted content
-- **During inference:** Temperature 0.0 for deterministic outputs, structured output schema (Pass/Fail/NA with reason)
+- **During inference:** Temperature 0.0 for repeatable outputs, structured output schema (Pass/Fail/NA with reason)
 - **Post-inference:** Human review workflow — accept/reject counts tracked per batch run
 - **Operational:** Batch run ID tracking, CloudWatch monitoring, keyword trend analysis, consent management
 - **Deployment:** 4-environment promotion (sand → dev → test → prod), CDK infrastructure as code, Jenkins pipelines"
@@ -167,13 +174,13 @@ The conversational platform handles real users daily — consent tracking, pre-i
 ### Q: "How would you adapt to Google Cloud from AWS?"
 
 **A:** "The patterns I've implemented map directly:
-- **Bedrock → Vertex AI**: Same concept — managed LLM inference, just different SDK calls
-- **Lambda → Cloud Functions/Cloud Run**: Serverless compute with container support
+- **Bedrock → Vertex AI (Gemini Enterprise Agent Platform for agents)**: Same concept — managed LLM inference, just different SDK calls
+- **Lambda → Cloud Run / Cloud Run functions** (formerly Cloud Functions): Serverless compute with container support
 - **DynamoDB → Firestore/Bigtable**: NoSQL with PK/SK patterns
 - **Snowflake → BigQuery**: Columnar analytics (I already write complex SQL daily)
 - **SQS → Pub/Sub**: Message queue decoupling
 - **EventBridge → Cloud Scheduler**: Cron-based triggers
-- **CDK → Terraform**: Infrastructure as code
+- **CDK → Terraform** (or Infrastructure Manager, Google's managed Terraform): Infrastructure as code
 - **S3 → Cloud Storage**: Object storage
 
 The architectural thinking — data pipelines, agent orchestration, LLM integration, production governance — is cloud-agnostic. I'd ramp up on GCP-specific services quickly because I understand the underlying patterns."
@@ -200,7 +207,8 @@ I'm familiar with advanced RAG patterns: hybrid search (BM25 + semantic), rerank
 **A:** "Strategies we use:
 - **Batching**: Process POs in chunks of 20 to optimize API calls
 - **Guardrails**: Block unnecessary LLM calls early (pre-inference check)
-- **Deterministic outputs**: Temperature 0.0 reduces need for retries
+- **Repeatable outputs**: Temperature 0.0 plus a strict output schema reduces parse failures and retries
+- **Batch inference**: For nightly jobs, provider batch APIs (Bedrock batch inference, Vertex AI batch prediction) are typically about half the on-demand price
 - **Parallel processing**: ThreadPoolExecutor (40 workers) maximizes throughput per compute hour
 - **VPC endpoints**: Reduce data transfer costs and latency
 - **Structured prompts**: Concise templates to minimize token usage
@@ -228,7 +236,7 @@ I set priorities, define workstream boundaries, manage dependencies (e.g., API c
 ### Architecture Decisions
 
 **Why WebSocket over REST for LLM responses?**
-"Lambda has a 29-second API Gateway timeout. LLM responses can take longer and users expect real-time feedback. WebSocket streaming solves both — tokens stream as generated, user sees response immediately, no timeout issues."
+"API Gateway REST integrations default to a 29-second timeout (raisable for Regional APIs since 2024, but streaming is still the better UX). LLM responses can take longer and users expect real-time feedback. WebSocket streaming solves both — tokens stream as generated, user sees response immediately, no timeout issues."
 
 **Why SQS between Lambda 1 and Lambda 2?**
 "Decoupling. Lambda 1 discovers POs, Lambda 2 fetches details from the procurement API. SQS provides: (1) rate limiting — don't overwhelm the API, (2) retry handling — if the API is temporarily down, messages stay in queue, (3) scalability — multiple Lambda 2 instances can process in parallel."
@@ -245,8 +253,8 @@ I set priorities, define workstream boundaries, manage dependencies (e.g., API c
 
 **How would you design a data pipeline on GCP?**
 "Based on my AWS pipeline experience, the GCP equivalent would be:
-1. **Ingestion**: Cloud Scheduler → Cloud Functions (trigger) → BigQuery (source query)
-2. **Processing**: Pub/Sub (queue) → Cloud Functions/Cloud Run (fetch external data) → Cloud Storage (raw data)
+1. **Ingestion**: Cloud Scheduler → Cloud Run functions (trigger) → BigQuery (source query)
+2. **Processing**: Pub/Sub (queue) → Cloud Run (fetch external data) → Cloud Storage (raw data)
 3. **AI Processing**: Cloud Run (Docker) → Vertex AI (LLM inference) → BigQuery (results)
 4. **Orchestration**: Cloud Composer (Airflow) for complex DAGs, or simple Cloud Scheduler for linear flows
 5. **Monitoring**: Cloud Logging + Cloud Monitoring + Error Reporting"
@@ -257,9 +265,9 @@ I set priorities, define workstream boundaries, manage dependencies (e.g., API c
 
 **My understanding of the ecosystem:**
 - **MCP (Model Context Protocol)**: I've built this — protocol for tools to expose capabilities to LLMs
-- **A2A (Agent-to-Agent)**: Protocol for agents to communicate with each other (analogous to my Lambda-to-Lambda orchestration via SQS)
-- **ADK (Agent Development Kit)**: Google's framework for building agents (analogous to my LangChain-based agent implementations)
-- **Gemini Enterprise Agent Platform**: Google's managed platform for deploying agents (analogous to my CDK-deployed Lambda-based agent infrastructure)
+- **A2A (Agent-to-Agent)**: Open protocol (started by Google, now a Linux Foundation project) for agents to discover each other via Agent Cards and delegate tasks (loosely analogous to my Lambda-to-Lambda orchestration via SQS, but between autonomous agents)
+- **ADK (Agent Development Kit)**: Google's open-source framework for building agents (analogous to my LangChain-based agent implementations)
+- **Gemini Enterprise Agent Platform**: Google's managed platform for building, deploying and governing agents, announced at Next '26 (analogous to my CDK-deployed Lambda-based agent infrastructure)
 
 **Key concepts I've implemented:**
 - **Tool use**: LLM decides which tool to call (SQL Agent picks Snowflake queries)
@@ -288,15 +296,15 @@ I set priorities, define workstream boundaries, manage dependencies (e.g., API c
 
 | AWS Service | GCP Equivalent | My Experience Level |
 |-------------|---------------|-------------------|
-| Bedrock | Vertex AI | Heavy (Bedrock) — need GCP ramp |
-| Lambda | Cloud Functions / Cloud Run | Heavy (Lambda) |
+| Bedrock | Vertex AI / Gemini Enterprise Agent Platform | Heavy (Bedrock) — need GCP ramp |
+| Lambda | Cloud Run functions / Cloud Run | Heavy (Lambda) |
 | DynamoDB | Firestore / Bigtable | Heavy (DynamoDB) |
 | S3 | Cloud Storage | Heavy (S3) |
 | SQS | Pub/Sub | Medium (SQS) |
 | EventBridge | Cloud Scheduler / Eventarc | Medium (EventBridge) |
 | API Gateway | API Gateway / Cloud Endpoints | Heavy (API Gateway) |
 | Cognito | Identity Platform / Firebase Auth | Medium (Cognito) |
-| CDK | Terraform / Deployment Manager | Heavy (CDK) |
+| CDK | Terraform / Infrastructure Manager | Heavy (CDK) |
 | CloudWatch | Cloud Logging / Monitoring | Medium (CloudWatch) |
 | ECR | Artifact Registry | Medium (ECR) |
 | Snowflake | BigQuery | Heavy (Snowflake) |
@@ -315,12 +323,12 @@ I set priorities, define workstream boundaries, manage dependencies (e.g., API c
 - **Cloud SQL / Spanner**: Managed relational databases
 - **Bigtable**: Wide-column NoSQL (low-latency, high-throughput)
 - **GKE**: Google Kubernetes Engine
-- **Terraform**: Infrastructure as code (preferred over GCP Deployment Manager)
+- **Terraform**: Infrastructure as code (Deployment Manager is deprecated; Infrastructure Manager runs Terraform as a managed service)
 
 ### Agentic AI Terminology
 
 - **MCP (Model Context Protocol)**: Open protocol for tools to expose capabilities to AI models
-- **A2A (Agent-to-Agent)**: Google's protocol for multi-agent communication
+- **A2A (Agent-to-Agent)**: Open protocol for multi-agent communication (Google-originated, Linux Foundation-hosted)
 - **ADK (Agent Development Kit)**: Google's SDK for building AI agents
 - **Gemini Enterprise Agent Platform**: Managed service for deploying production agents
 - **Grounding**: Connecting LLM responses to factual data sources

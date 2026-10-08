@@ -4,6 +4,8 @@ icon: material/laptop
 
 # FDE Live-Coding & Real-Time Scenarios — Prep & Confidence
 
+*Last reviewed: October 2026*
+
 A focused playbook for the **hard parts** of Forward Deployed Engineer loops:
 live coding under a watcher, real-time "the demo just broke" scenarios, and the
 LLM fundamentals (models, tokens, sampling) they probe. Plus concrete ways to
@@ -38,8 +40,9 @@ Typical rounds you'll see (varies by company — source: Exponent guides):
 - **Behavioral** — STAR stories about the "implementation gap" (lab code meets
   messy real infra).
 
-Market note: FDE postings surged (~5x year-over-year into 2026) as AI companies
-built customer-facing engineering teams (source: UKy/Lightcast).
+Market note: FDE postings grew sharply into 2026 as AI companies built
+customer-facing engineering teams (one labor-market source reported roughly 5x
+year over year; treat the exact figure as indicative).
 
 ## Live coding: a repeatable method
 
@@ -123,14 +126,15 @@ behave. These come up constantly.
 
 | Param | What it does | Interview one-liner |
 |-------|-------------|---------------------|
-| **Temperature** | Scales the probability distribution's sharpness | 0 = deterministic/factual; higher = more creative/varied (source: Google whitepaper summary) |
+| **Temperature** | Scales the probability distribution's sharpness | 0 = near-deterministic/factual (not guaranteed identical); higher = more creative/varied. Many reasoning models fix or ignore it |
 | **Top-p (nucleus)** | Sample from the smallest set of tokens whose cumulative prob ≥ p | Cuts the low-probability tail that causes rambling (source: Marktechpost) |
 | **Top-k** | Sample only from the k most-likely tokens | Simpler cap on the candidate set |
 | **Max tokens** | Caps output length | Controls cost/latency + avoids truncation surprises |
 
 **Practical presets to quote** (paraphrased from public guides): factual/SQL/JSON
-→ temperature 0; creative copy → higher temperature + top-p ~0.95
-(source: Google whitepaper summary).
+→ temperature 0 plus the provider's structured-output mode; creative copy → higher
+temperature + top-p ~0.95. Adjust temperature *or* top-p, not both at once.
+For reasoning models, the main knob is reasoning effort / thinking budget instead.
 Newer samplers (min-p, DRY, XTC) exist but temperature/top-p/max-tokens cover most
 interview needs (source: localaimaster).
 
@@ -160,7 +164,8 @@ favorite brand.
 | Q | A |
 |---|---|
 | What's a token, and why care? | Word-piece; context/cost/latency are measured in it |
-| Temperature 0 vs 0.9? | Deterministic/factual vs creative/varied |
+| Temperature 0 vs 0.9? | Near-deterministic/factual vs creative/varied |
+| Reasoning-model knob? | reasoning effort / thinking budget (billed as output) |
 | What does top-p do? | Samples the nucleus; trims the low-prob tail (less rambling) |
 | Demo breaks live — first move? | Reassure, then isolate the layer, check cheap causes first |
 | How do you pick a model? | By workload: reasoning vs volume vs privacy |

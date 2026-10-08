@@ -4,6 +4,8 @@ icon: material/tune
 
 # Retrieval Tuning: Top-K, Filtering & Reranking
 
+*Last reviewed: October 2026*
+
 The three levers that most affect RAG quality after chunking/embeddings:
 **how many** candidates you fetch (Top-K), **which** you keep (filtering), and
 **in what order** (reranking).
@@ -55,13 +57,14 @@ jointly — slower but far more accurate — and reorders the candidates.
 | Rerank | Cross-encoder | Slow (per pair) | High |
 
 Because reranking is expensive per pair, you **only rerank the Top-K
-candidates**, not the whole corpus. Options: Cohere Rerank, cross-encoder models,
-or an LLM as reranker.
+candidates**, not the whole corpus. Options: hosted rerankers (Cohere Rerank,
+Voyage rerank, Bedrock rerank models), open cross-encoders (for example the BGE
+reranker family), or an LLM as reranker for the hardest cases.
 
 ## Filtering vs reranking (the key distinction)
 
 - **Filtering** = binary include/exclude by metadata (correctness, security).
-- **Reranking** = reorder by relevance score (quality). 
+- **Reranking** = reorder by relevance score (quality).
 
 They're complementary: filter to the *allowed and fresh* set, then rerank that
 set for *best first*.
@@ -98,3 +101,31 @@ set for *best first*.
 | Filtering vs reranking? | Include/exclude by metadata vs reorder by relevance |
 | Reranker type? | Cross-encoder (joint query-chunk scoring) |
 | Why not rerank everything? | Cross-encoders are expensive per pair |
+
+## How interviewers probe this
+
+??? question "Filtered vector search returns too few results for small tenants. Why, and how do you fix it?"
+    A strong answer explains the interaction between ANN indexes and filters:
+    post-filtering an HNSW top-K can leave almost nothing for a tenant with few
+    documents. Fixes: true pre-filtering or filter-aware search (for example
+    pgvector's iterative index scans or native filtered HNSW), per-tenant
+    partitions or indexes for large tenants, or raising K adaptively, and
+    measuring recall per tenant size.
+
+??? question "How do you set K, n, and the reranker budget with numbers, not guesses?"
+    Build a labeled set, plot recall@K for the first stage and final quality
+    against n after reranking, then pick the knee of each curve subject to the
+    latency budget (reranker cost grows linearly with K). Re-check when the
+    corpus or embedding model changes.
+
+??? question "How do you merge dense and keyword results before reranking?"
+    Use Reciprocal Rank Fusion (score-free and robust) or weighted normalized
+    scores, tune the weights on the eval set, deduplicate by chunk ID, and then
+    rerank the fused list. Explain why raw scores from BM25 and cosine similarity
+    aren't directly comparable.
+
+??? question "Reranking added 300 ms to p95. What are your options?"
+    Rerank fewer candidates, use a smaller or distilled reranker, run it on a
+    GPU, cache results for popular queries, rerank only when first-stage
+    confidence is low, or stream the answer while reranking runs on a narrowed
+    set. Measure the quality cost of each option.

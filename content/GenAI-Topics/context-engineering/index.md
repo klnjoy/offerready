@@ -4,6 +4,26 @@ icon: material/window-restore
 
 # Context Engineering
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **"Context engineering" became the standard name** in 2025 for assembling,
+      budgeting, and pruning what an agent sees across a run, not just wording one
+      prompt.
+    - **Long context is not free accuracy.** 2025 studies of long inputs ("context
+      rot") found quality drops as input grows, well before the window is full, so
+      relevance and compaction still beat dumping everything in.
+    - **Compaction and memory moved into platforms.** Framework middleware
+      (LangChain 1.0 summarization middleware), managed memory (AgentCore Memory,
+      Cortex Agents threads), and provider-side compaction handle much of what
+      teams used to hand-roll.
+    - **Progressive disclosure for tools and skills.** Load tool schemas or skill
+      instructions only when they're needed, instead of injecting every MCP tool
+      definition up front.
+    - **Prompt caching shapes assembly order.** Put stable content (system prompt,
+      tool definitions, reference docs) first, in a deterministic order, so cached
+      prefixes keep hitting.
+
 Context engineering is the discipline of deciding **what goes into the model's
 context window, and how** — the tokens the model actually sees on each call. It's
 the layer above prompt engineering: prompts are wording; context engineering is
@@ -63,6 +83,10 @@ flowchart TB
 - **Isolation** — separate untrusted retrieved/tool content from instructions
   (also a prompt-injection defense).
 - **Token accounting** — measure tokens per component; know your budget.
+- **Cache-friendly layout** — stable prefix first (system, tools, docs), volatile
+  parts (history, query) last, so provider prompt caching applies.
+- **Just-in-time loading** — fetch tool schemas, skills, or documents when the
+  task needs them rather than front-loading everything.
 
 ## Interview deep dive
 

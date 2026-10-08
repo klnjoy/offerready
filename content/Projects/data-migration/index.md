@@ -4,8 +4,10 @@ icon: material/database-import
 
 # Data Migration — Oracle → Snowflake (Case Study)
 
-A real migration pattern: replicating a large financial application (PowerPlant,
-on Oracle) into Snowflake via **AWS DMS → S3 → Snowpipe → CDC merge**, with
+*Last reviewed: October 2026*
+
+A real migration pattern: replicating a large Oracle-based financial application
+into Snowflake via **AWS DMS → S3 → Snowpipe → CDC merge**, with
 row/column-level **secure views** and **SOX-grade validation**.
 
 !!! note "Generalized"
@@ -18,9 +20,9 @@ row/column-level **secure views** and **SOX-grade validation**.
 ```mermaid
 flowchart TB
     SRC[(Oracle source app)]
-    SRC -->|AWS DMS: full load + CDC| S3[(S3 Datalake_Raw - Parquet)]
+    SRC -->|AWS DMS: full load + CDC| S3[(S3 raw zone - Parquet)]
     S3 -->|Snowpipe FULL_LOAD - pattern *LOAD*| LT[FINANCE landing tables]
-    S3 -->|Snowpipe STG - CDC deltas| STG[LANDINGTEMP staging]
+    S3 -->|Snowpipe STG - CDC deltas| STG[STAGING schema]
     STG -->|nightly TASK: MERGE proc| LT
     LT -->|query time, by CURRENT_USER| SV[Secure Views _SV]
     SV --> BI[Tableau / end users]
@@ -50,16 +52,16 @@ scaling a 70+ table migration without bespoke code:
 
 ```sql
 -- The nightly CDC merge each task runs (generalized)
-CALL STAGING.PROC_MERGE_CDC_STREAM_SEQ(
+CALL STAGING.PROC_MERGE_CDC(
   'FINANCE',            -- source schema
   '<TABLE>',            -- table
-  'LANDINGTEMP',        -- staging schema
+  'STAGING',            -- staging schema
   '<TABLE>_STG',        -- staging table
   '<PRIMARY_KEY_COLS>', -- merge keys = source PK
   'Y',                  -- handle deletes
   CURRENT_DATABASE(),
   'DEL_<TABLE>_STG',    -- delete table
-  'TRANSACT_ID'         -- sequence column for ordering
+  'CHANGE_SEQ'          -- sequence column for ordering
 );
 ```
 
@@ -71,6 +73,12 @@ CALL STAGING.PROC_MERGE_CDC_STREAM_SEQ(
   payroll/labor views).
 - Security tables are the **highest-priority** for testing — a structural change
   there forces secure-view rework and SOX review.
+- **If you built it today:** use **row access policies** and **(tag-based) masking
+  policies** attached to the tables instead of filtering in each secure view. One
+  policy then covers every view and query path, and policies can be tested and
+  audited centrally. Also consider **Snowpipe Streaming** or Snowflake's
+  **Openflow** connectors for CDC, and **Dynamic Tables** in place of hand-written
+  merge tasks where the merge logic is a plain "latest row per key".
 
 ## Validation strategy (what makes it trustworthy)
 

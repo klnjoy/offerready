@@ -6,6 +6,8 @@ icon: material/tag-heart
 
 # OfferReady Pricing
 
+*Last reviewed: October 2026*
+
 **Learn. Build. Defend. Interview.** All the learning content and question banks
 are **free**. What Pro adds is the thing free sites can't: **a coach that grades
 *your* answers, tracks *your* progress, and tells *you* what to fix.**
@@ -110,7 +112,7 @@ in order — instead of a generic checklist.
 
 <ul class="pr-feats">
 <li>Everything in Pro Monthly</li>
-<li>Two months free vs paying monthly</li>
+<li>About 5 months free vs paying monthly</li>
 <li>Early access to new features</li>
 <li>Annual "interview readiness" review</li>
 </ul>

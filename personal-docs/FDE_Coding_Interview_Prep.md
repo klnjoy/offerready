@@ -3,7 +3,10 @@ icon: material/code-braces
 ---
 
 # FDE / Solutions Engineer - Coding Interview Prep
-## SQL + Python + Snowflake Cortex + System Design
+
+*Last reviewed: October 2026*
+
+**SQL + Python + Snowflake Cortex + System Design**
 
 Target: NVIDIA, Snowflake, Databricks, AWS FDE/SE roles
 
@@ -94,9 +97,10 @@ SELECT
     total_revenue,
     LAG(total_revenue, 12) OVER (ORDER BY month) as same_month_last_year,
     ROUND((total_revenue - LAG(total_revenue, 12) OVER (ORDER BY month)) 
-        / LAG(total_revenue, 12) OVER (ORDER BY month) * 100, 2) as yoy_growth_pct
+        / NULLIF(LAG(total_revenue, 12) OVER (ORDER BY month), 0) * 100, 2) as yoy_growth_pct
 FROM monthly
 ORDER BY month;
+-- LAG(.., 12) assumes no missing months; for gappy data, self-join on month - 1 year instead
 ```
 
 ### Q6: Sessionization (common in analytics interviews)
@@ -212,16 +216,19 @@ import snowflake.connector
 import pandas as pd
 
 def query_snowflake(sql, database="MY_DW"):
+    # Service users: key-pair (or OAuth) auth; Snowflake is phasing out
+    # password-only sign-in. Load the key from a secrets manager, never from code.
     conn = snowflake.connector.connect(
-        user="svc_account",
-        password="from_ssm_parameter_store",
-        account="org-account.us-west-2.privatelink",
+        user="SVC_ACCOUNT",
+        account="myorg-myaccount",
+        private_key_file="/run/secrets/svc_rsa_key.p8",
         warehouse="ANALYTICS_WH",
-        database=database
+        database=database,
     )
     try:
-        df = pd.read_sql(sql, conn)
-        return df
+        cur = conn.cursor()
+        cur.execute(sql)
+        return cur.fetch_pandas_all()   # needs snowflake-connector-python[pandas]
     finally:
         conn.close()
 
@@ -314,10 +321,10 @@ Use case: Auto-classify incoming support tickets.
 SELECT 
     ticket_id,
     subject,
-    SNOWFLAKE.CORTEX.CLASSIFY_TEXT(
+    AI_CLASSIFY(
         description,
         ['billing', 'technical', 'account_access', 'feature_request', 'outage']
-    ) as category
+    ):labels[0]::string as category   -- older code: SNOWFLAKE.CORTEX.CLASSIFY_TEXT
 FROM support_tickets
 WHERE created_date = CURRENT_DATE();
 ```
@@ -331,7 +338,7 @@ SELECT
     doc_id,
     doc_title,
     LENGTH(full_text) as char_count,
-    SNOWFLAKE.CORTEX.SUMMARIZE(full_text) as executive_summary
+    AI_SUMMARIZE(full_text) as executive_summary   -- older code: SNOWFLAKE.CORTEX.SUMMARIZE
 FROM policy_documents
 WHERE last_updated > DATEADD(day, -7, CURRENT_DATE());
 ```
@@ -343,14 +350,16 @@ Use case: Track customer sentiment from survey responses.
 SELECT 
     response_id,
     feedback_text,
-    SNOWFLAKE.CORTEX.SENTIMENT(feedback_text) as sentiment_score,
+    SNOWFLAKE.CORTEX.SENTIMENT(feedback_text) as sentiment_score,   -- -1..1
     CASE 
-        WHEN SNOWFLAKE.CORTEX.SENTIMENT(feedback_text) > 0.3 THEN 'positive'
-        WHEN SNOWFLAKE.CORTEX.SENTIMENT(feedback_text) < -0.3 THEN 'negative'
+        WHEN sentiment_score > 0.3 THEN 'positive'   -- reuse the alias: one LLM call, not three
+        WHEN sentiment_score < -0.3 THEN 'negative'
         ELSE 'neutral'
     END as sentiment_label
 FROM customer_feedback
 WHERE survey_date = CURRENT_DATE();
+-- AI_SENTIMENT(text) is the newer function; it returns category labels
+-- (positive/negative/neutral/mixed), optionally per aspect, instead of a score.
 ```
 
 ### Q4: Cortex COMPLETE() - custom prompts for data extraction
@@ -360,10 +369,15 @@ Use case: Extract structured fields from unstructured text.
 -- Extract key info from contract text
 SELECT 
     contract_id,
-    SNOWFLAKE.CORTEX.COMPLETE(
-        'mistral-large',
-        'Extract the following from this contract text. Return JSON with keys: vendor_name, contract_value, start_date, end_date, auto_renewal (yes/no). Contract text: ' || contract_text
-    ) as extracted_fields
+    AI_COMPLETE(
+        model => 'mistral-large2',
+        prompt => 'Extract vendor_name, contract_value, start_date, end_date, auto_renewal from this contract: ' || contract_text,
+        response_format => {'type': 'json', 'schema': {'type': 'object', 'properties': {
+            'vendor_name': {'type': 'string'}, 'contract_value': {'type': 'number'},
+            'start_date': {'type': 'string'}, 'end_date': {'type': 'string'},
+            'auto_renewal': {'type': 'boolean'}}}}
+    ) as extracted_fields   -- structured output: schema-valid JSON, no parsing prose
+    -- (AI_EXTRACT is a purpose-built alternative for field extraction)
 FROM raw_contracts
 WHERE status = 'pending_review';
 ```
@@ -376,7 +390,7 @@ Use case: Find relevant procedures without exact keyword match.
 CREATE OR REPLACE CORTEX SEARCH SERVICE procedure_search
   ON procedure_text
   ATTRIBUTES doc_title, department, last_updated
-  WAREHOUSE = 'GENAI_WIZARD'
+  WAREHOUSE = genai_wh
   TARGET_LAG = '1 hour'
   AS (
     SELECT procedure_text, doc_title, department, last_updated
@@ -384,56 +398,69 @@ CREATE OR REPLACE CORTEX SEARCH SERVICE procedure_search
     WHERE status = 'active'
   );
 
--- Step 2: Query with natural language
-SELECT PARSE_JSON(results) as search_results
-FROM TABLE(
+-- Step 2: Test with natural language. SEARCH_PREVIEW is a scalar function that
+-- returns a JSON string and accepts only literals; apps use the Python/REST API.
+SELECT r.value:doc_title::string AS doc_title, r.value:department::string AS department
+FROM TABLE(FLATTEN(PARSE_JSON(
     SNOWFLAKE.CORTEX.SEARCH_PREVIEW(
         'procedure_search',
         '{
-            "query": "what is the process for reporting a downed power line",
+            "query": "what is the process for reporting a safety hazard",
             "columns": ["doc_title", "procedure_text", "department"],
             "limit": 5
         }'
     )
-) as results;
+)['results'])) r;
 ```
 
 ### Q6: Cortex Analyst - semantic model + natural language query
 Use case: Business users ask questions without writing SQL.
 
 ```yaml
-# semantic_model.yaml (uploaded to a stage)
-name: energy_operations
-description: "Power operations planning data"
+# semantic_model.yaml (legacy YAML on a stage; new builds can use CREATE SEMANTIC VIEW)
+name: demand_forecasting
+description: "Demand forecast vs actuals"
 tables:
-  - name: LOAD_FORECAST
-    base_table: ANALYTICS.POPS.V_DAILY_FORECAST
+  - name: load_forecast
+    base_table: {database: ANALYTICS, schema: OPS, table: V_DAILY_FORECAST}
     description: "Daily load forecast vs actuals"
-    columns:
-      - name: FORECAST_DATE
-        description: "Date of forecast"
-      - name: HOUR_ENDING
+    time_dimensions:
+      - name: forecast_date
+        expr: FORECAST_DATE
+        data_type: DATE
+    dimensions:
+      - name: hour_ending
+        expr: HOUR_ENDING
         description: "Hour of day (1-24)"
-      - name: FORECAST_MW
-        description: "Forecasted load in megawatts"
+    facts:
+      - name: forecast_mw
+        expr: FORECAST_MW
         synonyms: ["predicted load", "expected demand"]
-      - name: ACTUAL_MW
-        description: "Actual observed load in megawatts"
+      - name: actual_mw
+        expr: ACTUAL_MW
         synonyms: ["real load", "measured demand"]
-    measures:
+    metrics:
       - name: forecast_error
-        expression: "AVG(ABS(FORECAST_MW - ACTUAL_MW))"
+        expr: AVG(ABS(load_forecast.forecast_mw - load_forecast.actual_mw))
         description: "Average absolute forecast error"
       - name: mape
-        expression: "AVG(ABS(FORECAST_MW - ACTUAL_MW) / NULLIF(ACTUAL_MW, 0)) * 100"
+        expr: AVG(ABS(load_forecast.forecast_mw - load_forecast.actual_mw) / NULLIF(load_forecast.actual_mw, 0)) * 100
         description: "Mean absolute percentage error"
 ```
 
 User asks: "What was the average forecast error last week?"
-Cortex Analyst generates and executes the SQL automatically.
+Cortex Analyst generates and executes the SQL automatically. (Snowflake now recommends
+calling it through a Cortex Agent, which can also use Cortex Search.)
 
 ### Q7: Full RAG pipeline in pure Snowflake SQL
 Use case: Answer questions from internal docs without external services.
+
+!!! warning "This SQL is conceptual"
+    `SEARCH_PREVIEW` returns a JSON string and accepts only string literals, so the
+    `:user_question` concatenation below won't run as written. It's also an injection
+    risk. In practice: call Cortex Search from the Python/REST API with the user's
+    question as a parameter, then pass the hits to `AI_COMPLETE` (or let a Cortex Agent
+    with a Search tool do both). Use the SQL to explain the flow.
 
 ```sql
 -- Step 1: Retrieve relevant context using Cortex Search
@@ -698,7 +725,7 @@ Query Pipeline:
     -> Vector Search (top-k similar chunks)
     -> (Optional) Reranking (cross-encoder, Cohere rerank)
     -> Context Assembly (selected chunks + prompt template)
-    -> LLM Generation (Claude, GPT-4, Mistral)
+    -> LLM Generation (Claude, GPT, Gemini, Llama, Mistral)
     -> Post-processing (citations, confidence score)
     -> Response to User
 
@@ -735,7 +762,7 @@ Key differences:
 1. **Better retrieval** - if you feed the LLM wrong context, it gives wrong answers. Fix retrieval first.
 2. **Smaller context** - don't stuff 20 chunks. Use 3-5 most relevant ones.
 3. **Explicit instructions** - "Answer ONLY based on the provided context. If the answer is not in the context, say 'I don't know.'"
-4. **Temperature = 0** - deterministic output, less creative = less hallucination
+4. **Temperature = 0** (where supported) - more repeatable, less creative output; it does not by itself make answers true
 5. **Grounding checks** - after generation, verify claims against retrieved docs
 6. **Confidence scoring** - if the model isn't sure, flag it for human review
 7. **Citation requirement** - force the model to cite which chunk it used for each claim
@@ -793,15 +820,18 @@ Use cases:
 - "What's the shortest path between entity A and entity B?" (relationship analysis)
 
 ```python
-from langchain.chains import GraphCypherQAChain
-from langchain_community.graphs import Neo4jGraph
-from langchain_community.chat_models import BedrockChat
+# Current packages: langchain-neo4j and langchain-aws
+from langchain_neo4j import GraphCypherQAChain, Neo4jGraph
+from langchain_aws import ChatBedrockConverse
 
-graph = Neo4jGraph(url="bolt://localhost:7687", username="neo4j", password="password")
-llm = BedrockChat(model_id="anthropic.claude-3-5-sonnet-20240620-v1:0")
+graph = Neo4jGraph(url="bolt://localhost:7687", username="neo4j", password=NEO4J_PASSWORD)
+llm = ChatBedrockConverse(model=BEDROCK_MODEL_ID)   # a current Claude model or inference profile
 
-chain = GraphCypherQAChain.from_llm(llm=llm, graph=graph, verbose=True)
-result = chain.run("Which tables are downstream of the CUSTOMER table?")
+chain = GraphCypherQAChain.from_llm(
+    llm=llm, graph=graph, verbose=True,
+    allow_dangerous_requests=True,   # required opt-in: the LLM writes Cypher, so use a read-only DB user
+)
+result = chain.invoke({"query": "Which tables are downstream of the CUSTOMER table?"})
 ```
 
 ### Q10: Components of a Text-to-SQL chatbot
@@ -971,14 +1001,18 @@ Rule of thumb: 1 token is roughly 4 characters or 0.75 words in English.
 ### Why do tokens matter?
 
 1. **Cost** - you pay per token (both input and output)
-   - Claude 3.5 Sonnet: $3/million input tokens, $15/million output tokens
-   - GPT-4: $30/million input, $60/million output
+   - Output tokens typically cost 4-5x input tokens; reasoning models also bill their
+     thinking tokens as output
+   - Mid-tier frontier models are roughly a few dollars per million input tokens and
+     several times that for output; small models are 10-30x cheaper. Prices change
+     often, so check the provider's pricing page rather than memorizing numbers
+   - Cached prompt prefixes and batch APIs are billed at a steep discount
    - If your RAG stuffs 10,000 tokens of context per query, that adds up fast
 
 2. **Context window limit** - every model has a max
-   - Claude 3.5: 200K tokens (~150K words)
-   - GPT-4o: 128K tokens
-   - Mistral: 32K tokens
+   - Frontier Claude, GPT and Gemini models: up to ~1M tokens in 2026
+   - Many smaller/open models: 128K or less
+   - Quality degrades well before the hard limit (context rot)
    - If your prompt exceeds the limit, it gets truncated or errors out
 
 3. **Latency** - more output tokens = slower response
@@ -992,18 +1026,18 @@ Rule of thumb: 1 token is roughly 4 characters or 0.75 words in English.
 ```python
 # For OpenAI models
 import tiktoken
-enc = tiktoken.encoding_for_model("gpt-4")
+enc = tiktoken.get_encoding("o200k_base")   # tokenizer used by GPT-4o and later
 tokens = enc.encode("Hello, how are you?")
-print(len(tokens))  # 5
+print(len(tokens))
 
-# For Claude/Bedrock - approximate
-# ~4 chars per token
+# For Claude: exact counts via the token-counting endpoint
+# (client.messages.count_tokens(...)); for a quick estimate use ~4 chars per token
 text = "This is my prompt"
 approx_tokens = len(text) / 4
 print(f"Approximately {approx_tokens} tokens")
 
-# For Snowflake Cortex - Snowflake handles counting internally
-# You see token usage in query history / account usage views
+# For Snowflake Cortex - use AI_COUNT_TOKENS() to estimate before a big run;
+# actual usage appears in the ACCOUNT_USAGE Cortex usage views
 ```
 
 ### Token optimization strategies
@@ -1011,12 +1045,12 @@ print(f"Approximately {approx_tokens} tokens")
 - Use shorter system prompts (cut fluff)
 - Limit retrieved chunks to top 3-5, not 20
 - Use smaller models for simple tasks (classification doesn't need 200K context)
-- Cache repeated queries
+- Cache repeated queries, and use provider prompt caching for stable prefixes
 - Set max_tokens on output to prevent runaway responses
 
 ---
 
-## Part 8: PWC GenAI Interview Questions (Actual - Both Rounds)
+## Part 8: Consulting-Firm GenAI Interview Questions (Two-Round Format)
 
 ### Round 1: Core Tech + Foundations
 
@@ -1024,7 +1058,7 @@ print(f"Approximately {approx_tokens} tokens")
 A: Converting a Python object (dict, list, class instance) into a format that can be stored or transmitted (bytes, JSON string, file). Deserialization is the reverse.
 ```python
 import json
-data = {"name": "Linga", "role": "FDE"}
+data = {"name": "Alex", "role": "FDE"}
 serialized = json.dumps(data)       # Python dict -> JSON string
 deserialized = json.loads(serialized)  # JSON string -> Python dict
 ```
@@ -1152,11 +1186,14 @@ A: A vector (list of numbers) that represents the meaning of text. Similar meani
 Dimensions:
 - text-embedding-3-small: 1536 dimensions
 - text-embedding-3-large: 3072 dimensions
-- text-embedding-ada-002: 1536 dimensions
+- text-embedding-ada-002 (legacy): 1536 dimensions
 - all-MiniLM-L6-v2 (open source): 384 dimensions
 - Cohere embed-v3: 1024 dimensions
 
-More dimensions = captures more nuance but costs more storage and compute.
+More dimensions = captures more nuance but costs more storage and compute. The
+text-embedding-3 models (and many newer ones) support shortened vectors (the
+`dimensions` parameter / Matryoshka embeddings), so you can trade a little quality for
+much smaller indexes.
 
 **Q11: text-embedding-3-small vs text-embedding-3-large?**
 
@@ -1164,7 +1201,7 @@ More dimensions = captures more nuance but costs more storage and compute.
 |---|---|---|
 | Dimensions | 1536 | 3072 |
 | Quality | Good for most use cases | Better for fine-grained similarity |
-| Cost | 5x cheaper | Higher cost |
+| Cost | ~6.5x cheaper ($0.02 vs $0.13 per 1M tokens at launch) | Higher cost |
 | Speed | Faster | Slower |
 | Storage | Less vector DB space | More space needed |
 
@@ -1230,17 +1267,17 @@ Use scripts when: the workflow is fixed, same steps every time, no ambiguity.
 
 **Q6: Is RAG dead?**
 A: No. People say this because:
-- Long context windows (200K tokens) mean you can stuff more docs directly
+- Long context windows (now up to ~1M tokens) mean you can stuff more docs directly
 - Fine-tuning means the model "knows" your data
 
 But RAG is still needed because:
 - You can't fine-tune on data that changes daily (policies, prices, inventory)
-- Even 200K tokens can't hold your entire knowledge base
+- Even 1M tokens can't hold your entire knowledge base, and quality and cost suffer long before that
 - RAG gives source citations (fine-tuned models can't)
 - RAG is cheaper than fine-tuning for most use cases
 - You can update the knowledge base without retraining
 
-RAG isn't dead - it's evolving (agentic RAG, graph RAG, CRAG).
+RAG isn't dead - it's evolving (agentic RAG, where the agent searches just in time with tools; graph RAG; CRAG).
 
 **Q7: What is Graph RAG and Graph AI?**
 A: Normal RAG: chunks are independent pieces of text. No relationships between them.
@@ -1272,12 +1309,17 @@ A: SQL Agent pattern:
 6. Agent formats results and returns to user
 
 ```python
-from langchain.agents import create_sql_agent
-from langchain.agents.agent_toolkits import SQLDatabaseToolkit
+# LangChain 1.x style: SQL tools + create_agent (create_sql_agent / agent.run are legacy)
+from langchain.agents import create_agent
+from langchain_community.agent_toolkits import SQLDatabaseToolkit
 
-toolkit = SQLDatabaseToolkit(db=snowflake_db, llm=claude)
-agent = create_sql_agent(llm=claude, toolkit=toolkit, agent_type="zero-shot-react-description")
-result = agent.run("What were total sales last month?")
+toolkit = SQLDatabaseToolkit(db=snowflake_db, llm=llm)   # db connected with a READ-ONLY role
+agent = create_agent(
+    model=llm,
+    tools=toolkit.get_tools(),
+    system_prompt="You write Snowflake SQL. SELECT only. Check the schema before querying.",
+)
+result = agent.invoke({"messages": [{"role": "user", "content": "What were total sales last month?"}]})
 ```
 
 The agent decides: which table to look at, what SQL to write, and how to handle errors. You don't hard-code the query.

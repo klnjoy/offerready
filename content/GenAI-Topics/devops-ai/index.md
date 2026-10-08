@@ -4,14 +4,16 @@ icon: material/infinity
 
 # DevOps for AI
 
+*Last reviewed: October 2026*
+
 The delivery-engineering discipline around AI systems: version control,
 infrastructure as code, deployment strategies, and the pipeline that safely gets
 a change from an editor to production. This page is the **delivery mechanics**;
 the AI-specific eval/rollout gates live in [LLMOps](../llmops/index.md).
 
 !!! note "Kiro and Jenkins — the roles"
-    **Kiro** is used for **AI-assisted development and automation** — authoring,
-    refactoring, scaffolding, docs. **Jenkins** is the **production CI/CD system**
+    **Kiro** (AWS's spec-driven, agentic IDE) is used for **AI-assisted
+    development and automation**: authoring, refactoring, scaffolding, docs. **Jenkins** is the **production CI/CD system**
     that builds, tests, evaluates, scans, and deploys. Kiro accelerates how code is
     written; **Jenkins is the gate to production.** Kiro does not replace Jenkins.
 

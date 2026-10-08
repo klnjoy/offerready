@@ -4,6 +4,19 @@ icon: material/lightning-bolt
 
 # FastAPI
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **The FastAPI CLI** (`fastapi dev`, `fastapi run`) is the documented way to
+      run apps, with `--workers N` for multiple processes. The docs no longer
+      recommend Gunicorn as a process manager, and on Kubernetes they suggest one
+      Uvicorn process per container.
+    - **Native Server-Sent Events.** Recent releases include
+      `fastapi.sse.EventSourceResponse` and `ServerSentEvent`, so you don't need a
+      third-party package or hand-formatted `data:` lines to stream LLM tokens.
+    - **Write new apps against Pydantic v2.** Pydantic v1-style models are a
+      legacy path; check your FastAPI version's support notes before relying on them.
+
 FastAPI is a modern, high-performance Python web framework for building APIs. It
 uses **type hints** for automatic validation and docs, is **async-first** (built
 on Starlette + Pydantic), and is a common choice for **serving GenAI/LLM
@@ -42,7 +55,8 @@ def ask(req: AskRequest):
     return AskResponse(answer=f"You asked about {req.area}: {req.question}")
 ```
 
-Run it: `uvicorn main:app --reload` → open `http://127.0.0.1:8000/docs`.
+Run it: `fastapi dev main.py` (or `uvicorn main:app --reload`) → open
+`http://127.0.0.1:8000/docs`.
 
 ## Request lifecycle
 
@@ -103,7 +117,10 @@ set timeouts on model calls, validate/limit input size, and add rate limiting.
 
 ## Deployment
 
-- **Uvicorn** (ASGI server), often behind **Gunicorn** with uvicorn workers.
+- **Uvicorn** (ASGI server): `fastapi run --workers 4 main.py` or
+  `uvicorn main:app --workers 4` on a VM. On Kubernetes, run **one process per
+  container** and scale with replicas. (Gunicorn with Uvicorn workers is an
+  older pattern you will still see.)
 - Containerize; put **Nginx**/ALB in front for TLS and load balancing.
 - On AWS: run on ECS/Fargate, or wrap with **Mangum** to run on Lambda + API
   Gateway.
@@ -161,9 +178,9 @@ set timeouts on model calls, validate/limit input size, and add rate limiting.
     worker, not the loop.
 
 ??? question "How do you deploy FastAPI to production?"
-    **Uvicorn** workers under **Gunicorn**, behind Nginx/ALB for TLS + load
-    balancing; containerized on ECS/Fargate/K8s, or **Mangum** to run on Lambda +
-    API Gateway. Health checks, structured logging, and config via env/secrets.
+    **Uvicorn** (`fastapi run --workers N` on VMs; one process per container on
+    K8s/ECS, scaled by replicas), behind Nginx/ALB for TLS + load balancing, or
+    **Mangum** to run on Lambda + API Gateway. Health checks, structured logging, and config via env/secrets.
 
 ??? question "How do you keep request/response contracts safe as the API evolves?"
     Pydantic **response_model** enforces the output shape; version the API
@@ -186,7 +203,8 @@ set timeouts on model calls, validate/limit input size, and add rate limiting.
 | `async def` vs `def`? | Async for non-blocking I/O; def (threadpool) for blocking/CPU |
 | What is `Depends` for? | Injecting reusable logic: auth, DB, config |
 | Auto docs URLs? | `/docs` (Swagger), `/redoc` |
-| Stream tokens with? | `StreamingResponse` |
+| Stream tokens with? | `EventSourceResponse` (native SSE) or `StreamingResponse` |
+| Run in prod? | `fastapi run --workers N`, or one Uvicorn process per container |
 
 ---
 
@@ -254,16 +272,20 @@ FastAPI is the front door for the RAG/agent systems described in
 [Snowflake Cortex](../../Snowflake-Cortex/index.md) REST integration.
 
 ```python
-from fastapi.responses import StreamingResponse
+from collections.abc import AsyncIterable
+from fastapi.sse import EventSourceResponse, ServerSentEvent
 
-@app.post("/chat")
-async def chat(req: AskRequest, _=Depends(require_api_key)):
-    ctx = await retrieve(req.question)          # async vector search
-    async def gen():
-        async for token in llm_stream(req.question, ctx):  # async LLM client
-            yield token
-    return StreamingResponse(gen(), media_type="text/event-stream")
+@app.post("/chat", response_class=EventSourceResponse)
+async def chat(req: AskRequest, _=Depends(require_api_key)) -> AsyncIterable[ServerSentEvent]:
+    ctx = await retrieve(req.question)                   # async vector search
+    async for token in llm_stream(req.question, ctx):    # async LLM client
+        yield ServerSentEvent(raw_data=token, event="token")
+    yield ServerSentEvent(raw_data="[DONE]", event="done")
 ```
+
+On older FastAPI versions, use `StreamingResponse` and format each chunk as a
+proper SSE frame (`data: ...\n\n`). Yielding raw tokens with a
+`text/event-stream` media type isn't valid SSE.
 
 Production checklist for an LLM endpoint:
 
@@ -334,8 +356,8 @@ Each: **diagnose → mitigate → prevent.**
     and alert on drift.
 
 ??? question "How do you deploy and roll this out safely?"
-    Containerize; **Uvicorn workers under Gunicorn** behind ALB/Nginx (TLS, LB);
-    run on ECS/Fargate or K8s (or **Mangum** on Lambda + API Gateway). Health +
+    Containerize; run Uvicorn (one process per container, scaled by replicas)
+    behind ALB/Nginx (TLS, LB); run on ECS/Fargate or K8s (or **Mangum** on Lambda + API Gateway). Health +
     readiness probes, **canary/blue-green** rollout, structured logs, and config
     via env/secrets. See [Kubernetes](../../GenAI-Topics/kubernetes/index.md) and
     [DevOps for AI](../../GenAI-Topics/devops-ai/index.md).

@@ -4,6 +4,21 @@ icon: material/robot-industrial
 
 # Agent Engineering
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **Frameworks reached 1.0.** LangChain and LangGraph 1.0 (October 2025) put
+      agents on a durable graph runtime (`create_agent`), with **middleware** for
+      human-in-the-loop, summarization, and PII handling.
+    - **Managed agent runtimes went GA.** Amazon Bedrock AgentCore (GA October
+      2025; Policy and Evaluations GA in March 2026) and Snowflake Cortex Agents
+      run the loop, memory, identity, and tool gateway for you.
+    - **The protocol layer stabilized.** MCP connects agents to tools and A2A v1.0
+      connects agents to each other. Both are now Linux Foundation projects.
+    - **Agent security has its own taxonomy.** The OWASP Top 10 for Agentic
+      Applications (December 2025) names goal hijack, tool misuse, identity and
+      privilege abuse, memory poisoning, cascading failures, and rogue agents.
+
 Agent engineering is the discipline of building LLM systems that **reason, use
 tools, and act** reliably — turning a chat model into a system that completes
 multi-step goals. It's broader than any one framework (LangGraph, AgentCore):
@@ -61,7 +76,8 @@ flowchart LR
 - **Least privilege** — separate read tools from write tools; gate writes.
 - **Human-in-the-loop** — approval step before irreversible actions.
 - **Deterministic fallback** — if the agent stalls, degrade to a fixed flow.
-- **Evaluate on task success**, not token quality (see Observability).
+- **Evaluate on task success**, not token quality (see
+  [Observability](../observability/index.md)).
 
 ## Single-agent vs multi-agent
 

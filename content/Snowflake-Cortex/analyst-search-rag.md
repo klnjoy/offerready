@@ -4,6 +4,8 @@ icon: material/database-search
 
 # Cortex Analyst, Semantic Models & Search (native RAG)
 
+*Last reviewed: October 2026*
+
 The two data tools underneath every Cortex Agent, worth understanding in their
 own right. **Cortex Analyst** answers questions over *structured* data by
 generating governed SQL against a **semantic view**. **Cortex Search** answers
@@ -119,9 +121,9 @@ flowchart TB
 - **Analyst** computes the governed metric (their revenue).
 - The **agent** stitches them and cites both.
 
-This is also a clean **AISQL** batch pattern without an agent: use LLM functions
-(`AI_FILTER`, `EXTRACT_ANSWER`, `SENTIMENT`) to enrich unstructured columns into
-structured signals, then query them with plain SQL.
+This is also a clean **AISQL** batch pattern without an agent: use Cortex AI
+Functions (`AI_FILTER`, `AI_EXTRACT`, `AI_SENTIMENT`, `AI_CLASSIFY`) to enrich
+unstructured columns into structured signals, then query them with plain SQL.
 
 ```sql
 -- Turn unstructured transcripts into structured churn signal, then aggregate.
@@ -129,7 +131,7 @@ CREATE OR REPLACE TABLE account_signals AS
 SELECT
     account_id,
     AI_FILTER(prompt => 'Does this transcript indicate churn risk? ' || transcript)  AS churn_flag,
-    SNOWFLAKE.CORTEX.SENTIMENT(transcript)                                            AS sentiment
+    SNOWFLAKE.CORTEX.SENTIMENT(transcript)                                            AS sentiment  -- or AI_SENTIMENT
 FROM support_transcripts;
 
 -- Now it's just SQL — join to revenue, aggregate, govern with existing policies.
@@ -194,7 +196,7 @@ GROUP BY r.region;
 | Who manages embedding/indexing/freshness? | Cortex Search (set a target lag) |
 | Native-RAG win? | No separate vector store to secure, sync, and pay for |
 | Cross-domain answer? | Search finds records + Analyst computes metric, agent stitches |
-| Batch enrichment tool? | AISQL / LLM functions (`AI_FILTER`, `EXTRACT_ANSWER`, `SENTIMENT`) + Streams/Tasks |
+| Batch enrichment tool? | Cortex AI Functions (`AI_FILTER`, `AI_EXTRACT`, `AI_SENTIMENT`) + Streams/Tasks |
 
 ---
 

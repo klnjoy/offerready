@@ -1,4 +1,4 @@
-// Give Mermaid diagrams a cleaner look that fits the purple theme.
+// Give Mermaid diagrams a cleaner look that fits the OfferReady navy/green brand.
 // Material loads mermaid; we just tweak defaults if it's available.
 document.addEventListener("DOMContentLoaded", function () {
   if (window.mermaid && window.mermaid.initialize) {
@@ -6,10 +6,10 @@ document.addEventListener("DOMContentLoaded", function () {
       window.mermaid.initialize({
         theme: "base",
         themeVariables: {
-          primaryColor: "#ede9fe",
-          primaryBorderColor: "#7c4dff",
-          primaryTextColor: "#1f2430",
-          lineColor: "#6366f1",
+          primaryColor: "#eef3fa",
+          primaryBorderColor: "#16305c",
+          primaryTextColor: "#0c1c38",
+          lineColor: "#1a9e64",
           fontFamily: "Inter, system-ui, sans-serif",
         },
         flowchart: { curve: "basis", htmlLabels: true },

@@ -4,6 +4,8 @@ icon: material/calendar-check
 
 # 30-Day Prep Plan
 
+*Last reviewed: October 2026*
+
 A practical, four-week plan to go from "I know the topics" to "I can design,
 build, and defend production AI systems in an interview." Every day maps to
 specific OfferReady pages so you're never guessing what to study.
@@ -12,7 +14,7 @@ specific OfferReady pages so you're never guessing what to study.
     ~1–2 focused hours/day. Each day = **learn → practice out loud → self-quiz.**
     Reading isn't rehearsing; say answers aloud and time yourself (~2 min). Track
     yourself in [Practice mode](Interview_Practice.md) and the
-    [Progress Dashboard](Interview_Progress.md). Adjust weeks to your target role
+    [Progress Dashboard](Interview_Progress.md) (both now open in the OfferReady app). Adjust weeks to your target role
     (see [Level Comparison](Interview_Level_Comparison.md)).
 
 **Daily rhythm:** 1) read/skim the concept page · 2) do the linked drill/Q&A out
@@ -42,9 +44,9 @@ Goal: design safe, reliable agentic systems and defend them.
 |-----|-------|-------|
 | 8 | Agent principles + patterns (deep) | [Agent Principles](../GenAI-Topics/agent-principles/index.md) |
 | 9 | LangChain / LangGraph | [LangGraph](../GenAI-Topics/langgraph/index.md) · [LC/LG Q&A](LangChain_LangGraph_Interview_QA.md) |
-| 10 | MCP + tools | [MCP](../GenAI-Topics/mcp/index.md) · [MCP Q&A](MCP_Interview_QA.md) |
+| 10 | MCP + tools (incl. the stateless 2026-07-28 spec, OAuth, tool poisoning) | [MCP](../GenAI-Topics/mcp/index.md) · [MCP Q&A](MCP_Interview_QA.md) |
 | 11 | **AI Security** (injection, tool poisoning, threat modeling) | [AI Security](../AI-Security/index.md) |
-| 12 | Agents Q&A + a multi-agent design | [Agents Q&A](Agents_Interview_QA.md) · [Case Studies](../Case-Studies/index.md) |
+| 12 | Agents Q&A (context engineering, agent evals) + a multi-agent design | [Agents Q&A](Agents_Interview_QA.md) · [Case Studies](../Case-Studies/index.md) |
 | 13 | Practice: agent + security scenarios | [Scenario Drills](Lab_Scenario_Drills.md) · [Why-chains: agents/security](Interview_Why_Chains.md) |
 | 14 | **Review** + [Hackathon build](Lab_Hackathon_Builds.md) (agent/MCP challenge) | Cheat sheet: [Agents/MCP/Security](Interview_Cheat_Sheets.md) |
 
@@ -74,7 +76,7 @@ Goal: put it together at senior/principal depth and rehearse full loops.
 | 25 | Production incidents | [Production Incident Interviews](Interview_Production_Incidents.md) |
 | 26 | Full system design | [Requirements → Production](Interview_Requirements_to_Production.md) · [Case Studies](../Case-Studies/index.md) |
 | 27 | Behavioral / STAR story bank | [Behavioral / STAR](Behavioral_STAR_Interview_QA.md) |
-| 28 | Full mock loop | [Master Interview Simulator](Interview_Master_Simulator.md) |
+| 28 | Full mock loop | [Mock Interview](Interview_Master_Simulator.md) (OfferReady app) |
 | 29 | **Level-tune** your answers (Senior→Staff→Principal/FDE) | [Level Comparison](Interview_Level_Comparison.md) |
 | 30 | Final review: [cheat sheets](Interview_Cheat_Sheets.md) + retake weak self-quizzes | all self-quizzes |
 

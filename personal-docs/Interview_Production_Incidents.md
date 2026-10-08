@@ -4,6 +4,8 @@ icon: material/fire-alert
 
 # Production Incident Interviews
 
+*Last reviewed: October 2026*
+
 "Walk me through an incident" questions test how you **operate** AI systems under
 pressure, not what you memorized. Each incident follows an SRE-style structure:
 **symptoms → investigate → telemetry → root cause → mitigate → permanent fix →
@@ -187,6 +189,40 @@ prevention → follow-ups.**
     checks, SLO + alert.
     **Follow-ups:** "why jitter on retries?" → avoid a thundering herd re-DDoSing the
     recovering provider.
+
+??? question "Incident 11 — The model you depend on is being retired (or was silently updated)."
+    **Symptoms:** a deprecation notice with a retirement date, or quality/format
+    drift with no code change because an un-pinned alias now points to a newer model.
+    **Investigate:** which routes, prompts and tenants use the model; is the model ID
+    pinned or an alias; what changed in output format, refusals, latency and cost.
+    **Telemetry:** per-model traffic, eval scores by model version, parse-failure
+    rate, tokens per request.
+    **Root cause:** provider lifecycle (models are retired on a schedule) or an
+    alias you didn't pin.
+    **Mitigate:** pin the last-known-good version where still available; route
+    affected traffic behind a flag.
+    **Permanent fix:** run the full eval suite on candidate replacements, tune
+    prompts per model, canary the switch, keep a fallback model.
+    **Prevention:** a model inventory with retirement dates, pinned versions,
+    quarterly migration drills, and eval suites that can run against any model.
+    **Follow-ups:** "why did cost change after the upgrade?" → different tokenizer,
+    longer outputs, or reasoning tokens; compare cost per successful task.
+
+??? question "Incident 12 — LLM bill jumped after a prompt refactor, with the same traffic and token counts."
+    **Symptoms:** spend up, input tokens flat, latency up slightly.
+    **Investigate:** check the **prompt-cache hit rate** (cached vs uncached input
+    tokens in the provider's usage data) before and after the deploy.
+    **Telemetry:** cache read/write tokens per route, time-to-first-token.
+    **Root cause:** the refactor put dynamic content (timestamp, user name, retrieved
+    docs) *before* the stable system prompt or tool definitions, or reordered tools
+    nondeterministically, so the cached prefix never matches.
+    **Mitigate:** revert, or move dynamic content after the stable prefix.
+    **Permanent fix:** stable-first prompt layout, deterministic tool ordering,
+    explicit cache breakpoints where the API supports them.
+    **Prevention:** cache hit rate on the cost dashboard with an alert; a CI check
+    that the static prefix is byte-identical across requests.
+    **Follow-ups:** "why does order matter?" → caches match on an exact prefix, so
+    one changed byte early invalidates everything after it.
 
 ---
 

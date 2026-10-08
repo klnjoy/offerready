@@ -4,6 +4,23 @@ icon: material/school
 
 # LLM Fundamentals
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **Reasoning models are standard.** Frontier models spend extra "thinking"
+      tokens before answering (test-time compute), usually with an effort or
+      budget setting. More thinking buys accuracy on hard tasks at the cost of
+      latency and money.
+    - **Sampling knobs don't always apply.** Some reasoning models fix or ignore
+      temperature and top-p, so reliability comes from structured outputs,
+      validation, and evals rather than temperature alone.
+    - **Mixture-of-Experts (MoE) is the common frontier architecture**, including
+      most large open-weight models: many parameters in total, only a fraction
+      active per token.
+    - **Post-training goes beyond SFT and RLHF.** Preference optimization (DPO
+      and variants) and reinforcement fine-tuning with verifiable rewards are now
+      common adaptation tools, alongside LoRA.
+
 The concepts every GenAI engineer should be fluent in: how models represent
 text, generate it, and how you adapt them. This underpins every other topic.
 
@@ -35,7 +52,7 @@ flowchart LR
 
 | Parameter | Effect |
 |-----------|--------|
-| **Temperature** | Higher = more random/creative; lower = more deterministic |
+| **Temperature** | Higher = more random/creative; lower = more deterministic (some reasoning models ignore it) |
 | **Top-p (nucleus)** | Sample from the smallest set of tokens summing to p |
 | **Top-k** | Sample from the k most likely tokens |
 | **Max tokens** | Caps output length |
@@ -66,6 +83,7 @@ flowchart TB
 | **RAG** | Adds knowledge | Low | Fresh/private/changing facts + citations |
 | **Fine-tuning** | Bakes in behavior/style | High | Consistent style/format, narrow domain |
 | **LoRA / PEFT** | Efficient fine-tune | Medium | Fine-tune without full retrain |
+| **Preference / RL fine-tuning** | Aligns outputs to preferences or graded rewards | High | Tasks with clear graders (DPO, reinforcement fine-tuning) |
 
 **Rule of thumb:** need *knowledge* → RAG; need *behavior/style* → fine-tune;
 need *quick change* → prompt. Most enterprise apps start with RAG.
@@ -78,7 +96,13 @@ need *quick change* → prompt. Most enterprise apps start with RAG.
   the weights (and possibly stale).
 - **Embeddings ≠ the LLM** — a separate (often smaller) model produces vectors
   for retrieval.
-- **Cost/latency** scale with tokens (input + output) and model size.
+- **Cost/latency** scale with tokens (input + output, including hidden
+  reasoning tokens) and model size.
+- **Reasoning vs non-reasoning models** — reasoning models trade latency and
+  cost for accuracy on multi-step problems; use them where the task needs it,
+  not by default.
+- **MoE** — only some "expert" sub-networks run per token, so a model's total
+  parameter count overstates its per-token compute.
 
 ## Interview deep dive
 
@@ -124,3 +148,31 @@ need *quick change* → prompt. Most enterprise apps start with RAG.
 | RAG vs fine-tune? | Knowledge vs behavior/style |
 | LoRA/PEFT? | Efficient fine-tuning without full retrain |
 | Hallucination fix? | Ground (RAG), "say you don't know", low temp, verify |
+
+## How interviewers probe this
+
+??? question "When would you pick a reasoning model over a fast non-reasoning model?"
+    A strong answer ties it to the task: multi-step math, code, planning, or
+    ambiguous analysis benefits from reasoning; extraction, classification, and
+    short chat usually don't. Measure accuracy, latency, and cost on your eval set,
+    tune effort or thinking budget, and route only the hard slice to the
+    expensive mode.
+
+??? question "Explain why the same prompt gives different answers, and how you make outputs dependable."
+    Sampling randomness, nondeterminism from batching and floating-point math on
+    the serving side, and silent model updates if versions aren't pinned. Make it
+    dependable with pinned versions, structured outputs and schema validation,
+    low temperature where supported, retries with repair, and evals that measure
+    the distribution of answers, not a single run.
+
+??? question "Fine-tune, RAG, or a bigger model? Walk through the decision."
+    Diagnose the gap first. Missing or changing knowledge points to RAG. A format
+    or behavior gap points to prompting, then fine-tuning. A reasoning-capability
+    gap points to a stronger or reasoning model. Factor in data availability,
+    maintenance cost (re-tuning on every base-model upgrade), and latency.
+
+??? question "What actually limits context length in practice?"
+    Attention cost and KV-cache memory grow with sequence length, so long
+    contexts cost more and slow down. Quality also degrades with long inputs well
+    before the advertised limit. Budget and order context deliberately instead of
+    filling the window.

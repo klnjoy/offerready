@@ -4,6 +4,8 @@ icon: material/rocket-launch
 
 # Requirements → Production (Flagship System Design)
 
+*Last reviewed: October 2026*
+
 The definitive senior/staff/principal exercise: take a vague business ask and
 drive it all the way to a production-ready, secured, operated system, out loud,
 defending every decision. This page walks one prompt end-to-end as a model, then
@@ -86,7 +88,12 @@ flowchart TB
   from context with citations.
 - **Agent strategy:** single agent with a **narrow tool set**; plan→act→observe
   with a step cap; read tools open, **write (create ticket) validated + gated**.
-- **Tools:** typed schemas, least-privilege service creds, sandboxed.
+- **Tools:** typed schemas, least-privilege service creds, sandboxed. Expose them
+  as **MCP servers behind a gateway** (OAuth per user, allowlisted and pinned tool
+  definitions) so other assistants can reuse them, and use on-behalf-of tokens so
+  the ticketing/HR APIs enforce the *user's* permissions.
+- **Context engineering:** keep the system prompt and tool definitions stable and
+  first (prompt-cache friendly), retrieve just in time, compact long conversations.
 
 ### 4. Security (see [AI Security](../AI-Security/index.md))
 
@@ -111,8 +118,9 @@ flowchart TB
 - Route to cheaper models; **prompt caching** for the fixed system/context prefix;
   cache frequent Q&A; **token budgets**; stream for perceived latency.
 - Scale the stateless gateway/agent horizontally; the model is the throughput
-  bottleneck, size/route accordingly. Rough cost model = requests/day × avg
-  tokens × per-token price − cache hit rate; put a **resource monitor**/budget alert on it.
+  bottleneck, size/route accordingly. Rough cost model = requests/day × (input
+  tokens × input price, discounted for prompt-cache hits + output tokens × output
+  price); put a budget alert on it and track **cost per resolved question**.
 
 ### 7. Governance & DR
 
@@ -124,8 +132,9 @@ flowchart TB
 
 ### 8. Verify & roll out
 
-- Golden/regression eval passes; injection suite passes; canary to one
-  org/region; watch quality/cost/latency/safety; expand; rollback path ready.
+- Golden/regression eval passes (for the agent: several trials per task, scored
+  on outcome and trajectory); injection suite passes; canary to one org/region;
+  watch quality/cost/latency/safety; expand; rollback path ready.
 
 ### Interviewer follow-ups (defend these)
 

@@ -4,6 +4,8 @@ icon: material/card-text
 
 # Master Cheat Sheets
 
+*Last reviewed: October 2026*
+
 Dense, last-minute recall sheets across the whole stack, the facts and framings
 you want fresh the morning of an interview. Each links to the deep page if you
 need to reopen it.
@@ -18,8 +20,9 @@ need to reopen it.
 ## LLM fundamentals
 
 - **Token** = sub-word unit; cost + context are counted in tokens.
-- **Temperature** 0 = deterministic; higher = more random. **top-p/top-k** = nucleus/rank sampling.
-- **Context window** = max tokens in/out; big context ≠ better (lost-in-the-middle, cost).
+- **Temperature** 0 = near-deterministic (not guaranteed identical); higher = more random. **top-p/top-k** = nucleus/rank sampling. Reasoning models: tune **reasoning effort** instead (thinking tokens bill as output).
+- **Context window** = max tokens in/out (frontier models ~1M in 2026); big context ≠ better (context rot, lost-in-the-middle, cost).
+- **Structured output** = provider JSON-schema mode; validate anyway.
 - **Function/tool calling** = model emits structured args for a described tool.
 - **RAG vs fine-tune:** RAG = facts/fresh/cited; fine-tune = behavior/format/style.
 - Model choice = quality × latency × cost × context × tool-use × safety.
@@ -42,7 +45,8 @@ need to reopen it.
 - Reliability: **step cap + cost budget + repeated-action detection**.
 - Least privilege: read tools open, **writes validated + gated**.
 - Single-agent by default; multi-agent only for truly distinct domains.
-- Eval **outcome + trajectory**, not just final answer.
+- Eval **outcome + trajectory**, not just final answer; run k trials (pass@k vs pass^k).
+- **Context engineering**: just-in-time retrieval, compaction, notes, sub-agents, small tool sets.
 → [Agent Principles](../GenAI-Topics/agent-principles/index.md)
 
 ## MCP
@@ -50,6 +54,7 @@ need to reopen it.
 - Standard protocol: **tools, resources, prompts**; client (app) ↔ server (exposes).
 - MCP vs function calling: protocol/transport vs model capability (complementary).
 - MCP vs A2A: agent→tools vs agent↔agent.
+- Current spec **2026-07-28**: stateless (no `initialize`/sessions), `server/discover`, MRTR; Sampling/Roots/Logging deprecated. Remote = **Streamable HTTP + OAuth 2.1** (resource indicators, no token passthrough).
 - Risks: malicious server, **tool poisoning** (description), rug pull, excessive perms, exfiltration.
 - Controls: allowlist, pin/sign, least-privilege short-lived creds (in server), sandbox+egress, audit.
 → [MCP](../GenAI-Topics/mcp/index.md)
@@ -69,7 +74,7 @@ need to reopen it.
 - Scale **up** = bigger warehouse (heavy query); **out** = multi-cluster (concurrency).
 - Time Travel (1d, up to 90) vs Fail-safe (7d, disaster) vs zero-copy clone.
 - Streams+Tasks (imperative CDC) vs Dynamic Tables (declarative).
-- **Cortex** = in-account GenAI (Analyst = NL→SQL, Search = RAG, LLM funcs); no egress, RBAC applies.
+- **Cortex** = governed GenAI in Snowflake's perimeter: AI functions (`AI_COMPLETE`, `AI_CLASSIFY`, `AI_FILTER`…), Search = RAG, Analyst = NL→SQL over semantic views, **Cortex Agents** orchestrate both; RBAC applies (watch cross-region inference).
 - Slow query → Query Profile: pruning, spill, exploding joins.
 → [Snowflake](../Technologies/snowflake/index.md) · [Snowflake Q&A](Snowflake_Interview_QA.md)
 
@@ -79,7 +84,8 @@ need to reopen it.
 - Data **skew** → AQE skew-join / **broadcast** small side / **salt** the key.
 - `repartition` (full shuffle) vs `coalesce` (no full shuffle).
 - Delta: **transaction log** → ACID/time-travel/MERGE; **OPTIMIZE** (small files) + **VACUUM**.
-- Partitioning vs Z-order vs liquid clustering; medallion bronze/silver/gold.
+- Liquid clustering (`CLUSTER BY` / `AUTO`) is the default for new tables (replaces partitioning + Z-order); medallion bronze/silver/gold.
+- DLT → **Lakeflow Declarative Pipelines** (Spark Declarative Pipelines in OSS).
 → [Databricks Q&A](Databricks_Interview_QA.md)
 
 ## SQL
@@ -120,7 +126,7 @@ need to reopen it.
 ## LLMOps / AgentOps
 
 - Managed API (fast, no ops) vs self-host vLLM/TGI (control, fixed cost, data-in).
-- Cost levers: **routing** + **caching** (prompt/semantic) + **token budgets**.
+- Cost levers: **routing** + **caching** (prompt/semantic) + **token budgets** + **batch APIs** (~50% off) + reasoning-effort tuning; track **cost per successful task**.
 - Version + eval-gate **prompts, models, datasets, retrieval config** as code.
 - Safe upgrade: pin → eval → canary → monitor → rollback (models drift).
 - AgentOps adds: tool registry, trajectory eval, loop/cost guards, HITL queues, replay.

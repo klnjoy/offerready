@@ -4,6 +4,8 @@ icon: material/lightbulb-on
 
 # Scenario Drills — Data & GenAI
 
+*Last reviewed: October 2026*
+
 Open-ended, real-world scenarios for **system design** and **"it broke in
 production"** situations — the parts of interviews (and the job) that trivia
 can't prepare you for. Each drill gives you the prompt, a **framework to attack
@@ -15,6 +17,7 @@ will throw next.
     2. **Think out loud** — talk through your approach before peeking.
     3. Reveal the **framework**, then the **walkthrough**; compare to yours.
     4. Handle the **curveballs** without looking. That's the real test.
+
     Related concept pages are linked at the bottom of each drill.
 
 ---
@@ -66,8 +69,8 @@ flowchart LR
     - *"Late-arriving data."* → lookback window on the merge, not just `> MAX(ts)`.
     - *"Cost doubled."* → check warehouse auto-suspend, Snowpipe on tiny files.
 
-    See: [Data Engineering](../Personal-SourceCode/DataEngineering_Interview_QA.md) ·
-    [Snowflake](../Personal-SourceCode/Snowflake_Interview_QA.md)
+    See: [Data Engineering](DataEngineering_Interview_QA.md) ·
+    [Snowflake](Snowflake_Interview_QA.md)
 
 ??? question "Design a production RAG assistant over a company's internal docs."
     **Clarify:** how many docs, how often they change, do answers need citations,
@@ -79,7 +82,8 @@ flowchart LR
     3. **Retrieve top-k → rerank** for precision; apply metadata filters.
     4. **Assemble context** within the token budget; instruct "answer only from
        context, cite sources, say 'not found' otherwise."
-    5. **Generate** with low temperature; **validate** citations.
+    5. **Generate** with low temperature (or low reasoning effort) and a structured
+       output schema; **validate** citations.
     6. **Guardrails + eval:** injection defense, an eval set (recall@k, faithfulness),
        feedback capture, quality-drift monitoring.
 
@@ -89,10 +93,12 @@ flowchart LR
     **Curveballs:**
     - *"It cites the wrong doc."* → retrieval problem first (log top-k), not prompting.
     - *"Docs change hourly."* → incremental re-index / target-lag, not full rebuild.
+    - *"A user saw a doc they don't have access to."* → enforce source ACLs at
+      retrieval time, and propagate permission changes and deletes to the index.
     - *"Data can't leave our account."* → in-warehouse (Cortex) or VPC-private inference.
 
     See: [RAG](../GenAI-Topics/rag/index.md) ·
-    [AI Engineer](../Personal-SourceCode/AI_Engineer_Interview_QA.md)
+    [AI Engineer](AI_Engineer_Interview_QA.md)
 
 ??? question "Design a multi-agent assistant that answers questions AND takes actions."
     **Clarify:** which actions (read vs write?), how reversible, who approves,
@@ -115,9 +121,11 @@ flowchart LR
     - *"It deleted something it shouldn't."* → destructive actions must be
       propose-then-approve, never direct.
     - *"A tool result said 'ignore your instructions'."* → injection; data ≠ commands.
+    - *"A third-party MCP server changed its tool descriptions overnight."* → rug
+      pull: pin and hash approved definitions, re-approve on change.
 
-    See: [Agents](../Personal-SourceCode/Agents_Interview_QA.md) ·
-    [MCP](../Personal-SourceCode/MCP_Interview_QA.md)
+    See: [Agents](Agents_Interview_QA.md) ·
+    [MCP](MCP_Interview_QA.md)
 
 ??? question "Design a metrics/BI layer that stays fast as data grows 100x."
     **Clarify:** query patterns, freshness needs, number of concurrent users,
@@ -139,8 +147,8 @@ flowchart LR
       exploding joins.
     - *"Costs spiked."* → resource monitors, auto-suspend, kill `SELECT *`.
 
-    See: [Snowflake](../Personal-SourceCode/Snowflake_Interview_QA.md) ·
-    [SQL](../Personal-SourceCode/SQL_Interview_QA.md)
+    See: [Snowflake](Snowflake_Interview_QA.md) ·
+    [SQL](SQL_Interview_QA.md)
 
 ---
 
@@ -155,7 +163,7 @@ flowchart LR
     with alerts, workload isolation, right-size. **Say how you'd confirm:** compare
     today's top queries to last week's.
 
-    See: [Snowflake](../Personal-SourceCode/Snowflake_Interview_QA.md)
+    See: [Snowflake](Snowflake_Interview_QA.md)
 
 ??? question "A Spark job passed on sample data but hangs at full scale."
     **Attack:** almost always **data skew** in a shuffle. Open the Spark UI, one
@@ -164,7 +172,7 @@ flowchart LR
     skewed. Also check partition sizing (~100–200 MB) and spill. **Verify:** re-run,
     watch the long stage's task distribution flatten.
 
-    See: [Databricks](../Personal-SourceCode/Databricks_Interview_QA.md)
+    See: [Databricks](Databricks_Interview_QA.md)
 
 ??? question "Your incremental model silently drops rows. Find the bug."
     **Attack:** row counts lower than source → usually the watermark or the key.
@@ -174,7 +182,7 @@ flowchart LR
     a column → set `on_schema_change`. **Verify:** `--full-refresh` rebuild + a
     row-count reconciliation test.
 
-    See: [dbt](../Personal-SourceCode/dbt_Interview_QA.md)
+    See: [dbt](dbt_Interview_QA.md)
 
 ??? question "A deploy broke prod and users are affected. What do you do?"
     **Attack, in order:** (1) **Restore service first** — roll back / flip
@@ -184,16 +192,18 @@ flowchart LR
     decouple deploy from release. (4) **Blameless postmortem.** The instinct to
     debug-before-restore is the classic junior mistake.
 
-    See: [DevOps](../Personal-SourceCode/DevOps_Interview_QA.md)
+    See: [DevOps](DevOps_Interview_QA.md)
 
 ??? question "The LLM feature is too slow and too expensive. Cut both."
-    **Attack — levers:** model **routing** (cheap model for easy cases), **caching**
-    (exact + semantic), **prompt/context trimming** (retrieve less, compact
-    history), **batching**, and **streaming** to cut *perceived* latency. Tokens =
+    **Attack — levers:** model **routing** (cheap model for easy cases), provider
+    **prompt caching** for the stable prefix plus exact/semantic response caching,
+    **prompt/context trimming** (retrieve less, compact history), **batch APIs** for
+    offline work, lower **reasoning effort** where evals allow, and **streaming** to
+    cut *perceived* latency. Tokens =
     cost + latency, so right-size context. **Verify:** measure per-request cost/
     latency before and after; optimize the top offenders, not everything.
 
-    See: [AI Engineer](../Personal-SourceCode/AI_Engineer_Interview_QA.md)
+    See: [AI Engineer](AI_Engineer_Interview_QA.md)
 
 ---
 
@@ -208,5 +218,6 @@ After a drill, can you answer these about *your* solution?
 - [ ] How would I *verify* it works (metric, test, canary)?
 
 !!! note "More labs"
-    This is the Scenario track. Live-coding drills and hackathon build challenges
-    are coming as separate Practice Labs pages.
+    This is the Scenario track. See also the
+    [Live-Coding Drills](Lab_LiveCoding_Drills.md) and
+    [Hackathon Build Challenges](Lab_Hackathon_Builds.md).

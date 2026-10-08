@@ -4,6 +4,23 @@ icon: material/database
 
 # Databricks
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **Liquid clustering is the default for new tables.** Databricks recommends
+      it over partitioning and `ZORDER` for all new tables. With `CLUSTER BY AUTO`
+      plus **predictive optimization**, Databricks picks the keys and runs
+      `OPTIMIZE` for you.
+    - **Delta Live Tables is now Lakeflow pipelines** (declarative pipelines),
+      part of **Lakeflow** with Lakeflow Connect for ingestion and Lakeflow Jobs
+      for orchestration. Existing DLT code keeps working.
+    - **Lakebase** (managed Postgres for OLTP next to the lakehouse) is GA, and
+      serverless compute is widely available for jobs, notebooks, pipelines, and
+      SQL warehouses.
+    - **GenAI moved up the stack.** Foundation Model APIs serve current Claude,
+      GPT, Gemini, Llama, and other models by endpoint name, and Agent Bricks
+      and AI/BI Genie cover agent building and natural-language analytics.
+
 Databricks is a unified **Lakehouse** platform built on Apache Spark and Delta
 Lake — combining the low-cost, open storage of a data lake with the reliability
 and performance of a warehouse, plus native ML/GenAI (Mosaic AI).
@@ -39,8 +56,9 @@ The storage layer that makes the lakehouse work:
 - **ACID transactions** on object storage (no more partial writes).
 - **Time Travel** — query/restore previous versions (`VERSION AS OF`).
 - **Schema enforcement & evolution**.
-- **`MERGE`** for upserts/CDC; **`OPTIMIZE`** + **Z-ordering** for file compaction
-  and data skipping; **`VACUUM`** to clean old files.
+- **`MERGE`** for upserts/CDC; **`OPTIMIZE`** for file compaction; **liquid
+  clustering** (or legacy Z-ordering) for data skipping; **`VACUUM`** to clean
+  old files.
 
 ```sql
 -- Upsert with Delta MERGE
@@ -49,8 +67,12 @@ USING staging.customers s ON t.id = s.id
 WHEN MATCHED THEN UPDATE SET *
 WHEN NOT MATCHED THEN INSERT *;
 
--- Optimize + data skipping
-OPTIMIZE gold.customers ZORDER BY (region, signup_date);
+-- Data skipping: liquid clustering (recommended for new tables)
+ALTER TABLE gold.customers CLUSTER BY (region, signup_date);  -- or CLUSTER BY AUTO
+OPTIMIZE gold.customers;                                       -- clusters incrementally
+
+-- Legacy equivalent on older tables
+-- OPTIMIZE gold.customers ZORDER BY (region, signup_date);
 ```
 
 ## Spark essentials
@@ -83,12 +105,13 @@ Centralized governance across workspaces: a three-level namespace
 | **Mosaic AI Model Serving** | Deploy/serve ML & LLM endpoints |
 | **Vector Search** | Managed vector index for RAG |
 | **AI Functions (`ai_query`)** | Call LLMs from SQL, like Snowflake Cortex |
-| **Genie** | Natural-language analytics over your data (text-to-insight) |
+| **AI/BI Genie** | Natural-language analytics over your data (text-to-insight) |
+| **Agent Bricks / Agent Framework** | Build, evaluate, and deploy agents on governed data |
 | **MLflow** | Experiment tracking, model registry, deployment |
 
 ```sql
 -- Call an LLM from Databricks SQL
-SELECT ai_query('databricks-meta-llama-3-70b-instruct',
+SELECT ai_query('databricks-meta-llama-3-3-70b-instruct',  -- check current endpoint names
                 'Summarize: ' || review) AS summary
 FROM feedback;
 ```
@@ -161,10 +184,11 @@ mix (heavy ML → Databricks; SQL-first + sharing → Snowflake), and openness n
     for the long task and its input size.
 
 ??? question "Design an ingestion pipeline for streaming + batch into the lakehouse."
-    **Medallion**: Auto Loader / Structured Streaming into **Bronze** (raw, append)
-    → cleanse/dedupe/conform into **Silver** (`MERGE` for CDC) → aggregate into
-    **Gold**. Delta gives ACID + Time Travel; `OPTIMIZE`/Z-order Gold for reads;
-    Unity Catalog governs it.
+    **Medallion**: Auto Loader / Structured Streaming (or Lakeflow pipelines)
+    into **Bronze** (raw, append) → cleanse/dedupe/conform into **Silver**
+    (`MERGE` or `AUTO CDC` for change data) → aggregate into **Gold**. Delta gives
+    ACID + Time Travel; liquid clustering on Gold for reads; Unity Catalog
+    governs it.
 
 ??? question "How do you handle GDPR 'delete my data' on an append-only lake?"
     Delta **`DELETE`** rewrites affected files transactionally; run **`VACUUM`** to
@@ -181,7 +205,10 @@ mix (heavy ML → Databricks; SQL-first + sharing → Snowflake), and openness n
 
 - Confusing **narrow vs wide** transformations (only wide ones shuffle).
 - Calling `collect()` on big data (pulls everything to the driver → OOM).
-- Not running `OPTIMIZE`/`VACUUM` → tiny-file problem, slow reads.
+- Not running `OPTIMIZE`/`VACUUM` (or not enabling predictive optimization) →
+  tiny-file problem, slow reads.
+- Proposing Hive-style partitioning + Z-order for a new table when liquid
+  clustering is the current recommendation.
 - Assuming Delta = Parquet (Delta adds the transaction log, ACID, Time Travel).
 - Ignoring partitioning strategy → skew and shuffle blowups.
 
@@ -244,10 +271,12 @@ speed and a money conversation.
 - **Kill the shuffle** — broadcast small sides, filter early (predicate
   pushdown), and pick partition keys that match your joins/filters.
 - **Fix the tiny-file problem** — many small files murder read performance. Run
-  `OPTIMIZE` (+ Z-order) to compact; use Auto Optimize / Optimized Writes on
-  streaming tables.
-- **Partition sensibly** — partition on low-cardinality, frequently-filtered
-  columns (date), not high-cardinality ones (user_id → millions of dirs).
+  `OPTIMIZE` to compact (or let predictive optimization do it); use Optimized
+  Writes / Auto Compaction on streaming tables.
+- **Cluster, don't over-partition** — on new tables use liquid clustering on the
+  columns you filter by. If you do partition (legacy or very large tables), use
+  low-cardinality columns (date), never high-cardinality ones (user_id →
+  millions of directories).
 - **Right-size clusters** — autoscaling for bursty jobs; **job clusters** (spun
   up per job, torn down after) over always-on all-purpose clusters for
   scheduled work; **spot/preemptible** instances for fault-tolerant batch.
@@ -339,7 +368,7 @@ Each drill: **diagnose → mitigate → prevent.**
 - [ ] Explain lakehouse = one copy + ACID/schema/perf via Delta.
 - [ ] Draw job → stage → task and name what causes a shuffle.
 - [ ] Name the three join strategies and when Spark picks each.
-- [ ] Know AQE, Photon, and OPTIMIZE/Z-order/VACUUM by name.
+- [ ] Know AQE, Photon, liquid clustering, predictive optimization, and OPTIMIZE/VACUUM by name.
 - [ ] Tie cost to DBUs × time and list three levers.
 - [ ] Describe Unity Catalog's three-level namespace + lineage + masking.
 - [ ] Handle a skew incident and a GDPR-erasure incident out loud.

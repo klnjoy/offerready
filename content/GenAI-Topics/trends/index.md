@@ -4,6 +4,8 @@ icon: material/trending-up
 
 # GenAI Trends & Market (2026 snapshot)
 
+*Last reviewed: October 2026*
+
 !!! warning "This is a point-in-time snapshot"
     GenAI moves fast — model names and numbers below reflect **~mid/late 2026**
     and will age quickly. Treat this as a *pattern* map, not a live feed. Always
@@ -33,9 +35,9 @@ competing on price/performance rather than a single leader.
 
 | Tier | Examples (2026) | Typical use |
 |------|-----------------|-------------|
-| Frontier reasoning/coding | GPT-5.x, Claude Opus 4.x, Gemini 3.x Pro | Hard reasoning, codebase-level tasks |
-| Cost-efficient workhorse | Claude Sonnet, Gemini Flash, GPT mini tiers | High-volume, latency-sensitive |
-| Open-weight / self-host | Llama, Qwen 3.x, DeepSeek V4, Mistral Large 3 | Private/air-gapped, price-sensitive |
+| Frontier reasoning/coding | GPT-5.x / GPT-6 family, Claude Opus 5.x, Gemini 3.x Pro | Hard reasoning, codebase-level tasks |
+| Cost-efficient workhorse | Claude Sonnet / Haiku, Gemini Flash, GPT mini/nano tiers | High-volume, latency-sensitive |
+| Open-weight / self-host | Llama, Qwen 3.x, DeepSeek V4.x, Mistral Large, OpenAI gpt-oss | Private/air-gapped, price-sensitive |
 
 Talking points, grounded in current comparisons
 (industry sources: azumo.com, aimlapi.com):
@@ -58,9 +60,12 @@ enterprise stack is two complementary protocols
 
 | Protocol | Connects | Role |
 |----------|----------|------|
-| **MCP** (Anthropic) | agent → tools/data | "USB-C for tools"; ~97M+ downloads reported |
-| **A2A** (Google → Linux Foundation) | agent → agent | cross-vendor agent coordination; 150+ orgs |
-| **ACP** | agent → agent (intra-enterprise) | REST-style messaging inside one org |
+| **MCP** (Anthropic → Linux Foundation's Agentic AI Foundation, Dec 2025) | agent → tools/data | "USB-C for tools"; stateless remote servers with OAuth as of the `2026-07-28` spec |
+| **A2A** (Google → Linux Foundation) | agent → agent | cross-vendor agent coordination; v1.0 stable; 150+ orgs |
+
+IBM's **ACP** (Agent Communication Protocol) was a third contender in 2025, but
+it **merged into A2A** in August 2025, so treat it as history rather than a
+separate layer.
 
 - **They're layers, not competitors** — a serious deployment runs MCP *and* A2A
   (source: beam.ai).
@@ -132,6 +137,8 @@ From current interview guides
 | Q | A |
 |---|---|
 | Two-protocol agent stack? | MCP (tools) + A2A (agent-to-agent) |
+| What happened to ACP? | Merged into A2A (Aug 2025) |
+| Agent security reference? | OWASP Top 10 for Agentic Applications (Dec 2025) + LLM Top 10 2026 |
 | Why do agent pilots stall? | Reliability, cost, governance — not model quality |
 | RAG for multi-hop questions? | GraphRAG |
 | How do you prove a RAG answer is grounded? | Faithfulness metric + LLM-as-judge |
@@ -141,3 +148,30 @@ From current interview guides
 - Skim a model-comparison site + one agent-protocol source monthly.
 - Track the vendor blogs (OpenAI, Anthropic, Google DeepMind, Meta, Mistral).
 - Re-run this page's questions against the [retrieval agent](../../Start-Here/index.md).
+
+## How interviewers probe this
+
+??? question "What has actually changed in the last 12 months that affects how you'd build an agent today?"
+    A strong answer names concrete shifts: stable frameworks (LangChain/LangGraph
+    1.x), managed agent runtimes with policy and evaluation (AgentCore, Cortex
+    Agents), MCP moving to stateless remote servers with OAuth under neutral
+    governance, A2A reaching v1.0, and OWASP's agentic and 2026 LLM risk lists.
+    It then explains which of these it would adopt and why.
+
+??? question "How do you stay model-agnostic when the frontier changes every few months?"
+    Put a gateway or abstraction between app and provider, keep evals that can
+    score any model, store prompts per model, use structured outputs and tool
+    schemas rather than provider quirks, and treat a model swap as a release with
+    canary and rollback.
+
+??? question "Open-weight or closed frontier model for a regulated workload?"
+    Weigh data residency and control, capability gaps on your eval set, total
+    cost (GPUs and ops versus per-token pricing), license terms, and the team's
+    ability to run inference safely. Often the answer is both, routed by data
+    sensitivity and task difficulty.
+
+??? question "Why do so many agent pilots fail to reach production?"
+    Unreliable task success on real inputs, no evaluation harness, unclear
+    ownership of actions, security reviews blocked on excessive agency and prompt
+    injection, and costs that don't fit unit economics. Describe how you'd
+    address each one.

@@ -4,6 +4,8 @@ icon: material/account-tie
 
 # System Design + Mock Interview
 
+*Last reviewed: October 2026*
+
 Bring it together: a full Cortex system-design walkthrough you can narrate on a
 whiteboard, then a timed mock interview with model answers. Pairs with the
 vendor-neutral [Master Interview Simulator](../Personal-SourceCode/Interview_Master_Simulator.md).
@@ -54,9 +56,9 @@ flowchart TB
 | Structured Q&A | **Cortex Analyst** over a curated **semantic view** | Governed SQL; definitions/metrics encoded once |
 | Unstructured Q&A | **Cortex Search** (hybrid, managed) | Native RAG; no separate vector store to secure |
 | Orchestration | **Cortex Agent** with both as tools | Handles cross-domain, multi-step questions; managed loop |
-| Ingestion/enrichment | **Snowpipe** + **AISQL** (`AI_FILTER`, `SENTIMENT`) via **Streams/Tasks** | Turn text into structured signals for cheap SQL later |
+| Ingestion/enrichment | **Snowpipe** + **Cortex AI Functions** (`AI_FILTER`, `AI_SENTIMENT`, `AI_EXTRACT`) via **Streams/Tasks** | Turn text into structured signals for cheap SQL later |
 | PII | **Object tags + tag-based masking**, row-access policies | Protection follows classification into AI results |
-| Cost | Per-workload warehouses, **resource monitors**, model routing, pre-inference filters | Predictable credits; runaway loops trip alerts |
+| Cost | Per-workload warehouses with **resource monitors**, alerts on **Cortex usage-history views** + per-user AI limits, model routing, pre-inference filters | Predictable credits; warehouse *and* token spend trip alerts |
 | UX | **CoWork** for internal, **REST API** for a custom app | Meet users where they are; thin client, Threads hold state |
 | Quality | **Eval set** + LLM-judge + user feedback in CI | Catch regressions on model/semantic-view changes |
 
@@ -79,7 +81,8 @@ auto-renewal clause."*
   data, not instructions; write tools gated.
 - **Wrong numbers** after a schema change → semantic view versioned, eval set in
   CI.
-- **Cost spike** → resource monitors + pre-inference filters + model routing.
+- **Cost spike** → Cortex usage alerts + per-user limits + pre-inference filters +
+  model routing (resource monitors alone won't catch token spend).
 - **Over-broad access** → least-privilege roles; tools run under caller context.
 
 !!! tip "Scoring signal"
@@ -130,8 +133,9 @@ Give yourself the time budget; answer aloud, then check.
 ??? question "How do you keep this within a monthly credit budget?"
     Token volume × model tier is the driver. Filter with cheap SQL before
     inference, route easy questions to small models, batch enrichment with
-    Streams/Tasks, tune Search target lag to real needs, and put resource
-    monitors with alerts on the Cortex warehouses.
+    Streams/Tasks, tune Search target lag to real needs, put resource monitors on
+    the warehouses, and alert on `CORTEX_AI_FUNCTIONS_USAGE_HISTORY` with
+    per-user limits, because resource monitors don't cap AI token credits.
 
 ### Curveballs (15 min)
 
@@ -149,7 +153,7 @@ Give yourself the time budget; answer aloud, then check.
 
 ??? question "The demo works; what would you fix before production?"
     Add an **eval set** in CI (guarding the semantic view and model choice),
-    resource monitors + cost-per-question dashboard, masking/row-access on every
+    Cortex usage alerts + cost-per-question dashboard, masking/row-access on every
     sensitive column, audit review, output validation before serving, and
     monitoring of tool latency/failure. Then a rollback plan for model/semantic
     changes.

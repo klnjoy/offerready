@@ -4,6 +4,22 @@ icon: material/database-search
 
 # RAG (Retrieval-Augmented Generation)
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **Agentic RAG is the default for complex questions.** The model decides
+      whether to retrieve, rewrites queries, retrieves several times, and checks
+      sufficiency, instead of one fixed retrieve-then-generate pass.
+    - **Long context didn't kill RAG.** Bigger windows help, but cost, latency,
+      quality loss on long inputs, access control, and freshness keep retrieval
+      central. Teams combine the two: retrieve, then give generous context.
+    - **Chunk context matters.** Contextual chunk embeddings (adding
+      document-level context to each chunk before embedding) and late-interaction
+      or multi-vector retrieval are common upgrades over plain chunking.
+    - **Managed RAG is everywhere:** Bedrock Knowledge Bases, Snowflake Cortex
+      Search, Databricks Vector Search, and Vertex AI Search, often with built-in
+      reranking and metadata filtering.
+
 RAG grounds an LLM in your own data: instead of relying only on what the model
 memorized, you **retrieve** relevant chunks at query time and put them in the
 prompt so the model answers from facts you control.
@@ -39,10 +55,10 @@ the prompt as grounding context.
 | Decision | Options | Guidance |
 |----------|---------|----------|
 | **Chunking** | Fixed size, recursive, semantic, by heading | Overlap ~10–20%; keep chunks self-contained |
-| **Embeddings** | OpenAI, Cohere, Bedrock Titan, open models | Match model to domain & language |
+| **Embeddings** | OpenAI, Cohere, Voyage, Bedrock Titan/Nova, open models — see **[Embeddings](../embeddings/index.md)** | Match model to domain & language |
 | **Vector store** | pgvector, Pinecone, FAISS, Cortex Search, Databricks Vector Search — see **[Vector DB](../vector-db/index.md)** | Managed vs self-hosted trade-off |
 | **Retrieval** | Dense, sparse (BM25), **hybrid** | Hybrid usually wins for keywords + meaning |
-| **Re-ranking** | Cross-encoder reranker | Boosts precision on the top-k |
+| **Re-ranking** | Cross-encoder reranker — see **[Retrieval Tuning](../retrieval-tuning/index.md)** | Boosts precision on the top-k |
 
 ## Improving quality
 
@@ -50,6 +66,12 @@ the prompt as grounding context.
 - **Query rewriting / expansion** for vague questions.
 - **Metadata filtering** (date, source, tenant) to constrain retrieval.
 - **Return citations** so answers are verifiable.
+- **Agentic retrieval** — let the model decide when and what to retrieve, with a
+  cap on retrieval rounds.
+- **Contextual chunks** — prepend document/section context to each chunk before
+  embedding so chunks stay meaningful on their own.
+- **GraphRAG** for multi-hop, relationship-heavy questions — see
+  [Graph DB & GraphRAG](../graph-db/index.md).
 - **Evaluate**: faithfulness (grounded?), answer relevance, context precision/recall.
 
 ## Common failure modes

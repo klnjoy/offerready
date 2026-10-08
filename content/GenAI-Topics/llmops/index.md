@@ -4,6 +4,22 @@ icon: material/cog-sync
 
 # LLMOps / Deployment
 
+*Last reviewed: October 2026*
+
+!!! info "What's changed recently"
+    - **Serving engines consolidated.** Hugging Face put **TGI into maintenance
+      mode** and now recommends **vLLM** and **SGLang** (plus llama.cpp or MLX
+      for local use). New self-hosted stacks should start there.
+    - **Kubernetes-native distributed inference** (prefill/decode
+      disaggregation, KV-cache-aware routing via the Gateway API Inference
+      Extension and llm-d-style schedulers) is how large self-hosted deployments
+      scale now.
+    - **Managed APIs added cost and latency tiers** (batch, flex, priority) and
+      cached-input pricing, which changes the managed vs self-host math.
+    - **Agent operations got managed tooling.** Online evaluators and trace-based
+      monitoring now ship in platforms (for example AgentCore Evaluations and
+      Snowflake Cortex Agent evaluations, both GA in March 2026).
+
 LLMOps is MLOps for LLM apps: **serving, scaling, cost control, caching,
 versioning, and lifecycle** of models and prompts in production. It's what turns
 a working prototype into a reliable, affordable service.
@@ -16,7 +32,7 @@ a working prototype into a reliable, affordable service.
 flowchart TB
     APP[Your app / API] --> CHOICE{Serving path}
     CHOICE -->|managed| API[Hosted API: Bedrock / OpenAI / Azure]
-    CHOICE -->|self-host| SRV[Inference server: vLLM / TGI]
+    CHOICE -->|self-host| SRV[Inference server: vLLM / SGLang]
     SRV --> GPU[(GPUs)]
     API --> APP2[Response]
     SRV --> APP2
@@ -25,7 +41,7 @@ flowchart TB
 | Path | Pros | Cons |
 |------|------|------|
 | **Managed API** (Bedrock, OpenAI, Azure) | No infra, fast to ship, scales | Per-token cost, less control, data-egress concerns |
-| **Self-hosted** (vLLM, TGI, Ollama) | Control, data stays in, fixed cost | You manage GPUs, scaling, ops |
+| **Self-hosted** (vLLM, SGLang; Ollama/llama.cpp for local) | Control, data stays in, fixed cost | You manage GPUs, scaling, ops |
 
 ## Performance & cost levers
 
@@ -65,7 +81,7 @@ flowchart TB
 
 ### 60-second talking points
 
-- **"Managed API to ship fast; self-host (vLLM/TGI) for control and fixed cost."**
+- **"Managed API to ship fast; self-host (vLLM/SGLang) for control and fixed cost."**
 - **"Biggest cost levers: caching, right-sizing/routing, and token budgets."**
 - **"Treat prompts and model versions as code, gated by an eval suite."**
 
@@ -79,7 +95,7 @@ flowchart TB
 
 ??? question "Design deployment for a customer-facing RAG chatbot."
     App/API (FastAPI) → retrieval → **managed model (Bedrock)** or self-hosted
-    vLLM → guardrails → streaming response. Add caching, timeouts+retries with a
+    vLLM/SGLang → guardrails → streaming response. Add caching, timeouts+retries with a
     fallback model, rate limiting, tracing/monitoring, prompt/model versioning,
     and CI evals. Canary new versions.
 
@@ -106,7 +122,7 @@ flowchart TB
 | Q | A |
 |---|---|
 | Managed vs self-host? | Speed/no-ops vs control/fixed-cost/data-in |
-| Self-host servers? | vLLM, TGI, Ollama |
+| Self-host servers? | vLLM, SGLang (TGI is in maintenance mode); Ollama/llama.cpp locally |
 | Prompt caching? | Reuse a fixed prefix across calls to cut cost/latency |
 | Model routing? | Cheap model for easy queries, strong for hard |
 | Safe model upgrade? | Pin, eval, canary, monitor, roll back |

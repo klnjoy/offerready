@@ -4,6 +4,8 @@ icon: material/stairs-up
 
 # Path: Staff / Principal AI Architect
 
+*Last reviewed: October 2026*
+
 A curated preparation path for **Staff** and **Principal**-level AI engineering
 and architecture interviews. This page is your *plan* — what to read, in what
 order, what to emphasize, and how to know you're ready. It routes into existing
@@ -80,7 +82,7 @@ Work top to bottom. Each step says **what to emphasize at this level**.
   *class* of incident org-wide" (the Principal move).
 - **Reframe drill:** for a given ask, practice saying *"the real problem is X; here's
   whether we should solve it with AI at all"* before designing.
-- **Full run:** the [Master Interview Simulator](Interview_Master_Simulator.md)
+- **Full run:** the [Mock Interview](Interview_Master_Simulator.md) (OfferReady app)
   end to end, then check yourself against the [Master Cheat Sheets](Interview_Cheat_Sheets.md).
 
 ---
