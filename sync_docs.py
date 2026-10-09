@@ -1023,11 +1023,15 @@ def write_nav(md_catalog, modules) -> None:
         P = "Personal-SourceCode/"
         # base filename -> display label (label overrides NAV_LABEL_OVERRIDES here)
         groups: list[tuple[str, list[tuple[str, str]]]] = [
-            ("Choose Your Path", [
-                ("Path_AI_Engineer.md", "AI / GenAI Engineer"),
-                ("Path_Staff_Principal_Architect.md", "Staff / Principal Architect"),
+            # Role guides: what the role is, the loop by company type, a
+            # senior-vs-staff rubric, likely questions and a 14-day plan.
+            # Filenames keep the Path_ prefix so existing links keep working.
+            ("Role guides", [
+                ("Path_AI_Engineer.md", "AI Engineer"),
                 ("Path_FDE.md", "Forward Deployed Engineer"),
-                ("Path_Data_Platform.md", "Data & AI / Platform Engineer"),
+                ("Path_AI_Platform_Engineer.md", "AI Platform Engineer"),
+                ("Path_Data_Platform.md", "Data Platform Engineer"),
+                ("Path_Staff_Principal_Architect.md", "Staff / Principal AI Architect"),
             ]),
             ("By Level & Role", [
                 ("Interview_Level_Comparison.md", "Senior / Staff / Principal / FDE"),
@@ -1076,12 +1080,13 @@ def write_nav(md_catalog, modules) -> None:
 
         # Map available interview pages by base filename.
         available = {Path(rel).name: rel for rel, _t in interview_entries}
-        # Curated per-level path pages: authored under personal-docs/ and always
+        # Curated role-guide pages: authored under personal-docs/ and always
         # synced to Personal-SourceCode/, but their filenames don't match the
         # interview catalog keywords, so register them explicitly (only if the
         # synced file is actually present).
         for _pb in ("Path_AI_Engineer.md", "Path_Staff_Principal_Architect.md",
-                    "Path_FDE.md", "Path_Data_Platform.md"):
+                    "Path_FDE.md", "Path_Data_Platform.md",
+                    "Path_AI_Platform_Engineer.md"):
             if (DOCS_DIR / P / _pb).exists():
                 available[_pb] = f"{P}{_pb}"
         index_base = "Interview_Guide_Overview.md"
