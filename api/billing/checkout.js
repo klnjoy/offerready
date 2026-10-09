@@ -122,6 +122,9 @@ async function handler(req, res) {
       customerId: customerId || undefined,
       customerEmail: user.email || undefined,
       clientReferenceId: user.id,
+      // A double-click or retry within the same minute gets the same session
+      // back instead of a second one.
+      idempotencyKey: 'checkout:' + user.id + ':' + option + ':' + Math.floor(Date.now() / 60000),
       successUrl: urls.successUrl,
       cancelUrl: urls.cancelUrl,
     });

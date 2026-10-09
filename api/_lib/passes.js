@@ -263,11 +263,85 @@ async function grantPack(userId, kind, sessionId) {
   }
 }
 
+// ---- take back (refund / dispute; webhook only) -----------------------------------
+
+/**
+ * End the pass bought in `sessionId` after a full refund or a dispute: delete
+ * it, move any queued passes up so they start now or when the previous one
+ * ends, then let billing.syncProAfterRevoke trim the Pro rows. Idempotent.
+ * @returns {Promise<{ revoked: boolean, duplicate?: boolean }>}
+ */
+async function revokePass(userId, sessionId, reason, nowMs) {
+  const billing = require('./billing');
+  const now = typeof nowMs === 'number' ? nowMs : Date.now();
+  const key = 'revoke:' + sessionId;
+  const fresh = await billing.claimOnce(key, 'pass.revoked', { session_id: sessionId, user_id: userId, reason });
+  if (!fresh) return { revoked: false, duplicate: true };
+  try {
+    const del = await rest(`/passes?stripe_session_id=eq.${encodeURIComponent(sessionId)}`, {
+      method: 'DELETE', headers: svcHeaders({ Prefer: 'return=minimal' }),
+    });
+    if (!del.ok) throw new Error('passes delete ' + del.status);
+    // Re-chain the passes still to come so there's no gap where the removed one was.
+    const resp = await rest(
+      `/passes?user_id=eq.${encodeURIComponent(userId)}&expires_at=gt.${encodeURIComponent(new Date(now).toISOString())}` +
+        '&select=kind,starts_at,expires_at,stripe_session_id&order=starts_at.asc',
+      { method: 'GET', headers: svcHeaders() }
+    );
+    if (!resp.ok) throw new Error('passes read ' + resp.status);
+    const rows = (await resp.json()) || [];
+    let prevEnd = now;
+    for (const r of rows) {
+      const s0 = Date.parse(r.starts_at);
+      if (s0 <= now) { prevEnd = Math.max(prevEnd, Date.parse(r.expires_at)); continue; }
+      const start = Math.max(now, prevEnd);
+      if (start < s0 && r.stripe_session_id && isPass(r.kind)) {
+        const end = start + PASSES[r.kind].days * DAY_MS;
+        const up = await rest(`/passes?stripe_session_id=eq.${encodeURIComponent(r.stripe_session_id)}`, {
+          method: 'PATCH', headers: svcHeaders({ Prefer: 'return=minimal' }),
+          body: JSON.stringify({ starts_at: new Date(start).toISOString(), expires_at: new Date(end).toISOString() }),
+        });
+        if (!up.ok) throw new Error('passes update ' + up.status);
+        prevEnd = end;
+      } else {
+        prevEnd = Math.max(prevEnd, Date.parse(r.expires_at));
+      }
+    }
+    await billing.syncProAfterRevoke(userId);
+    return { revoked: true };
+  } catch (err) {
+    await billing.releaseClaim(key);
+    throw err;
+  }
+}
+
+/** Take back a refunded or disputed pack's credits (the balance may go below zero). Idempotent. */
+async function revokePack(userId, kind, sessionId, reason) {
+  if (!isPack(kind)) throw new Error('unknown pack ' + kind);
+  const billing = require('./billing');
+  const key = 'revoke:' + sessionId;
+  const fresh = await billing.claimOnce(key, 'pack.revoked', { session_id: sessionId, user_id: userId, reason });
+  if (!fresh) return { revoked: false, duplicate: true };
+  try {
+    const pack = PACKS[kind];
+    const resp = await rest('/credit_ledger', {
+      method: 'POST',
+      headers: svcHeaders({ Prefer: 'return=minimal' }),
+      body: JSON.stringify({ user_id: userId, feature: pack.feature, delta: -pack.amount, source: reason + ':' + sessionId }),
+    });
+    if (!resp.ok) throw new Error('credit insert ' + resp.status);
+    return { revoked: true };
+  } catch (err) {
+    await billing.releaseClaim(key);
+    throw err;
+  }
+}
+
 module.exports = {
   PASSES, PASS_KINDS, PACKS, PACK_KINDS, CREDIT_FEATURES, DAY_MS,
   isPass, isPack, priceFor,
   livePasses, combine, passCoverage, lastPassCustomer,
   creditBalance, spendCredit,
-  grantPass, grantPack,
+  grantPass, grantPack, revokePass, revokePack,
   configured,
 };

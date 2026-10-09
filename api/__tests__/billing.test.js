@@ -130,6 +130,17 @@ function stub(world) {
         w.passes.push(row);
         return resp(201, null);
       }
+      if (method === 'DELETE') {
+        const f = filtersOf(u);
+        w.passes = w.passes.filter((r) => !matches(r, f));
+        return resp(204, null);
+      }
+      if (method === 'PATCH') {
+        const f = filtersOf(u);
+        const patch = JSON.parse(o.body);
+        w.passes.forEach((r, i) => { if (matches(r, f)) w.passes[i] = Object.assign({}, r, patch); });
+        return resp(204, null);
+      }
     }
     if (u.startsWith(SB + '/rest/v1/credit_ledger')) {
       const row = JSON.parse(o.body);
@@ -152,7 +163,11 @@ function stub(world) {
     if (u.startsWith(SB + '/rest/v1/jobs')) return resp(200, [], { 'content-range': '*/0' });
     if (u.startsWith('https://api.stripe.com/v1/')) {
       const params = new URLSearchParams(o.body || '');
-      w.stripeCalls.push({ path: u.slice('https://api.stripe.com/v1'.length), method, params });
+      w.stripeCalls.push({ path: u.slice('https://api.stripe.com/v1'.length), method, params, headers: o.headers || {} });
+      if (u.includes('/checkout/sessions') && method === 'GET') {
+        const pi = new URL(u).searchParams.get('payment_intent');
+        return resp(200, { data: (w.stripeSessions || []).filter((x) => x.payment_intent === pi) });
+      }
       if (u.includes('/checkout/sessions')) return resp(200, { id: 'cs_new', url: 'https://checkout.stripe.com/c/pay/cs_new' });
       if (u.includes('/billing_portal/sessions')) {
         if (w.portalError) return resp(400, { error: { message: 'No configuration provided' } });
@@ -224,7 +239,7 @@ function sprintEvent(id, sessionId, extra) {
 const proRows = (w) => w.entitlements.filter((r) => PRO_FEATURES.includes(r.feature));
 const marker = (w) => w.entitlements.find((r) => r.feature === SPRINT_FEATURE);
 
-const ENV_KEYS = ['STRIPE_SECRET_KEY', 'STRIPE_PRO_MONTHLY_PRICE_ID', 'STRIPE_PRO_ANNUAL_PRICE_ID', 'STRIPE_SPRINT_PRICE_ID', 'STRIPE_PASS_JOB_PRICE_ID', 'STRIPE_PASS_30_PRICE_ID', 'STRIPE_PASS_90_PRICE_ID', 'STRIPE_PASS_365_PRICE_ID', 'STRIPE_MOCK_PACK_PRICE_ID', 'STRIPE_WEBHOOK_SECRET', 'OPENAI_API_KEY'];
+const ENV_KEYS = ['STRIPE_SECRET_KEY', 'STRIPE_PRO_MONTHLY_PRICE_ID', 'STRIPE_PRO_ANNUAL_PRICE_ID', 'STRIPE_SPRINT_PRICE_ID', 'STRIPE_PASS_JOB_PRICE_ID', 'STRIPE_PASS_30_PRICE_ID', 'STRIPE_PASS_90_PRICE_ID', 'STRIPE_PASS_365_PRICE_ID', 'STRIPE_MOCK_PACK_PRICE_ID', 'STRIPE_API_VERSION', 'STRIPE_WEBHOOK_SECRET', 'OPENAI_API_KEY'];
 
 let errSpy;
 test.beforeEach(() => {
@@ -984,5 +999,95 @@ test('me/plan: a live pass shows as pro_source pass with its end date', async ()
     assert.equal(b.billing.pro_expires_at, end);
     assert.equal(b.billing.pass_kind, 'pass90');
     assert.equal(b.billing.portal, true);
+  } finally { s.restore(); }
+});
+
+// ---- hardening: API version, idempotency, refunds and disputes ----------------------
+
+test('checkout: pins the Stripe API version and sends an idempotency key per user+option+minute', async () => {
+  process.env.STRIPE_SECRET_KEY = 'sk_test_x';
+  process.env.STRIPE_PASS_90_PRICE_ID = 'price_p90';
+  const handler = require('../billing/checkout');
+  const s = stub();
+  try {
+    await handler(req('POST', { app: true, option: 'pass90' }, 'good-token'), fakeRes());
+    const h = s.w.stripeCalls[0].headers;
+    assert.equal(h['Stripe-Version'], '2025-03-31.basil');
+    assert.match(h['Idempotency-Key'], new RegExp('^checkout:' + USER + ':pass90:\\d+$'));
+    process.env.STRIPE_API_VERSION = '2026-01-28.clover';
+    await handler(req('POST', { app: true, option: 'pass90' }, 'good-token'), fakeRes());
+    assert.equal(s.w.stripeCalls[1].headers['Stripe-Version'], '2026-01-28.clover');
+  } finally { s.restore(); }
+});
+
+function chargeEvent(id, type, obj) {
+  return { id, type, data: { object: Object.assign({ id: 'ch_1', object: 'charge', payment_intent: 'pi_1' }, obj || {}) } };
+}
+
+test('webhook refund: a full refund ends the pass and moves a queued pass up; Pro follows', async () => {
+  process.env.STRIPE_WEBHOOK_SECRET = WHSEC;
+  process.env.STRIPE_SECRET_KEY = 'sk_test_x';
+  const handler = require('../billing/webhook');
+  const s = stub();
+  try {
+    await handler(webhookReq(passEvent('evt_a', 'cs_a', 'pass30')), fakeRes());
+    await handler(webhookReq(passEvent('evt_b', 'cs_b', 'pass90')), fakeRes());
+    s.w.stripeSessions = [{ id: 'cs_a', mode: 'payment', payment_intent: 'pi_1', client_reference_id: USER, metadata: { user_id: USER, option: 'pass30' } }];
+    const t0 = Date.now();
+    await handler(webhookReq(chargeEvent('evt_r1', 'charge.refunded', { refunded: true })), fakeRes());
+    assert.deepEqual(s.w.passes.map((p) => p.stripe_session_id), ['cs_b']);
+    const b = s.w.passes[0];
+    assert.ok(Math.abs(Date.parse(b.starts_at) - t0) < 5000, 'queued pass starts now');
+    assert.ok(Math.abs(Date.parse(b.expires_at) - (t0 + 90 * DAY)) < 5000);
+    for (const r of proRows(s.w)) { assert.equal(r.status, 'active'); assert.equal(r.expires_at, b.expires_at); }
+    // Same refund delivered again: nothing more happens.
+    await handler(webhookReq(chargeEvent('evt_r1b', 'charge.refunded', { refunded: true })), fakeRes());
+    assert.equal(s.w.passes.length, 1);
+  } finally { s.restore(); }
+});
+
+test('webhook refund: the only pass refunded -> Pro revoked; a partial refund keeps it', async () => {
+  process.env.STRIPE_WEBHOOK_SECRET = WHSEC;
+  process.env.STRIPE_SECRET_KEY = 'sk_test_x';
+  const handler = require('../billing/webhook');
+  const s = stub();
+  try {
+    await handler(webhookReq(passEvent('evt_a', 'cs_a', 'job')), fakeRes());
+    s.w.stripeSessions = [{ id: 'cs_a', mode: 'payment', payment_intent: 'pi_1', metadata: { user_id: USER, option: 'job' } }];
+    await handler(webhookReq(chargeEvent('evt_p', 'charge.refunded', { refunded: false, amount_refunded: 500 })), fakeRes());
+    assert.equal(s.w.passes.length, 1, 'partial refund keeps the pass');
+    await handler(webhookReq(chargeEvent('evt_f', 'charge.refunded', { refunded: true })), fakeRes());
+    assert.equal(s.w.passes.length, 0);
+    for (const r of proRows(s.w)) assert.equal(r.status, 'revoked');
+  } finally { s.restore(); }
+});
+
+test('webhook dispute: a disputed mock pack takes its credits back; unknown payments are ignored', async () => {
+  process.env.STRIPE_WEBHOOK_SECRET = WHSEC;
+  process.env.STRIPE_SECRET_KEY = 'sk_test_x';
+  const handler = require('../billing/webhook');
+  const s = stub();
+  try {
+    await handler(webhookReq(passEvent('evt_m', 'cs_m', 'mock10')), fakeRes());
+    s.w.stripeSessions = [{ id: 'cs_m', mode: 'payment', payment_intent: 'pi_1', metadata: { user_id: USER, option: 'mock10' } }];
+    await handler(webhookReq({ id: 'evt_d', type: 'charge.dispute.created', data: { object: { id: 'dp_1', object: 'dispute', charge: 'ch_1', payment_intent: 'pi_1' } } }), fakeRes());
+    assert.deepEqual(s.w.ledger.map((r) => r.delta), [10, -10]);
+    await handler(webhookReq({ id: 'evt_d2', type: 'charge.dispute.created', data: { object: { id: 'dp_2', payment_intent: 'pi_other' } } }), fakeRes());
+    assert.equal(s.w.ledger.length, 2);
+  } finally { s.restore(); }
+});
+
+test('webhook refund: an active subscription keeps Pro when a pass is refunded', async () => {
+  process.env.STRIPE_WEBHOOK_SECRET = WHSEC;
+  process.env.STRIPE_SECRET_KEY = 'sk_test_x';
+  const handler = require('../billing/webhook');
+  const subEnd = new Date(Date.now() + 20 * DAY).toISOString();
+  const s = stub({ subscriptions: [{ user_id: USER, stripe_customer_id: 'cus_1', stripe_subscription_id: 'sub_1', status: 'active', current_period_end: subEnd }] });
+  try {
+    await handler(webhookReq(passEvent('evt_a', 'cs_a', 'pass90')), fakeRes());
+    s.w.stripeSessions = [{ id: 'cs_a', mode: 'payment', payment_intent: 'pi_1', metadata: { user_id: USER, option: 'pass90' } }];
+    await handler(webhookReq(chargeEvent('evt_r', 'charge.refunded', { refunded: true })), fakeRes());
+    assert.equal(s.w.passes.length, 0);
+    for (const r of proRows(s.w)) assert.equal(r.status, 'active');
   } finally { s.restore(); }
 });

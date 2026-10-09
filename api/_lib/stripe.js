@@ -21,6 +21,12 @@ const TIMEOUT_MS = 10000;
 
 function secretKey() { return process.env.STRIPE_SECRET_KEY; }
 
+// Pin the API version so a change to the account's default version can't
+// change the shape of what Stripe sends back. Set the webhook endpoint in the
+// Dashboard to the same version. Override with STRIPE_API_VERSION.
+const DEFAULT_API_VERSION = '2025-03-31.basil';
+function apiVersion() { return (process.env.STRIPE_API_VERSION || '').trim() || DEFAULT_API_VERSION; }
+
 /** Encode a flat/nested object into application/x-www-form-urlencoded (Stripe style). */
 function formEncode(obj, prefix, out) {
   out = out || [];
@@ -38,7 +44,7 @@ function formEncode(obj, prefix, out) {
   return out;
 }
 
-async function stripePost(path, params) {
+async function stripePost(path, params, opts) {
   const key = secretKey();
   if (!key) throw new Error('Stripe not configured');
   const controller = new AbortController();
@@ -47,10 +53,11 @@ async function stripePost(path, params) {
     const resp = await fetch(STRIPE_API + path, {
       method: 'POST',
       signal: controller.signal,
-      headers: {
+      headers: Object.assign({
         Authorization: `Bearer ${key}`,
         'Content-Type': 'application/x-www-form-urlencoded',
-      },
+        'Stripe-Version': apiVersion(),
+      }, opts && opts.idempotencyKey ? { 'Idempotency-Key': opts.idempotencyKey } : {}),
       body: formEncode(params).join('&'),
     });
     const data = await resp.json().catch(() => ({}));
@@ -75,7 +82,7 @@ async function stripeGet(path) {
     const resp = await fetch(STRIPE_API + path, {
       method: 'GET',
       signal: controller.signal,
-      headers: { Authorization: `Bearer ${key}` },
+      headers: { Authorization: `Bearer ${key}`, 'Stripe-Version': apiVersion() },
     });
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) { const e = new Error(`Stripe ${resp.status}`); e.status = resp.status; throw e; }
@@ -93,7 +100,7 @@ async function stripeGet(path) {
  *   receipt shows up there. `option` is stamped on the session metadata; the
  *   webhook grants the pass only for metadata.option === 'sprint'.
  */
-async function createCheckoutSession({ priceId, customerEmail, clientReferenceId, successUrl, cancelUrl, customerId, mode, option }) {
+async function createCheckoutSession({ priceId, customerEmail, clientReferenceId, successUrl, cancelUrl, customerId, mode, option, idempotencyKey }) {
   const m = mode === 'payment' ? 'payment' : 'subscription';
   const params = {
     mode: m,
@@ -115,7 +122,17 @@ async function createCheckoutSession({ priceId, customerEmail, clientReferenceId
     params.invoice_creation = { enabled: 'true' };
     params.payment_intent_data = { metadata: { user_id: clientReferenceId, option: option || 'sprint' } };
   }
-  return stripePost('/checkout/sessions', params);
+  return stripePost('/checkout/sessions', params, { idempotencyKey });
+}
+
+/**
+ * The Checkout Session that created a PaymentIntent (refunds and disputes
+ * carry only the payment_intent). null when none is found.
+ */
+async function findCheckoutSession(paymentIntentId) {
+  if (!paymentIntentId) return null;
+  const data = await stripeGet('/checkout/sessions?limit=1&payment_intent=' + encodeURIComponent(paymentIntentId));
+  return (data && Array.isArray(data.data) && data.data[0]) || null;
 }
 
 /** Create a Billing Portal session so a user can manage/cancel. */
@@ -158,7 +175,9 @@ module.exports = {
   createCheckoutSession,
   createPortalSession,
   getSubscription,
+  findCheckoutSession,
   verifyWebhook,
+  apiVersion,
   stripePost,
   stripeGet,
 };
