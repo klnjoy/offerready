@@ -85,10 +85,18 @@ async function stripeGet(path) {
   }
 }
 
-/** Create a Checkout Session (subscription mode) for a price + user. */
-async function createCheckoutSession({ priceId, customerEmail, clientReferenceId, successUrl, cancelUrl, customerId }) {
+/**
+ * Create a Checkout Session for a price + user.
+ *   mode 'subscription' (default): monthly / annual Pro.
+ *   mode 'payment': the one-time 30-day Sprint pass. Stripe creates (or reuses)
+ *   a Customer so the buyer can open the billing portal, and an invoice so the
+ *   receipt shows up there. `option` is stamped on the session metadata; the
+ *   webhook grants the pass only for metadata.option === 'sprint'.
+ */
+async function createCheckoutSession({ priceId, customerEmail, clientReferenceId, successUrl, cancelUrl, customerId, mode, option }) {
+  const m = mode === 'payment' ? 'payment' : 'subscription';
   const params = {
-    mode: 'subscription',
+    mode: m,
     'line_items': [{ price: priceId, quantity: 1 }],
     success_url: successUrl,
     cancel_url: cancelUrl,
@@ -97,9 +105,16 @@ async function createCheckoutSession({ priceId, customerEmail, clientReferenceId
   };
   if (customerId) params.customer = customerId;
   else if (customerEmail) params.customer_email = customerEmail;
-  // Stamp the user id onto the subscription metadata so the webhook can map it.
-  params['subscription_data'] = { metadata: { user_id: clientReferenceId } };
   params.metadata = { user_id: clientReferenceId };
+  if (option) params.metadata.option = option;
+  if (m === 'subscription') {
+    // Stamp the user id onto the subscription metadata so the webhook can map it.
+    params['subscription_data'] = { metadata: { user_id: clientReferenceId } };
+  } else {
+    if (!customerId) params.customer_creation = 'always';
+    params.invoice_creation = { enabled: 'true' };
+    params.payment_intent_data = { metadata: { user_id: clientReferenceId, option: option || 'sprint' } };
+  }
   return stripePost('/checkout/sessions', params);
 }
 

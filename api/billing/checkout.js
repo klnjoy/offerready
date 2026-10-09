@@ -1,9 +1,19 @@
 /**
  * POST /api/billing/checkout  (Vercel serverless function)
  * ---------------------------------------------------------------------------
- * Creates a Stripe Checkout Session (subscription mode) for the signed-in user
- * to upgrade to Pro, and returns the hosted checkout URL. The user is taken to
- * Stripe's hosted page — no card data touches our servers (spec §17).
+ * Creates a Stripe Checkout Session for the signed-in user to buy Pro, and
+ * returns the hosted checkout URL. The user is taken to Stripe's hosted page —
+ * no card data touches our servers (spec §17).
+ *
+ * Body: { app?: true, option?: 'monthly' | 'annual' | 'sprint' } (default monthly)
+ *   monthly -> STRIPE_PRO_MONTHLY_PRICE_ID, subscription mode
+ *   annual  -> STRIPE_PRO_ANNUAL_PRICE_ID,  subscription mode
+ *   sprint  -> STRIPE_SPRINT_PRICE_ID,      payment mode (one-time 30-day pass,
+ *              granted by the webhook on checkout.session.completed)
+ * An option whose env var is missing -> 400. No option configured -> 503.
+ * GET (public) -> { options } so the signed-out Pricing page can show them.
+ * A known Stripe customer (subscriptions mirror / earlier sprint) is reused so
+ * one person keeps one customer and one billing portal.
  *
  * Identity comes from a verified Supabase JWT. The Supabase user id is stamped
  * as client_reference_id + subscription metadata so the webhook can map the
@@ -15,6 +25,14 @@
 const { setCors, send } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
 const { createCheckoutSession } = require('../_lib/stripe');
+const billing = require('../_lib/billing');
+
+const OPTION_LABELS = { monthly: 'Monthly Pro', annual: 'Annual Pro', sprint: 'The 30-day Interview Sprint pass' };
+
+function parseBody(body) {
+  if (typeof body === 'string') { try { return JSON.parse(body); } catch (e) { return null; } }
+  return body && typeof body === 'object' ? body : null;
+}
 
 // Where Stripe sends the user back. The product app
 // (https://klnjoy.github.io/offerready-app/) sends { app: true } so users land
@@ -39,10 +57,29 @@ function returnUrls(origin, body) {
 async function handler(req, res) {
   setCors(res, req.headers && req.headers.origin);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
+  // Public: which options this deployment sells (the signed-out Pricing page
+  // has no /api/me/plan). No secrets: just ['monthly','annual','sprint'] subset.
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    send(res, 200, { options: billing.availableOptions() });
+    return;
+  }
   if (req.method !== 'POST') { send(res, 405, { error: 'Method not allowed.' }); return; }
 
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRO_MONTHLY_PRICE_ID) {
+  if (!process.env.STRIPE_SECRET_KEY || billing.availableOptions().length === 0) {
     send(res, 503, { error: 'Billing is not configured yet.' });
+    return;
+  }
+
+  const body = parseBody(req.body) || {};
+  const option = body.option === undefined || body.option === null || body.option === '' ? 'monthly' : String(body.option);
+  if (!Object.prototype.hasOwnProperty.call(OPTION_LABELS, option)) {
+    send(res, 400, { error: 'Unknown billing option. Use monthly, annual or sprint.', options: billing.availableOptions() });
+    return;
+  }
+  const priceId = billing.priceFor(option);
+  if (!priceId) {
+    send(res, 400, { error: `${OPTION_LABELS[option]} isn't available right now. Choose another option.`, options: billing.availableOptions() });
     return;
   }
 
@@ -52,16 +89,30 @@ async function handler(req, res) {
   const origin = (req.headers && req.headers.origin) || (process.env.ALLOWED_ORIGIN || 'https://klnjoy.github.io');
   const urls = returnUrls(origin, req.body);
 
+  // Reuse the Stripe customer we already know (best-effort; never blocks checkout).
+  let state = null;
+  try { state = await billing.getBillingState(user.id); } catch (_) { state = null; }
+  const customerId = state ? state.customerId : null;
+  // Already subscribed: a second subscription would double-bill. Plan changes
+  // (monthly <-> annual) and cancellation live in the billing portal.
+  if (option !== 'sprint' && state && state.proSource === 'subscription') {
+    send(res, 409, { error: 'You already have a Pro subscription. Use Manage billing to switch or cancel it.', portal: !!customerId });
+    return;
+  }
+
   try {
     const session = await createCheckoutSession({
-      priceId: process.env.STRIPE_PRO_MONTHLY_PRICE_ID,
+      priceId,
+      mode: option === 'sprint' ? 'payment' : 'subscription',
+      option,
+      customerId: customerId || undefined,
       customerEmail: user.email || undefined,
       clientReferenceId: user.id,
       successUrl: urls.successUrl,
       cancelUrl: urls.cancelUrl,
     });
     if (!session || !session.url) { send(res, 502, { error: 'Could not start checkout. Please try again.' }); return; }
-    send(res, 200, { ok: true, url: session.url });
+    send(res, 200, { ok: true, url: session.url, option });
   } catch (err) {
     console.error('checkout error:', err && err.message);
     send(res, 502, { error: 'Could not start checkout. Please try again.' });

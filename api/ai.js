@@ -5,7 +5,7 @@
  * grow features without adding a serverless function per feature (Vercel Hobby
  * caps at 12). Dispatch on body.action:
  *
- *   analyze_jd         -> structured JD analysis (public, mirrors /api/analyze-job)
+ *   analyze_jd         -> structured JD analysis (auth required, free accounts included)
  *   gap_analysis       -> resume-vs-JD match score + gaps (auth required)
  *   generate_questions -> categorized interview questions from a JD (auth required)
  *
@@ -17,9 +17,10 @@
  *     NOT require Pro (gap analysis + question generation are core funnel value,
  *     shown before the paywall per the product's "value before signup" stance);
  *     persistence + Pro-only depth live behind their own gates elsewhere.
- *   - Plans (api/_lib/plans.js): a SIGNED-IN analyze_jd counts toward the
- *     monthly `analyses` quota (403 {upgrade:true,...} when over; recorded only
- *     after a successful analysis). Anonymous runs are bounded by rate limit.
+ *   - Plans (api/_lib/plans.js): analyze_jd needs a signed-in user (401
+ *     {error, signin:true} otherwise) and counts toward the monthly `analyses`
+ *     quota (403 {upgrade:true,...} when over; recorded only after a
+ *     successful analysis).
  *   - Rate limit (api/_lib/rateLimit.js): best-effort per instance, per IP and
  *     per user; 429 + Retry-After.
  */
@@ -106,8 +107,8 @@ function attachResources(analysis) {
 async function handleAnalyzeJd(body, res, user) {
   const v = validateInput(body);
   if (!v.ok) { send(res, v.status, { error: v.error }); return; }
-  // Monthly quota for signed-in users (anonymous "value before signup" runs
-  // are bounded by the per-IP rate limit instead). Fails open on storage errors.
+  // Monthly quota (the handler only reaches here with a user). Fails open on
+  // storage errors.
   if (user) {
     const q = await checkQuota(user.id, 'analyses');
     if (!q.ok) { send(res, 403, quotaError(q, 'analyses')); return; }
@@ -257,12 +258,14 @@ module.exports = async function handler(req, res) {
 
   const action = String(body.action || '').toLowerCase();
 
-  // analyze_jd is public (value before signup). The others require identity so
-  // results can be attributed/persisted to the user's jobs.
+  // analyze_jd requires a (free) account: every analysis counts toward the
+  // monthly `analyses` quota. The app keeps the pasted JD across sign-in and
+  // re-runs it; the sample walkthrough (/example) stays public and offline.
+  // The others require identity so results can be attributed/persisted.
   if (action === 'analyze_jd') {
-    // Optional identity: a signed-in caller's analyses count toward their plan.
     const user = bearerToken(req) ? await getUser(req) : null;
-    if (user && !rateLimit.enforce(req, res, { scope: 'ai', userId: user.id })) return;
+    if (!user) { send(res, 401, { error: 'Sign in to analyze a job. It\'s free.', signin: true }); return; }
+    if (!rateLimit.enforce(req, res, { scope: 'ai', userId: user.id })) return;
     await handleAnalyzeJd(body, res, user);
     return;
   }

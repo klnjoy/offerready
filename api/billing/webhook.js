@@ -6,6 +6,13 @@
  *   1. Reads the RAW body (bodyParser disabled) and verifies the signature.
  *   2. Deduplicates via webhook_events (idempotency ledger).
  *   3. Mirrors the subscription and grants/revokes the Pro entitlement bundle.
+ *   4. One-time Sprint pass (Checkout mode=payment, metadata.option='sprint'):
+ *      on checkout.session.completed with payment_status 'paid' (or
+ *      checkout.session.async_payment_succeeded for delayed methods) grants
+ *      30 days of Pro, extending from a still-valid pass. Idempotent on the
+ *      checkout session id (ledger key 'checkout:<cs id>' in webhook_events),
+ *      on top of the per-event dedupe. Revoking a subscription keeps a
+ *      still-valid pass (billing.revokePro).
  *
  * Never trusts an unverified payload. Any failure fails closed (does not grant).
  * This endpoint is called by Stripe, not the browser — no CORS needed.
@@ -46,9 +53,12 @@ async function applySubscriptionState(sub) {
   if (!userId) { console.error('webhook: no user_id for subscription', sub && sub.id); return; }
 
   const status = sub.status;                       // active|trialing|past_due|canceled|...
-  const periodEnd = isoOrNull(sub.current_period_end);
   const item = sub.items && sub.items.data && sub.items.data[0];
   const priceId = item && item.price && item.price.id;
+  // Stripe API 2025-03-31+ moved the period fields onto the subscription item.
+  const periodEndUnix = sub.current_period_end || (item && item.current_period_end);
+  const periodStartUnix = sub.current_period_start || (item && item.current_period_start);
+  const periodEnd = isoOrNull(periodEndUnix);
 
   await billing.upsertSubscription({
     user_id: userId,
@@ -57,7 +67,7 @@ async function applySubscriptionState(sub) {
     stripe_price_id: priceId || null,
     plan: 'pro',
     status: status,
-    current_period_start: isoOrNull(sub.current_period_start),
+    current_period_start: isoOrNull(periodStartUnix),
     current_period_end: periodEnd,
     cancel_at_period_end: Boolean(sub.cancel_at_period_end),
     canceled_at: isoOrNull(sub.canceled_at),
@@ -74,6 +84,17 @@ async function applySubscriptionState(sub) {
   } else {
     await billing.revokePro(userId);
   }
+}
+
+/** Sprint pass: a paid one-time Checkout Session we created with option=sprint. */
+async function applySprintPayment(session) {
+  const md = (session && session.metadata) || {};
+  if (md.option !== 'sprint') return; // some other one-time payment: not ours to grant
+  if (session.payment_status !== 'paid' && session.payment_status !== 'no_payment_required') return; // async: wait
+  const userId = md.user_id || session.client_reference_id;
+  if (!userId) { console.error('webhook: no user_id for sprint session', session.id); return; }
+  const customerId = typeof session.customer === 'string' ? session.customer : (session.customer && session.customer.id) || null;
+  await billing.grantSprint(userId, session.id, customerId);
 }
 
 module.exports = async function handler(req, res) {
@@ -96,7 +117,12 @@ module.exports = async function handler(req, res) {
   try {
     const obj = event.data && event.data.object;
     switch (event.type) {
+      case 'checkout.session.async_payment_succeeded': {
+        if (obj && obj.mode === 'payment') await applySprintPayment(obj);
+        break;
+      }
       case 'checkout.session.completed': {
+        if (obj && obj.mode === 'payment') { await applySprintPayment(obj); break; }
         // Fetch the subscription to get full state, then apply.
         if (obj && obj.subscription) {
           const sub = await getSubscription(obj.subscription);
@@ -127,3 +153,6 @@ module.exports = async function handler(req, res) {
     send(res, 200, { received: true, error: 'processing_failed' });
   }
 };
+// Re-attach after `module.exports = handler` above replaced the object (the
+// assignment near the top was being discarded).
+module.exports.config = { api: { bodyParser: false } };
