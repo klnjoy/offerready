@@ -33,6 +33,7 @@
 
 const { PRO_FEATURES } = require('./billing');
 const { countJobs } = require('./jobs');
+const passes = require('./passes');
 
 // Monthly limits (calendar month, UTC). null = unlimited. Pro limits are
 // fair-use caps that protect AI cost; a real user rarely reaches them.
@@ -110,14 +111,33 @@ function periodEnd(now) {
 }
 
 /**
+ * Live one-time passes combined into one allowance (passes.combine), or null.
+ * `undefined` means the lookup failed (e.g. migration 0014 not applied yet).
+ */
+async function passFor(userId) {
+  if (!passes.configured()) return null;
+  try { return passes.combine(await passes.livePasses(userId)); }
+  catch (err) { logOnce('pass-lookup-failed (is migration 0014 applied?)', err && err.message); return undefined; }
+}
+
+/**
  * Resolve the plan, distinguishing "known free" from "lookup failed".
- * @returns {Promise<{ plan: 'free'|'pro', known: boolean }>}
+ * A user holding a live pass is 'pro' with that pass's allowance (`pass`);
+ * otherwise Pro comes from entitlements (a subscription or the legacy sprint)
+ * with the monthly LIMITS.pro.
+ * @returns {Promise<{ plan: 'free'|'pro', known: boolean, pass: object|null }>}
  */
 async function resolvePlan(userId) {
-  if (!userId) return { plan: 'free', known: true };
+  if (!userId) return { plan: 'free', known: true, pass: null };
   const hit = planCache.get(userId);
-  if (hit && Date.now() - hit.at < PLAN_TTL_MS) return { plan: hit.plan, known: true };
-  if (!configured()) { logOnce('supabase-not-configured'); return { plan: 'free', known: false }; }
+  if (hit && Date.now() - hit.at < PLAN_TTL_MS) return { plan: hit.plan, known: true, pass: hit.pass };
+  if (!configured()) { logOnce('supabase-not-configured'); return { plan: 'free', known: false, pass: null }; }
+
+  const pass = await passFor(userId);
+  if (pass) {
+    planCache.set(userId, { plan: 'pro', pass, at: Date.now() });
+    return { plan: 'pro', known: true, pass };
+  }
 
   const list = PRO_FEATURES.map((f) => `"${f}"`).join(',');
   const qs =
@@ -128,15 +148,21 @@ async function resolvePlan(userId) {
     `&select=feature&limit=1`;
   try {
     const resp = await rest('/entitlements?' + qs, { method: 'GET', headers: svcHeaders() });
-    if (!resp.ok) { logOnce('plan-lookup-failed', resp.status); return { plan: 'free', known: false }; }
+    if (!resp.ok) { logOnce('plan-lookup-failed', resp.status); return { plan: 'free', known: false, pass: null }; }
     const rows = await resp.json();
     const plan = Array.isArray(rows) && rows.length > 0 ? 'pro' : 'free';
-    planCache.set(userId, { plan, at: Date.now() });
-    return { plan, known: true };
+    planCache.set(userId, { plan, pass: null, at: Date.now() });
+    return { plan, known: true, pass: null };
   } catch (err) {
     logOnce('plan-lookup-error', err && err.name);
-    return { plan: 'free', known: false };
+    return { plan: 'free', known: false, pass: null };
   }
+}
+
+/** The limits and counting window that apply to a resolved plan. */
+function allowanceOf(r) {
+  if (r.pass) return { limits: r.pass.limits, since: r.pass.since, until: r.pass.ends };
+  return { limits: LIMITS[r.plan] || LIMITS.free, since: periodStart(), until: periodEnd() };
 }
 
 /** 'free' | 'pro' (cached 60s per user). Uncertain lookups read as 'free'. */
@@ -148,13 +174,13 @@ async function getPlan(userId) {
  * This month's usage_events counts for a user, via public.usage_counts().
  * @returns {Promise<Record<string, number>|null>} null when storage is unavailable.
  */
-async function monthCounts(userId, feature) {
+async function monthCounts(userId, feature, since) {
   if (!configured()) { logOnce('supabase-not-configured'); return null; }
   try {
     const resp = await rest('/rpc/usage_counts', {
       method: 'POST',
       headers: svcHeaders(),
-      body: JSON.stringify({ p_user: userId, p_since: periodStart(), p_feature: feature || null }),
+      body: JSON.stringify({ p_user: userId, p_since: since || periodStart(), p_feature: feature || null }),
     });
     if (!resp.ok) { logOnce('usage-count-failed (is migration 0010 applied?)', resp.status); return null; }
     const rows = await resp.json();
@@ -177,37 +203,58 @@ async function savedJobsCount(userId) {
   catch (err) { logOnce('jobs-count-error', err && err.name); return null; }
 }
 
-/**
- * May `userId` use `feature` once more this month?
- * @returns {Promise<{ ok: boolean, plan: 'free'|'pro', used: number, limit: number|null, unknown?: boolean }>}
- */
-async function checkQuota(userId, feature) {
-  const { plan, known } = await resolvePlan(userId);
-  const limits = LIMITS[plan] || LIMITS.free;
+/** Usage against the plan's own allowance (no credits). */
+async function allowanceQuota(userId, feature, r) {
+  const { plan, known, pass } = r;
+  const { limits, since } = allowanceOf(r);
+  const base = { plan, pass: pass ? pass.kind : null };
   if (!Object.prototype.hasOwnProperty.call(limits, feature)) {
-    return { ok: true, plan, used: 0, limit: null };
+    return Object.assign(base, { ok: true, used: 0, limit: null });
   }
   const limit = limits[feature];
   // Couldn't tell whether they pay: never block on our own uncertainty.
-  if (!known) return { ok: true, plan, used: 0, limit, unknown: true };
-  if (limit === null) return { ok: true, plan, used: 0, limit: null };
-  if (limit <= 0) return { ok: false, plan, used: 0, limit };
+  if (!known) return Object.assign(base, { ok: true, used: 0, limit, unknown: true });
+  if (limit === null) return Object.assign(base, { ok: true, used: 0, limit: null });
 
   let used;
-  if (feature === 'saved_jobs') {
+  if (limit <= 0) used = 0;
+  else if (feature === 'saved_jobs') {
     used = await savedJobsCount(userId);
   } else {
-    const counts = await monthCounts(userId, feature);
+    const counts = await monthCounts(userId, feature, since);
     used = counts ? (counts[feature] || 0) : null;
   }
-  if (used === null) return { ok: true, plan, used: 0, limit, unknown: true };
-  return { ok: used < limit, plan, used, limit };
+  if (used === null) return Object.assign(base, { ok: true, used: 0, limit, unknown: true });
+  return Object.assign(base, { ok: used < limit, used, limit });
+}
+
+/**
+ * May `userId` use `feature` once more? Counts this month on Free / a
+ * subscription, or since the pass started on a pass. When the allowance is
+ * used up, credit-pack features (voice_mock) fall back to the credit balance.
+ * @returns {Promise<{ ok, plan, used, limit, pass, unknown?, credit?, credits? }>}
+ */
+async function checkQuota(userId, feature) {
+  const r = await resolvePlan(userId);
+  const q = await allowanceQuota(userId, feature, r);
+  if (q.ok || passes.CREDIT_FEATURES.indexOf(feature) === -1) return q;
+  const bal = await passes.creditBalance(userId);
+  const credits = bal ? (bal[feature] || 0) : 0;
+  if (credits > 0) return Object.assign(q, { ok: true, credit: true, credits });
+  return Object.assign(q, { credits });
 }
 
 /** Record one successful use. Never throws; errors log once. */
 async function recordUse(userId, feature) {
   if (!userId || METERED.indexOf(feature) === -1) return;
   if (!configured()) { logOnce('supabase-not-configured'); return; }
+  // Past the plan's allowance, this use was paid for with a pack credit.
+  if (passes.CREDIT_FEATURES.indexOf(feature) !== -1) {
+    try {
+      const q = await allowanceQuota(userId, feature, await resolvePlan(userId));
+      if (!q.unknown && q.limit !== null && q.used >= q.limit) await passes.spendCredit(userId, feature);
+    } catch (err) { logOnce('credit-spend-error', err && err.name); }
+  }
   try {
     const resp = await rest('/usage_events', {
       method: 'POST',
@@ -225,36 +272,46 @@ function nounFor(feature, n) {
   return n === 1 ? w[0] : w[1];
 }
 
+function passLabel(kind) { return (passes.PASSES[kind] && passes.PASSES[kind].label) || 'pass'; }
+
 /** Friendly explanation for an over-quota result. */
 function quotaMessage(q, feature) {
   const planName = q.plan === 'pro' ? 'Pro' : 'Free';
+  const pack = passes.CREDIT_FEATURES.indexOf(feature) !== -1;
   if (feature === 'saved_jobs') {
-    return `Free includes ${q.limit} ${nounFor(feature, q.limit)}. Upgrade to Pro to save more, or delete one you no longer need.`;
+    if (q.pass) return `Your ${passLabel(q.pass)} includes ${q.limit} ${nounFor(feature, q.limit)}. Delete one you no longer need, or get a bigger pass.`;
+    return `Free includes ${q.limit} ${nounFor(feature, q.limit)}. Get a pass to save more, or delete one you no longer need.`;
   }
   if (!q.limit) {
-    return `${nounFor(feature, 2).replace(/^./, (c) => c.toUpperCase())} are part of OfferReady Pro.`;
+    return `${nounFor(feature, 2).replace(/^./, (c) => c.toUpperCase())} come with any pass.`;
+  }
+  if (q.pass) {
+    return `You've used all ${q.limit} ${nounFor(feature, q.limit)} in your ${passLabel(q.pass)}. ${pack ? 'Add a mock pack for more.' : 'Buy another pass to add more.'}`;
   }
   if (q.plan === 'pro') {
-    return `You've reached this month's fair-use limit of ${q.limit} ${nounFor(feature, q.limit)} on Pro. It resets on the 1st (UTC).`;
+    return `You've reached this month's fair-use limit of ${q.limit} ${nounFor(feature, q.limit)} on Pro. It resets on the 1st (UTC).${pack ? ' Add a mock pack for more now.' : ''}`;
   }
-  return `You've used ${q.used} of ${q.limit} ${nounFor(feature, 2)} this month on ${planName}. Upgrade to Pro for more.`;
+  return `You've used ${q.used} of ${q.limit} ${nounFor(feature, 2)} this month on ${planName}. ${pack ? 'Get a pass or a mock pack for more.' : 'Get a pass for more.'}`;
 }
 
 /**
- * The 403 body for an over-quota result. `upgrade` is true on Free (the app
- * shows an upgrade prompt); a Pro user at a fair-use cap gets upgrade:false
- * and the reset time instead, since there is nothing to upgrade to.
+ * The 403 body for an over-quota result. `upgrade` is true when buying
+ * something helps (Free, a pass, or a feature a mock pack tops up); a
+ * subscriber at a monthly fair-use cap gets the reset time instead.
  */
 function quotaError(q, feature) {
+  const pack = passes.CREDIT_FEATURES.indexOf(feature) !== -1;
   const body = {
     error: quotaMessage(q, feature),
-    upgrade: q.plan !== 'pro',
+    upgrade: q.plan !== 'pro' || !!q.pass || pack,
     feature,
     used: q.used,
     limit: q.limit,
     plan: q.plan,
   };
-  if (feature !== 'saved_jobs') body.resets_at = periodEnd();
+  if (q.pass) body.pass = q.pass;
+  if (pack) body.pack = true;
+  if (feature !== 'saved_jobs' && !q.pass) body.resets_at = periodEnd();
   return body;
 }
 
@@ -264,9 +321,12 @@ function quotaError(q, feature) {
  * If usage storage is unavailable, each usage entry is { used: null, limit, unknown: true }.
  */
 async function getUsageSummary(userId) {
-  const { plan, known } = await resolvePlan(userId);
-  const limits = LIMITS[plan];
-  const [counts, jobs] = await Promise.all([monthCounts(userId, null), savedJobsCount(userId)]);
+  const r = await resolvePlan(userId);
+  const { plan, known, pass } = r;
+  const { limits, since, until } = allowanceOf(r);
+  const [counts, jobs, credits] = await Promise.all([
+    monthCounts(userId, null, since), savedJobsCount(userId), passes.creditBalance(userId),
+  ]);
   const usage = {};
   let usageKnown = !!counts && jobs !== null;
   for (const f of Object.keys(limits)) {
@@ -277,14 +337,18 @@ async function getUsageSummary(userId) {
     usage[f] = used === null ? { used: null, limit: limits[f], unknown: true } : { used, limit: limits[f] };
   }
   if (!known) usageKnown = false;
+  const passLimits = {};
+  for (const k of passes.PASS_KINDS) passLimits[k] = passes.PASSES[k].limits;
   return {
     plan,
     plan_known: known,
     usage,
     usage_known: usageKnown,
-    limits: { free: LIMITS.free, pro: LIMITS.pro },
-    period_start: periodStart(),
-    period_end: periodEnd(),
+    limits: { free: LIMITS.free, pro: LIMITS.pro, passes: passLimits },
+    period_start: since,
+    period_end: until,
+    pass: pass ? { kind: pass.kind, kinds: pass.kinds, starts_at: pass.starts_at, expires_at: pass.ends, since: pass.since } : null,
+    credits: credits || { voice_mock: 0 },
   };
 }
 
@@ -293,5 +357,5 @@ function _reset() { planCache.clear(); logged.clear(); }
 module.exports = {
   LIMITS, getPlan, checkQuota, recordUse,
   quotaError, quotaMessage, getUsageSummary, periodStart, periodEnd, METERED,
-  _internal: { _reset, planCache, resolvePlan },
+  _internal: { _reset, planCache, resolvePlan, allowanceQuota },
 };

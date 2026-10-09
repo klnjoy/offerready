@@ -49,6 +49,18 @@ function stub(world) {
       if (world.pro === 'error') throw Object.assign(new Error('net'), { name: 'TypeError' });
       return json(200, world.pro ? [{ feature: 'interview_pro' }] : []);
     }
+    if (u.startsWith(SB + '/rest/v1/passes')) {
+      if (world.passes === 'error') return json(404, { code: '42P01' });
+      const now = Date.now();
+      return json(200, (world.passes || []).filter((r) => Date.parse(r.expires_at) > now));
+    }
+    if (u.startsWith(SB + '/rest/v1/rpc/credit_balance')) {
+      return json(200, Object.keys(world.credits || {}).map((f) => ({ feature: f, balance: world.credits[f] })));
+    }
+    if (u.startsWith(SB + '/rest/v1/credit_ledger')) {
+      (world.debits = world.debits || []).push(JSON.parse(o.body));
+      return json(201, null);
+    }
     if (u.startsWith(SB + '/rest/v1/rpc/usage_counts')) {
       if (world.counts === 'error') throw Object.assign(new Error('net'), { name: 'TypeError' });
       if (world.counts === 'missing') return json(404, { code: 'PGRST202', message: 'Could not find the function' });
@@ -122,7 +134,7 @@ test('getPlan: active Pro-bundle entitlement => pro; query covers the whole bund
   const s = stub({ pro: true });
   try {
     assert.equal(await plans.getPlan(USER), 'pro');
-    const q = decodeURIComponent(s.calls[0].url);
+    const q = decodeURIComponent(s.calls.find((c) => c.url.includes('/entitlements')).url);
     for (const f of PRO_FEATURES) assert.ok(q.includes(`"${f}"`), 'bundle includes ' + f);
     assert.ok(q.includes('status=eq.active'));
     assert.ok(q.includes('expires_at.is.null'));
@@ -267,23 +279,28 @@ test('recordUse: inserts {user_id, feature} with the service role; never throws 
 
 test('quotaError: Free over quota -> upgrade body with friendly message', () => {
   const b = plans.quotaError({ ok: false, plan: 'free', used: 1, limit: 1 }, 'voice_mock');
-  assert.equal(b.error, "You've used 1 of 1 voice sessions this month on Free. Upgrade to Pro for more.");
+  assert.equal(b.error, "You've used 1 of 1 voice sessions this month on Free. Get a pass or a mock pack for more.");
+  assert.equal(b.pack, true);
   assert.equal(b.upgrade, true);
   assert.equal(b.feature, 'voice_mock');
   assert.equal(b.used, 1); assert.equal(b.limit, 1); assert.equal(b.plan, 'free');
   assert.ok(b.resets_at);
   const g = plans.quotaError({ ok: false, plan: 'free', used: 5, limit: 5 }, 'ai_grading');
   assert.match(g.error, /5 of 5 AI answer gradings this month on Free/);
-  assert.match(plans.quotaError({ ok: false, plan: 'free', used: 0, limit: 0 }, 'custom_scenarios').error, /Custom scenarios are part of OfferReady Pro/);
+  assert.match(plans.quotaError({ ok: false, plan: 'free', used: 0, limit: 0 }, 'custom_scenarios').error, /Custom scenarios come with any pass/);
   const j = plans.quotaError({ ok: false, plan: 'free', used: 1, limit: 1 }, 'saved_jobs');
   assert.match(j.error, /Free includes 1 saved job/);
   assert.equal(j.resets_at, undefined);
 });
 
-test('quotaError: Pro at a fair-use cap is not told to upgrade', () => {
+test('quotaError: Pro at a fair-use cap is not told to upgrade (unless a mock pack helps)', () => {
+  const g = plans.quotaError({ ok: false, plan: 'pro', used: 400, limit: 400 }, 'ai_grading');
+  assert.equal(g.upgrade, false);
+  assert.match(g.error, /fair-use limit of 400 AI answer gradings on Pro/);
+  assert.ok(g.resets_at);
   const b = plans.quotaError({ ok: false, plan: 'pro', used: 40, limit: 40 }, 'voice_mock');
-  assert.equal(b.upgrade, false);
-  assert.match(b.error, /fair-use limit of 40 voice sessions on Pro/);
+  assert.equal(b.upgrade, true);
+  assert.match(b.error, /fair-use limit of 40 voice sessions on Pro\. It resets on the 1st \(UTC\)\. Add a mock pack/);
 });
 
 // ---- summary (GET /api/me/plan) -------------------------------------------------
@@ -314,7 +331,10 @@ test('GET /api/me/plan: plan + usage + limits + period_start', async () => {
     assert.deepEqual(b.usage.ai_grading, { used: 0, limit: 5 });
     assert.deepEqual(b.usage.saved_jobs, { used: 1, limit: 1 });
     assert.deepEqual(b.usage.prep_plan, { used: 0, limit: null });
-    assert.deepEqual(b.limits, plans.LIMITS);
+    assert.deepEqual(b.limits.free, plans.LIMITS.free);
+    assert.deepEqual(b.limits.pro, plans.LIMITS.pro);
+    assert.ok(b.limits.passes.pass90);
+    assert.equal(b.pass, null);
     assert.equal(b.period_start, plans.periodStart());
   } finally { s.restore(); }
 });
@@ -439,5 +459,100 @@ test('ai analyze_jd: signed-in Free over quota -> 403 analyses; anonymous -> 401
     assert.equal(res.statusCode, 401, 'anonymous runs must sign in first');
     assert.equal(res.json().signin, true);
     assert.ok(!s.calls.some((c) => c.url.includes('supabase')));
+  } finally { s.restore(); }
+});
+
+// ---- one-time passes + mock credits (api/_lib/passes.js) -----------------------------
+
+const DAYMS = 24 * 60 * 60 * 1000;
+function passRow(kind, startOffsetDays, days) {
+  const s0 = Date.now() + startOffsetDays * DAYMS;
+  return { kind, starts_at: new Date(s0).toISOString(), expires_at: new Date(s0 + days * DAYMS).toISOString() };
+}
+
+test('pass: a live 90-day pass makes the user pro with the pass allowance, counted since it started', async () => {
+  plans._internal._reset();
+  const p = passRow('pass90', -10, 90);
+  const s = stub({ passes: [p], counts: { analyses: 79 } });
+  try {
+    const q = await plans.checkQuota(USER, 'analyses');
+    assert.deepEqual({ ok: q.ok, plan: q.plan, used: q.used, limit: q.limit, pass: q.pass }, { ok: true, plan: 'pro', used: 79, limit: 80, pass: 'pass90' });
+    const rpc = s.calls.find((c) => c.url.includes('/rpc/usage_counts'));
+    assert.equal(rpc.body.p_since, p.starts_at);
+    assert.equal(s.calls.filter((c) => c.url.includes('/entitlements')).length, 0, 'no entitlement lookup needed');
+  } finally { s.restore(); }
+});
+
+test('pass: allowance is for the whole pass, not monthly; over it the message offers another pass', async () => {
+  plans._internal._reset();
+  const s = stub({ passes: [passRow('pass30', -3, 30)], counts: { analyses: 30 } });
+  try {
+    const q = await plans.checkQuota(USER, 'analyses');
+    assert.equal(q.ok, false);
+    const b = plans.quotaError(q, 'analyses');
+    assert.match(b.error, /used all 30 job analyses in your 30-day pass\. Buy another pass/);
+    assert.equal(b.upgrade, true);
+    assert.equal(b.pass, 'pass30');
+    assert.equal(b.resets_at, undefined);
+  } finally { s.restore(); }
+});
+
+test('pass: a queued pass adds its allowance straight away', async () => {
+  plans._internal._reset();
+  const a = passRow('pass30', -20, 30);
+  const b = { kind: 'pass90', starts_at: a.expires_at, expires_at: new Date(Date.parse(a.expires_at) + 90 * DAYMS).toISOString() };
+  const s = stub({ passes: [a, b], counts: { voice_mock: 20 }, jobs: 3 });
+  try {
+    const q = await plans.checkQuota(USER, 'voice_mock');
+    assert.equal(q.limit, 28);
+    assert.equal(q.ok, true);
+    const sum = await plans.getUsageSummary(USER);
+    assert.equal(sum.pass.kind, 'pass30');
+    assert.deepEqual(sum.pass.kinds, ['pass30', 'pass90']);
+    assert.equal(sum.pass.expires_at, b.expires_at);
+    assert.equal(sum.period_start, a.starts_at);
+    assert.deepEqual(sum.usage.saved_jobs, { used: 3, limit: 20 });
+  } finally { s.restore(); }
+});
+
+test('pass: passes table missing -> falls back to entitlements (fail open)', async () => {
+  plans._internal._reset();
+  const s = stub({ passes: 'error', pro: true, counts: {} });
+  try {
+    const q = await plans.checkQuota(USER, 'analyses');
+    assert.equal(q.plan, 'pro');
+    assert.equal(q.limit, plans.LIMITS.pro.analyses);
+  } finally { s.restore(); }
+});
+
+test('credits: over the voice allowance a mock credit lets it through and recordUse spends one', async () => {
+  plans._internal._reset();
+  const world = { pro: false, counts: { voice_mock: 1 }, credits: { voice_mock: 3 } };
+  const s = stub(world);
+  try {
+    const q = await plans.checkQuota(USER, 'voice_mock');
+    assert.equal(q.ok, true);
+    assert.equal(q.credit, true);
+    assert.equal(q.credits, 3);
+    await plans.recordUse(USER, 'voice_mock');
+    assert.deepEqual(world.debits.map((d) => [d.feature, d.delta]), [['voice_mock', -1]]);
+  } finally { s.restore(); }
+});
+
+test('credits: within the allowance no credit is spent; with no credits the limit holds', async () => {
+  plans._internal._reset();
+  let world = { pro: false, counts: { voice_mock: 0 }, credits: { voice_mock: 3 } };
+  let s = stub(world);
+  try {
+    await plans.recordUse(USER, 'voice_mock');
+    assert.equal((world.debits || []).length, 0);
+  } finally { s.restore(); }
+  plans._internal._reset();
+  world = { pro: false, counts: { voice_mock: 1 }, credits: {} };
+  s = stub(world);
+  try {
+    const q = await plans.checkQuota(USER, 'voice_mock');
+    assert.equal(q.ok, false);
+    assert.equal(q.credits, 0);
   } finally { s.restore(); }
 });

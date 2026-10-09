@@ -5,11 +5,12 @@
  * returns the hosted checkout URL. The user is taken to Stripe's hosted page —
  * no card data touches our servers (spec §17).
  *
- * Body: { app?: true, option?: 'monthly' | 'annual' | 'sprint' } (default monthly)
- *   monthly -> STRIPE_PRO_MONTHLY_PRICE_ID, subscription mode
- *   annual  -> STRIPE_PRO_ANNUAL_PRICE_ID,  subscription mode
- *   sprint  -> STRIPE_SPRINT_PRICE_ID,      payment mode (one-time 30-day pass,
- *              granted by the webhook on checkout.session.completed)
+ * Body: { app?: true, option?: 'job'|'pass30'|'pass90'|'pass365'|'mock10'|'monthly'|'annual' }
+ *   Passes and the mock pack are ONE-TIME payments (payment mode, never
+ *   renew), priced by env (api/_lib/passes.js) and granted by the webhook on
+ *   checkout.session.completed. 'sprint' is the old name of pass30.
+ *   monthly / annual are subscriptions, offered only if their env is set.
+ *   Default when no option is sent: pass30.
  * An option whose env var is missing -> 400. No option configured -> 503.
  * GET (public) -> { options } so the signed-out Pricing page can show them.
  * A known Stripe customer (subscriptions mirror / earlier sprint) is reused so
@@ -27,7 +28,16 @@ const { getUser } = require('../_lib/supabaseAuth');
 const { createCheckoutSession } = require('../_lib/stripe');
 const billing = require('../_lib/billing');
 
-const OPTION_LABELS = { monthly: 'Monthly Pro', annual: 'Annual Pro', sprint: 'The 30-day Interview Sprint pass' };
+const passes = require('../_lib/passes');
+
+const OPTION_LABELS = {
+  job: 'The Job pass', pass30: 'The 30-day pass', pass90: 'The 90-day pass', pass365: 'The 1-year pass',
+  mock10: 'The mock interview pack', monthly: 'Monthly Pro', annual: 'Annual Pro',
+  sprint: 'The 30-day pass', // old name of pass30, still accepted
+};
+
+/** One-time Checkout (no subscription): every pass and pack. */
+function isOneTime(option) { return passes.isPass(option) || passes.isPack(option); }
 
 function parseBody(body) {
   if (typeof body === 'string') { try { return JSON.parse(body); } catch (e) { return null; } }
@@ -75,9 +85,10 @@ async function handler(req, res) {
   }
 
   const body = parseBody(req.body) || {};
-  const option = body.option === undefined || body.option === null || body.option === '' ? 'monthly' : String(body.option);
+  let option = body.option === undefined || body.option === null || body.option === '' ? 'pass30' : String(body.option);
+  if (option === 'sprint') option = 'pass30';
   if (!Object.prototype.hasOwnProperty.call(OPTION_LABELS, option)) {
-    send(res, 400, { error: 'Unknown billing option. Use monthly, annual or sprint.', options: billing.availableOptions() });
+    send(res, 400, { error: 'Unknown billing option.', options: billing.availableOptions() });
     return;
   }
   const priceId = billing.priceFor(option);
@@ -98,7 +109,7 @@ async function handler(req, res) {
   const customerId = state ? state.customerId : null;
   // Already subscribed: a second subscription would double-bill. Plan changes
   // (monthly <-> annual) and cancellation live in the billing portal.
-  if (option !== 'sprint' && state && state.proSource === 'subscription') {
+  if (!isOneTime(option) && state && state.proSource === 'subscription') {
     send(res, 409, { error: 'You already have a Pro subscription. Use Manage billing to switch or cancel it.', portal: !!customerId });
     return;
   }
@@ -106,7 +117,7 @@ async function handler(req, res) {
   try {
     const session = await createCheckoutSession({
       priceId,
-      mode: option === 'sprint' ? 'payment' : 'subscription',
+      mode: isOneTime(option) ? 'payment' : 'subscription',
       option,
       customerId: customerId || undefined,
       customerEmail: user.email || undefined,

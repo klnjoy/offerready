@@ -15,10 +15,13 @@
  *   period_start: ISO,             // first instant of this UTC month
  *   period_end: ISO,               // when monthly counters reset
  *   plan_known: boolean,           // false if the entitlement lookup itself failed
+ *   pass: { kind, kinds, starts_at, expires_at, since } | null,  // live one-time pass(es)
+ *   credits: { voice_mock: number },  // mock pack credits left (never expire)
  *   billing: {
- *     options: ('monthly'|'annual'|'sprint')[],  // Checkout options this deployment sells
+ *     options: ('job'|'pass30'|'pass90'|'pass365'|'mock10'|'monthly'|'annual')[],  // Checkout options this deployment sells
  *     portal: boolean,                           // a Stripe customer exists -> POST /api/billing/portal works
- *     pro_source: 'subscription'|'sprint'|null,  // what currently pays for Pro
+ *     pro_source: 'subscription'|'pass'|'sprint'|null,  // what currently pays for Pro
+ *     pass_kind / pass_kinds: the pass in effect now / every live pass
  *     pro_expires_at: ISO|null,                  // renewal / end of the period, or the sprint's end
  *     pro_interval: 'month'|'year'|null,         // subscriptions only
  *     cancel_at_period_end: boolean
@@ -48,6 +51,8 @@ async function billingBlock(userId) {
     pro_expires_at: st ? st.proExpiresAt : null,
     pro_interval: st ? st.interval : null,
     cancel_at_period_end: !!(st && st.cancelAtPeriodEnd),
+    pass_kind: st ? st.passKind || null : null,
+    pass_kinds: st ? st.passKinds || [] : [],
   };
 }
 
@@ -66,6 +71,6 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     // getUsageSummary already fails open internally; this is a last resort.
     console.error('[me/plan] failure:', err && err.name);
-    send(res, 200, { plan: 'free', plan_known: false, usage: {}, usage_known: false, limits: LIMITS, period_start: periodStart(), billing: { options: billing.availableOptions(), portal: false, pro_source: null, pro_expires_at: null, pro_interval: null, cancel_at_period_end: false } });
+    send(res, 200, { plan: 'free', plan_known: false, usage: {}, usage_known: false, limits: LIMITS, period_start: periodStart(), billing: { options: billing.availableOptions(), portal: false, pro_source: null, pro_expires_at: null, pro_interval: null, cancel_at_period_end: false, pass_kind: null, pass_kinds: [] }, pass: null, credits: { voice_mock: 0 } });
   }
 };

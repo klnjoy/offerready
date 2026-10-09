@@ -42,6 +42,8 @@ function filtersOf(u) {
   for (const [k, v] of q.entries()) {
     if (['select', 'order', 'limit', 'on_conflict', 'or'].includes(k)) continue;
     if (v.startsWith('eq.')) f[k] = (x) => String(x) === v.slice(3);
+    else if (v.startsWith('gt.')) f[k] = (x) => Date.parse(x) > Date.parse(v.slice(3));
+    else if (v === 'not.is.null') f[k] = (x) => x !== null && x !== undefined;
     else if (v.startsWith('in.(')) {
       const set = v.slice(4, -1).split(',').map((s) => s.replace(/^"|"$/g, ''));
       f[k] = (x) => set.includes(String(x));
@@ -63,7 +65,7 @@ function matches(row, f) {
  *          counts: {feature:n}, openai: 'ok'|'error'|'stream', stripe: {} }
  */
 function stub(world) {
-  const w = Object.assign({ entitlements: [], events: new Map(), subscriptions: [], usage: [], counts: {}, stripeCalls: [] }, world || {});
+  const w = Object.assign({ entitlements: [], events: new Map(), subscriptions: [], usage: [], counts: {}, stripeCalls: [], passes: [], ledger: [] }, world || {});
   const calls = [];
   const orig = global.fetch;
   global.fetch = async (url, opts) => {
@@ -112,6 +114,33 @@ function stub(world) {
         if (i >= 0) w.subscriptions[i] = Object.assign({}, w.subscriptions[i], row); else w.subscriptions.unshift(row);
         return resp(201, null);
       }
+    }
+    if (u.startsWith(SB + '/rest/v1/passes')) {
+      if (w.passesError) return resp(500, {});
+      if (method === 'GET') {
+        const rows = w.passes.filter((r) => matches(r, filtersOf(u))).map((r) => Object.assign({}, r));
+        const order = new URL(u).searchParams.get('order') || '';
+        if (order.startsWith('created_at.desc')) rows.reverse();
+        else rows.sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at));
+        return resp(200, rows);
+      }
+      if (method === 'POST') {
+        const row = JSON.parse(o.body);
+        if (w.passes.some((r) => r.stripe_session_id === row.stripe_session_id)) return resp(409, { code: '23505' });
+        w.passes.push(row);
+        return resp(201, null);
+      }
+    }
+    if (u.startsWith(SB + '/rest/v1/credit_ledger')) {
+      const row = JSON.parse(o.body);
+      if (row.stripe_session_id && w.ledger.some((r) => r.stripe_session_id === row.stripe_session_id)) return resp(409, { code: '23505' });
+      w.ledger.push(row);
+      return resp(201, null);
+    }
+    if (u.startsWith(SB + '/rest/v1/rpc/credit_balance')) {
+      const bal = {};
+      for (const r of w.ledger) bal[r.feature] = (bal[r.feature] || 0) + r.delta;
+      return resp(200, Object.keys(bal).map((f) => ({ feature: f, balance: bal[f] })));
     }
     if (u.startsWith(SB + '/rest/v1/rpc/usage_counts')) {
       return resp(200, Object.keys(w.counts).map((f) => ({ feature: f, used: w.counts[f] })));
@@ -195,7 +224,7 @@ function sprintEvent(id, sessionId, extra) {
 const proRows = (w) => w.entitlements.filter((r) => PRO_FEATURES.includes(r.feature));
 const marker = (w) => w.entitlements.find((r) => r.feature === SPRINT_FEATURE);
 
-const ENV_KEYS = ['STRIPE_SECRET_KEY', 'STRIPE_PRO_MONTHLY_PRICE_ID', 'STRIPE_PRO_ANNUAL_PRICE_ID', 'STRIPE_SPRINT_PRICE_ID', 'STRIPE_WEBHOOK_SECRET', 'OPENAI_API_KEY'];
+const ENV_KEYS = ['STRIPE_SECRET_KEY', 'STRIPE_PRO_MONTHLY_PRICE_ID', 'STRIPE_PRO_ANNUAL_PRICE_ID', 'STRIPE_SPRINT_PRICE_ID', 'STRIPE_PASS_JOB_PRICE_ID', 'STRIPE_PASS_30_PRICE_ID', 'STRIPE_PASS_90_PRICE_ID', 'STRIPE_PASS_365_PRICE_ID', 'STRIPE_MOCK_PACK_PRICE_ID', 'STRIPE_WEBHOOK_SECRET', 'OPENAI_API_KEY'];
 
 let errSpy;
 test.beforeEach(() => {
@@ -222,13 +251,13 @@ function allPrices() {
 
 // ---- checkout options ------------------------------------------------------------
 
-test('checkout: default option is monthly (subscription mode, monthly price)', async () => {
+test('checkout: monthly is a subscription (subscription mode, monthly price)', async () => {
   allPrices();
   const handler = require('../billing/checkout');
   const s = stub();
   try {
     const res = fakeRes();
-    await handler(req('POST', { app: true }, 'good-token'), res);
+    await handler(req('POST', { app: true, option: 'monthly' }, 'good-token'), res);
     assert.equal(res.statusCode, 200);
     assert.equal(res.json().url, 'https://checkout.stripe.com/c/pay/cs_new');
     const p = s.w.stripeCalls[0].params;
@@ -254,7 +283,7 @@ test('checkout: annual uses the annual price in subscription mode', async () => 
   } finally { s.restore(); }
 });
 
-test('checkout: sprint is a one-time payment (mode=payment, no subscription_data, customer created)', async () => {
+test('checkout: sprint (old name of pass30) is a one-time payment (mode=payment, no subscription_data, customer created)', async () => {
   allPrices();
   const handler = require('../billing/checkout');
   const s = stub();
@@ -265,7 +294,7 @@ test('checkout: sprint is a one-time payment (mode=payment, no subscription_data
     const p = s.w.stripeCalls[0].params;
     assert.equal(p.get('mode'), 'payment');
     assert.equal(p.get('line_items[0][price]'), 'price_sprint');
-    assert.equal(p.get('metadata[option]'), 'sprint');
+    assert.equal(p.get('metadata[option]'), 'pass30');
     assert.equal(p.get('metadata[user_id]'), USER);
     assert.equal(p.get('customer_creation'), 'always');
     assert.equal(p.get('invoice_creation[enabled]'), 'true');
@@ -280,7 +309,7 @@ test('checkout: an option whose env var is missing -> 400 with a clear message (
   const handler = require('../billing/checkout');
   const s = stub();
   try {
-    for (const [option, word] of [['annual', 'Annual'], ['sprint', 'Sprint']]) {
+    for (const [option, word] of [['annual', 'Annual'], ['sprint', '30-day pass'], ['pass90', '90-day pass']]) {
       const res = fakeRes();
       await handler(req('POST', { app: true, option }, 'good-token'), res);
       assert.equal(res.statusCode, 400, option);
@@ -297,15 +326,19 @@ test('checkout: an option whose env var is missing -> 400 with a clear message (
   } finally { s.restore(); }
 });
 
-test('checkout: only the sprint configured -> sprint works, default monthly is 400', async () => {
+test('checkout: only the sprint price configured -> the default (pass30) works, monthly is 400', async () => {
   process.env.STRIPE_SECRET_KEY = 'sk_test_x';
   process.env.STRIPE_SPRINT_PRICE_ID = 'price_sprint';
   const handler = require('../billing/checkout');
   const s = stub();
   try {
     let res = fakeRes();
-    await handler(req('POST', { app: true }, 'good-token'), res);
+    await handler(req('POST', { app: true, option: 'monthly' }, 'good-token'), res);
     assert.equal(res.statusCode, 400);
+    res = fakeRes();
+    await handler(req('POST', { app: true }, 'good-token'), res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(s.w.stripeCalls[0].params.get('metadata[option]'), 'pass30');
     res = fakeRes();
     await handler(req('POST', { app: true, option: 'sprint' }, 'good-token'), res);
     assert.equal(res.statusCode, 200);
@@ -365,7 +398,7 @@ test('checkout GET: public list of configured options', async () => {
   process.env.STRIPE_SPRINT_PRICE_ID = 'price_sprint';
   res = fakeRes();
   await handler(req('GET'), res);
-  assert.deepEqual(res.json(), { options: ['annual', 'sprint'] });
+  assert.deepEqual(res.json(), { options: ['pass30', 'annual'] });
 });
 
 // ---- webhook: sprint pass ----------------------------------------------------------
@@ -645,7 +678,7 @@ test('me/plan: billing block lists only configured options; existing fields unch
     assert.equal(res.statusCode, 200);
     const b = res.json();
     for (const k of ['plan', 'usage', 'usage_known', 'limits', 'period_start', 'period_end', 'plan_known']) assert.ok(k in b, k);
-    assert.deepEqual(b.billing, { options: ['monthly', 'sprint'], portal: false, pro_source: null, pro_expires_at: null, pro_interval: null, cancel_at_period_end: false });
+    assert.deepEqual(b.billing, { options: ['pass30', 'monthly'], portal: false, pro_source: null, pro_expires_at: null, pro_interval: null, cancel_at_period_end: false, pass_kind: null, pass_kinds: [] });
   } finally { s.restore(); }
 });
 
@@ -662,7 +695,8 @@ test('me/plan: subscription source (annual) and sprint source', async () => {
     await handler(req('GET', undefined, 'good-token'), res);
     const b = res.json();
     assert.equal(b.plan, 'pro');
-    assert.deepEqual(b.billing, { options: ['monthly', 'annual', 'sprint'], portal: true, pro_source: 'subscription', pro_expires_at: end, pro_interval: 'year', cancel_at_period_end: true });
+    assert.deepEqual(b.billing.options.filter((o) => ['monthly', 'annual', 'pass30'].includes(o)), ['pass30', 'monthly', 'annual']);
+    assert.deepEqual(Object.assign({}, b.billing, { options: undefined }), { options: undefined, portal: true, pro_source: 'subscription', pro_expires_at: end, pro_interval: 'year', cancel_at_period_end: true, pass_kind: null, pass_kinds: [] });
   } finally { s.restore(); }
   plans._internal._reset();
   const sEnd = new Date(Date.now() + 22 * DAY).toISOString();
@@ -829,4 +863,126 @@ test('checkout routes ?op=portal (the /api/billing/portal rewrite) to the portal
   res.end = (b) => { res.body = b || ''; return res; };
   await handler({ method: 'GET', url: '/api/billing/checkout?op=portal', query: { op: 'portal' }, headers: {} }, res);
   assert.strictEqual(res.statusCode, 405);
+});
+
+// ---- one-time passes + mock packs -------------------------------------------------
+
+function passEvent(id, sessionId, option, extra) {
+  return Object.assign({
+    id, type: 'checkout.session.completed',
+    data: { object: Object.assign({
+      id: sessionId, object: 'checkout.session', mode: 'payment', payment_status: 'paid',
+      customer: 'cus_pass', client_reference_id: USER, metadata: { user_id: USER, option },
+    }, extra || {}) },
+  });
+}
+
+test('checkout: a pass is a one-time payment with its own price; unknown options are 400', async () => {
+  process.env.STRIPE_SECRET_KEY = 'sk_test_x';
+  process.env.STRIPE_PASS_90_PRICE_ID = 'price_p90';
+  process.env.STRIPE_MOCK_PACK_PRICE_ID = 'price_mock';
+  const handler = require('../billing/checkout');
+  const s = stub();
+  try {
+    let res = fakeRes();
+    await handler(req('POST', { app: true, option: 'pass90' }, 'good-token'), res);
+    assert.equal(res.statusCode, 200);
+    let p = s.w.stripeCalls[0].params;
+    assert.equal(p.get('mode'), 'payment');
+    assert.equal(p.get('line_items[0][price]'), 'price_p90');
+    assert.equal(p.get('metadata[option]'), 'pass90');
+    res = fakeRes();
+    await handler(req('POST', { app: true, option: 'mock10' }, 'good-token'), res);
+    p = s.w.stripeCalls[1].params;
+    assert.equal(p.get('mode'), 'payment');
+    assert.equal(p.get('metadata[option]'), 'mock10');
+    res = fakeRes();
+    await handler(req('POST', { app: true, option: 'lifetime' }, 'good-token'), res);
+    assert.equal(res.statusCode, 400);
+    res = fakeRes();
+    await handler(req('POST', { app: true, option: 'pass365' }, 'good-token'), res);
+    assert.equal(res.statusCode, 400, 'not configured');
+  } finally { s.restore(); }
+});
+
+test('webhook pass: grants a pass row and Pro until it ends; idempotent per session', async () => {
+  process.env.STRIPE_WEBHOOK_SECRET = WHSEC;
+  const handler = require('../billing/webhook');
+  const s = stub();
+  try {
+    const t0 = Date.now();
+    await handler(webhookReq(passEvent('evt_p1', 'cs_p1', 'pass90')), fakeRes());
+    assert.equal(s.w.passes.length, 1);
+    const p = s.w.passes[0];
+    assert.equal(p.kind, 'pass90');
+    assert.equal(p.stripe_customer_id, 'cus_pass');
+    assert.ok(Math.abs(Date.parse(p.expires_at) - (t0 + 90 * DAY)) < 5000);
+    for (const r of proRows(s.w)) assert.equal(r.expires_at, p.expires_at);
+    await handler(webhookReq(passEvent('evt_p1b', 'cs_p1', 'pass90')), fakeRes());
+    assert.equal(s.w.passes.length, 1, 'same session never grants twice');
+  } finally { s.restore(); }
+});
+
+test('webhook pass: buying again while a pass is live queues it after the current one', async () => {
+  process.env.STRIPE_WEBHOOK_SECRET = WHSEC;
+  const handler = require('../billing/webhook');
+  const s = stub();
+  try {
+    await handler(webhookReq(passEvent('evt_a', 'cs_a', 'pass30')), fakeRes());
+    await handler(webhookReq(passEvent('evt_b', 'cs_b', 'job')), fakeRes());
+    const [a, b] = s.w.passes;
+    assert.equal(b.starts_at, a.expires_at);
+    assert.equal(Date.parse(b.expires_at) - Date.parse(b.starts_at), 45 * DAY);
+    for (const r of proRows(s.w)) assert.equal(r.expires_at, b.expires_at);
+  } finally { s.restore(); }
+});
+
+test('webhook pack: adds 10 mock credits once per session; unpaid grants nothing', async () => {
+  process.env.STRIPE_WEBHOOK_SECRET = WHSEC;
+  const handler = require('../billing/webhook');
+  const s = stub();
+  try {
+    await handler(webhookReq(passEvent('evt_m0', 'cs_m0', 'mock10', { payment_status: 'unpaid' })), fakeRes());
+    assert.equal(s.w.ledger.length, 0);
+    await handler(webhookReq(passEvent('evt_m1', 'cs_m1', 'mock10')), fakeRes());
+    await handler(webhookReq(passEvent('evt_m2', 'cs_m1', 'mock10')), fakeRes());
+    assert.deepEqual(s.w.ledger.map((r) => [r.feature, r.delta]), [['voice_mock', 10]]);
+    assert.equal(proRows(s.w).length, 0, 'a pack is not a pass');
+  } finally { s.restore(); }
+});
+
+test('revoke: a canceled subscription keeps Pro until a live pass ends', async () => {
+  process.env.STRIPE_WEBHOOK_SECRET = WHSEC;
+  const handler = require('../billing/webhook');
+  const passEnd = new Date(Date.now() + 40 * DAY).toISOString();
+  const s = stub({
+    entitlements: PRO_FEATURES.map((f) => ({ user_id: USER, feature: f, status: 'active', expires_at: new Date(Date.now() + DAY).toISOString(), source: 'stripe:sub_1' })),
+    passes: [{ user_id: USER, kind: 'pass90', starts_at: new Date(Date.now() - 50 * DAY).toISOString(), expires_at: passEnd, stripe_session_id: 'cs_x' }],
+  });
+  try {
+    await handler(webhookReq(subEvent('evt_del_p', 'canceled')), fakeRes());
+    for (const r of proRows(s.w)) { assert.equal(r.status, 'active'); assert.equal(r.expires_at, passEnd); }
+  } finally { s.restore(); }
+});
+
+test('me/plan: a live pass shows as pro_source pass with its end date', async () => {
+  allPrices();
+  const handler = require('../me/plan');
+  const end = new Date(Date.now() + 60 * DAY).toISOString();
+  const s = stub({
+    passes: [{ user_id: USER, kind: 'pass90', starts_at: new Date(Date.now() - 30 * DAY).toISOString(), expires_at: end, stripe_session_id: 'cs_y', stripe_customer_id: 'cus_y' }],
+    ledger: [{ user_id: USER, feature: 'voice_mock', delta: 10 }, { user_id: USER, feature: 'voice_mock', delta: -1 }],
+  });
+  try {
+    const res = fakeRes();
+    await handler(req('GET', undefined, 'good-token'), res);
+    const b = res.json();
+    assert.equal(b.plan, 'pro');
+    assert.equal(b.pass.kind, 'pass90');
+    assert.deepEqual(b.credits, { voice_mock: 9 });
+    assert.equal(b.billing.pro_source, 'pass');
+    assert.equal(b.billing.pro_expires_at, end);
+    assert.equal(b.billing.pass_kind, 'pass90');
+    assert.equal(b.billing.portal, true);
+  } finally { s.restore(); }
 });

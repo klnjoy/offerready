@@ -22,6 +22,7 @@
 
 const { verifyWebhook, getSubscription } = require('../_lib/stripe');
 const billing = require('../_lib/billing');
+const passes = require('../_lib/passes');
 
 // Vercel: give us the raw body so the Stripe signature can be verified.
 module.exports.config = { api: { bodyParser: false } };
@@ -86,15 +87,22 @@ async function applySubscriptionState(sub) {
   }
 }
 
-/** Sprint pass: a paid one-time Checkout Session we created with option=sprint. */
+/**
+ * A paid one-time Checkout Session we created: a pass (job/pass30/pass90/
+ * pass365), a mock pack (mock10), or a legacy sprint. Anything else is not
+ * ours to grant.
+ */
 async function applySprintPayment(session) {
   const md = (session && session.metadata) || {};
-  if (md.option !== 'sprint') return; // some other one-time payment: not ours to grant
+  const option = md.option;
+  if (option !== 'sprint' && !passes.isPass(option) && !passes.isPack(option)) return;
   if (session.payment_status !== 'paid' && session.payment_status !== 'no_payment_required') return; // async: wait
   const userId = md.user_id || session.client_reference_id;
-  if (!userId) { console.error('webhook: no user_id for sprint session', session.id); return; }
+  if (!userId) { console.error('webhook: no user_id for one-time session', session.id); return; }
   const customerId = typeof session.customer === 'string' ? session.customer : (session.customer && session.customer.id) || null;
-  await billing.grantSprint(userId, session.id, customerId);
+  if (option === 'sprint') await billing.grantSprint(userId, session.id, customerId);
+  else if (passes.isPass(option)) await passes.grantPass(userId, option, session.id, customerId);
+  else await passes.grantPack(userId, option, session.id);
 }
 
 module.exports = async function handler(req, res) {
