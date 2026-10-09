@@ -4,9 +4,13 @@ icon: material/email-outline
 
 # Contact
 
-Questions, feedback, bug reports or partnership ideas are all welcome. The
-quickest way to reach the OfferReady team is through the project's GitHub
-repository.
+Questions, feedback, bug reports or partnership ideas are all welcome.
+
+- **Account, billing and privacy requests:** email **[support email]**. Use
+  email for anything personal: billing questions, refunds, deleting your
+  account, or a data request.
+- **Bugs, content errors and ideas:** open an issue in the project's GitHub
+  repository (public).
 
 <div class="grid cards" markdown>
 
@@ -26,11 +30,18 @@ repository.
 
     [:octicons-arrow-right-24: Share feedback](https://github.com/klnjoy/offerready/issues)
 
--   :material-lifebuoy: __Support__
+-   :material-email-outline: __Account and billing support__
 
     ---
 
-    Problems using the site or the study tools.
+    Billing, refunds, cancelling, deleting your account or a privacy request.
+    Email **[support email]** from the address you signed up with.
+
+-   :material-lifebuoy: __Help with the app__
+
+    ---
+
+    Problems using the app or the study tools (no personal details, please).
 
     [:octicons-arrow-right-24: Ask for help](https://github.com/klnjoy/offerready/issues)
 
@@ -56,13 +67,12 @@ repository.
 
 !!! warning "Keep private details out of public issues"
     GitHub issues are public. Never include API keys, passwords, personal data
-    or confidential material from an employer or interview. For a privacy or data
-    request, open an issue that asks for a private follow-up and leave the details
-    out.
+    or confidential material from an employer or interview. For billing, account
+    deletion, or a privacy or data request, email **[support email]** instead.
 
 We aim to reply within a few business days.
 
 ## Related
 
-- [Privacy](../Privacy/index.md): what we collect and what we don't.
+- [Privacy](../Privacy/index.md): what we collect, and how to download or delete your data.
 - [Terms of Service](../Terms/index.md): the terms for using OfferReady.
