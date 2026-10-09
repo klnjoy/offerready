@@ -4,7 +4,7 @@ icon: material/information-outline
 
 # Disclaimer
 
-*Last updated: 2026*
+*Last updated:* October 2026
 
 !!! warning "Educational content only"
     OfferReady is a **learning and interview-preparation resource**. Everything
@@ -22,6 +22,11 @@ OfferReady helps you *prepare*. It does **not** promise, guarantee, or predict:
 
 Any "readiness" scores, levels, or indicators are **preparation guidance only**
 — a way to focus your study — not a prediction of hiring success.
+
+## Practice only
+
+OfferReady is for preparing **before** an interview. Don't use it during a live
+interview or assessment; see section 3 of the [Terms of Service](../Terms/index.md).
 
 ## Accuracy and currency
 
