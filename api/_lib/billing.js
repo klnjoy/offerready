@@ -307,8 +307,9 @@ async function extendPro(userId, expiresAt, source, nowMs) {
  * are only offered when their price env vars are set. 'sprint' is the old name
  * of the 30-day pass (accepted by checkout, never listed). */
 function priceFor(option) {
-  if (option === 'monthly') return process.env.STRIPE_PRO_MONTHLY_PRICE_ID || '';
-  if (option === 'annual') return process.env.STRIPE_PRO_ANNUAL_PRICE_ID || '';
+  const { validPrice } = require('./passes');
+  if (option === 'monthly') return validPrice(process.env.STRIPE_PRO_MONTHLY_PRICE_ID);
+  if (option === 'annual') return validPrice(process.env.STRIPE_PRO_ANNUAL_PRICE_ID);
   if (option === 'sprint') return require('./passes').priceFor('pass30');
   return require('./passes').priceFor(option);
 }
