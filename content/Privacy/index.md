@@ -51,6 +51,8 @@ Questions or requests about your data: see [Contact](../Contact/index.md).
 | **Error reports**: the page path (no query string), the error message and technical trace, your browser's user-agent, the app version, and your account id if you're signed in | When something breaks in the app | To find and fix bugs | Supabase. Before sending, the app removes query strings and anything that looks like an email address or a token, and sends at most 10 reports per visit. **[Owner to confirm: retention period for error reports, e.g. 90 days]** |
 | **Product usage events**: which app pages you open and when you finish key steps (adding a job, practising a question, finishing a drill or mock, starting checkout), with a random browser id, a random visit id, the app version and your account id if you're signed in. Never the content: no job descriptions, resumes, answers or emails. | While you use the app, unless your browser sends "Do Not Track" | To see which steps people use and where they get stuck, so we fix the right things | Supabase, first-party only. At most 200 events per visit. |
 | **Feedback you send**: your message, the optional 1-5 rating, the page you sent it from, the app version, your browser's user-agent, your account id if you're signed in, and whether we may email you about it | When you use **Send feedback** | To improve OfferReady and, if you ticked the box, to reply | Supabase |
+| **Shared interview questions** (opt-in per debrief): the company, role family, level, round type, the month, the questions you logged and how each went, and the round outcome | Only when you tick **Share the questions from this round anonymously** on a debrief | To show which questions each company asks. Other users only ever see questions for a company once at least 3 different people have shared for it, and never who shared them | Supabase, linked to your account so you can un-share or delete it. Never shared: your name, interviewers, notes or the exact date. |
+| **Interview results**: the result you report after an interview date (offer, next round, not selected, waiting, didn't happen) with that job's readiness score, practice count and how long you prepared | When you answer **How did it go?**, or log a final outcome in a debrief | To check that readiness scores match real results and improve them | Supabase, visible only to you; deleted with your data |
 
 ### Data that stays on your device
 
@@ -145,6 +147,8 @@ from our server, not from you.
 - Error reports: **[Owner to confirm: retention period, e.g. 90 days]**
 - Usage events: **[Owner to confirm: retention period, e.g. 12 months]**
 - Feedback: until it has been dealt with, or until you ask us to delete it.
+- Shared interview questions and interview results: until you un-share them,
+  delete them from the Account page, or delete your account.
 
 ## Your choices and rights
 
