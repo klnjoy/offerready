@@ -32,11 +32,20 @@ GitHub Pages (static site)  ──HTTPS──►  Vercel Function /api/analyze-j
 | `SUPABASE_SERVICE_ROLE_KEY` | For plans + billing | Server-only; entitlements, usage, subscription mirror |
 | `STRIPE_SECRET_KEY` | For billing | `sk_test_…` / `sk_live_…` (server-only) |
 | `STRIPE_WEBHOOK_SECRET` | For billing | `whsec_…` of the `/api/billing/webhook` endpoint |
-| `STRIPE_PRO_MONTHLY_PRICE_ID` | Optional | Recurring monthly Pro price → "Monthly" checkout option |
-| `STRIPE_PRO_ANNUAL_PRICE_ID` | Optional | Recurring yearly Pro price → "Annual" checkout option |
-| `STRIPE_SPRINT_PRICE_ID` | Optional | ONE-TIME price → 30-day "Interview Sprint" pass (Checkout mode `payment`) |
+| `STRIPE_PASS_JOB_PRICE_ID` | For passes | ONE-TIME price → Job pass (45 days, 1 job), suggested $19 |
+| `STRIPE_PASS_30_PRICE_ID` | For passes | ONE-TIME price → 30-day pass, suggested $29 (falls back to `STRIPE_SPRINT_PRICE_ID`) |
+| `STRIPE_PASS_90_PRICE_ID` | For passes | ONE-TIME price → 90-day pass (most popular), suggested $59 |
+| `STRIPE_PASS_365_PRICE_ID` | For passes | ONE-TIME price → 1-year pass, suggested $99 |
+| `STRIPE_MOCK_PACK_PRICE_ID` | For passes | ONE-TIME price → 10 extra voice mock interviews, suggested $15 |
+| `STRIPE_PRO_MONTHLY_PRICE_ID` | Optional, off | Recurring monthly Pro. Leave unset: pricing is pass-based |
+| `STRIPE_PRO_ANNUAL_PRICE_ID` | Optional, off | Recurring yearly Pro. Leave unset: pricing is pass-based |
 | `ACCESS_UNTIL_PERIOD_END` | No | `true` (keep Pro until period end after cancel) |
 | `APP_BASE_PATH` | No | `/offerready-app` (where Checkout/Portal return users) |
+
+Passes and the mock pack never auto-renew; their allowances are in
+`api/_lib/passes.js` and need migration `0014_passes.sql`. Show matching prices
+in the app with `VITE_PRICE_JOB`, `VITE_PRICE_PASS30`, `VITE_PRICE_PASS90`,
+`VITE_PRICE_PASS365` and `VITE_PRICE_MOCK10` (display labels only).
 
 Each checkout option is offered only when its price variable is set (the app
 reads the list from `GET /api/me/plan` → `billing.options`).

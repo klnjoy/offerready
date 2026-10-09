@@ -145,18 +145,32 @@ async function writeRows(rows) {
   if (resp && resp.ok === false) throw new Error('entitlements write ' + resp.status);
 }
 
+/**
+ * The longest one-time coverage the user still holds: a legacy sprint pass or
+ * a pass from api/_lib/passes.js. { expires_at, source } or null. Lookup
+ * failures are logged and read as "none".
+ */
+async function heldCoverage(userId) {
+  let best = null;
+  try {
+    const sprint = await getSprint(userId);
+    if (sprint) best = { expires_at: sprint.expires_at, source: sprint.source };
+  } catch (err) { console.error('[billing] sprint lookup failed:', err && err.message); }
+  try {
+    const cov = await require('./passes').passCoverage(userId);
+    if (cov && (!best || Date.parse(cov.expires_at) > Date.parse(best.expires_at))) best = cov;
+  } catch (err) { console.error('[billing] pass lookup failed:', err && err.message); }
+  return best;
+}
+
 /** Grant the Pro feature bundle to a user (active, sourced from a Stripe sub).
- * A still-valid sprint pass that ends later than `expiresAt` keeps its later
- * expiry (the Pro rows always carry the longer coverage). */
+ * A still-valid pass that ends later than `expiresAt` keeps its later expiry
+ * (the Pro rows always carry the longer coverage). */
 async function grantPro(userId, source, expiresAt) {
   let exp = expiresAt || null;
   if (exp) {
-    try {
-      const sprint = await getSprint(userId);
-      if (sprint && Date.parse(sprint.expires_at) > Date.parse(exp)) exp = sprint.expires_at;
-    } catch (err) {
-      console.error('[billing] sprint lookup failed during grant:', err && err.message);
-    }
+    const held = await heldCoverage(userId);
+    if (held && Date.parse(held.expires_at) > Date.parse(exp)) exp = held.expires_at;
   }
   const rows = PRO_FEATURES.map((feature) => ({
     user_id: userId, feature, status: 'active',
@@ -170,14 +184,12 @@ async function grantPro(userId, source, expiresAt) {
 }
 
 /** Revoke the Pro feature bundle for a user (subscription ended). A still-valid
- * sprint pass is preserved: the Pro rows fall back to the pass's expiry. */
+ * pass is preserved: the Pro rows fall back to the pass's expiry. */
 async function revokePro(userId) {
-  let sprint = null;
-  try { sprint = await getSprint(userId); }
-  catch (err) { console.error('[billing] sprint lookup failed during revoke (revoking):', err && err.message); }
+  const held = await heldCoverage(userId);
   const list = PRO_FEATURES.map((f) => `"${f}"`).join(',');
-  const patch = sprint
-    ? { status: 'active', expires_at: sprint.expires_at, source: sprint.source }
+  const patch = held
+    ? { status: 'active', expires_at: held.expires_at, source: held.source }
     : { status: 'revoked' };
   await rest(
     `/entitlements?user_id=eq.${encodeURIComponent(userId)}&feature=in.(${encodeURIComponent(list)})`,
@@ -213,6 +225,23 @@ async function releaseClaim(key) {
 }
 
 /**
+ * Pro rows to write so Pro lasts until `expiresAt`, or [] when the current
+ * coverage (an active subscription, a longer pass, no expiry) already lasts
+ * at least that long. `rows` is readEntitlementRows() output.
+ */
+function proRowsIfLonger(userId, rows, expiresAt, source, nowMs) {
+  let proExp;
+  for (const r of rows) {
+    if (r.feature === SPRINT_FEATURE || !isLive(r, nowMs)) continue;
+    if (PRO_FEATURES.indexOf(r.feature) === -1) continue;
+    proExp = proExp === undefined ? r.expires_at : laterExpiry(proExp, r.expires_at);
+  }
+  const proLonger = proExp === null || (proExp !== undefined && Date.parse(proExp) >= Date.parse(expiresAt));
+  if (proLonger) return [];
+  return PRO_FEATURES.map((feature) => ({ user_id: userId, feature, status: 'active', expires_at: expiresAt, source }));
+}
+
+/**
  * Grant (or extend) a 30-day sprint pass for a paid one-time Checkout Session.
  * Idempotent on the session id. Buying again before the pass ends extends from
  * the current expiry, not from now.
@@ -234,19 +263,8 @@ async function grantSprint(userId, sessionId, customerId, nowMs) {
     const keepCustomer = customerId || (marker && parseSprintSource(marker.source).customerId) || null;
     const source = 'sprint:' + sessionId + (keepCustomer ? '|' + keepCustomer : '');
 
-    // Pro rows: keep the current coverage if it already lasts longer (an
-    // active subscription, or no expiry); otherwise carry the pass's expiry.
-    let proExp;
-    for (const r of rows) {
-      if (r.feature === SPRINT_FEATURE || !isLive(r, now)) continue;
-      proExp = proExp === undefined ? r.expires_at : laterExpiry(proExp, r.expires_at);
-    }
     const out = [{ user_id: userId, feature: SPRINT_FEATURE, status: 'active', expires_at: expiresAt, source }];
-    const proLonger = proExp === null || (proExp !== undefined && Date.parse(proExp) >= Date.parse(expiresAt));
-    if (!proLonger) {
-      for (const feature of PRO_FEATURES) out.push({ user_id: userId, feature, status: 'active', expires_at: expiresAt, source });
-    }
-    await writeRows(out);
+    await writeRows(out.concat(proRowsIfLonger(userId, rows, expiresAt, source, now)));
     return { granted: true, expires_at: expiresAt };
   } catch (err) {
     await releaseClaim(key); // let a redelivery / manual resend try again
@@ -254,17 +272,33 @@ async function grantSprint(userId, sessionId, customerId, nowMs) {
   }
 }
 
+/**
+ * Make the Pro bundle last until at least `expiresAt` (used by one-time
+ * passes, api/_lib/passes.js). Never shortens longer coverage. Throws on
+ * storage errors.
+ */
+async function extendPro(userId, expiresAt, source, nowMs) {
+  const now = typeof nowMs === 'number' ? nowMs : Date.now();
+  const rows = await readEntitlementRows(userId);
+  const out = proRowsIfLonger(userId, rows, expiresAt, source, now);
+  if (out.length) await writeRows(out);
+  return out.length > 0;
+}
+
 // ---- Read side: /api/me/plan + /api/billing/portal ------------------------------
 
-/** Which Checkout options this deployment sells (env-driven). */
+/** Which Checkout options this deployment sells (env-driven). One-time passes
+ * and packs live in passes.js; monthly/annual subscriptions stay supported but
+ * are only offered when their price env vars are set. 'sprint' is the old name
+ * of the 30-day pass (accepted by checkout, never listed). */
 function priceFor(option) {
   if (option === 'monthly') return process.env.STRIPE_PRO_MONTHLY_PRICE_ID || '';
   if (option === 'annual') return process.env.STRIPE_PRO_ANNUAL_PRICE_ID || '';
-  if (option === 'sprint') return process.env.STRIPE_SPRINT_PRICE_ID || '';
-  return '';
+  if (option === 'sprint') return require('./passes').priceFor('pass30');
+  return require('./passes').priceFor(option);
 }
 
-const OPTIONS = ['monthly', 'annual', 'sprint'];
+const OPTIONS = ['job', 'pass30', 'pass90', 'pass365', 'mock10', 'monthly', 'annual'];
 
 function availableOptions() {
   if (!process.env.STRIPE_SECRET_KEY) return [];
@@ -292,13 +326,19 @@ async function getBillingState(userId, nowMs) {
   const now = typeof nowMs === 'number' ? nowMs : Date.now();
   const state = {
     customerId: null, proSource: null, proExpiresAt: null, interval: null, cancelAtPeriodEnd: false,
+    passKind: null, passKinds: [],
   };
   if (!userId || !restBase() || !process.env.SUPABASE_SERVICE_ROLE_KEY) return state;
-  const [sub, sprint] = await Promise.all([
+  const passes = require('./passes');
+  const [sub, sprint, live, passCustomer] = await Promise.all([
     latestSubscription(userId).catch((e) => { console.error('[billing] subscription read failed:', e && e.message); return null; }),
     getSprint(userId, now).catch((e) => { console.error('[billing] sprint read failed:', e && e.message); return null; }),
+    passes.livePasses(userId, now).catch((e) => { console.error('[billing] passes read failed:', e && e.message); return []; }),
+    passes.lastPassCustomer(userId),
   ]);
+  const pass = passes.combine(live, now);
   if (sub && sub.stripe_customer_id) state.customerId = sub.stripe_customer_id;
+  else if (passCustomer) state.customerId = passCustomer;
   else if (sprint && sprint.customerId) state.customerId = sprint.customerId;
 
   const subLive = sub && ACTIVE_STATUSES.indexOf(sub.status) !== -1 &&
@@ -309,6 +349,11 @@ async function getBillingState(userId, nowMs) {
     state.cancelAtPeriodEnd = !!sub.cancel_at_period_end;
     const annual = process.env.STRIPE_PRO_ANNUAL_PRICE_ID;
     state.interval = annual && sub.stripe_price_id === annual ? 'year' : 'month';
+  } else if (pass) {
+    state.proSource = 'pass';
+    state.proExpiresAt = pass.ends;
+    state.passKind = pass.kind;
+    state.passKinds = pass.kinds;
   } else if (sprint) {
     state.proSource = 'sprint';
     state.proExpiresAt = sprint.expires_at;
@@ -344,6 +389,10 @@ module.exports = {
   getSprint,
   grantSprint,
   claimOnce,
+  releaseClaim,
+  extendPro,
+  readEntitlementRows,
+  OPTIONS,
   priceFor,
   availableOptions,
   getBillingState,

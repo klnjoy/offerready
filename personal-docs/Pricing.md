@@ -12,7 +12,7 @@ search:
 
 # Pricing has moved
 
-Plans and what's included in Free and Pro are on the pricing page.
+Free, the one-time passes and what each includes are on the pricing page.
 
 [See pricing](../assets/pricing.html){ .md-button .md-button--primary }
 
