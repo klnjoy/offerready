@@ -8,6 +8,8 @@
  *   analyze_jd         -> structured JD analysis (auth required, free accounts included)
  *   gap_analysis       -> resume-vs-JD match score + gaps (auth required)
  *   generate_questions -> categorized interview questions from a JD (auth required)
+ *   import_job_url     -> fetch a job posting from a link (sign-in optional, no LLM;
+ *                         20/min per IP; see api/_lib/jobImport.js for the SSRF guards)
  *
  * Security / cost posture (mirrors analyze-job.js):
  *   - OPENAI_API_KEY is server-side only. One LLM call per request. No storage.
@@ -43,6 +45,7 @@ const {
   ownsJob, saveGapAnalysis, saveQuestions, getGapAnalysis,
   getPracticeSessions, computeReadiness, saveProgressSnapshot,
 } = require('./_lib/readiness');
+const { importJobUrl } = require('./_lib/jobImport');
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
@@ -239,6 +242,13 @@ async function handleGenerateQuestions(body, res, user) {
   send(res, 200, { ok: true, action: 'generate_questions', questions: result.questions, counts: result.counts, job_id: jobId || null, saved: saved });
 }
 
+/** import_job_url — no LLM call, so it works without OPENAI_API_KEY. */
+async function handleImportJobUrl(req, res, body) {
+  if (!rateLimit.enforce(req, res, { scope: 'job_import', perIp: 20 })) return;
+  const out = await importJobUrl(body.url);
+  send(res, out.status, out.body);
+}
+
 module.exports = async function handler(req, res) {
   setCors(res, req.headers && req.headers.origin);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
@@ -247,13 +257,21 @@ module.exports = async function handler(req, res) {
   // 20/min per user once identity is known.
   if (!rateLimit.enforce(req, res, { scope: 'ai' })) return;
 
+  let body = req.body;
+  if (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) { body = null; } }
+
+  // Link import does not use the AI provider, so it is dispatched before the
+  // OPENAI_API_KEY check. Sign-in is optional.
+  if (body && typeof body === 'object' && String(body.action || '').toLowerCase() === 'import_job_url') {
+    await handleImportJobUrl(req, res, body);
+    return;
+  }
+
   if (!process.env.OPENAI_API_KEY) {
     send(res, 503, { demo: true, error: 'AI is not configured on this deployment.' });
     return;
   }
 
-  let body = req.body;
-  if (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) { body = null; } }
   if (!body || typeof body !== 'object') { send(res, 400, { error: 'Invalid request body.' }); return; }
 
   const action = String(body.action || '').toLowerCase();
