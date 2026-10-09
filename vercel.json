@@ -18,6 +18,14 @@
     {
       "source": "/api/areas",
       "destination": "/api/ask"
+    },
+    {
+      "source": "/api/billing/portal",
+      "destination": "/api/billing/checkout?op=portal"
+    },
+    {
+      "source": "/api/premium/tailor",
+      "destination": "/api/ai?op=tailor"
     }
   ]
 }

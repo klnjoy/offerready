@@ -11,7 +11,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 
 const plans = require('../_lib/plans');
-const handler = require('../premium/tailor');
+const handler = require('../_lib/handlers/tailor');
 const { parseBody, validateOutput, buildMessages, scrubInventedNumbers, sourceNumbers, SYSTEM_PROMPT } = handler._internal;
 
 const ENV_KEYS = ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'OPENAI_API_KEY', 'OPENAI_MODEL'];

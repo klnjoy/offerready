@@ -573,7 +573,7 @@ test('webhook: config disables the body parser (raw body for signatures)', () =>
 // ---- portal --------------------------------------------------------------------------
 
 test('portal: 503 without Stripe config', async () => {
-  const handler = require('../billing/portal');
+  const handler = require('../_lib/handlers/billingPortal');
   const s = stub();
   try {
     const res = fakeRes();
@@ -584,7 +584,7 @@ test('portal: 503 without Stripe config', async () => {
 
 test('portal: 401 signed out; 404 with no customer yet', async () => {
   process.env.STRIPE_SECRET_KEY = 'sk_test_x';
-  const handler = require('../billing/portal');
+  const handler = require('../_lib/handlers/billingPortal');
   const s = stub();
   try {
     let res = fakeRes();
@@ -600,7 +600,7 @@ test('portal: 401 signed out; 404 with no customer yet', async () => {
 
 test('portal: creates a session for the mirrored customer with return_url /account', async () => {
   process.env.STRIPE_SECRET_KEY = 'sk_test_x';
-  const handler = require('../billing/portal');
+  const handler = require('../_lib/handlers/billingPortal');
   const s = stub({ subscriptions: [{ user_id: USER, stripe_customer_id: 'cus_123', stripe_subscription_id: 'sub_1', status: 'active' }] });
   try {
     const res = fakeRes();
@@ -616,7 +616,7 @@ test('portal: creates a session for the mirrored customer with return_url /accou
 
 test('portal: a sprint-only buyer uses the customer remembered on the pass; Stripe error -> 502', async () => {
   process.env.STRIPE_SECRET_KEY = 'sk_test_x';
-  const handler = require('../billing/portal');
+  const handler = require('../_lib/handlers/billingPortal');
   const end = new Date(Date.now() + 9 * DAY).toISOString();
   const s = stub({ entitlements: [{ user_id: USER, feature: SPRINT_FEATURE, status: 'active', expires_at: end, source: 'sprint:cs_1|cus_sprint' }] });
   try {
@@ -819,4 +819,14 @@ test('ai: other actions keep their behavior (gap_analysis 401 message unchanged,
     await handler(req('POST', { action: 'nope' }), res);
     assert.equal(res.statusCode, 400);
   } finally { s.restore(); }
+});
+
+test('checkout routes ?op=portal (the /api/billing/portal rewrite) to the portal handler', async () => {
+  const handler = require('../billing/checkout');
+  const res = { statusCode: 0, headers: {}, body: '' };
+  res.status = (c) => { res.statusCode = c; return res; };
+  res.setHeader = (k, v) => { res.headers[k] = v; return res; };
+  res.end = (b) => { res.body = b || ''; return res; };
+  await handler({ method: 'GET', url: '/api/billing/checkout?op=portal', query: { op: 'portal' }, headers: {} }, res);
+  assert.strictEqual(res.statusCode, 405);
 });

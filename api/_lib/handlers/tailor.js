@@ -35,9 +35,9 @@
 
 'use strict';
 
-const { setCors, send } = require('../_lib/http');
-const { getUser } = require('../_lib/supabaseAuth');
-const plans = require('../_lib/plans');
+const { setCors, send } = require('../http');
+const { getUser } = require('../supabaseAuth');
+const plans = require('../plans');
 
 const FEATURE = 'resume_tailor';
 const DEFAULT_MODEL = 'gpt-4o-mini';

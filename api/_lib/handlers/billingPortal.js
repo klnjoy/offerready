@@ -17,10 +17,10 @@
 
 'use strict';
 
-const { setCors, send } = require('../_lib/http');
-const { getUser } = require('../_lib/supabaseAuth');
-const { createPortalSession } = require('../_lib/stripe');
-const billing = require('../_lib/billing');
+const { setCors, send } = require('../http');
+const { getUser } = require('../supabaseAuth');
+const { createPortalSession } = require('../stripe');
+const billing = require('../billing');
 
 function returnUrl(origin) {
   const base = String(origin || '').replace(/\/+$/, '');

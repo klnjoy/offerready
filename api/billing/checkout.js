@@ -55,6 +55,9 @@ function returnUrls(origin, body) {
 }
 
 async function handler(req, res) {
+  // /api/billing/portal is rewritten here (vercel.json) to stay within the
+  // serverless function limit; it is a separate handler.
+  if (isOp(req, 'portal')) return require('../_lib/handlers/billingPortal')(req, res);
   setCors(res, req.headers && req.headers.origin);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   // Public: which options this deployment sells (the signed-out Pricing page
@@ -117,6 +120,12 @@ async function handler(req, res) {
     console.error('checkout error:', err && err.message);
     send(res, 502, { error: 'Could not start checkout. Please try again.' });
   }
+}
+
+function isOp(req, op) {
+  const q = req && req.query && req.query.op;
+  if (q === op) return true;
+  return typeof (req && req.url) === 'string' && new RegExp('[?&]op=' + op + '(&|$)').test(req.url);
 }
 
 module.exports = handler;
