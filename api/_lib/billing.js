@@ -202,6 +202,21 @@ async function revokePro(userId) {
 }
 
 /**
+ * After a pass is taken back: an active subscription keeps Pro as it is;
+ * otherwise the Pro rows fall back to what's still held (revokePro).
+ */
+async function syncProAfterRevoke(userId, nowMs) {
+  const now = typeof nowMs === 'number' ? nowMs : Date.now();
+  let sub = null;
+  try { sub = await latestSubscription(userId); }
+  catch (err) { console.error('[billing] subscription read failed during pass revoke:', err && err.message); }
+  const subLive = sub && ACTIVE_STATUSES.indexOf(sub.status) !== -1 &&
+    (!sub.current_period_end || Date.parse(sub.current_period_end) > now);
+  if (subLive) return;
+  await revokePro(userId);
+}
+
+/**
  * Claim a key in the webhook_events ledger (the same table and PK that dedupes
  * Stripe events), so one checkout session grants at most once even when it
  * arrives in two different events (completed + async_payment_succeeded).
@@ -391,6 +406,7 @@ module.exports = {
   claimOnce,
   releaseClaim,
   extendPro,
+  syncProAfterRevoke,
   readEntitlementRows,
   OPTIONS,
   priceFor,

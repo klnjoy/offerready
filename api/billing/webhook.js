@@ -13,6 +13,8 @@
  *      checkout session id (ledger key 'checkout:<cs id>' in webhook_events),
  *      on top of the per-event dedupe. Revoking a subscription keeps a
  *      still-valid pass (billing.revokePro).
+ *   5. charge.refunded (full refund) / charge.dispute.created on a pass or
+ *      pack: takes the purchase back (passes.revokePass / revokePack).
  *
  * Never trusts an unverified payload. Any failure fails closed (does not grant).
  * This endpoint is called by Stripe, not the browser — no CORS needed.
@@ -20,7 +22,7 @@
 
 'use strict';
 
-const { verifyWebhook, getSubscription } = require('../_lib/stripe');
+const { verifyWebhook, getSubscription, findCheckoutSession } = require('../_lib/stripe');
 const billing = require('../_lib/billing');
 const passes = require('../_lib/passes');
 
@@ -105,6 +107,24 @@ async function applySprintPayment(session) {
   else await passes.grantPack(userId, option, session.id);
 }
 
+/**
+ * A full refund or a dispute on a one-time purchase takes it back: a pass
+ * ends (queued passes move up), a pack's credits are removed. Partial refunds
+ * keep access (a goodwill partial refund isn't a cancellation). Purchases we
+ * didn't create (no matching Checkout Session with our option) are ignored.
+ */
+async function applyReversal(obj, reason) {
+  const pi = obj && (typeof obj.payment_intent === 'string' ? obj.payment_intent : obj.payment_intent && obj.payment_intent.id);
+  if (!pi) return;
+  const session = await findCheckoutSession(pi);
+  if (!session || session.mode !== 'payment') return;
+  const md = session.metadata || {};
+  const userId = md.user_id || session.client_reference_id;
+  if (!userId) { console.error('webhook: no user_id for reversed session', session.id); return; }
+  if (passes.isPass(md.option)) await passes.revokePass(userId, session.id, reason);
+  else if (passes.isPack(md.option)) await passes.revokePack(userId, md.option, session.id, reason);
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') { send(res, 405, { error: 'Method not allowed.' }); return; }
 
@@ -145,6 +165,14 @@ module.exports = async function handler(req, res) {
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
         await applySubscriptionState(obj);
+        break;
+      }
+      case 'charge.refunded': {
+        if (obj && obj.refunded === true) await applyReversal(obj, 'refund');
+        break;
+      }
+      case 'charge.dispute.created': {
+        await applyReversal(obj, 'dispute');
         break;
       }
       default:

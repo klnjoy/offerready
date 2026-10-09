@@ -51,17 +51,20 @@ Each checkout option is offered only when its price variable is set (the app
 reads the list from `GET /api/me/plan` → `billing.options`).
 
 **Stripe setup (billing):**
-1. Products → create **OfferReady Pro** with two recurring prices (monthly,
-   yearly) and a product **Interview Sprint (30 days)** with a **one-time** price.
-   Copy the `price_…` ids into the three variables above.
-2. Developers → Webhooks → add `https://<api>/api/billing/webhook` with events
+1. Products → create five products, each with a **one-time** price: Job pass
+   (45 days), 30-day pass, 90-day pass, 1-year pass, and Mock interview pack
+   (10). Copy the `price_…` ids into the `STRIPE_PASS_*` and
+   `STRIPE_MOCK_PACK_PRICE_ID` variables above.
+2. Developers → Webhooks → add `https://<api>/api/billing/webhook`, set its API
+   version to `2025-03-31.basil` (the version the API pins; override with
+   `STRIPE_API_VERSION` and change both together), with events
    `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
-   `customer.subscription.created`, `customer.subscription.updated`,
-   `customer.subscription.deleted`. Copy its signing secret.
-3. Settings → Billing → Customer portal: save a configuration (required before
-   `/api/billing/portal` works): allow updating payment methods, viewing invoice
-   history, canceling (at period end), and switching plans between the monthly
-   and yearly Pro prices. Default redirect: the app's `/account`.
+   `charge.refunded`, `charge.dispute.created` (a full refund or a dispute ends
+   the pass or removes the pack's credits). Add the `customer.subscription.*`
+   events only if you sell subscriptions. Copy its signing secret.
+3. Settings → Billing → Customer portal (optional with passes): save a
+   configuration so "Receipts" in Account opens the portal for invoice history.
+   Default redirect: the app's `/account`.
 
 Add them for **Production** (and Preview if you want). Never commit a real key —
 `.env` is gitignored; see `.env.example` for the shape.
