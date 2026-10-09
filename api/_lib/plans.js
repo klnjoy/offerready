@@ -37,14 +37,16 @@ const { countJobs } = require('./jobs');
 // Monthly limits (calendar month, UTC). null = unlimited. Pro limits are
 // fair-use caps that protect AI cost; a real user rarely reaches them.
 const LIMITS = {
-  free: { saved_jobs: 1, analyses: 3, ai_grading: 5, voice_mock: 1, custom_scenarios: 0, premium_scenarios: 0, story_ai: 3, prep_plan: null },
-  pro:  { saved_jobs: null, analyses: 60, ai_grading: 400, voice_mock: 40, custom_scenarios: 40, premium_scenarios: null, story_ai: 150, prep_plan: null },
+  free: { saved_jobs: 1, analyses: 3, ai_grading: 5, voice_mock: 1, custom_scenarios: 0, premium_scenarios: 0, story_ai: 3, prep_plan: null, resume_tailor: 2 },
+  pro:  { saved_jobs: null, analyses: 60, ai_grading: 400, voice_mock: 40, custom_scenarios: 40, premium_scenarios: null, story_ai: 150, prep_plan: null, resume_tailor: 100 },
 };
 
 // Features counted as monthly usage_events (saved_jobs counts jobs rows;
 // premium_scenarios is a library gate checked by entitlement in [slug].js;
-// prep_plan is unlimited on both plans).
-const METERED = ['analyses', 'ai_grading', 'voice_mock', 'custom_scenarios', 'story_ai'];
+// prep_plan is unlimited on both plans). resume_tailor needs migration 0011
+// (the usage_events CHECK constraint); before it runs, recordUse's insert is
+// rejected, logged once and ignored, so tailoring still works (uncounted).
+const METERED = ['analyses', 'ai_grading', 'voice_mock', 'custom_scenarios', 'story_ai', 'resume_tailor'];
 
 // Human wording for limit messages: [singular, plural].
 const NOUNS = {
@@ -56,6 +58,7 @@ const NOUNS = {
   premium_scenarios: ['premium scenario', 'premium scenarios'],
   story_ai: ['story coaching session', 'story coaching sessions'],
   prep_plan: ['prep plan', 'prep plans'],
+  resume_tailor: ['resume tailoring run', 'resume tailoring runs'],
 };
 
 const TIMEOUT_MS = 6000;

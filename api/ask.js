@@ -26,6 +26,12 @@
  * server-side (also mid-stream, where it may be split across deltas) and
  * returned as `followups`, so it never reaches the visible answer.
  *
+ * purpose: 'story_coach' (Story bank "Coach this story") is METERED: it needs a
+ * Bearer token (401 {signin:true} without), checks the monthly `story_ai`
+ * quota (403 quotaError shape when over) and records one use only after a
+ * successful answer (stream: before the done frame; JSON: before the reply).
+ * Every other request is the anonymous help assistant, unchanged.
+ *
  * Security/cost: key server-side only, CORS restricted, input capped, one LLM
  * call, no storage, no content logging, no-key -> 503.
  */
@@ -36,6 +42,10 @@ const { AREAS } = require('./_lib/areas');
 
 const { lookupResource, RESOURCES } = require('./_lib/skillMap');
 const { suggestActions } = require('./_lib/helpActions');
+const { getUser } = require('./_lib/supabaseAuth');
+const { checkQuota, recordUse, quotaError } = require('./_lib/plans');
+
+const STORY_COACH = 'story_coach';
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
@@ -97,7 +107,7 @@ function setCors(res, origin) {
   res.setHeader('Access-Control-Allow-Origin', value);
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 function send(res, status, payload) {
   res.status(status).setHeader('Content-Type', 'application/json');
@@ -402,6 +412,15 @@ async function handler(req, res) {
   if (!question) { send(res, 400, { error: 'Please enter a question.' }); return; }
   if (question.length > Q_MAX) { send(res, 413, { error: 'Question is too long.' }); return; }
 
+  // Story coaching is a metered plan feature; the help assistant is not.
+  let meteredUser = null;
+  if (body.purpose === STORY_COACH) {
+    meteredUser = await getUser(req);
+    if (!meteredUser) { send(res, 401, { error: 'Sign in to get story coaching.', signin: true }); return; }
+    const q = await checkQuota(meteredUser.id, 'story_ai');
+    if (!q.ok) { send(res, 403, quotaError(q, 'story_ai')); return; }
+  }
+
   const history = sanitizeHistory(body.history);
   const context = sanitizeContext(body.context);
   const area = (body && typeof body.area === 'string' && body.area) || 'all';
@@ -434,6 +453,7 @@ async function handler(req, res) {
         ? data.choices[0].message.content : '';
       const { answer, followups } = splitFollowups(raw || '');
       if (!answer) { send(res, 502, { error: 'Empty answer. Please try again.' }); return; }
+      if (meteredUser) await recordUse(meteredUser.id, 'story_ai');
       send(res, 200, { answer, ...extras(question, answer, context, followups), area, used_llm: true });
       return;
     }
@@ -475,6 +495,7 @@ async function handler(req, res) {
     if (!fin.answer.trim()) {
       sse(res, 'error', { error: 'Empty answer. Please try again.' });
     } else {
+      if (meteredUser) await recordUse(meteredUser.id, 'story_ai');
       sse(res, 'done', extras(question, fin.answer, context, fin.followups));
     }
     res.end();

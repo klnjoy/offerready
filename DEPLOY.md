@@ -28,6 +28,31 @@ GitHub Pages (static site)  ──HTTPS──►  Vercel Function /api/analyze-j
 | `OPENAI_API_KEY` | **Yes** | `sk-…` (server-side only, never in the frontend) |
 | `OPENAI_MODEL` | No | `gpt-4o-mini` (default in code if unset) |
 | `ALLOWED_ORIGIN` | No | `https://klnjoy.github.io` (CORS; default already this) |
+| `SUPABASE_URL` / `SUPABASE_ANON_KEY` | For accounts | Sign-in verification (job analysis now requires a free account) |
+| `SUPABASE_SERVICE_ROLE_KEY` | For plans + billing | Server-only; entitlements, usage, subscription mirror |
+| `STRIPE_SECRET_KEY` | For billing | `sk_test_…` / `sk_live_…` (server-only) |
+| `STRIPE_WEBHOOK_SECRET` | For billing | `whsec_…` of the `/api/billing/webhook` endpoint |
+| `STRIPE_PRO_MONTHLY_PRICE_ID` | Optional | Recurring monthly Pro price → "Monthly" checkout option |
+| `STRIPE_PRO_ANNUAL_PRICE_ID` | Optional | Recurring yearly Pro price → "Annual" checkout option |
+| `STRIPE_SPRINT_PRICE_ID` | Optional | ONE-TIME price → 30-day "Interview Sprint" pass (Checkout mode `payment`) |
+| `ACCESS_UNTIL_PERIOD_END` | No | `true` (keep Pro until period end after cancel) |
+| `APP_BASE_PATH` | No | `/offerready-app` (where Checkout/Portal return users) |
+
+Each checkout option is offered only when its price variable is set (the app
+reads the list from `GET /api/me/plan` → `billing.options`).
+
+**Stripe setup (billing):**
+1. Products → create **OfferReady Pro** with two recurring prices (monthly,
+   yearly) and a product **Interview Sprint (30 days)** with a **one-time** price.
+   Copy the `price_…` ids into the three variables above.
+2. Developers → Webhooks → add `https://<api>/api/billing/webhook` with events
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+   `customer.subscription.created`, `customer.subscription.updated`,
+   `customer.subscription.deleted`. Copy its signing secret.
+3. Settings → Billing → Customer portal: save a configuration (required before
+   `/api/billing/portal` works): allow updating payment methods, viewing invoice
+   history, canceling (at period end), and switching plans between the monthly
+   and yearly Pro prices. Default redirect: the app's `/account`.
 
 Add them for **Production** (and Preview if you want). Never commit a real key —
 `.env` is gitignored; see `.env.example` for the shape.

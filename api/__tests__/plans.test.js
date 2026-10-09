@@ -107,8 +107,8 @@ test.afterEach(() => {
 // ---- limits contract ----------------------------------------------------------
 
 test('LIMITS: the decided Free/Pro numbers (must match src/lib/plans.ts)', () => {
-  assert.deepEqual(plans.LIMITS.free, { saved_jobs: 1, analyses: 3, ai_grading: 5, voice_mock: 1, custom_scenarios: 0, premium_scenarios: 0, story_ai: 3, prep_plan: null });
-  assert.deepEqual(plans.LIMITS.pro, { saved_jobs: null, analyses: 60, ai_grading: 400, voice_mock: 40, custom_scenarios: 40, premium_scenarios: null, story_ai: 150, prep_plan: null });
+  assert.deepEqual(plans.LIMITS.free, { saved_jobs: 1, analyses: 3, ai_grading: 5, voice_mock: 1, custom_scenarios: 0, premium_scenarios: 0, story_ai: 3, prep_plan: null, resume_tailor: 2 });
+  assert.deepEqual(plans.LIMITS.pro, { saved_jobs: null, analyses: 60, ai_grading: 400, voice_mock: 40, custom_scenarios: 40, premium_scenarios: null, story_ai: 150, prep_plan: null, resume_tailor: 100 });
 });
 
 test('periodStart / periodEnd: UTC calendar month', () => {
@@ -419,7 +419,7 @@ test('jobs POST: Pro with many jobs -> saved', async () => {
   } finally { s.restore(); }
 });
 
-test('ai analyze_jd: signed-in Free over quota -> 403 analyses; anonymous not metered', async () => {
+test('ai analyze_jd: signed-in Free over quota -> 403 analyses; anonymous -> 401 sign-in (not metered)', async () => {
   process.env.OPENAI_API_KEY = 'k';
   const handler = require('../ai');
   const body = { action: 'analyze_jd', jobDescription: 'We are hiring a senior data engineer to build pipelines with Snowflake and dbt. '.repeat(3) };
@@ -436,7 +436,8 @@ test('ai analyze_jd: signed-in Free over quota -> 403 analyses; anonymous not me
   try {
     const res = fakeRes();
     await handler(req('POST', body), res);
-    assert.notEqual(res.statusCode, 403, 'anonymous run is not quota-checked');
+    assert.equal(res.statusCode, 401, 'anonymous runs must sign in first');
+    assert.equal(res.json().signin, true);
     assert.ok(!s.calls.some((c) => c.url.includes('supabase')));
   } finally { s.restore(); }
 });

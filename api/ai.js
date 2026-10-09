@@ -5,9 +5,11 @@
  * grow features without adding a serverless function per feature (Vercel Hobby
  * caps at 12). Dispatch on body.action:
  *
- *   analyze_jd         -> structured JD analysis (public, mirrors /api/analyze-job)
+ *   analyze_jd         -> structured JD analysis (auth required, free accounts included)
  *   gap_analysis       -> resume-vs-JD match score + gaps (auth required)
  *   generate_questions -> categorized interview questions from a JD (auth required)
+ *   import_job_url     -> fetch a job posting from a link (sign-in optional, no LLM;
+ *                         20/min per IP; see api/_lib/jobImport.js for the SSRF guards)
  *
  * Security / cost posture (mirrors analyze-job.js):
  *   - OPENAI_API_KEY is server-side only. One LLM call per request. No storage.
@@ -17,9 +19,10 @@
  *     NOT require Pro (gap analysis + question generation are core funnel value,
  *     shown before the paywall per the product's "value before signup" stance);
  *     persistence + Pro-only depth live behind their own gates elsewhere.
- *   - Plans (api/_lib/plans.js): a SIGNED-IN analyze_jd counts toward the
- *     monthly `analyses` quota (403 {upgrade:true,...} when over; recorded only
- *     after a successful analysis). Anonymous runs are bounded by rate limit.
+ *   - Plans (api/_lib/plans.js): analyze_jd needs a signed-in user (401
+ *     {error, signin:true} otherwise) and counts toward the monthly `analyses`
+ *     quota (403 {upgrade:true,...} when over; recorded only after a
+ *     successful analysis).
  *   - Rate limit (api/_lib/rateLimit.js): best-effort per instance, per IP and
  *     per user; 429 + Retry-After.
  */
@@ -42,6 +45,7 @@ const {
   ownsJob, saveGapAnalysis, saveQuestions, getGapAnalysis,
   getPracticeSessions, computeReadiness, saveProgressSnapshot,
 } = require('./_lib/readiness');
+const { importJobUrl } = require('./_lib/jobImport');
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
@@ -106,8 +110,8 @@ function attachResources(analysis) {
 async function handleAnalyzeJd(body, res, user) {
   const v = validateInput(body);
   if (!v.ok) { send(res, v.status, { error: v.error }); return; }
-  // Monthly quota for signed-in users (anonymous "value before signup" runs
-  // are bounded by the per-IP rate limit instead). Fails open on storage errors.
+  // Monthly quota (the handler only reaches here with a user). Fails open on
+  // storage errors.
   if (user) {
     const q = await checkQuota(user.id, 'analyses');
     if (!q.ok) { send(res, 403, quotaError(q, 'analyses')); return; }
@@ -238,7 +242,18 @@ async function handleGenerateQuestions(body, res, user) {
   send(res, 200, { ok: true, action: 'generate_questions', questions: result.questions, counts: result.counts, job_id: jobId || null, saved: saved });
 }
 
+/** import_job_url — no LLM call, so it works without OPENAI_API_KEY. */
+async function handleImportJobUrl(req, res, body) {
+  if (!rateLimit.enforce(req, res, { scope: 'job_import', perIp: 20 })) return;
+  const out = await importJobUrl(body.url);
+  send(res, out.status, out.body);
+}
+
 module.exports = async function handler(req, res) {
+  // /api/premium/tailor is rewritten here (vercel.json) to stay within the
+  // serverless function limit; it is a separate handler.
+  const op = (req && req.query && req.query.op) || ((typeof (req && req.url) === 'string' && /[?&]op=tailor(&|$)/.test(req.url)) ? 'tailor' : '');
+  if (op === 'tailor') return require('./_lib/handlers/tailor')(req, res);
   setCors(res, req.headers && req.headers.origin);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (req.method !== 'POST') { send(res, 405, { error: 'Method not allowed.' }); return; }
@@ -246,23 +261,33 @@ module.exports = async function handler(req, res) {
   // 20/min per user once identity is known.
   if (!rateLimit.enforce(req, res, { scope: 'ai' })) return;
 
+  let body = req.body;
+  if (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) { body = null; } }
+
+  // Link import does not use the AI provider, so it is dispatched before the
+  // OPENAI_API_KEY check. Sign-in is optional.
+  if (body && typeof body === 'object' && String(body.action || '').toLowerCase() === 'import_job_url') {
+    await handleImportJobUrl(req, res, body);
+    return;
+  }
+
   if (!process.env.OPENAI_API_KEY) {
     send(res, 503, { demo: true, error: 'AI is not configured on this deployment.' });
     return;
   }
 
-  let body = req.body;
-  if (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) { body = null; } }
   if (!body || typeof body !== 'object') { send(res, 400, { error: 'Invalid request body.' }); return; }
 
   const action = String(body.action || '').toLowerCase();
 
-  // analyze_jd is public (value before signup). The others require identity so
-  // results can be attributed/persisted to the user's jobs.
+  // analyze_jd requires a (free) account: every analysis counts toward the
+  // monthly `analyses` quota. The app keeps the pasted JD across sign-in and
+  // re-runs it; the sample walkthrough (/example) stays public and offline.
+  // The others require identity so results can be attributed/persisted.
   if (action === 'analyze_jd') {
-    // Optional identity: a signed-in caller's analyses count toward their plan.
     const user = bearerToken(req) ? await getUser(req) : null;
-    if (user && !rateLimit.enforce(req, res, { scope: 'ai', userId: user.id })) return;
+    if (!user) { send(res, 401, { error: 'Sign in to analyze a job. It\'s free.', signin: true }); return; }
+    if (!rateLimit.enforce(req, res, { scope: 'ai', userId: user.id })) return;
     await handleAnalyzeJd(body, res, user);
     return;
   }
