@@ -1,0 +1,39 @@
+# Live check of AI answer grading against evals/grading/cases.json.
+# Needs the repository secret OPENAI_API_KEY (Settings → Secrets and variables
+# → Actions). Without it the job prints a skip message and passes.
+name: Grading eval
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 9 * * 1" # Mondays 09:17 UTC: catches model drift
+  pull_request:
+    paths:
+      - "api/_lib/gradeAnswer.js"
+      - "api/_lib/rubrics.js"
+      - "evals/grading/**"
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run grading eval
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+        run: node evals/grading/run.js
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: grading-eval-report
+          path: evals/grading/last-report.json
+          if-no-files-found: ignore

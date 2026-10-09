@@ -356,7 +356,8 @@ test('GET /api/me/plan: usage storage missing -> still 200 with plan, usage unkn
 
 // ---- endpoint enforcement -------------------------------------------------------
 
-const GOOD_GRADE = { score: 7, verdict: 'Solid', covered: ['a'], missing: ['b'], followup: 'Why?' };
+// Rubric-shaped reply (api/_lib/gradeAnswer.js); 'Q?' maps to the general rubric.
+const GOOD_GRADE = { criteria: ['answer', 'mechanism', 'tradeoff', 'example', 'risks'].map((id) => ({ id, rating: 2, evidence: 'my answer here', note: '' })), verdict: 'Solid', staff_upgrade: '', followup: 'Why?' };
 
 test('grade-answer: Free over quota -> 403 upgrade shape, no OpenAI call, nothing recorded', async () => {
   process.env.OPENAI_API_KEY = 'k';

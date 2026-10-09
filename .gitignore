@@ -47,3 +47,4 @@ Thumbs.db
 # ---- Node / Vercel backend (api/) ----
 node_modules/
 .vercel/
+evals/grading/last-report.json

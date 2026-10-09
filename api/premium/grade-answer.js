@@ -1,8 +1,10 @@
 /**
  * POST /api/premium/grade-answer  (Vercel serverless function)
  * ---------------------------------------------------------------------------
- * Grades the candidate's OWN answer to a Defend node and pushes back like a
- * real interviewer (score + what held up + what was missing + one follow-up).
+ * Grades the candidate's OWN answer against a topic rubric (api/_lib/rubrics.js)
+ * and pushes back like a real interviewer: per-criterion ratings checked against
+ * quotes from the answer, a server-computed score, the staff-level upgrade and
+ * one follow-up. Body: { prompt, answer, signals?, model?, topic? }.
  * This is the feature that makes Pro an AI interviewer, not a study guide.
  *
  * Access matrix (plans.js `ai_grading` quota — Free 5/month, Pro 400/month):
@@ -28,7 +30,7 @@ const { SYSTEM_PROMPT, buildUserMessage, validateGrade } = require('../_lib/grad
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const REQUEST_TIMEOUT_MS = 30000;
-const MAX_OUTPUT_TOKENS = 700;
+const MAX_OUTPUT_TOKENS = 1200;
 const FEATURE = 'ai_grading';
 
 function safeParseJson(str) {
@@ -67,6 +69,8 @@ module.exports = async function handler(req, res) {
   const prompt = String(body.prompt || '').slice(0, 1200);
   const model_answer = String(body.model || '').slice(0, 1600);
   const signals = Array.isArray(body.signals) ? body.signals.slice(0, 6) : [];
+  const topic = typeof body.topic === 'string' ? body.topic.slice(0, 60) : '';
+  const ctx = { prompt, signals, model: model_answer, answer, topic };
   if (!prompt) { send(res, 400, { error: 'Missing the question to grade against.' }); return; }
 
   const model = process.env.OPENAI_MODEL || DEFAULT_MODEL;
@@ -88,7 +92,7 @@ module.exports = async function handler(req, res) {
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: buildUserMessage({ prompt, signals, model: model_answer, answer }) },
+          { role: 'user', content: buildUserMessage(ctx) },
         ],
       }),
     });
@@ -103,7 +107,7 @@ module.exports = async function handler(req, res) {
     const data = await resp.json();
     const content = data && data.choices && data.choices[0] && data.choices[0].message
       ? data.choices[0].message.content : '';
-    const result = validateGrade(safeParseJson(content));
+    const result = validateGrade(safeParseJson(content), ctx);
     if (!result.ok) {
       console.error('Grade failed validation:', result.reason);
       send(res, 422, { fallback: true, error: 'Could not grade this answer. Showing the strong answer instead.' });
