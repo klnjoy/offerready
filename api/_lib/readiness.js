@@ -437,7 +437,61 @@ function int(v) {
   return isFinite(n) ? n : 0;
 }
 
+// ---------------------------------------------------------------------------
+// Readiness for every job at once (the Readiness overview). Two indexed reads
+// instead of one per job, so 400 jobs cost the same as 4.
+// ---------------------------------------------------------------------------
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * { [jobId]: { score, match, practiced, at, week_ago } } for the user's jobs.
+ *   score     latest saved readiness, else half the resume match (the formula
+ *             the job page uses before any practice), else absent
+ *   week_ago  the score a week ago (latest snapshot at least 7 days old), for
+ *             the change arrow; null when there's no history that old
+ * Bounded reads (newest 5000 snapshots, 2000 gap rows): a job outside them
+ * just shows no score. Returns {} on storage errors.
+ */
+async function readinessByJob(userId, nowMs) {
+  if (!userId) return {};
+  const now = typeof nowMs === 'number' ? nowMs : Date.now();
+  const out = {};
+  try {
+    const [pr, gr] = await Promise.all([
+      restFetch(`/progress_metrics?user_id=eq.${enc(userId)}&select=job_id,overall_readiness,questions_practiced,recorded_at&order=recorded_at.desc&limit=5000`,
+        { method: 'GET', headers: serviceHeaders() }),
+      restFetch(`/gap_analysis?user_id=eq.${enc(userId)}&select=job_id,match_score,created_at&order=created_at.desc&limit=2000`,
+        { method: 'GET', headers: serviceHeaders() }),
+    ]);
+    const prog = pr.ok ? await pr.json() : [];
+    const gaps = gr.ok ? await gr.json() : [];
+    for (const g of Array.isArray(gaps) ? gaps : []) {
+      if (!g || !g.job_id || out[g.job_id]) continue;
+      const match = Math.max(0, Math.min(100, Math.round(Number(g.match_score) || 0)));
+      out[g.job_id] = { score: Math.round(match / 2), match, practiced: 0, at: g.created_at || null, week_ago: null };
+    }
+    const seen = new Set();
+    for (const p of Array.isArray(prog) ? prog : []) {
+      if (!p || !p.job_id) continue;
+      const v = Math.max(0, Math.min(100, Math.round(Number(p.overall_readiness) || 0)));
+      const t = Date.parse(p.recorded_at || '');
+      if (!seen.has(p.job_id)) {
+        seen.add(p.job_id);
+        const cur = out[p.job_id] || { match: null, week_ago: null };
+        out[p.job_id] = { score: v, match: cur.match, practiced: Number(p.questions_practiced) || 0, at: p.recorded_at || null, week_ago: null };
+      } else if (out[p.job_id].week_ago == null && isFinite(t) && now - t >= WEEK_MS) {
+        out[p.job_id].week_ago = v;
+      }
+    }
+  } catch (_e) {
+    return {};
+  }
+  return out;
+}
+
 module.exports = {
+  readinessByJob,
   ownsJob, practiceSchemaReady,
   saveGapAnalysis, getGapAnalysis,
   saveQuestions, getQuestions,

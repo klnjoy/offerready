@@ -1091,3 +1091,20 @@ test('webhook refund: an active subscription keeps Pro when a pass is refunded',
     for (const r of proRows(s.w)) assert.equal(r.status, 'active');
   } finally { s.restore(); }
 });
+
+test('placeholder price values ("30", "0", "99") are treated as not set up', async () => {
+  process.env.STRIPE_SECRET_KEY = 'sk_test_x';
+  process.env.STRIPE_PASS_JOB_PRICE_ID = '0';
+  process.env.STRIPE_PASS_30_PRICE_ID = '30';
+  process.env.STRIPE_PASS_90_PRICE_ID = ' price_abc123 ';
+  process.env.STRIPE_MOCK_PACK_PRICE_ID = '99';
+  assert.deepEqual(billing.availableOptions(), ['pass90']);
+  const handler = require('../billing/checkout');
+  const s = stub();
+  try {
+    const res = fakeRes();
+    await handler(req('POST', { app: true, option: 'pass30' }, 'good-token'), res);
+    assert.equal(res.statusCode, 400);
+    assert.equal(s.w.stripeCalls.length, 0);
+  } finally { s.restore(); }
+});

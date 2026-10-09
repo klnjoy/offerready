@@ -57,14 +57,21 @@ const CREDIT_FEATURES = ['voice_mock'];
 function isPass(option) { return PASS_KINDS.indexOf(option) !== -1; }
 function isPack(option) { return PACK_KINDS.indexOf(option) !== -1; }
 
+/** A Stripe Price id, or '' for anything else (placeholders like "30" or "0"
+ * mean "not set up yet", so that option isn't offered). */
+function validPrice(v) {
+  const t = String(v || '').trim();
+  return /^price_[A-Za-z0-9]+$/.test(t) ? t : '';
+}
+
 function priceFor(option) {
   const env = process.env;
   switch (option) {
-    case 'job': return env.STRIPE_PASS_JOB_PRICE_ID || '';
-    case 'pass30': return env.STRIPE_PASS_30_PRICE_ID || env.STRIPE_SPRINT_PRICE_ID || '';
-    case 'pass90': return env.STRIPE_PASS_90_PRICE_ID || '';
-    case 'pass365': return env.STRIPE_PASS_365_PRICE_ID || '';
-    case 'mock10': return env.STRIPE_MOCK_PACK_PRICE_ID || '';
+    case 'job': return validPrice(env.STRIPE_PASS_JOB_PRICE_ID);
+    case 'pass30': return validPrice(env.STRIPE_PASS_30_PRICE_ID) || validPrice(env.STRIPE_SPRINT_PRICE_ID);
+    case 'pass90': return validPrice(env.STRIPE_PASS_90_PRICE_ID);
+    case 'pass365': return validPrice(env.STRIPE_PASS_365_PRICE_ID);
+    case 'mock10': return validPrice(env.STRIPE_MOCK_PACK_PRICE_ID);
     default: return '';
   }
 }
@@ -339,7 +346,7 @@ async function revokePack(userId, kind, sessionId, reason) {
 
 module.exports = {
   PASSES, PASS_KINDS, PACKS, PACK_KINDS, CREDIT_FEATURES, DAY_MS,
-  isPass, isPack, priceFor,
+  isPass, isPack, priceFor, validPrice,
   livePasses, combine, passCoverage, lastPassCustomer,
   creditBalance, spendCredit,
   grantPass, grantPack, revokePass, revokePack,

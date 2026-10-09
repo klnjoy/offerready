@@ -2,6 +2,7 @@
  * /api/jobs  (Vercel serverless function)
  * ---------------------------------------------------------------------------
  * GET  → list the signed-in user's saved jobs (summary fields).
+ * GET ?view=readiness → { scores: { [jobId]: { score, match, practiced, at, week_ago } } }
  * POST → save a new analyzed job for the signed-in user.
  *
  * Identity comes from a verified Supabase JWT (Authorization: Bearer). All DB
@@ -20,6 +21,7 @@ const { setCors, send } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
 const { listJobs, insertJob, deriveJobTitle } = require('../_lib/jobs');
 const { checkQuota, quotaError } = require('../_lib/plans');
+const { readinessByJob } = require('../_lib/readiness');
 
 function str(v, max) {
   if (v == null) return null;
@@ -47,6 +49,14 @@ module.exports = async function handler(req, res) {
   if (!user) { send(res, 401, { error: 'Sign in to use saved jobs.' }); return; }
 
   if (req.method === 'GET') {
+    // ?view=readiness → readiness for every job, for the Readiness overview.
+    const view = (req.query && req.query.view) || (/[?&]view=readiness(&|$)/.test(String(req.url || '')) ? 'readiness' : '');
+    if (view === 'readiness') {
+      const scores = await readinessByJob(user.id);
+      res.setHeader('Cache-Control', 'private, no-store');
+      send(res, 200, { ok: true, scores });
+      return;
+    }
     const jobs = await listJobs(user.id);
     send(res, 200, { ok: true, jobs });
     return;
