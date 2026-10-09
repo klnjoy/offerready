@@ -49,6 +49,8 @@ Questions or requests about your data: see [Contact](../Contact/index.md).
 | **Your resume text** | Only if you turn on **resume sync** (off by default) | So you don't have to add your resume again on another device | Supabase, until you turn sync off and delete it, or delete your data. With resume sync off, your resume stays in your browser only. |
 | **Billing details**: your Stripe customer id, plan, renewal and expiry dates | When you buy Pro or a Sprint pass | To give you the features you paid for | Supabase (status only) and Stripe (payment details) |
 | **Error reports**: the page path (no query string), the error message and technical trace, your browser's user-agent, the app version, and your account id if you're signed in | When something breaks in the app | To find and fix bugs | Supabase. Before sending, the app removes query strings and anything that looks like an email address or a token, and sends at most 10 reports per visit. **[Owner to confirm: retention period for error reports, e.g. 90 days]** |
+| **Product usage events**: which app pages you open and when you finish key steps (adding a job, practising a question, finishing a drill or mock, starting checkout), with a random browser id, a random visit id, the app version and your account id if you're signed in. Never the content: no job descriptions, resumes, answers or emails. | While you use the app, unless your browser sends "Do Not Track" | To see which steps people use and where they get stuck, so we fix the right things | Supabase, first-party only. At most 200 events per visit. |
+| **Feedback you send**: your message, the optional 1-5 rating, the page you sent it from, the app version, your browser's user-agent, your account id if you're signed in, and whether we may email you about it | When you use **Send feedback** | To improve OfferReady and, if you ticked the box, to reply | Supabase |
 
 ### Data that stays on your device
 
@@ -125,6 +127,10 @@ from our server, not from you.
 ## Cookies, analytics and tracking
 
 - No advertising, no third-party analytics and no tracking pixels.
+- We record a small set of first-party usage events (see the table above) in
+  our own database. They use a random id kept in your browser's local storage,
+  not a cookie, and are never shared with anyone. If your browser sends "Do
+  Not Track", the app sends no usage events.
 - The app keeps your sign-in session and preferences in your browser's local
   storage. These are needed for the app to work.
 - Hosting providers (GitHub, Vercel) may keep standard server logs, such as IP
@@ -137,6 +143,8 @@ from our server, not from you.
 - Billing records: as long as the law requires us to keep them, even after you
   delete your account. **[Owner to confirm: billing record retention period]**
 - Error reports: **[Owner to confirm: retention period, e.g. 90 days]**
+- Usage events: **[Owner to confirm: retention period, e.g. 12 months]**
+- Feedback: until it has been dealt with, or until you ask us to delete it.
 
 ## Your choices and rights
 
