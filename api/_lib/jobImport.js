@@ -17,6 +17,15 @@
  *                       (jobs[]: title, location, isRemote, descriptionHtml, descriptionPlain, jobUrl).
  *                       The board API has no documented single-posting endpoint, so the posting is
  *                       matched by its id within jobUrl; otherwise the page itself is used.
+ *        Workday     {tenant}.wdN.myworkdayjobs.com/[lang/]{site}/job/{path}
+ *                    wdN.myworkdaysite.com/[lang/]recruiting/{tenant}/{site}/job/{path}
+ *                    -> https://{host}/wday/cxs/{tenant}/{site}/job/{path}
+ *                       (jobPostingInfo.title/jobDescription/location/externalUrl,
+ *                        hiringOrganization.name). Workday pages are rendered by
+ *                        JavaScript, so the page itself has no readable posting.
+ *        SmartRecruiters jobs.smartrecruiters.com/{company}/{id}[-slug]
+ *                    -> https://api.smartrecruiters.com/v1/companies/{company}/postings/{id}
+ *                       (name, company.name, location, jobAd.sections.*.text, postingUrl)
  *   2. schema.org JobPosting JSON-LD on the page (including @graph arrays).
  *   3. The page's readable main text, accepted only if it looks like a posting.
  *
@@ -420,6 +429,27 @@ function detectAts(u) {
   if (host === 'jobs.ashbyhq.com' && parts.length >= 2 && slug.test(parts[0]) && /^[0-9a-f-]{8,64}$/i.test(parts[1])) {
     return { kind: 'ashby', org: parts[0], id: parts[1].toLowerCase() };
   }
+  // Workday: optional language segment ("en-US"), then the site, then /job/...
+  const lang = (p) => /^[a-z]{2}(-[A-Za-z]{2})?$/.test(p);
+  let wd = /^([a-z0-9-]{1,63})\.(wd\d{1,3})\.myworkdayjobs\.com$/.exec(host);
+  if (wd) {
+    const rest = lang(parts[0] || '') ? parts.slice(1) : parts;
+    const at = rest.indexOf('job');
+    if (at === 1 && slug.test(rest[0]) && rest.length > 2) {
+      return { kind: 'workday', host, tenant: wd[1], site: rest[0], path: rest.slice(2) };
+    }
+  }
+  wd = /^(wd\d{1,3})\.myworkdaysite\.com$/.exec(host);
+  if (wd) {
+    const rest = lang(parts[0] || '') ? parts.slice(1) : parts;
+    if (rest[0] === 'recruiting' && slug.test(rest[1] || '') && slug.test(rest[2] || '') && rest[3] === 'job' && rest.length > 4) {
+      return { kind: 'workday', host, tenant: rest[1], site: rest[2], path: rest.slice(4) };
+    }
+  }
+  if (host === 'jobs.smartrecruiters.com' && parts.length >= 2 && slug.test(parts[0])) {
+    const m = /^(\d{6,20})/.exec(parts[1]);
+    if (m) return { kind: 'smartrecruiters', company: parts[0], id: m[1] };
+  }
   return null;
 }
 
@@ -503,6 +533,53 @@ async function fromAshby(ats, userUrl, ctx) {
     description,
     source_url: httpUrlOr(job.jobUrl, userUrl.href),
     source: 'ashby',
+  };
+}
+
+async function fromWorkday(ats, userUrl, ctx) {
+  const path = ats.path.map((p) => encodeURIComponent(p)).join('/');
+  const api = new URL(`https://${ats.host}/wday/cxs/${encodeURIComponent(ats.tenant)}/${encodeURIComponent(ats.site)}/job/${path}`);
+  const r = await safeFetch(api, ctx, 'application/json');
+  const j = parseJson(r.text);
+  const info = j && typeof j === 'object' && j.jobPostingInfo && typeof j.jobPostingInfo === 'object' ? j.jobPostingInfo : null;
+  if (!info || !info.title) return null;
+  const description = capDescription(richToText(info.jobDescription));
+  if (!description) return null;
+  const extra = Array.isArray(info.additionalLocations) ? info.additionalLocations.filter((x) => typeof x === 'string') : [];
+  let location = clean([info.location].concat(extra).filter(Boolean).join('; '), 300);
+  if (!location && /remote/i.test(String(info.remoteType || ''))) location = 'Remote';
+  const org = j.hiringOrganization && typeof j.hiringOrganization === 'object' ? j.hiringOrganization.name : '';
+  return {
+    title: clean(info.title, 300),
+    company: clean(org, 200) || humanizeSlug(ats.tenant),
+    location,
+    description,
+    source_url: httpUrlOr(info.externalUrl, userUrl.href),
+    source: 'workday',
+  };
+}
+
+async function fromSmartRecruiters(ats, userUrl, ctx) {
+  const api = new URL(`https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(ats.company)}/postings/${encodeURIComponent(ats.id)}`);
+  const r = await safeFetch(api, ctx, 'application/json');
+  const j = parseJson(r.text);
+  if (!j || typeof j !== 'object' || !j.name) return null;
+  const sec = j.jobAd && j.jobAd.sections && typeof j.jobAd.sections === 'object' ? j.jobAd.sections : {};
+  const html = ['companyDescription', 'jobDescription', 'qualifications', 'additionalInformation']
+    .map((k) => sec[k] && typeof sec[k] === 'object' ? `<h3>${escapeHtml(sec[k].title || '')}</h3>${String(sec[k].text || '')}` : '')
+    .join('\n');
+  const description = capDescription(htmlToText(html));
+  if (!description) return null;
+  const loc = j.location && typeof j.location === 'object' ? j.location : {};
+  let location = clean([loc.city, loc.region, loc.country].filter(Boolean).join(', '), 300);
+  if (loc.remote === true) location = location ? location + ' (remote)' : 'Remote';
+  return {
+    title: clean(j.name, 300),
+    company: clean(j.company && j.company.name, 200) || humanizeSlug(ats.company),
+    location,
+    description,
+    source_url: httpUrlOr(j.postingUrl, userUrl.href),
+    source: 'smartrecruiters',
   };
 }
 
@@ -709,6 +786,8 @@ async function importJobUrl(rawUrl, opts) {
         if (ats.kind === 'greenhouse') result = await fromGreenhouse(ats, u, ctx);
         else if (ats.kind === 'lever') result = await fromLever(ats, u, ctx);
         else if (ats.kind === 'ashby') result = await fromAshby(ats, u, ctx);
+        else if (ats.kind === 'workday') result = await fromWorkday(ats, u, ctx);
+        else if (ats.kind === 'smartrecruiters') result = await fromSmartRecruiters(ats, u, ctx);
       } catch (e) {
         // Timeouts are final; other ATS API failures fall back to the page.
         if (e instanceof ImportError && e.status === 504) throw e;

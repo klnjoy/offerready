@@ -37,6 +37,8 @@ Respond with STRICT JSON only — no markdown, no commentary outside the JSON.
 Match this schema exactly (use empty arrays/strings when unknown):
 
 {
+  "jobTitle": "string",
+  "company": "string",
   "roleSummary": "string",
   "seniority": "string",
   "coreSkills": [{ "name": "string", "type": "EXPLICIT|INFERRED" }],
@@ -66,6 +68,13 @@ Match this schema exactly (use empty arrays/strings when unknown):
 }
 
 Rules:
+- "jobTitle": the job title EXACTLY as the posting names it (e.g. "AI Strategy
+  Lead", "Staff Data Engineer"). If the posting never names a title, use "".
+  Never invent or embellish a title, and never add a level it doesn't state.
+- "company": the hiring company's name as written in the posting, else "".
+- "seniority": the level ONLY when the posting states it (in the title or as
+  years/level wording, e.g. "Senior", "Staff", "Principal", "8+ years").
+  If the posting doesn't state a level, use "". Do not guess.
 - If no resume is provided, set "resumeProvided": false, "alignment": [], and any
   resume-dependent readiness dimension to status INSUFFICIENT_INFO.
 - Keep arrays concise (max ~8 items each). Keep strings tight and specific.

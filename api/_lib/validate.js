@@ -134,6 +134,8 @@ function normalizeAnalysis(obj, resumeProvided) {
   const arr = (v) => (Array.isArray(v) ? v : []);
   const str = (v) => (typeof v === 'string' ? v : '');
   return {
+    jobTitle: str(a.jobTitle).trim().slice(0, 200),
+    company: str(a.company).trim().slice(0, 200),
     roleSummary: str(a.roleSummary),
     seniority: str(a.seniority),
     coreSkills: arr(a.coreSkills),

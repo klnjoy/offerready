@@ -469,3 +469,55 @@ test('api/ai import_job_url: 21st request per minute from one IP -> 429', async 
   assert.equal(res.statusCode, 429);
   assert.ok(res.headers['Retry-After']);
 });
+
+// ---------------------------------------------------------------------------
+// Workday + SmartRecruiters
+// ---------------------------------------------------------------------------
+
+test('workday: myworkdayjobs URL maps to the cxs JSON API', async () => {
+  const calls = stub({
+    'https://acme.wd5.myworkdayjobs.com/wday/cxs/acme/Careers/job/Austin-TX/Senior-Data-Engineer_R123': json({
+      jobPostingInfo: { title: 'Senior Data Engineer', jobDescription: '<p>Build pipelines with <b>Spark</b>.</p><ul><li>5+ years SQL</li></ul>', location: 'Austin, TX', additionalLocations: ['Remote - US'], externalUrl: 'https://acme.wd5.myworkdayjobs.com/Careers/job/Austin-TX/Senior-Data-Engineer_R123' },
+      hiringOrganization: { name: 'Acme Corp' },
+    }),
+  });
+  const r = await importJobUrl('https://acme.wd5.myworkdayjobs.com/en-US/Careers/job/Austin-TX/Senior-Data-Engineer_R123?source=LinkedIn');
+  assert.equal(r.status, 200);
+  assert.equal(r.body.source, 'workday');
+  assert.equal(r.body.title, 'Senior Data Engineer');
+  assert.equal(r.body.company, 'Acme Corp');
+  assert.equal(r.body.location, 'Austin, TX; Remote - US');
+  assert.match(r.body.description, /Build pipelines with Spark\./);
+  assert.match(r.body.description, /• 5\+ years SQL/);
+  assert.equal(calls.fetch[0].init.headers.Accept, 'application/json');
+});
+
+test('workday: myworkdaysite recruiting URL is recognized', () => {
+  const a = _internal.detectAts(new URL('https://wd3.myworkdaysite.com/en-US/recruiting/acme/External/job/NYC/ML-Engineer_JR99'));
+  assert.deepEqual(a, { kind: 'workday', host: 'wd3.myworkdaysite.com', tenant: 'acme', site: 'External', path: ['NYC', 'ML-Engineer_JR99'] });
+  assert.equal(_internal.detectAts(new URL('https://acme.wd5.myworkdayjobs.com/Careers')), null);
+});
+
+test('smartrecruiters: posting URL maps to the postings API', async () => {
+  stub({
+    'https://api.smartrecruiters.com/v1/companies/AcmeCorp/postings/744000012345678': json({
+      name: 'AI Engineer', company: { name: 'Acme Corp' }, location: { city: 'Berlin', country: 'de', remote: true },
+      postingUrl: 'https://jobs.smartrecruiters.com/AcmeCorp/744000012345678-ai-engineer',
+      jobAd: { sections: { jobDescription: { title: 'Job Description', text: '<p>Build RAG systems.</p>' }, qualifications: { title: 'Qualifications', text: '<ul><li>Python</li></ul>' } } },
+    }),
+  });
+  const r = await importJobUrl('https://jobs.smartrecruiters.com/AcmeCorp/744000012345678-ai-engineer');
+  assert.equal(r.status, 200);
+  assert.equal(r.body.source, 'smartrecruiters');
+  assert.equal(r.body.title, 'AI Engineer');
+  assert.equal(r.body.company, 'Acme Corp');
+  assert.equal(r.body.location, 'Berlin, de (remote)');
+  assert.match(r.body.description, /Build RAG systems\./);
+});
+
+test('workday: API failure falls back to the page (and reports not found)', async () => {
+  stub({});
+  const r = await importJobUrl('https://acme.wd5.myworkdayjobs.com/Careers/job/Austin/Engineer_R1');
+  assert.equal(r.status, 422);
+  assert.equal(r.body.blocked, true);
+});
