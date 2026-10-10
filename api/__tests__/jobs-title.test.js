@@ -692,3 +692,21 @@ test('deriveJobTitle: bare seniority is NEVER the whole title', () => {
       lvl + ' alone must not be persisted as a title');
   });
 });
+
+// ---- 2026-10: exact posting title + no guessed level -----------------------
+const { deriveJobTitle: dj } = require('../_lib/jobs');
+
+test('the posting\'s own title (analysis.jobTitle) wins over summary heuristics', () => {
+  assert.equal(dj({}, { jobTitle: 'AI Strategy Lead', seniority: 'Senior', roleSummary: 'The Data Engineer builds pipelines.' }), 'AI Strategy Lead');
+  assert.equal(dj({ targetRole: 'Staff ML Engineer' }, { jobTitle: 'ML Engineer' }), 'Staff ML Engineer');
+});
+
+test('a level the job description never states is not added to the title', () => {
+  const a = { seniority: 'Senior', roleSummary: 'The Data Engineer will build pipelines.' };
+  assert.equal(dj({ jobDescription: 'We need a Data Engineer to build pipelines.' }, a), 'Data Engineer');
+  assert.equal(dj({ jobDescription: 'We need a Senior Data Engineer to build pipelines.' }, a), 'Senior Data Engineer');
+});
+
+test('a bare level as jobTitle is ignored', () => {
+  assert.notEqual(dj({}, { jobTitle: 'Senior', roleSummary: 'The Data Engineer will build pipelines.' }), 'Senior');
+});

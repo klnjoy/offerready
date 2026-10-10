@@ -121,6 +121,18 @@ module.exports = async function handler(req, res) {
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) { body = null; } }
     if (!body || typeof body !== 'object') { send(res, 400, { error: 'Invalid request body.' }); return; }
+    // Rename: the user fixes the job title / company shown everywhere.
+    if (String(body.action || '') === 'rename') {
+      const title = String(body.title == null ? '' : body.title).replace(/\s+/g, ' ').trim().slice(0, 200);
+      const company = String(body.company == null ? '' : body.company).replace(/\s+/g, ' ').trim().slice(0, 200);
+      if (title.length < 2) { send(res, 400, { error: 'Give the job a title (at least 2 characters).' }); return; }
+      const existing = await getJob(user.id, id);
+      if (!existing) { send(res, 404, { error: 'Job not found.' }); return; }
+      const updated = await updateJobFields(user.id, id, { title, company: company || null, updated_at: new Date().toISOString() });
+      if (!updated) { send(res, 502, { error: 'Could not rename this job. Please try again.' }); return; }
+      send(res, 200, { ok: true, job: { id, title: updated.title, company: updated.company } });
+      return;
+    }
     if (String(body.action || '') !== 'complete_practice') {
       send(res, 400, { error: 'Unknown action.' }); return;
     }

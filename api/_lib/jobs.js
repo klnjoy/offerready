@@ -177,6 +177,11 @@ function deriveJobTitle(body, analysis) {
   const explicit = cleanTitle(b.title) || cleanTitle(b.targetRole);
   if (explicit && hasRoleNoun(explicit) && !isLevelOnly(explicit)) return explicit.slice(0, 200);
 
+  // a2) the title exactly as the posting names it (analysis.jobTitle, added to
+  //     the analysis prompt in 2026-10). The most reliable source by far.
+  const named = cleanTitle(a.jobTitle);
+  if (named && !isLevelOnly(named) && named.length >= 3) return named.slice(0, 200);
+
   // b) parsed role title from analysis.seniority — ONLY when it already
   //    contains a role noun and is not a level-only string.
   const parsed = cleanTitle(a.seniority);
@@ -185,7 +190,11 @@ function deriveJobTitle(body, analysis) {
   // Capture a bare level from either the explicit input OR the seniority, to
   // prefix onto a role derived below (c/d) — e.g. explicit "Senior" + summary
   // "Databricks Data Engineer" => "Senior Databricks Data Engineer".
-  const levelPrefix = levelFrom(explicit) || levelFrom(a.seniority);
+  // A level the model only GUESSED must not be added: when the job
+  // description is available, the level word has to appear in it.
+  const jd = String(b.jobDescription || '');
+  const statedLevel = (lvl) => (lvl && (!jd || new RegExp('\\b' + lvl.replace(/[^A-Za-z ]/g, '') + '\\b', 'i').test(jd)) ? lvl : '');
+  const levelPrefix = levelFrom(explicit) || statedLevel(levelFrom(a.seniority));
 
   // c) AI-derived role title from the role summary. The summary is a paragraph
   //    that often OPENS with a company description, so we extract an actual
@@ -557,7 +566,7 @@ function repairedTitleFor(job) {
   if (!isWeakTitle(j.title)) return '';      // preserve good / user-edited titles
   // Derive from the job's own analysis (no body.title/targetRole available on
   // a reopen) using the same precedence as a fresh save.
-  const derived = deriveJobTitle({}, j.analysis || {});
+  const derived = deriveJobTitle({ jobDescription: j.job_description || '' }, j.analysis || {});
   if (!derived || derived === 'Untitled role') return '';   // no reliable role
   if (isWeakTitle(derived)) return '';       // don't replace one weak guess with another
   if (cleanTitle(derived) === cleanTitle(j.title)) return '';
