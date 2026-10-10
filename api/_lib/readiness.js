@@ -152,7 +152,7 @@ async function getGapAnalysis(userId, jobId) {
  */
 async function saveQuestions(userId, jobId, questions) {
   if (!userId || !jobId || !Array.isArray(questions) || !questions.length) return 0;
-  const rows = questions.slice(0, 40).map((q, i) => ({
+  const rows = questions.slice(0, 60).map((q, i) => ({
     user_id: userId,
     job_id: jobId,
     category: String(q.category || 'technical').slice(0, 40),

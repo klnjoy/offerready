@@ -161,8 +161,9 @@ function ctxList(arr, max, itemLen) {
 function buildQuestionsUserMessage(input) {
   const {
     jobTitle, seniority, jobDescription,
-    technologies, coreSkills, missingSkills, missingKeywords, missingExperience,
+    technologies, coreSkills, missingSkills, missingKeywords, missingExperience, avoid,
   } = input || {};
+  const avoidList = Array.isArray(avoid) ? avoid.filter((x) => typeof x === 'string' && x.trim()).slice(0, 60).map((x) => x.trim().slice(0, 160)) : [];
 
   const techs = ctxList(technologies, 15, 60);
   const skills = ctxList(coreSkills, 15, 80);
@@ -185,6 +186,7 @@ function buildQuestionsUserMessage(input) {
     'skills, and gap-focus areas. Technical and system-design questions must be',
     'specific to this stack (not generic). Generate the full question set as JSON',
     'now (10 technical, 10 behavioral, 5 system_design, 5 leadership).',
+    avoidList.length ? '\nALREADY ASKED (the candidate has these; do NOT repeat or rephrase them. Cover different topics, scenarios and depths of the same job):\n' + avoidList.map((x) => '- ' + x).join('\n') : '',
   ].filter(Boolean).join('\n');
 }
 

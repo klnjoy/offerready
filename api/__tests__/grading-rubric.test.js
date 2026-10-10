@@ -143,3 +143,12 @@ test('eval cases are sane', () => {
     assert.ok(c.question && c.answer && Array.isArray(c.tags), c.id);
   }
 });
+
+test('scenario prompt bans language-choice and soft-skill drills; soft gaps are dropped', () => {
+  const S = require('../_lib/scenarioGen');
+  assert.match(S.SYSTEM_PROMPT, /NEVER ask about programming-language preference/);
+  const msg = S.buildUserMessage({ targetRole: 'FDE', analysis: { potentialGaps: [{ requirement: 'Strong communication skills' }, { requirement: 'Enterprise SSO (SAML, OIDC)' }] }, gapFocus: ['Intune device management'] });
+  assert.ok(msg.includes('Enterprise SSO'));
+  assert.ok(msg.includes('Intune device management'));
+  assert.ok(!/communication/i.test(msg));
+});

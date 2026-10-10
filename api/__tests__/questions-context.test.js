@@ -108,3 +108,10 @@ test('buildQuestionsUserMessage: still works with only a JD (no analysis signals
   assert.ok(msg.includes('generic job description'));
   assert.ok(/10 technical, 10 behavioral, 5 system_design, 5 leadership/.test(msg));
 });
+
+test('buildQuestionsUserMessage: "more" mode lists the already-asked questions to avoid', () => {
+  const msg = buildQuestionsUserMessage({ ...DATA_ENGINEER, avoid: ['How do you handle late data in Spark?', ''] });
+  assert.match(msg, /ALREADY ASKED/);
+  assert.ok(msg.includes('- How do you handle late data in Spark?'));
+  assert.ok(!buildQuestionsUserMessage(DATA_ENGINEER).includes('ALREADY ASKED'));
+});
