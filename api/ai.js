@@ -42,7 +42,7 @@ const {
 } = require('./_lib/readinessAi');
 const { touchJobStats } = require('./_lib/jobs');
 const {
-  ownsJob, saveGapAnalysis, saveQuestions, getGapAnalysis,
+  ownsJob, saveGapAnalysis, saveQuestions, getGapAnalysis, getQuestions,
   getPracticeSessions, computeReadiness, saveProgressSnapshot,
 } = require('./_lib/readiness');
 const { importJobUrl } = require('./_lib/jobImport');
@@ -210,28 +210,56 @@ async function handleGenerateQuestions(body, res, user) {
     } catch (_e) { /* best-effort enrichment */ }
   }
 
-  const out = await callOpenAI(
-    QUESTIONS_SYSTEM_PROMPT,
-    buildQuestionsUserMessage({
-      jobTitle: body.jobTitle || body.targetRole,
-      seniority: body.seniority || analysis.seniority,
-      jobDescription,
-      technologies: analysis.technologies,
-      coreSkills: analysis.coreSkills,
-      missingSkills: gapResult && gapResult.missingSkills,
-      missingKeywords: gapResult && gapResult.missingKeywords,
-      missingExperience: gapResult && gapResult.missingExperience,
-    }),
-    2600, 0.5
-  );
-  if (!out.ok) { send(res, out.status, { error: out.error }); return; }
-  const result = validateQuestions(safeParseModelJson(out.content));
-  if (!result.ok) { send(res, 502, { error: 'Could not generate a full question set. Please try again.' }); return; }
+  // "more": keep the saved set (and its practice marks) and add NEW questions
+  // that don't repeat it.
+  const more = body.mode === 'more';
+  const owned = !!(jobId && (await ownsJob(user.id, jobId)));
+  let existing = [];
+  if (more && owned) {
+    try { existing = await getQuestions(user.id, jobId); } catch (_e) { existing = []; }
+  }
+  const userMsg = buildQuestionsUserMessage({
+    jobTitle: body.jobTitle || body.targetRole,
+    seniority: body.seniority || analysis.seniority,
+    jobDescription,
+    technologies: analysis.technologies,
+    coreSkills: analysis.coreSkills,
+    missingSkills: gapResult && gapResult.missingSkills,
+    missingKeywords: gapResult && gapResult.missingKeywords,
+    missingExperience: gapResult && gapResult.missingExperience,
+    avoid: existing.map((q) => q && q.prompt).filter(Boolean),
+  });
 
-  // jobId already resolved + ownership used above for gap enrichment; reuse it.
+  // One retry when the model returns an incomplete set (and there's time left
+  // in the 60 s function budget).
+  const started = Date.now();
+  let result = null;
+  let lastErr = null;
+  for (let attempt = 0; attempt < 2 && !result; attempt++) {
+    if (attempt && Date.now() - started > 15000) break;
+    const out = await callOpenAI(QUESTIONS_SYSTEM_PROMPT, userMsg, 3200, attempt ? 0.4 : 0.6);
+    if (!out.ok) { lastErr = out; if (out.status === 504 || out.status === 429) break; continue; }
+    const r = validateQuestions(safeParseModelJson(out.content));
+    if (r.ok) result = r;
+  }
+  if (!result) {
+    if (lastErr) { send(res, lastErr.status, { error: lastErr.error }); return; }
+    send(res, 502, { error: 'Could not generate a full question set. Please try again.' });
+    return;
+  }
+
+  let questions = result.questions;
+  if (more && existing.length) {
+    const key = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const seen = new Set(existing.map((q) => key(q.prompt)));
+    const fresh = questions.filter((q) => !seen.has(key(q.prompt)));
+    questions = existing.map((q) => ({ category: q.category, difficulty: q.difficulty, prompt: q.prompt, model_answer: q.model_answer, signals: q.signals }))
+      .concat(fresh).slice(0, 60);
+  }
+
   let saved = 0;
-  if (jobId && (await ownsJob(user.id, jobId))) {
-    saved = await saveQuestions(user.id, jobId, result.questions);
+  if (owned) {
+    saved = await saveQuestions(user.id, jobId, questions);
     // Generating a question set means prep is underway: reflect that on the
     // My Jobs card (best-effort sync; the authoritative data stays in questions/
     // practice_sessions/progress_metrics).
@@ -239,6 +267,7 @@ async function handleGenerateQuestions(body, res, user) {
       try { await touchJobStats(user.id, jobId, { prepProgress: 50 }); } catch (_e) { /* best-effort */ }
     }
   }
+  result = { ...result, questions };
   send(res, 200, { ok: true, action: 'generate_questions', questions: result.questions, counts: result.counts, job_id: jobId || null, saved: saved });
 }
 

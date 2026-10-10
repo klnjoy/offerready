@@ -45,6 +45,26 @@ const SYSTEM_PROMPT = [
   '  of why / tradeoff / constraint / incident, then one "reflection", then one',
   '  "next_drill" as the final node.',
   '',
+  'WHAT MAKES A GOOD DRILL:',
+  '- Pick ONE concrete situation from this job\'s core technical work (e.g. for a',
+  '  forward deployed engineer: deploying a tool-using LLM app into a customer\'s',
+  '  environment behind their SSO). Every node stays in that SAME situation.',
+  '- The "decision" node asks the candidate to choose between 2-3 real',
+  '  architecture or delivery options with different consequences (e.g. "run',
+  '  inference in the customer VPC or your managed cloud", "sync vs event-driven",',
+  '  "fine-tune vs RAG"). Name the options in the prompt.',
+  '- NEVER ask about programming-language preference, generic tooling taste, or',
+  '  pure soft skills ("how do you improve communication"). Those are not',
+  '  trade-off decisions. Soft-skill gaps belong in behavioral practice, not here.',
+  '- "constraint" changes the situation (new compliance rule, 10x load, smaller',
+  '  budget, customer forbids data leaving their network) and asks what changes.',
+  '- "incident" is a specific production failure in this design and asks how',
+  '  the candidate detects, mitigates and prevents it.',
+  '- "reflection" checklist items are concrete technical review points for THIS',
+  '  design (e.g. "Token scopes reviewed for every tool"), not generic habits.',
+  '- "title" names the situation (e.g. "Customer-hosted LLM assistant behind',
+  '  Okta SSO"), never "Defend your decision for <role>".',
+  '',
   'SCHEMA:',
   '{',
   '  "title": string,',
@@ -72,13 +92,17 @@ function buildUserMessage(input) {
     .map((s) => (typeof s === 'string' ? s : s && s.name))
     .filter(Boolean);
   const techs = (a.technologies || []).filter(Boolean);
+  // Technical gaps only: soft skills ("communication") make poor trade-off drills.
+  const SOFT = /\b(communicat|collaborat|interpersonal|teamwork|presentation|stakeholder management|soft skill|leadership skill|mentor)/i;
   const gaps = []
+    .concat(Array.isArray(input && input.gapFocus) ? input.gapFocus : [])
     .concat((a.potentialGaps || []).map((g) => g && g.requirement))
     .concat((a.preparationPlan || []).map((p) => p && p.title))
-    .filter(Boolean);
+    .filter((x) => typeof x === 'string' && x.trim() && !SOFT.test(x))
+    .filter((x, i, all) => all.findIndex((y) => y.toLowerCase() === x.toLowerCase()) === i);
 
   return [
-    'TARGET ROLE: ' + (targetRole || a.seniority || 'unspecified'),
+    'TARGET ROLE: ' + (targetRole || a.jobTitle || a.seniority || 'unspecified'),
     a.seniority ? 'SENIORITY: ' + a.seniority : '',
     a.roleSummary ? 'ROLE SUMMARY: ' + a.roleSummary : '',
     skills.length ? 'CORE SKILLS: ' + skills.slice(0, 12).join(', ') : '',
@@ -89,7 +113,8 @@ function buildUserMessage(input) {
     (jobDescription || '').slice(0, 6000),
     '',
     'Produce the scenario JSON now. Make the decisions specific to THIS role and',
-    'stack; pressure-test the candidate gaps in the why/tradeoff/constraint nodes.',
+    'stack; pressure-test the candidate\'s technical gaps in the why/tradeoff/',
+    'constraint/incident nodes. No language-choice or soft-skill questions.',
   ].filter(Boolean).join('\n');
 }
 

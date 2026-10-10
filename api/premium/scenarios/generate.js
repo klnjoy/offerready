@@ -25,6 +25,8 @@
 const { setCors, send } = require('../../_lib/http');
 const { getUser } = require('../../_lib/supabaseAuth');
 const { checkQuota, recordUse, quotaError } = require('../../_lib/plans');
+const { getJob } = require('../../_lib/jobs');
+const { getGapAnalysis } = require('../../_lib/readiness');
 const {
   SYSTEM_PROMPT, buildUserMessage, validateTree,
 } = require('../../_lib/scenarioGen');
@@ -74,9 +76,27 @@ module.exports = async function handler(req, res) {
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) { body = null; } }
   if (!body || typeof body !== 'object') { send(res, 400, { error: 'Invalid request body.' }); return; }
 
-  const jobDescription = String(body.jobDescription || '').slice(0, 6000);
-  const targetRole = String(body.targetRole || '').slice(0, 200);
-  const analysis = (body.analysis && typeof body.analysis === 'object') ? body.analysis : {};
+  let jobDescription = String(body.jobDescription || '').slice(0, 6000);
+  let targetRole = String(body.targetRole || '').slice(0, 200);
+  let analysis = (body.analysis && typeof body.analysis === 'object') ? body.analysis : {};
+  let gapFocus = [];
+  // A saved job of this user is the source of truth: its own JD, analysis and
+  // resume gaps (not whatever job the browser analyzed last).
+  const jobId = typeof body.job_id === 'string' ? body.job_id.slice(0, 128) : '';
+  if (jobId) {
+    try {
+      const job = await getJob(user.id, jobId);
+      if (job) {
+        if (job.job_description) jobDescription = String(job.job_description).slice(0, 6000);
+        if (job.analysis && typeof job.analysis === 'object') analysis = job.analysis;
+        if (job.title) targetRole = String(job.title).slice(0, 200);
+        const gap = await getGapAnalysis(user.id, jobId);
+        const r = gap && gap.result ? gap.result : {};
+        gapFocus = [].concat(r.missingSkills || [], r.missingExperience || [], r.missingKeywords || [])
+          .filter((x) => typeof x === 'string').slice(0, 10);
+      }
+    } catch (_e) { /* fall back to the request body */ }
+  }
   let category = String(body.category || '').toLowerCase();
   if (VALID_CATEGORIES.indexOf(category) === -1) category = null;
   if (!jobDescription && !targetRole && !Object.keys(analysis).length) {
@@ -103,7 +123,7 @@ module.exports = async function handler(req, res) {
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: buildUserMessage({ jobDescription, targetRole, analysis }) },
+          { role: 'user', content: buildUserMessage({ jobDescription, targetRole, analysis, gapFocus }) },
         ],
       }),
     });
