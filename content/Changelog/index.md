@@ -11,6 +11,12 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Interview notes.** A plain notepad for during a real interview: type each
+  question as it's asked, then turn your notes into a debrief in one click.
+  No AI and no microphone.
+- **Forward Deployed Engineer guide.** A [role page](../For/forward-deployed-engineers/index.md)
+  for FDE loops: discovery, practical coding, customer scenarios and demos.
+- **Help Center.** Step-by-step [help pages](../Help/index.md) for every part of the app.
 - **AI Interview Coach.** Ask any interview question and get an
   answer outline built from your resume and stories. Every point is labelled
   with where it came from, and numbers you haven't shown it are flagged.
