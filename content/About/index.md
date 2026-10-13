@@ -27,7 +27,7 @@ built around exactly those three things.
 
 ## Our principles
 
-- **Built from your real experience.** The Copilot and the resume tailoring
+- **Built from your real experience.** Answer Studio and the resume tailoring
   never invent employers, projects or numbers. Every point is labelled with
   where it came from.
 - **Practice only.** OfferReady is for preparing *before* an interview. We

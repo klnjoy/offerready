@@ -1,5 +1,6 @@
 /**
- * api/_lib/copilot.js — the practice Interview Copilot.
+ * api/_lib/copilot.js — Answer Studio (formerly the practice "Interview Copilot";
+ * the API action is still named 'copilot').
  *
  * Given an interview question (and optionally the candidate's own draft
  * answer), it builds a speakable answer from the candidate's REAL material:
@@ -37,7 +38,7 @@ const MODES = {
 const SOURCES = ['resume', 'story', 'you', 'general', 'suggestion'];
 
 const SYSTEM_PROMPT = [
-  'You are OfferReady\'s Interview Copilot: an honest senior interview coach helping a',
+  'You are OfferReady\'s Answer Studio: an honest senior interview coach helping a',
   'candidate PRACTISE. You build answers ONLY from the candidate\'s real material.',
   '',
   'HARD RULES:',
