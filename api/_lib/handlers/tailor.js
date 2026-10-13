@@ -42,7 +42,7 @@ const plans = require('../plans');
 const FEATURE = 'resume_tailor';
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
-const REQUEST_TIMEOUT_MS = 30000;
+const REQUEST_TIMEOUT_MS = 50000; // covers one retry; api/ai.js allows 60s
 const MAX_OUTPUT_TOKENS = 2200;
 
 const MAX_BULLETS = 12;
@@ -333,7 +333,10 @@ async function handler(req, res) {
   const model = process.env.OPENAI_MODEL || DEFAULT_MODEL;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  try {
+  // One call to the model; returns { ok, status, content, finish }.
+  const ask = async (extraSystem) => {
+    const messages = buildMessages(v);
+    if (extraSystem) messages.unshift({ role: 'system', content: extraSystem });
     const resp = await fetch(OPENAI_URL, {
       method: 'POST',
       signal: controller.signal,
@@ -343,21 +346,36 @@ async function handler(req, res) {
         temperature: 0.3,
         max_tokens: MAX_OUTPUT_TOKENS,
         response_format: { type: 'json_object' },
-        messages: buildMessages(v),
+        messages,
       }),
     });
-    if (resp.status === 429) { send(res, 429, { error: 'Tailoring is busy. Try again in a moment.' }); return; }
-    if (!resp.ok) {
-      console.error(`OpenAI non-OK status (tailor): ${resp.status}`);
+    if (!resp.ok) return { ok: false, status: resp.status };
+    const data = await resp.json();
+    const choice = data && data.choices && data.choices[0];
+    return { ok: true, content: choice && choice.message ? choice.message.content : '', finish: choice && choice.finish_reason };
+  };
+  try {
+    let r = await ask();
+    if (!r.ok && r.status === 429) { send(res, 429, { error: 'Tailoring is busy. Try again in a moment.' }); return; }
+    if (!r.ok) {
+      console.error(`OpenAI non-OK status (tailor): ${r.status}`);
       send(res, 502, { error: 'Tailoring had an error. Please try again.' });
       return;
     }
-    const data = await resp.json();
-    const content = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
-    const result = validateOutput(safeParseJson(content), v);
+    let result = validateOutput(safeParseJson(r.content), v);
+    // Unreadable or cut-off JSON: retry once, asking for short, valid JSON.
+    if (!result.ok && result.reason !== 'empty') {
+      console.error('tailor output failed validation, retrying:', result.reason, r.finish);
+      const r2 = await ask('Your previous reply was not valid or was cut off. Reply with a short, valid JSON object only: keep each "why" under 15 words.');
+      if (r2.ok) result = validateOutput(safeParseJson(r2.content), v);
+    }
     if (!result.ok) {
       console.error('tailor output failed validation:', result.reason);
-      send(res, 502, { error: 'Couldn’t read the tailoring result. Please try again.' });
+      if (result.reason === 'empty') {
+        send(res, 422, { error: 'None of these lines looked like bullets to improve. Use one achievement from your experience per line, not your name, contact details or headings.' });
+      } else {
+        send(res, 502, { error: 'Couldn’t read the tailoring result. Please try again.' });
+      }
       return;
     }
     // Count the use; never let a storage error (e.g. 0011 not applied) break the reply.
