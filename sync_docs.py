@@ -888,6 +888,21 @@ def _retired_homepage_sections_unused():
 APP_URL = "https://klnjoy.github.io/offerready-app/"
 
 
+# Help Center pages, in reading order (files under content/Help/).
+HELP_PAGES = [
+    ("index.md", "Help Center"),
+    ("getting-started.md", "Getting started"),
+    ("jobs.md", "Jobs and your resume"),
+    ("practice.md", "Practice"),
+    ("coach.md", "AI Interview Coach"),
+    ("mock-interviews.md", "Mock interviews"),
+    ("readiness.md", "Readiness"),
+    ("after-the-interview.md", "After the interview"),
+    ("account-billing.md", "Plans and billing"),
+    ("troubleshooting.md", "Troubleshooting and FAQ"),
+]
+
+
 def write_nav(md_catalog, modules) -> None:
     if not MKDOCS_YML.exists():
         return
@@ -1154,6 +1169,14 @@ def write_nav(md_catalog, modules) -> None:
         nav.append(f"  - {name}:")
         for rel_dest, title in sorted(entries, key=lambda e: e[1].lower()):
             nav.append(f"      - {nav_label(title)}: {rel_dest}")
+
+    # ----- Help Center (authored under content/Help/) ------------------------
+    help_dir = CONTENT_DIR / "Help"
+    if help_dir.exists():
+        nav.append("  - Help:")
+        for rel, label in HELP_PAGES:
+            if (help_dir / rel).exists():
+                nav.append(f"      - {label}: Help/{rel}")
 
     # ----- Link out to the product -------------------------------------------
     nav.append("  - Open the app \u2197: " + APP_URL)
