@@ -46,6 +46,7 @@ const {
   getPracticeSessions, computeReadiness, saveProgressSnapshot,
 } = require('./_lib/readiness');
 const { importJobUrl } = require('./_lib/jobImport');
+const COPILOT = require('./_lib/copilot');
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
@@ -330,5 +331,42 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  if (action === 'copilot') {
+    const user = await getUser(req);
+    if (!user) { send(res, 401, { error: 'Sign in to use the Interview Copilot.' }); return; }
+    if (!rateLimit.enforce(req, res, { scope: 'ai', userId: user.id })) return;
+    await handleCopilot(body, res, user);
+    return;
+  }
+
   send(res, 400, { error: 'Unknown action.' });
 };
+
+/**
+ * copilot — practice Interview Copilot (api/_lib/copilot.js). Counts against
+ * the existing ai_grading allowance (AI coaching); no new quota is invented.
+ * The resume and stories are sent by the client for this call only and are
+ * never stored or logged here.
+ */
+async function handleCopilot(body, res, user) {
+  const question = String(body.question || '').trim();
+  if (question.length < 8) { send(res, 400, { error: 'Type the interview question first.' }); return; }
+  const q = await checkQuota(user.id, 'ai_grading');
+  if (!q.ok) { send(res, 403, quotaError(q, 'ai_grading')); return; }
+  const input = {
+    mode: String(body.mode || 'answer'),
+    question: question.slice(0, 800),
+    jobTitle: String(body.jobTitle || '').slice(0, 200),
+    requirements: Array.isArray(body.requirements) ? body.requirements.filter((x) => typeof x === 'string').slice(0, 15) : [],
+    gaps: Array.isArray(body.gaps) ? body.gaps.filter((x) => typeof x === 'string').slice(0, 10) : [],
+    resume: String(body.resume || '').slice(0, 8000),
+    stories: Array.isArray(body.stories) ? body.stories.filter((x) => typeof x === 'string').map((x) => x.slice(0, 1200)).slice(0, 8) : [],
+    draft: String(body.draft || '').slice(0, 2500),
+  };
+  const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 1600, 0.4);
+  if (!out.ok) { send(res, out.status, { error: out.error }); return; }
+  const v = COPILOT.validateCopilot(safeParseModelJson(out.content), input);
+  if (!v.ok) { send(res, 502, { error: 'The Copilot could not build an answer this time. Please try again.' }); return; }
+  await recordUse(user.id, 'ai_grading');
+  send(res, 200, { ok: true, action: 'copilot', result: v.result });
+}
