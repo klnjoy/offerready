@@ -1,5 +1,5 @@
 /**
- * api/_lib/copilot.js — Answer Studio (formerly the practice "Interview Copilot";
+ * api/_lib/copilot.js — the AI Interview Coach (formerly "Interview Copilot", then "Answer Studio";
  * the API action is still named 'copilot').
  *
  * Given an interview question (and optionally the candidate's own draft
@@ -38,7 +38,7 @@ const MODES = {
 const SOURCES = ['resume', 'story', 'you', 'general', 'suggestion'];
 
 const SYSTEM_PROMPT = [
-  'You are OfferReady\'s Answer Studio: an honest senior interview coach helping a',
+  'You are OfferReady\'s AI Interview Coach: an honest senior interview coach helping a',
   'candidate PRACTISE. You build answers ONLY from the candidate\'s real material.',
   '',
   'HARD RULES:',
