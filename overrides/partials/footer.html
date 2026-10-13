@@ -5,8 +5,9 @@
     1. Previous / next page links (upstream markup, shown when the
        navigation.footer feature is on and the page doesn't hide "footer").
     2. A multi-column site footer: brand + one-line description, then link
-       columns for Learn, Build, Interview Prep, Product and Company.
-    3. A bottom bar with the copyright (from mkdocs.yml `copyright`).
+       columns for Product, Features (app deep links), For your role,
+       Resources and Company.
+    3. A bottom bar: copyright, legal links, and the practice-only disclaimer.
 
   Links: use_directory_urls is false, so every internal target is an explicit
   `.../index.html` or `.html` file, prefixed with {{ base_url }} so it resolves
@@ -77,48 +78,51 @@
 
         <nav class="or-site-footer__cols" aria-label="Site footer">
           <div class="or-site-footer__col">
-            <h2 class="or-site-footer__heading">Learn</h2>
-            <ul>
-              <li><a href="{{ base_url }}/GenAI-Topics/index.html">GenAI Topics</a></li>
-              <li><a href="{{ base_url }}/Technologies/index.html">Technologies</a></li>
-              <li><a href="{{ base_url }}/Snowflake-Cortex/index.html">Snowflake Cortex</a></li>
-              <li><a href="{{ base_url }}/Documentation/index.html">Reference Docs</a></li>
-            </ul>
-          </div>
-          <div class="or-site-footer__col">
-            <h2 class="or-site-footer__heading">Build</h2>
-            <ul>
-              <li><a href="{{ base_url }}/Setup-Guides/index.html">Setup Guides</a></li>
-              <li><a href="{{ base_url }}/Projects/data-migration/index.html">Projects</a></li>
-              <li><a href="{{ base_url }}/Labs/index.html">Labs</a></li>
-              <li><a href="{{ base_url }}/Case-Studies/index.html">Case Studies</a></li>
-            </ul>
-          </div>
-          <div class="or-site-footer__col">
-            <h2 class="or-site-footer__heading">Interview Prep</h2>
-            <ul>
-              <li><a href="{{ qa }}Interview_Guide_Overview.html">Interview Guide</a></li>
-              <li><a href="{{ qa }}GenAI_Interview_QA.html">GenAI Q&amp;A</a></li>
-              <li><a href="{{ qa }}AI_Engineer_Interview_QA.html">AI Engineer Q&amp;A</a></li>
-              <li><a href="{{ qa }}Interview_Requirements_to_Production.html">System Design</a></li>
-              <li><a href="{{ qa }}Interview_Cheat_Sheets.html">Cheat Sheets</a></li>
-            </ul>
-          </div>
-          <div class="or-site-footer__col">
             <h2 class="or-site-footer__heading">Product</h2>
             <ul>
-              <li><a href="{{ app }}">Open the app</a></li>
+              <li><a href="{{ app }}example">How it works</a></li>
+              <li><a href="{{ app }}analyze">Start free</a></li>
               <li><a href="{{ base_url }}/assets/pricing.html">Pricing</a></li>
-              <li><a href="{{ app }}example">Sample walkthrough</a></li>
+              <li><a href="{{ base_url }}/Compare/index.html">Compare OfferReady</a></li>
+            </ul>
+          </div>
+          <div class="or-site-footer__col">
+            <h2 class="or-site-footer__heading">Features</h2>
+            <ul>
+              <li><a href="{{ app }}analyze">Job fit and gaps</a></li>
+              <li><a href="{{ app }}tailor">Tailor resume</a></li>
+              <li><a href="{{ app }}copilot">Interview Copilot</a></li>
+              <li><a href="{{ app }}practice">Practice</a></li>
+              <li><a href="{{ app }}mock">Mock interview</a></li>
+              <li><a href="{{ app }}debrief">Interview debrief</a></li>
+            </ul>
+          </div>
+          <div class="or-site-footer__col">
+            <h2 class="or-site-footer__heading">For your role</h2>
+            <ul>
+              <li><a href="{{ base_url }}/For/ai-engineers/index.html">AI / GenAI Engineers</a></li>
+              <li><a href="{{ base_url }}/For/data-engineers/index.html">Data Engineers</a></li>
+              <li><a href="{{ base_url }}/For/platform-engineers/index.html">Platform / DevOps Engineers</a></li>
+              <li><a href="{{ base_url }}/For/staff-engineers/index.html">Staff / Principal Engineers</a></li>
+            </ul>
+          </div>
+          <div class="or-site-footer__col">
+            <h2 class="or-site-footer__heading">Resources</h2>
+            <ul>
+              <li><a href="{{ qa }}Interview_Guide_Overview.html">Interview guide</a></li>
+              <li><a href="{{ qa }}Interview_Cheat_Sheets.html">Cheat sheets</a></li>
+              <li><a href="{{ qa }}Interview_Requirements_to_Production.html">System design</a></li>
+              <li><a href="{{ base_url }}/GenAI-Topics/index.html">Study library</a></li>
+              <li><a href="{{ base_url }}/Setup-Guides/index.html">Build guides</a></li>
             </ul>
           </div>
           <div class="or-site-footer__col">
             <h2 class="or-site-footer__heading">Company</h2>
             <ul>
+              <li><a href="{{ base_url }}/About/index.html">About</a></li>
               <li><a href="{{ base_url }}/Contact/index.html">Contact</a></li>
-              <li><a href="{{ base_url }}/Privacy/index.html">Privacy</a></li>
-              <li><a href="{{ base_url }}/Terms/index.html">Terms</a></li>
-              <li><a href="{{ base_url }}/Disclaimer/index.html">Disclaimer</a></li>
+              <li><a href="{{ base_url }}/Security/index.html">Security and your data</a></li>
+              <li><a href="{{ base_url }}/Changelog/index.html">Changelog</a></li>
             </ul>
           </div>
         </nav>
@@ -127,9 +131,18 @@
       <div class="or-site-footer__bottom">
         {%- set parts = (config.copyright or "© OfferReady").split(" · ", 1) %}
         <p class="or-site-footer__copy">{{ parts[0] }}</p>
-        {% if parts | length > 1 %}
-          <p class="or-site-footer__note">{{ parts[1] }}</p>
-        {% endif %}
+        <ul class="or-site-footer__legal" aria-label="Legal">
+          <li><a href="{{ base_url }}/Privacy/index.html">Privacy</a></li>
+          <li><a href="{{ base_url }}/Privacy/index.html#ai-processing">How we use your data</a></li>
+          <li><a href="{{ base_url }}/Terms/index.html">Terms</a></li>
+          <li><a href="{{ base_url }}/Terms/index.html#7-refunds">Refunds</a></li>
+          <li><a href="{{ base_url }}/Disclaimer/index.html">Disclaimer</a></li>
+        </ul>
+        <p class="or-site-footer__disclaimer">
+          OfferReady is a practice tool. It builds answers only from your own
+          resume and stories, and it isn't for use during live interviews. It
+          can't guarantee an interview or an offer.
+        </p>
       </div>
     </div>
   </div>
