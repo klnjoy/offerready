@@ -1578,6 +1578,12 @@ a.ig-feature.ig-link .ig-d {
   color: rgba(255, 255, 255, 0.55);
 }
 .or-site-footer__bottom p { margin: 0; }
+.or-site-footer__legal { display: flex; flex-wrap: wrap; gap: 0.3rem 1.1rem; margin: 0; padding: 0; list-style: none; }
+.or-site-footer__legal li { margin: 0; }
+.or-site-footer__legal a { color: rgba(255, 255, 255, 0.7); }
+.or-site-footer__legal a:hover,
+.or-site-footer__legal a:focus-visible { color: #fff; text-decoration: underline; text-underline-offset: 0.2em; }
+.or-site-footer__disclaimer { flex-basis: 100%; max-width: 52rem; line-height: 1.55; }
 .or-site-footer a:focus-visible { outline: 2px solid var(--or-signal); outline-offset: 2px; border-radius: 0.2rem; }
 
 @media screen and (max-width: 76.1875em) {
