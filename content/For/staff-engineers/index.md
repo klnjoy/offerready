@@ -26,7 +26,7 @@ influence across teams without authority.
 2. **Trade-off drills.** The interviewer keeps asking "why?" until your
    reasoning holds or breaks. Practise until it holds.
 3. **Leadership stories.** Prepare stories about influence, disagreement and
-   failure, then let Answer Studio shape them into speakable answers without
+   failure, then let the AI Interview Coach shape them into speakable answers without
    inventing anything.
 4. **Retry and compare.** Answer, improve and answer again, and watch the
    criteria move from "Vague" to "Solid".

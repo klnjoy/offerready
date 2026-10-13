@@ -11,7 +11,7 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
-- **Answer Studio.** Ask any interview question and get an
+- **AI Interview Coach.** Ask any interview question and get an
   answer outline built from your resume and stories. Every point is labelled
   with where it came from, and numbers you haven't shown it are flagged.
 - **Retry and compare.** Answer again and see your score and each criterion
