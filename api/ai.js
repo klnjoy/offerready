@@ -333,7 +333,7 @@ module.exports = async function handler(req, res) {
 
   if (action === 'copilot') {
     const user = await getUser(req);
-    if (!user) { send(res, 401, { error: 'Sign in to use the Interview Copilot.' }); return; }
+    if (!user) { send(res, 401, { error: 'Sign in to use Answer Studio.' }); return; }
     if (!rateLimit.enforce(req, res, { scope: 'ai', userId: user.id })) return;
     await handleCopilot(body, res, user);
     return;
@@ -343,7 +343,7 @@ module.exports = async function handler(req, res) {
 };
 
 /**
- * copilot — practice Interview Copilot (api/_lib/copilot.js). Counts against
+ * copilot — Answer Studio (api/_lib/copilot.js). Counts against
  * the existing ai_grading allowance (AI coaching); no new quota is invented.
  * The resume and stories are sent by the client for this call only and are
  * never stored or logged here.
@@ -366,7 +366,7 @@ async function handleCopilot(body, res, user) {
   const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 1600, 0.4);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const v = COPILOT.validateCopilot(safeParseModelJson(out.content), input);
-  if (!v.ok) { send(res, 502, { error: 'The Copilot could not build an answer this time. Please try again.' }); return; }
+  if (!v.ok) { send(res, 502, { error: 'Answer Studio could not build an answer this time. Please try again.' }); return; }
   await recordUse(user.id, 'ai_grading');
   send(res, 200, { ok: true, action: 'copilot', result: v.result });
 }

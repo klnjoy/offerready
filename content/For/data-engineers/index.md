@@ -31,7 +31,7 @@ explain the cost and governance side of your design.
 3. **Practise and compare.** Answer a question, get rubric feedback, try again,
    and see what changed: for example "Vague → Solid" on idempotency.
 4. **Prepare your stories.** Turn your migration and incident work into STAR stories,
-   so the Copilot and the mock interviews can draw on them.
+   so Answer Studio and the mock interviews can draw on them.
 
 ## Study material
 

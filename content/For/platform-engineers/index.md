@@ -27,7 +27,7 @@ GPU capacity, an LLM gateway and shared evaluation.
    resume is thin. [Add a job →](https://klnjoy.github.io/offerready-app/analyze)
 2. **Trade-off and incident drills.** Defend a rollout plan, then handle the
    follow-up: "the canary is fine, but p99 doubled for one tenant".
-3. **Interview Copilot.** Turn a real incident from your resume into a
+3. **Answer Studio.** Turn a real incident from your resume into a
    speakable answer, with each point labelled by where it came from.
 4. **Mock interview.** Practise out loud with voice, then go over your weakest
    criteria.

@@ -32,7 +32,7 @@ whether you can defend every choice when the interviewer pushes back.
 3. **Defend your trade-offs.** In trade-off drills the interviewer challenges your design:
    "why not fine-tune?", "what happens when retrieval returns nothing?".
 4. **Build answers from your own experience.** The
-   [Interview Copilot](https://klnjoy.github.io/offerready-app/copilot) builds
+   [Answer Studio](https://klnjoy.github.io/offerready-app/studio) builds
    an answer from your resume and stories, labels where each point came from,
    and flags numbers you haven't shown it.
 5. **Run a mock.** A voice or text mock interview, with follow-ups on what you actually said.
