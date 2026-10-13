@@ -61,7 +61,8 @@ function stubFetch(opts = {}) {
     }
     if (u.includes('api.openai.com')) {
       if (opts.openaiStatus) return { ok: false, status: opts.openaiStatus, json: async () => ({}) };
-      const content = typeof opts.model === 'string' ? opts.model : JSON.stringify(opts.model || MODEL_OK);
+      const m = Array.isArray(opts.models) ? opts.models.shift() : opts.model;
+      const content = typeof m === 'string' ? m : JSON.stringify(m || MODEL_OK);
       return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content } }] }) };
     }
     if (u.includes('/rest/v1/entitlements')) return { ok: true, status: 200, json: async () => [] };
@@ -287,6 +288,27 @@ test('unreadable model output → 502, nothing recorded', async () => {
   await handler(req(baseBody()), res);
   assert.equal(res.statusCode, 502);
   assert.equal(log.record, 0);
+});
+
+test('cut-off model output is retried once, then succeeds', async () => {
+  const calls = stubFetch({ user: USER, models: ['{"suggestions": [{"index": 0, "rewri', MODEL_OK] });
+  const log = stubPlans();
+  const res = mockRes();
+  await handler(req(baseBody()), res);
+  assert.strictEqual(res.statusCode, 200);
+  assert.strictEqual(calls.filter((c) => c.url.includes('api.openai.com')).length, 2);
+  assert.strictEqual(log.record, 1);
+});
+
+test('nothing to rewrite → 422 with a clear message, no retry, nothing recorded', async () => {
+  const calls = stubFetch({ user: USER, model: { suggestions: [] } });
+  const log = stubPlans();
+  const res = mockRes();
+  await handler(req(baseBody()), res);
+  assert.strictEqual(res.statusCode, 422);
+  assert.match(res.json().error, /one achievement/);
+  assert.strictEqual(calls.filter((c) => c.url.includes('api.openai.com')).length, 1);
+  assert.strictEqual(log.record, 0);
 });
 
 test('OpenAI 429 → 429, other errors → 502', async () => {
