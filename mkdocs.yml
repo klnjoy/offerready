@@ -83,7 +83,7 @@ plugins:
 extra_css:
   # ?v=N cache-buster — bump when extra.css changes so browsers don't serve a
   # stale cached stylesheet after a deploy.
-  - assets/extra.css?v=50
+  - assets/extra.css?v=51
   # Help assistant styles (after extra.css so they win over the old #kb rules).
   - assets/chatbot.css?v=2
 
@@ -221,11 +221,12 @@ nav:
           - Hackathon Build Challenges: Personal-SourceCode/Lab_Hackathon_Builds.md
   - Interview Prep:
       - Personal-SourceCode/Interview_Guide_Overview.md
-      - Choose Your Path:
-          - AI / GenAI Engineer: Personal-SourceCode/Path_AI_Engineer.md
-          - Staff / Principal Architect: Personal-SourceCode/Path_Staff_Principal_Architect.md
+      - Role guides:
+          - AI Engineer: Personal-SourceCode/Path_AI_Engineer.md
           - Forward Deployed Engineer: Personal-SourceCode/Path_FDE.md
-          - "Data & AI / Platform Engineer": Personal-SourceCode/Path_Data_Platform.md
+          - AI Platform Engineer: Personal-SourceCode/Path_AI_Platform_Engineer.md
+          - Data Platform Engineer: Personal-SourceCode/Path_Data_Platform.md
+          - Staff / Principal AI Architect: Personal-SourceCode/Path_Staff_Principal_Architect.md
       - By Level & Role:
           - Senior / Staff / Principal / FDE: Personal-SourceCode/Interview_Level_Comparison.md
           - AI Engineer: Personal-SourceCode/AI_Engineer_Interview_QA.md
@@ -257,7 +258,27 @@ nav:
       - Plans:
           - Master Cheat Sheets: Personal-SourceCode/Interview_Cheat_Sheets.md
           - 30-Day Prep Plan: Personal-SourceCode/Interview_30_Day_Plan.md
+      - More Q&A:
+          - "AI Security Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/AI_Security_Interview_QA.md
+          - "Architecture Interview Q&A — Staff & Principal Scenario-Based": Personal-SourceCode/Architecture_Interview_QA.md
+          - "FastAPI Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/FastAPI_Interview_QA.md
+          - "FDE Customer Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/FDE_Customer_Interview_QA.md
+          - "Leadership & Delivery Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/Leadership_Delivery_Interview_QA.md
+          - "ML / AI Platform Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/ML_AI_Platform_Interview_QA.md
+          - "RAG & LLMOps Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/RAG_LLMOps_Interview_QA.md
+          - "System Design Interview Q&A — Senior & Staff, AI and Data": Personal-SourceCode/System_Design_Interview_QA.md
   - Study Guide:
       - Personal-SourceCode/OfferReady-Complete-Study-Guide.md
+  - Help:
+      - Help Center: Help/index.md
+      - Getting started: Help/getting-started.md
+      - Jobs and your resume: Help/jobs.md
+      - Practice: Help/practice.md
+      - AI Interview Coach: Help/coach.md
+      - Mock interviews: Help/mock-interviews.md
+      - Readiness: Help/readiness.md
+      - After the interview: Help/after-the-interview.md
+      - Plans and billing: Help/account-billing.md
+      - Troubleshooting and FAQ: Help/troubleshooting.md
   - Open the app ↗: https://klnjoy.github.io/offerready-app/
 # NAV:END
