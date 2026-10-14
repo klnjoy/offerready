@@ -54,9 +54,16 @@ interview** and **Interview notes**, where your device supports it.
 
 ## Updates
 
-The app updates itself. When a new version is ready you'll see **Update
-available.** Choose to reload now, or **Later**. If something looks out of date, close the app and open it
-again.
+The app updates itself. You never need to refresh or reinstall to get a new
+version:
+
+- If an update arrives when you open the app or come back to it, it switches
+  to the new version straight away.
+- If it arrives while you're busy, you'll see **Update available.** Choose
+  **Refresh** to update now, or carry on: it updates by itself the next time
+  you leave the app.
+- It never updates in the middle of a mock interview, or on a screen where
+  you've typed something, so nothing you're writing is lost.
 
 ## Common questions
 

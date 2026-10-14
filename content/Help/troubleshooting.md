@@ -175,9 +175,10 @@ nothing here helps, see [Still stuck?](#still-stuck) at the end.
 ## App, install and display
 
 ??? question "The page looks old or a new feature is missing"
-    Hard refresh: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac). In the
-    installed app, choose **Update available** when it appears, or close and
-    reopen the app.
+    The app updates itself when you open it or come back to it. If you're in
+    the middle of something, choose **Refresh** on **Update available**. In a
+    browser tab, a hard refresh also works: Ctrl+Shift+R (Windows) or
+    Cmd+Shift+R (Mac).
 
 ??? question "I can't install the app"
     Use Chrome or Edge on a computer, Chrome on Android, or Safari on iPhone.
