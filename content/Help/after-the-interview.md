@@ -1,46 +1,127 @@
 ---
 title: After the interview
-description: Debriefs, the outcome check-in, sharing questions, and comparing offers.
+description: Interview notes during the interview, debriefs afterwards, editing and rating questions, the outcome check-in, thank-you emails and comparing offers.
 ---
 
 # After the interview
 
+Everything here is on the job page's **After the interview** tab, and in the
+**Interview day** section of the Overview tab.
+
 ## Take notes during the interview
 
-Open **Take notes during an interview** on the job's **After the interview**
-tab (on the day of your interview, it's also the job's next step). Type each
-question as it's asked and press Enter; add a word or two under it if you like.
-Notes save on this device as you type. When you're done, choose
-**Done: turn into a debrief** and the questions are filled in for you to rate.
+A plain notepad for the real interview. It has no AI and no microphone: it's
+just you typing.
 
-It's just you typing: no AI, no microphone. It's usually fine to ask "Do you
-mind if I take a few notes?" at the start.
+1. Open the job and choose **Interview notes** (in **Interview day** on the
+   Overview tab). On the day of your interview it's also **Do this next**.
+   The Mock interview page has **Real interview today? Take notes**.
+2. Type each question as it's asked under **Question you were asked** and
+   press **Enter**. Questions are numbered, with room for a short note.
+3. Use **Other notes** for anything else: team, scope, follow-ups you
+   promised.
+4. When you're done, choose **Done: turn into a debrief**. The debrief opens
+   with your questions and notes filled in.
+
+Notes save on this device as you type, so you can close the page and come
+back. **Clear notes** deletes them (you're asked to confirm first). Once you
+save the debrief, the notepad for that job is emptied, because the notes now
+live in the debrief.
+
+!!! tip "Is it OK to take notes?"
+    It's usually fine to ask "Do you mind if I take a few notes?" at the start.
 
 ## Write a debrief
 
-On the job page's **After the interview** tab, choose **Log an interview**.
-For each round, note the questions you were asked and how each one went.
-Write it while it's fresh. Questions that went badly come back into your plan
-for the next round.
+A debrief records one round while it's fresh. Questions that went badly come
+back into your plan before the next round.
+
+1. On the job page choose **Log a round** (or **Log interview**), or come from
+   your notes.
+2. Fill in:
+   - **Interview date** and **Round**: recruiter screen, technical, system
+     design, behavioral, onsite or loop, hiring manager;
+   - **Interviewers** (optional, private to you);
+   - **Questions they asked**: type each one and press Enter, or paste a list.
+     Rate each **Good**, **OK** or **Bad** and add a note. A Bad answer asks
+     "What went wrong? What would you say now?";
+   - **Overall, how did it feel?**: Rough, Shaky, Okay, Good or Great;
+   - **Outcome**: Waiting to hear, Next round, Offer or Rejected. For **Next
+     round** add the **Next round date** and **Next round type**, and your plan
+     re-plans up to it;
+   - **Anything else to remember** (private notes).
+3. **Save debrief**.
+
+## See, edit and delete debriefs
+
+Saved rounds are listed under **Debrief history**, newest first. Each card
+shows the round, the date, the outcome, your questions and your notes.
+
+- **Rate how each went**: shown when no question has a rating yet. It opens
+  the editor.
+- **Edit questions and notes**: change anything: add or reword questions,
+  rate them, update the outcome or the notes. **Save debrief** again.
+- **Draft a thank-you email**: a short email based on the round, to copy and
+  send yourself. OfferReady never sends it.
+- **Delete**: removes the round, after you confirm.
+
+The debrief page lists **Questions to revisit**: the ones you rated Bad, so
+you can practise them again.
 
 ## Share questions anonymously (optional)
 
 Tick **Share the questions from this round anonymously** to help others
-prepare. Only the company, role family, level, round type, month, questions
-and how they went are shared, never your name, notes or interviewers. A
-company's questions appear only after at least 3 different people have shared
-for it. You can un-share at any time.
+prepare. Only the company, round type, month, your questions and how each went,
+and the outcome are shared. Your name, the interviewers, your notes and the
+exact date are never shared. A company's questions appear only after at
+least 3 different people have shared for it. You can un-share any time by
+editing the debrief.
 
-## "How did it go?"
+## "How did the interview go?"
 
-After your interview date, OfferReady asks for the result: offer, next round,
-not selected, still waiting, or it didn't happen. "Still waiting" asks again a
-few days later. Your answers help check that readiness scores match real
+After your interview date, OfferReady asks how it went: **Got an offer**,
+**Moved to the next round**, **Didn't get it**, **Still waiting** or **It
+didn't happen**. Choosing an answer
+takes you to the right next step, for example **Log the round and the next
+date**, or **Compare offers** for an offer. "Still waiting" asks again a few
+days later. Your answers also help us check that readiness matches real
 results.
 
 ## Compare offers
 
-**Compare offers** puts offers side by side on first-year and yearly pay, so
-you can plan how to negotiate.
+**Compare offers** (on the After the interview tab) puts offers side by side.
+
+1. Add each offer: company, currency, base pay, bonus, sign-on, equity
+   (total grant and years), start date, decision deadline, location and work
+   setup (remote, hybrid or on-site), and notes.
+2. **Side by side** compares year-1 value and the yearly (annualised) value,
+   and marks the highest.
+3. Pick an **Offer to negotiate** for a **Negotiation plan**: your leverage and
+   how to ask for more, the right way.
+
+## Common questions
+
+??? question "Where can I see my interview notes later?"
+    Before you turn them into a debrief: open **Interview notes** from the job
+    page, where they're still saved on this device. After: in the debrief under
+    **Debrief history** on the job's **After the interview** tab. Your
+    questions are listed there and your other notes are under **Your notes**.
+
+??? question "Can I edit a debrief after saving it?"
+    Yes. Choose **Edit questions and notes** on its card, change anything, then
+    **Save debrief**.
+
+??? question "My notes aren't on my other device"
+    Interview notes stay on the device you typed them on, until you turn them
+    into a debrief. Debriefs sync to your account while you're signed in.
+
+??? question "Does OfferReady listen to or record my real interview?"
+    No. Interview notes is only a text box. There's no microphone, no AI and
+    no answer feed during an interview.
+
+??? question "I rated a question Bad. What happens?"
+    It's added to your plan before the next round, and listed under
+    **Questions to revisit** on the debrief page, so you practise it again
+    rather than forget it.
 
 **Next:** [Plans and billing](account-billing.md)

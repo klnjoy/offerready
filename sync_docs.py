@@ -899,7 +899,9 @@ HELP_PAGES = [
     ("readiness.md", "Readiness"),
     ("after-the-interview.md", "After the interview"),
     ("account-billing.md", "Plans and billing"),
-    ("troubleshooting.md", "Troubleshooting and FAQ"),
+    ("your-data.md", "Your data and sync"),
+    ("get-the-app.md", "Get the app"),
+    ("troubleshooting.md", "Troubleshooting"),
 ]
 
 
