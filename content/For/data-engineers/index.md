@@ -27,7 +27,8 @@ explain the cost and governance side of your design.
    shows and which you need to back up with an example.
    [Add a job →](https://klnjoy.github.io/offerready-app/analyze)
 2. **Drill the trade-offs.** Choose CDC or batch, then hold that choice while
-   the interviewer asks about replays, schema changes and cost.
+   the interviewer asks about replays, schema changes and cost. There are
+   drills for a Databricks lakehouse, a batch and streaming pipeline, and dbt.
 3. **Practise and compare.** Answer a question, get rubric feedback, try again,
    and see what changed: for example "Vague → Solid" on idempotency.
 4. **Prepare your stories.** Turn your migration and incident work into STAR stories,
@@ -37,7 +38,7 @@ explain the cost and governance side of your design.
 
 - [Data & AI / Platform Engineer path](../../Personal-SourceCode/Path_Data_Platform.md)
 - [SQL Q&A](../../Personal-SourceCode/SQL_Interview_QA.md) and [Data Engineering Q&A](../../Personal-SourceCode/DataEngineering_Interview_QA.md)
-- [Snowflake](../../Technologies/snowflake/index.md), [Databricks](../../Technologies/databricks/index.md), [dbt](../../Technologies/dbt/index.md)
+- [Snowflake](../../Technologies/snowflake/index.md), [Databricks](../../Technologies/databricks/index.md) ([Q&A](../../Personal-SourceCode/Databricks_Interview_QA.md)), [dbt](../../Technologies/dbt/index.md)
 
 [Start preparing free](https://klnjoy.github.io/offerready-app/analyze){ .md-button .md-button--primary }
 [Compare OfferReady](../../Compare/index.md){ .md-button }

@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Architect guide.** A [role page](../For/architects/index.md) for solutions,
+  AI, data and cloud architect interviews: discovery, trade-offs, governance and
+  the case presentation.
 - **Interview notes.** A plain notepad for during a real interview: type each
   question as it's asked, then turn your notes into a debrief in one click.
   No AI and no microphone.
