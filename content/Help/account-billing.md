@@ -1,6 +1,6 @@
 ---
 title: Plans and billing
-description: Free plan, one-time passes, limits, billing and your account.
+description: The free plan, one-time passes, every limit, usage alerts, paying, receipts and your account.
 ---
 
 # Plans and billing
@@ -8,39 +8,111 @@ description: Free plan, one-time passes, limits, billing and your account.
 Start free. When an interview is booked, a one-time pass covers your search.
 There's no subscription and nothing to cancel.
 
-| Plan | Price | Good for |
-|---|---|---|
-| **Free** | $0 | Trying the full prep loop on one job |
-| **Job pass** | $19 once, 45 days | One interview you've booked |
-| **30-day pass** | $29 once | A few interviews this month |
-| **90-day pass** | $59 once | A full job search |
-| **1-year pass** | $99 once | Ongoing prep, or several searches |
-| **Mock interview pack** | $15 once | 10 extra voice mocks |
+## Plans
 
-Every limit for every plan is on the [pricing page](https://klnjoy.github.io/offerready-app/pricing).
+| Plan | Price | Length | Good for |
+|---|---|---|---|
+| **Free** | $0 | Resets monthly | Trying the full prep loop on one job |
+| **Job pass** | $19 once | 45 days | One interview you've booked |
+| **30-day pass** | $29 once | 30 days | A few interviews this month |
+| **90-day pass** | $59 once | 90 days | A full job search (recommended) |
+| **1-year pass** | $99 once | 365 days | Ongoing prep, or several searches |
+| **Mock interview pack** | $15 once | Never expires | 10 extra voice mocks, on any plan |
+
+## Every limit
+
+Free limits are per month. A pass's allowance is for the whole pass.
+
+| What | Free (a month) | Job pass | 30-day | 90-day | 1-year |
+|---|---|---|---|---|---|
+| Saved jobs | 1 | 1 | 5 | 15 | 40 |
+| Job analyses | 3 | 10 | 30 | 80 | 200 |
+| AI feedback on answers (incl. the AI Interview Coach) | 5 | 100 | 250 | 600 | 1,500 |
+| Voice mock interviews | 1 | 4 | 8 | 20 | 40 |
+| Drills written for your job | — | 5 | 15 | 40 | 100 |
+| Trade-off drill library | Previews | Full | Full | Full | Full |
+| STAR story coaching | 3 | 20 | 50 | 120 | 300 |
+| Resume tailoring | 2 | 10 | 30 | 80 | 200 |
+| Day-by-day plan | Included | Included | Included | Included | Included |
+| Plan calendar export | — | Included | Included | Included | Included |
+| Study library, question bank, flashcards, timed exams | Included | Included | Included | Included | Included |
+
+The [pricing page](https://klnjoy.github.io/offerready-app/pricing) always has
+the current limits.
+
+## Usage alerts
+
+Once you've used **50%**, **80%** and **100%** of an allowance, a short alert
+appears at the top of app pages, with when the free allowance resets.
+
+- **View usage** opens your usage on the Account page.
+- **See passes** (or **Extend**, if you have a pass) opens pricing.
+- Close the alert with **×**. It comes back at the next level.
+
+On the Account page, the **Current plan** card shows each allowance as
+"used of limit". If the counts can't be loaded, nothing is blocked.
 
 ## When you reach a limit
 
-You'll see what the limit was and the options to raise it. Free limits reset
-each month.
+The feature tells you which limit you reached and how to raise it. Everything
+else keeps working: your jobs, plans, notes, stories and the question bank
+with model answers don't use AI allowances.
 
-## Paying and receipts
+## Buying a pass
 
-Payments go through Stripe's checkout. OfferReady never sees your full card
-number. **Manage billing** on the Account page opens Stripe's billing portal
-for receipts and payment details. See [Refunds](../Terms/index.md#7-refunds).
+1. Choose **See passes** or open **Pricing**.
+2. Pick a pass. The app suggests the shortest one that covers your interview
+   date.
+3. Pay on Stripe's secure checkout. OfferReady never sees your full card
+   number.
+4. You come back to OfferReady, and the pass is active straight away.
+
+**Buying another pass?** It starts the day your current pass ends, so you
+don't lose any days, and its allowance is added to what you have left
+straight away.
+
+## Receipts and payment details
+
+On the **Account** page choose **Manage billing**. Stripe's customer portal
+opens, where you can see invoices and receipts and update your card.
+Refunds are covered in the [terms](../Terms/index.md#7-refunds).
 
 ## Your account
 
-- **Sign in** with email, Google or GitHub.
-- **Sync:** your jobs, plans, practice and stories follow you across devices
-  while you're signed in. You can pause sync on a device from the sync status
-  in the top bar.
-- **Resume sync** is off by default; turn it on to use your resume on other
-  devices.
-- **Download my data** and **Delete my data** are on the Account page.
+- **Sign in** with Google, GitHub, or email and password. **Forgot
+  password?** on the sign-in form sends a reset link.
+- **Profile** on the Account page shows who you're signed in as. **Sign out**
+  is there too.
+- **Your data**: **Download my data** and **Delete my data**. See
+  [Your data and sync](your-data.md).
+- **Install the app** is also on the Account page. See
+  [Get the app](get-the-app.md).
 
-More detail: [Security and your data](../Security/index.md) and
-[Privacy](../Privacy/index.md).
+## Common questions
 
-**Next:** [Troubleshooting](troubleshooting.md)
+??? question "Is there a subscription?"
+    No. Passes are one-time payments with a fixed length. Nothing renews and
+    there's nothing to cancel.
+
+??? question "What happens when my pass ends?"
+    You go back to the free plan. Your jobs, practice, stories and debriefs
+    stay. Only the limits change. If you have more saved jobs than the free
+    plan allows, they're kept, but you can't add new ones until you're under
+    the limit or buy a pass.
+
+??? question "When do free limits reset?"
+    At the start of each month (UTC). The usage alert and the Account page show
+    the reset date.
+
+??? question "Do mock pack credits expire?"
+    No. They're used after your plan's voice mocks run out, on any plan.
+
+??? question "I paid but still see the free plan"
+    Reload the page. If it still shows Free after a minute, sign out and back
+    in with the same account you paid with. Still wrong? [Contact
+    us](../Contact/index.md) with your receipt email.
+
+??? question "Can I get a refund?"
+    See [Refunds](../Terms/index.md#7-refunds) in the terms.
+
+**Next:** [Your data and sync](your-data.md)

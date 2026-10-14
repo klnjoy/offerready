@@ -11,6 +11,11 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Complete Help Center.** Step-by-step instructions for every part of the
+  app, with common questions on each page, a [full list of limits](../Help/account-billing.md),
+  new pages on [your data and sync](../Help/your-data.md) and
+  [getting the app](../Help/get-the-app.md), and a much longer
+  [troubleshooting](../Help/troubleshooting.md) guide.
 - **Architect guide.** A [role page](../For/architects/index.md) for solutions,
   AI, data and cloud architect interviews: discovery, trade-offs, governance and
   the case presentation.
