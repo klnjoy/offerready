@@ -36,8 +36,9 @@ your resume, saved to the job.
 
 1. Open **Questions for this job**. The job at the top is your current job.
    Use **Switch job** to change it.
-2. Choose **Write my questions**. About 25–30 questions are written in roughly
-   30 seconds. Optional: **Edit the job description first**.
+2. Choose **Write my questions**. About 16 questions are written in roughly
+   15 seconds; **Get more questions** adds more that don't repeat them.
+   Optional: **Edit the job description first**.
 3. Filter by **Not practised**, **Technical**, **Behavioral**, **System
    design** or **Leadership**, or choose **Practise the next one**.
 4. Open a question. **Say it out loud first**, then type the main points. Use
@@ -92,7 +93,12 @@ matched to what each job asks for.
 1. Open **Your stories**. **Coverage** shows what this job is likely to
    probe, for example technical depth, leadership, customer focus, delivery
    under pressure, conflict and failure, and which ones have no story yet.
-2. Choose **Add a story** next to a gap, or:
+2. Too many gaps to write? **Draft stories from my resume** (under the
+   coverage list) drafts up to 4 stories for the competencies with none, in
+   one go, from your saved resume. One story can cover two. Each is marked
+   **Draft · check it** until you open it, check it, fill in anything in
+   [brackets] and save. It uses 1 story AI credit.
+3. Or choose **Add a story** next to a gap, or:
    - **+ Quick capture**: three boxes: what happened, what you did, how it
      ended.
    - **New full story**: situation, task, action, result and metrics.
@@ -102,10 +108,10 @@ matched to what each job asks for.
      metrics for you to check. Anything it can't know, like a number, is left
      in **[brackets]** for you to fill in: it never makes up facts. It uses 1
      story AI credit.
-3. Give it a title, pick its **competencies**, and tick the jobs it
+4. Give it a title, pick its **competencies**, and tick the jobs it
    **Suits**. Only one of title, what happened or what you did is needed to
    save: the rest is optional.
-4. The **STAR check** shows what's missing, for example "Add the situation".
+5. The **STAR check** shows what's missing, for example "Add the situation".
    **Save story**.
 
 Then:

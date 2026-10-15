@@ -47,7 +47,8 @@ const { checkQuota, recordUse, quotaError } = require('./_lib/plans');
 
 const STORY_COACH = 'story_coach';
 const STORY_DRAFT = 'story_draft';
-const { buildDraftMessages, parseDraft, NOTES_MAX } = require('./_lib/storyDraft');
+const { buildDraftMessages, parseDraft, buildBatchMessages, parseBatch, NOTES_MAX, RESUME_MAX } = require('./_lib/storyDraft');
+const STORY_BATCH = 'story_batch';
 const DEBRIEF_FILL = 'debrief_fill';
 const { buildFillMessages, parseFill, RECAP_MAX } = require('./_lib/debriefFill');
 
@@ -413,6 +414,7 @@ async function handler(req, res) {
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) { body = null; } }
   if (body && body.purpose === STORY_DRAFT) { await storyDraft(req, res, body); return; }
+  if (body && body.purpose === STORY_BATCH) { await storyBatch(req, res, body); return; }
   if (body && body.purpose === DEBRIEF_FILL) { await debriefFill(req, res, body); return; }
   const question = body && typeof body.question === 'string' ? body.question.trim() : '';
   if (!question) { send(res, 400, { error: 'Please enter a question.' }); return; }
@@ -554,7 +556,10 @@ async function storyDraft(req, res, body) {
     const data = await resp.json();
     const raw = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
     const draft = parseDraft(raw);
-    if (!draft) { send(res, 502, { error: 'Couldn’t draft the story. Please try again.' }); return; }
+    if (!draft) {
+      send(res, 422, { error: 'That doesn’t describe something you did yet. Add one thing you worked on, e.g. "moved the nightly load to dbt, much faster", or pick a line about a project.' });
+      return;
+    }
     await recordUse(user.id, 'story_ai');
     send(res, 200, { draft });
   } catch (e) {
@@ -595,6 +600,44 @@ async function debriefFill(req, res, body) {
     send(res, 200, { fill });
   } catch (e) {
     send(res, e && e.name === 'AbortError' ? 504 : 502, { error: 'Couldn’t fill in the debrief. Please try again.' });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+
+/**
+ * purpose 'story_batch': the saved resume + the competencies with no story ->
+ * up to 4 STAR drafts ({stories}). Metered as ONE story_ai use.
+ */
+async function storyBatch(req, res, body) {
+  const resume = typeof body.resume === 'string' ? body.resume.trim() : '';
+  if (resume.length < 80) { send(res, 400, { error: 'Add your resume first: the drafts are built from it.' }); return; }
+  if (resume.length > RESUME_MAX * 2) { send(res, 413, { error: 'That resume is too long.' }); return; }
+  const user = await getUser(req);
+  if (!user) { send(res, 401, { error: 'Sign in to draft stories with AI.', signin: true }); return; }
+  const q = await checkQuota(user.id, 'story_ai');
+  if (!q.ok) { send(res, 403, quotaError(q, 'story_ai')); return; }
+  const ctx = sanitizeContext(body.context);
+  const messages = buildBatchMessages(resume, body.competencies, ctx && ctx.job);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 45000);
+  try {
+    const resp = await fetch(OPENAI_URL, {
+      method: 'POST', signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+      body: JSON.stringify({ model: process.env.OPENAI_MODEL || DEFAULT_MODEL, temperature: 0.3, max_tokens: 2200, messages, response_format: { type: 'json_object' } }),
+    });
+    if (resp.status === 429) { send(res, 429, { error: 'Busy right now — try again in a moment.' }); return; }
+    if (!resp.ok) { console.error(`story_batch OpenAI status ${resp.status}`); send(res, 502, { error: 'Couldn’t draft stories. Please try again.' }); return; }
+    const data = await resp.json();
+    const raw = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
+    const stories = parseBatch(raw);
+    if (!stories) { send(res, 422, { error: 'Your resume didn’t give enough to draft stories from. Try Draft it for me on one story instead.' }); return; }
+    await recordUse(user.id, 'story_ai');
+    send(res, 200, { stories });
+  } catch (e) {
+    send(res, e && e.name === 'AbortError' ? 504 : 502, { error: 'Couldn’t draft stories. Please try again.' });
   } finally {
     clearTimeout(timer);
   }

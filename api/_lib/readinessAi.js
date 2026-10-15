@@ -103,11 +103,13 @@ function validateGap(parsed) {
 
 // Target counts per category (spec: 10 technical, 10 behavioral, 5 system
 // design, 5 leadership).
+// A first set of 16 comes back in about half the time of 30; "Get more
+// questions" adds another set that doesn't repeat it.
 const QUESTION_TARGETS = {
-  technical: 10,
-  behavioral: 10,
-  system_design: 5,
-  leadership: 5,
+  technical: 6,
+  behavioral: 5,
+  system_design: 3,
+  leadership: 2,
 };
 const VALID_CATEGORIES = Object.keys(QUESTION_TARGETS);
 const VALID_DIFFICULTY = ['easy', 'medium', 'hard'];
@@ -126,7 +128,7 @@ const QUESTIONS_SYSTEM_PROMPT = [
   '  ]',
   '}',
   '',
-  'Required counts: 10 technical, 10 behavioral, 5 system_design, 5 leadership.',
+  'Required counts: ' + Object.keys(QUESTION_TARGETS).map((c) => QUESTION_TARGETS[c] + ' ' + c).join(', ') + '.',
   'Technical questions must reference the actual skills/tech in the JD. System',
   'design questions must be scenario-based. Behavioral/leadership must be STAR-',
   'style. Vary difficulty realistically for the role seniority.',
@@ -211,7 +213,7 @@ function validateQuestions(parsed) {
 
   // Require a meaningful set: at least half the target in each of the 4 buckets.
   const enough = VALID_CATEGORIES.every((c) => (counts[c] || 0) >= Math.ceil(QUESTION_TARGETS[c] / 2));
-  if (clean.length < 15 || !enough) return { ok: false, reason: 'insufficient', counts: counts };
+  if (clean.length < 12 || !enough) return { ok: false, reason: 'insufficient', counts: counts };
 
   return { ok: true, questions: clean, counts: counts };
 }

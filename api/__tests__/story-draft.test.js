@@ -22,3 +22,25 @@ test('parseDraft refuses empty or broken output', () => {
   assert.strictEqual(parseDraft('{}'), null);
   assert.ok(parseDraft('```json\n{"situation":"S"}\n```'));
 });
+
+const { buildBatchMessages, parseBatch } = require('../_lib/storyDraft');
+
+test('a title alone is enough for a single draft', () => {
+  assert.ok(parseDraft('{"title":"Moved ETL to dbt"}'));
+});
+
+test('batch prompt lists only known competencies and the resume', () => {
+  const m = buildBatchMessages('Led a team of 4. Cut cost by 30%.', ['leadership', 'nonsense', 'failure'], { title: 'Lead Data Engineer' });
+  assert.match(m[1].content, /COMPETENCIES NEEDED: leadership, failure/);
+  assert.match(m[1].content, /RESUME:\nLed a team of 4/);
+  assert.match(m[0].content, /Never invent numbers/);
+});
+
+test('parseBatch keeps valid stories, at most 4', () => {
+  const one = { title: 'T', situation: 'S', action: 'A', result: 'R', tags: ['leadership'] };
+  const out = parseBatch(JSON.stringify({ stories: [one, {}, one, one, one, one] }));
+  assert.strictEqual(out.length, 4);
+  assert.deepStrictEqual(out[0].tags, ['leadership']);
+  assert.strictEqual(parseBatch('{"stories":[]}'), null);
+  assert.strictEqual(parseBatch('x'), null);
+});
