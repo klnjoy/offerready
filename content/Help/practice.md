@@ -96,8 +96,15 @@ matched to what each job asks for.
    - **+ Quick capture**: three boxes: what happened, what you did, how it
      ended.
    - **New full story**: situation, task, action, result and metrics.
+   - **Draft it for me** (at the top of a new story): write a few words about
+     something you did, or tap a line from your resume, and choose **Draft my
+     story**. The AI fills in the title, situation, task, action, result and
+     metrics for you to check. Anything it can't know, like a number, is left
+     in **[brackets]** for you to fill in: it never makes up facts. It uses 1
+     story AI credit.
 3. Give it a title, pick its **competencies**, and tick the jobs it
-   **Suits**.
+   **Suits**. Only one of title, what happened or what you did is needed to
+   save: the rest is optional.
 4. The **STAR check** shows what's missing, for example "Add the situation".
    **Save story**.
 

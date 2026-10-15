@@ -46,6 +46,10 @@ const { getUser } = require('./_lib/supabaseAuth');
 const { checkQuota, recordUse, quotaError } = require('./_lib/plans');
 
 const STORY_COACH = 'story_coach';
+const STORY_DRAFT = 'story_draft';
+const { buildDraftMessages, parseDraft, NOTES_MAX } = require('./_lib/storyDraft');
+const DEBRIEF_FILL = 'debrief_fill';
+const { buildFillMessages, parseFill, RECAP_MAX } = require('./_lib/debriefFill');
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
@@ -408,6 +412,8 @@ async function handler(req, res) {
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch (_) { body = null; } }
+  if (body && body.purpose === STORY_DRAFT) { await storyDraft(req, res, body); return; }
+  if (body && body.purpose === DEBRIEF_FILL) { await debriefFill(req, res, body); return; }
   const question = body && typeof body.question === 'string' ? body.question.trim() : '';
   if (!question) { send(res, 400, { error: 'Please enter a question.' }); return; }
   if (question.length > Q_MAX) { send(res, 413, { error: 'Question is too long.' }); return; }
@@ -519,3 +525,77 @@ module.exports._internal = {
   createFollowupFilter, splitFollowups, parseFollowups, pickCitations,
   readOpenAIStream, HISTORY_TURNS, HISTORY_CHARS,
 };
+
+
+/**
+ * purpose 'story_draft': notes -> a STAR draft ({draft}). Metered like story
+ * coaching (story_ai): signed in, quota checked, one use recorded on success.
+ */
+async function storyDraft(req, res, body) {
+  const notes = typeof body.notes === 'string' ? body.notes.trim() : '';
+  if (notes.length < 8) { send(res, 400, { error: 'Write a few words about what you did first.' }); return; }
+  if (notes.length > NOTES_MAX) { send(res, 413, { error: 'That’s too long. A few sentences is enough.' }); return; }
+  const user = await getUser(req);
+  if (!user) { send(res, 401, { error: 'Sign in to draft stories with AI.', signin: true }); return; }
+  const q = await checkQuota(user.id, 'story_ai');
+  if (!q.ok) { send(res, 403, quotaError(q, 'story_ai')); return; }
+  const ctx = sanitizeContext(body.context);
+  const messages = buildDraftMessages(notes, ctx && ctx.job);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const resp = await fetch(OPENAI_URL, {
+      method: 'POST', signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+      body: JSON.stringify({ model: process.env.OPENAI_MODEL || DEFAULT_MODEL, temperature: 0.3, max_tokens: 700, messages, response_format: { type: 'json_object' } }),
+    });
+    if (resp.status === 429) { send(res, 429, { error: 'Busy right now — try again in a moment.' }); return; }
+    if (!resp.ok) { console.error(`story_draft OpenAI status ${resp.status}`); send(res, 502, { error: 'Couldn’t draft the story. Please try again.' }); return; }
+    const data = await resp.json();
+    const raw = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
+    const draft = parseDraft(raw);
+    if (!draft) { send(res, 502, { error: 'Couldn’t draft the story. Please try again.' }); return; }
+    await recordUse(user.id, 'story_ai');
+    send(res, 200, { draft });
+  } catch (e) {
+    send(res, e && e.name === 'AbortError' ? 504 : 502, { error: 'Couldn’t draft the story. Please try again.' });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+
+/**
+ * purpose 'debrief_fill': the user's recap of a real interview -> questions,
+ * ratings and notes ({fill}). Signed in only; rate limited like the rest of
+ * /api/ask. Not metered: it only structures what the user wrote.
+ */
+async function debriefFill(req, res, body) {
+  const recap = typeof body.recap === 'string' ? body.recap.trim() : '';
+  if (recap.length < 15) { send(res, 400, { error: 'Write a few sentences about the interview first.' }); return; }
+  if (recap.length > RECAP_MAX) { send(res, 413, { error: 'That’s too long. Keep it to the main points.' }); return; }
+  const user = await getUser(req);
+  if (!user) { send(res, 401, { error: 'Sign in to fill in a debrief with AI.', signin: true }); return; }
+  const ctx = sanitizeContext(body.context);
+  const messages = buildFillMessages(recap, ctx && ctx.job);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const resp = await fetch(OPENAI_URL, {
+      method: 'POST', signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+      body: JSON.stringify({ model: process.env.OPENAI_MODEL || DEFAULT_MODEL, temperature: 0.2, max_tokens: 900, messages, response_format: { type: 'json_object' } }),
+    });
+    if (resp.status === 429) { send(res, 429, { error: 'Busy right now — try again in a moment.' }); return; }
+    if (!resp.ok) { console.error(`debrief_fill OpenAI status ${resp.status}`); send(res, 502, { error: 'Couldn’t fill in the debrief. Please try again.' }); return; }
+    const data = await resp.json();
+    const raw = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
+    const fill = parseFill(raw);
+    if (!fill) { send(res, 502, { error: 'Couldn’t find questions in that. Name what they asked, then try again.' }); return; }
+    send(res, 200, { fill });
+  } catch (e) {
+    send(res, e && e.name === 'AbortError' ? 504 : 502, { error: 'Couldn’t fill in the debrief. Please try again.' });
+  } finally {
+    clearTimeout(timer);
+  }
+}

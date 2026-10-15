@@ -38,7 +38,12 @@ back into your plan before the next round.
 
 1. On the job page choose **Log a round** (or **Log interview**), or come from
    your notes.
-2. Fill in:
+2. **Fill it in for me** (optional, at the top): tell it how the interview
+   went in your own words, what they asked, how you answered, what was
+   hard, and choose **Fill in the debrief**. It adds the questions you
+   mention, how each one went and your notes. It never adds questions you
+   didn't mention. Check each one, then carry on below.
+3. Fill in, or check:
    - **Interview date** and **Round**: recruiter screen, technical, system
      design, behavioral, onsite or loop, hiring manager;
    - **Interviewers** (optional, private to you);
@@ -50,7 +55,7 @@ back into your plan before the next round.
      round** add the **Next round date** and **Next round type**, and your plan
      re-plans up to it;
    - **Anything else to remember** (private notes).
-3. **Save debrief**.
+4. **Save debrief**.
 
 ## See, edit and delete debriefs
 

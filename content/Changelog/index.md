@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Less typing.** **Draft it for me** turns a few words or a resume line
+  into a full STAR story, and **Fill it in for me** turns your recap of an
+  interview into a debrief with each question rated. Both leave anything they
+  can't know for you to fill in.
 - **Questions you were asked.** Every question from your real interviews, in
   one place across all your jobs, with your notes, how it went and how often
   it came up. Practise any of them with the AI Interview Coach. See
