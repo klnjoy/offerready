@@ -63,8 +63,9 @@ Every job page and practice tool shows where you are, like the study notes:
   **Your jobs**, each job is a folder, in the order you prepare:
   **Overview**, **Resume match**, **Practise every day** (the four steps,
   ticked when done), **AI Interview Coach**, **Any time** (Question bank,
-  Readiness), **Interview day and after** (Interview notes, Log a round,
-  Debriefs and outcome, Compare offers), and **Job settings** last. The
+  Readiness), **Interview day and after** (Interview notes during the
+  interview, Debriefs to log a round and see past ones, Questions you were
+  asked, Compare offers), and **Job settings** last. The
   folders you're in are open; choose any folder to open or close it.
 - **On this page** on the right of a wide screen lists the sections of the
   page you're on.
