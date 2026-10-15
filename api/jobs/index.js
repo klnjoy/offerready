@@ -30,6 +30,26 @@ function str(v, max) {
   return max ? s.slice(0, max) : s;
 }
 
+/** An analysis worth saving: an object with a summary or any skills,
+ * responsibilities or requirements in it. */
+function hasAnalysisContent(a) {
+  if (!a || typeof a !== 'object' || Array.isArray(a)) return false;
+  if (str(a.roleSummary)) return true;
+  const lists = ['coreSkills', 'technologies', 'responsibilities', 'experienceRequirements', 'preferredSkills', 'interviewSignals'];
+  return lists.some((k) => Array.isArray(a[k]) && a[k].length > 0);
+}
+
+/** A short summary when the analysis has none: the start of the posting,
+ * else the job title. */
+function fallbackSummary(body, a) {
+  const jd = str(body && body.jobDescription);
+  if (jd) {
+    const flat = jd.replace(/\s+/g, ' ');
+    return flat.length > 400 ? flat.slice(0, 400).replace(/\s+\S*$/, '') + '…' : flat;
+  }
+  return str(a.jobTitle) || str(body && body.title) || 'Saved job';
+}
+
 /** Derive dashboard columns from a full analysis object. */
 function summarize(analysis) {
   const a = analysis || {};
@@ -68,9 +88,14 @@ module.exports = async function handler(req, res) {
     if (!body || typeof body !== 'object') { send(res, 400, { error: 'Invalid request body.' }); return; }
 
     const analysis = body.analysis;
-    if (!analysis || typeof analysis !== 'object' || !analysis.roleSummary) {
+    if (!hasAnalysisContent(analysis)) {
       send(res, 400, { error: 'A valid analysis is required to save a job.' });
       return;
+    }
+    // The model sometimes leaves roleSummary empty while the rest of the
+    // analysis is fine: fill it from the posting instead of refusing the job.
+    if (!str(analysis.roleSummary)) {
+      analysis.roleSummary = fallbackSummary(body, analysis);
     }
 
     // Free-tier enforcement (server-side, cannot be bypassed by the client).
@@ -102,3 +127,5 @@ module.exports = async function handler(req, res) {
 
   send(res, 405, { error: 'Method not allowed.' });
 };
+
+module.exports._test = { hasAnalysisContent, fallbackSummary };
