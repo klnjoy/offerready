@@ -62,7 +62,7 @@ Every job page and practice tool shows where you are, like the study notes:
 - **The folder list** on the left of a computer, like the study notes. Under
   **Your jobs**, each job is a folder, in the order you prepare:
   **Overview**, **Resume match**, **Practise every day** (the four steps,
-  ticked when done), **Any time** (AI Interview Coach, Question bank,
+  ticked when done), **AI Interview Coach**, **Any time** (Question bank,
   Readiness), **Interview day and after** (Interview notes, Log a round,
   Debriefs and outcome, Compare offers), and **Job settings** last. The
   folders you're in are open; choose any folder to open or close it.
