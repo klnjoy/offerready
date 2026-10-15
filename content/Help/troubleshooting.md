@@ -183,7 +183,7 @@ nothing here helps, see [Still stuck?](#still-stuck) at the end.
 ??? question "How do I get back, or to another step?"
     Use the trail at the top of the page: choose any part to go up a level.
     On a computer, the folder list on the left has every job and step. On a
-    phone, choose **Steps**.
+    phone, choose **Menu**.
 
 
 ??? question "The page looks old or a new feature is missing"
