@@ -11,6 +11,13 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Questions you were asked.** Every question from your real interviews, in
+  one place across all your jobs, with your notes, how it went and how often
+  it came up. Practise any of them with the AI Interview Coach. See
+  [After the interview](../Help/after-the-interview.md#questions-you-were-asked).
+- **Tailoring keeps your main resume.** Tailored bullets are now saved as a
+  copy with that job, so your other jobs keep your main resume. See
+  [Where the tailored copy is](../Help/jobs.md#where-the-tailored-copy-is).
 - **Find your way like the study notes.** Every job page and practice tool
   shows a trail at the top (*Jobs › your job › step*), your jobs as folders
   on the left with their steps inside (in **Menu** on phones), "On this
