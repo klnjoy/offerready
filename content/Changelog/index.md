@@ -11,6 +11,12 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Faster.** Adding a job opens it as soon as it's saved and compares your
+  resume in the background; questions for a job come in about half the time
+  (16 first, then **Get more questions**).
+- **Draft stories from my resume.** One click drafts up to 4 stories for the
+  competencies a job needs that you have no story for, marked Draft until you
+  check them.
 - **Less typing.** **Draft it for me** turns a few words or a resume line
   into a full STAR story, and **Fill it in for me** turns your recap of an
   interview into a debrief with each question rated. Both leave anything they

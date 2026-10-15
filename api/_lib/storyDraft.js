@@ -25,6 +25,9 @@ Rules:
 - Situation: 1-2 sentences. Task: 1 sentence. Action: 3-5 short steps the
   candidate took. Result: 1-2 sentences, with the number if the notes give one.
 - Title: under 10 words, the outcome first (e.g. "Cut the nightly load from 6h to 40m").
+- If the notes describe a background or a skill set rather than one piece of
+  work, build the story around the most specific thing they mention and put
+  the missing specifics in [brackets] (e.g. "[which project?]").
 - tags: 1-3 of: ${TAGS.join(', ')}.
 Return ONLY JSON:
 {"title":"","situation":"","task":"","action":"","result":"","metrics":"","tags":[]}
@@ -53,8 +56,43 @@ function parseDraft(raw) {
   const d = {};
   for (const k of Object.keys(FIELD_MAX)) d[k] = clean(o[k], FIELD_MAX[k]);
   d.tags = Array.isArray(o.tags) ? o.tags.map((t) => String(t).toLowerCase().trim()).filter((t) => TAGS.includes(t)).slice(0, 3) : [];
-  if (!d.situation && !d.action && !d.result) return null;
+  if (!d.title && !d.situation && !d.action && !d.result) return null;
   return d;
 }
 
-module.exports = { buildDraftMessages, parseDraft, NOTES_MAX, TAGS };
+// ---- several stories at once, from the resume, for the missing competencies
+
+const BATCH_SYSTEM = `
+You turn a candidate's resume into STAR interview story drafts for the
+behavioral round, one per competency asked for (a story may cover two).
+
+Rules:
+- Use ONLY facts in the resume. Never invent numbers, names, tools or outcomes.
+  Where a story needs a fact the resume doesn't give, write a short question in
+  square brackets, e.g. "[who disagreed with you?]".
+- First person ("I"), plain spoken English. Situation 1-2 sentences, task 1,
+  action 3-5 short steps, result 1-2 sentences.
+- Title under 10 words, outcome first.
+- tags: the competencies the story shows, from: ${TAGS.join(', ')}.
+- At most 4 stories. Skip a competency the resume gives nothing for.
+Return ONLY JSON: {"stories":[{"title":"","situation":"","task":"","action":"","result":"","metrics":"","tags":[]}]}
+`.trim();
+
+const RESUME_MAX = 6000;
+
+function buildBatchMessages(resume, competencies, job) {
+  const comps = (Array.isArray(competencies) ? competencies : []).filter((c) => TAGS.includes(c)).slice(0, 8);
+  const lines = ['COMPETENCIES NEEDED: ' + (comps.length ? comps.join(', ') : TAGS.slice(0, 4).join(', ')), '', 'RESUME:', String(resume || '').slice(0, RESUME_MAX)];
+  if (job && job.title) lines.push('', 'Job (emphasis only, never as facts): ' + clean(job.title, 120));
+  return [{ role: 'system', content: BATCH_SYSTEM }, { role: 'user', content: lines.join('\n') }];
+}
+
+function parseBatch(raw) {
+  let o = null;
+  try { o = JSON.parse(String(raw || '').replace(/^```(?:json)?|```$/g, '').trim()); } catch (_) { return null; }
+  const list = o && Array.isArray(o.stories) ? o.stories : [];
+  const out = list.map((x) => parseDraft(JSON.stringify(x || {}))).filter(Boolean).slice(0, 4);
+  return out.length ? out : null;
+}
+
+module.exports = { buildDraftMessages, parseDraft, buildBatchMessages, parseBatch, NOTES_MAX, RESUME_MAX, TAGS };
