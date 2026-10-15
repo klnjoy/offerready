@@ -59,12 +59,17 @@ Every job page and practice tool shows where you are, like the study notes:
 - **The trail** at the top, for example
   *Jobs › Senior AI Engineer › Practise every day › Trade-off drill*. Choose
   any part to go up a level.
-- **The side list** on a computer: everything for this job in one place.
-  Switch job at the top, then **This job** (Overview, Resume, After the
-  interview, Job settings), **Practise every day** (the four steps, ticked when
-  done), **Any time** (AI Interview Coach, Question bank, Readiness) and
-  **Interview day** (Interview notes, Log a round, Compare offers).
-- **This job** button on a phone or tablet: opens the same list.
+- **The folder list** on the left of a computer, like the study notes. Under
+  **Your jobs**, each job is a folder. Open it for Overview, Resume, After
+  the interview and Job settings, and three folders: **Practise every day**
+  (the four steps, ticked when done), **Any time** (AI Interview Coach,
+  Question bank, Readiness) and **Interview day** (Interview notes, Log a
+  round, Compare offers). The folders you're in are open; choose any folder
+  to open or close it.
+- **On this page** on the right of a wide screen lists the sections of the
+  page you're on.
+- **Steps** button on a phone or tablet: opens the same folders from the
+  left. Choose a folder to go into it, and the back arrow to go up.
 - **Previous** and **Next** at the bottom of each main step.
 
 ## Adding a job
