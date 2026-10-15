@@ -35,14 +35,14 @@ A plain form for this job. Nothing changes until you press a button.
 - **Job details**: job title, company and interview date. Change what you
   need, then choose **Save changes**, or **Cancel** to put them back. If you
   try to leave with changes you haven't saved, OfferReady warns you.
-- **Your resume**: upload a file or paste the text, check it, then choose
-  **Save resume**. **Remove** asks before it deletes your saved resume.
 - **Delete this job**: asks you to confirm. Your resume and stories stay.
 
-### Resume
+### Resume match
 
 How your resume matches this job, your top gaps, your saved resume, and
-**Tailor my resume for this job**.
+**Tailor my resume for this job**. This is the one place to change your
+resume: upload a file or paste the text, check it, then choose **Save
+resume**. **Remove** asks first. (On a phone the tab is called **Resume**.)
 
 ### After the interview
 
@@ -60,12 +60,12 @@ Every job page and practice tool shows where you are, like the study notes:
   *Jobs › Senior AI Engineer › Practise every day › Trade-off drill*. Choose
   any part to go up a level.
 - **The folder list** on the left of a computer, like the study notes. Under
-  **Your jobs**, each job is a folder. Open it for Overview, Resume, After
-  the interview and Job settings, and three folders: **Practise every day**
-  (the four steps, ticked when done), **Any time** (AI Interview Coach,
-  Question bank, Readiness) and **Interview day** (Interview notes, Log a
-  round, Compare offers). The folders you're in are open; choose any folder
-  to open or close it.
+  **Your jobs**, each job is a folder, in the order you prepare:
+  **Overview**, **Resume match**, **Practise every day** (the four steps,
+  ticked when done), **AI Interview Coach**, **Any time** (Question bank,
+  Readiness), **Interview day and after** (Interview notes, Log a round,
+  Debriefs and outcome, Compare offers), and **Job settings** last. The
+  folders you're in are open; choose any folder to open or close it.
 - **On this page** on the right of a wide screen lists the sections of the
   page you're on.
 - **Steps** button on a phone or tablet: opens the same folders from the
