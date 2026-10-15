@@ -13,7 +13,7 @@ New features and improvements, newest first.
 ### Week of 13 October
 - **Find your way like the study notes.** Every job page and practice tool
   shows a trail at the top (*Jobs › your job › step*), your jobs as folders
-  on the left with their steps inside (a **Steps** menu on phones), "On this
+  on the left with their steps inside (in **Menu** on phones), "On this
   page" on the right, and previous / next links at the bottom. See [Getting around](../Help/jobs.md#getting-around).
 - **Job settings.** A Settings tab on each job: title, company and interview
   date with **Save changes** and **Cancel**, your resume saved only when you

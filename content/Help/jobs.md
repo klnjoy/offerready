@@ -68,8 +68,8 @@ Every job page and practice tool shows where you are, like the study notes:
   folders you're in are open; choose any folder to open or close it.
 - **On this page** on the right of a wide screen lists the sections of the
   page you're on.
-- **Steps** button on a phone or tablet: opens the same folders from the
-  left. Choose a folder to go into it, and the back arrow to go up.
+- **Menu** on a phone or tablet: opens the same folders from the left.
+  Choose a folder to go into it, and the back arrow to go up.
 - **Previous** and **Next** at the bottom of each main step.
 
 ## Adding a job
