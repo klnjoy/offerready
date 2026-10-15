@@ -11,7 +11,7 @@ plan, practice progress, resume match and debriefs.
 ## The job page
 
 Open a job from **Jobs** in the top bar. At the top you'll see the job title,
-**Rename**, and **Switch job** to jump to another job. The page has three tabs.
+**Rename**, and **Switch job** to jump to another job. The page has four tabs.
 
 ### Overview
 
@@ -28,6 +28,17 @@ Open a job from **Jobs** in the top bar. At the top you'll see the job title,
 | **Set up once** | Job, date, resume, gaps checked, and the optional tailoring. It folds away once done. |
 | **About this job** | What the role asks for, from the description. |
 
+### Settings
+
+A plain form for this job. Nothing changes until you press a button.
+
+- **Job details**: job title, company and interview date. Change what you
+  need, then choose **Save changes**, or **Cancel** to put them back. If you
+  try to leave with changes you haven't saved, OfferReady warns you.
+- **Your resume**: upload a file or paste the text, check it, then choose
+  **Save resume**. **Remove** asks before it deletes your saved resume.
+- **Delete this job**: asks you to confirm. Your resume and stories stay.
+
 ### Resume
 
 How your resume matches this job, your top gaps, your saved resume, and
@@ -40,6 +51,21 @@ offers**. See [After the interview](after-the-interview.md).
 
 !!! tip "Open a tab directly"
     Links keep the tab, so you can bookmark a job's Resume tab, for example.
+
+## Getting around
+
+Every job page and practice tool shows where you are, like the study notes:
+
+- **The trail** at the top, for example
+  *Jobs › Senior AI Engineer › Practise every day › Trade-off drill*. Choose
+  any part to go up a level.
+- **The side list** on a computer: everything for this job in one place.
+  Switch job at the top, then **This job** (Overview, Resume, After the
+  interview, Job settings), **Practise every day** (the four steps, ticked when
+  done), **Any time** (AI Interview Coach, Question bank, Readiness) and
+  **Interview day** (Interview notes, Log a round, Compare offers).
+- **This job** button on a phone or tablet: opens the same list.
+- **Previous** and **Next** at the bottom of each main step.
 
 ## Adding a job
 
@@ -119,7 +145,8 @@ near the end, and keeps the day before light.
 ## Common questions
 
 ??? question "The job title is wrong"
-    Choose **Rename** next to the title on the job page. Imported jobs use the
+    Choose **Rename** next to the title on the job page, or change it on the
+    **Settings** tab and choose **Save changes**. Imported jobs use the
     exact title from the posting.
 
 ??? question "Can I edit the job description after adding the job?"

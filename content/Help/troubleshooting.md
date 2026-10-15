@@ -61,7 +61,13 @@ nothing here helps, see [Still stuck?](#still-stuck) at the end.
     [Plans and billing](account-billing.md).
 
 ??? question "The job title or company is wrong"
-    Choose **Rename** next to the title on the job page.
+    Choose **Rename** next to the title on the job page, or open the job's
+    **Settings** tab, change it and choose **Save changes**.
+
+??? question "I changed a setting but nothing happened"
+    On a job's **Settings** tab, changes are kept only when you choose **Save
+    changes** (or **Save resume** for your resume). "You have unsaved
+    changes" means they aren't saved yet.
 
 ## Your resume
 
@@ -173,6 +179,12 @@ nothing here helps, see [Still stuck?](#still-stuck) at the end.
     be recovered.
 
 ## App, install and display
+
+??? question "How do I get back, or to another step?"
+    Use the trail at the top of the page: choose any part to go up a level.
+    On a computer, the list on the left has everything for the job. On a
+    phone, choose **This job**.
+
 
 ??? question "The page looks old or a new feature is missing"
     The app updates itself when you open it or come back to it. If you're in

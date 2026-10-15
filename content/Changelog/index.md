@@ -11,6 +11,13 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Find your way like the study notes.** Every job page and practice tool
+  shows a trail at the top (*Jobs › your job › step*), a list of everything
+  for the job on the left (a **This job** button on phones), and previous /
+  next links at the bottom. See [Getting around](../Help/jobs.md#getting-around).
+- **Job settings.** A Settings tab on each job: title, company and interview
+  date with **Save changes** and **Cancel**, your resume saved only when you
+  choose **Save resume**, and deleting the job.
 - **Complete Help Center.** Step-by-step instructions for every part of the
   app, with common questions on each page, a [full list of limits](../Help/account-billing.md),
   new pages on [your data and sync](../Help/your-data.md) and
