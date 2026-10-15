@@ -25,8 +25,10 @@ to your account while you're signed in, so you can pick up on any device.
 | **Interview notes** (until you turn them into a debrief) | ✓ | No, this device only |
 | **Recent voice sessions** (transcripts) | ✓ | No. Only the score, if you choose **Save to readiness** |
 
-Your **audio is never sent**. Speech recognition in voice interviews runs in
-your browser.
+OfferReady **never receives your audio**. Voice interviews use your browser's
+speech recognition; depending on the browser, its own speech service may
+process the audio (for example Google, in Chrome). Only the text of your
+answers is sent to OfferReady, for feedback, and it isn't stored by the API.
 
 ## Syncing between devices
 
