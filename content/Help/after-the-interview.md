@@ -96,9 +96,13 @@ Turn the notes into a debrief and they appear here.
 Tick **Share the questions from this round anonymously** to help others
 prepare. Only the company, round type, month, your questions and how each went,
 and the outcome are shared. Your name, the interviewers, your notes and the
-exact date are never shared. A company's questions appear only after at
-least 3 different people have shared for it. You can un-share any time by
-editing the debrief.
+exact date are never shared. You can un-share any time by editing the
+debrief.
+
+Shared rounds are kept anonymously for a future "questions asked at this
+company" page. **Nobody else can see them yet.** When that page opens, a
+company's questions will show only after at least 3 different people have
+shared for it.
 
 ## "How did the interview go?"
 
