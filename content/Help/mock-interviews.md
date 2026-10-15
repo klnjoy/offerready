@@ -87,8 +87,12 @@ it's **End mock**. Either way you get feedback on the questions you answered.
     **Type my answers instead of speaking**.
 
 ??? question "Is my audio recorded or sent anywhere?"
-    No. Speech recognition runs in your browser. OfferReady receives only the
-    text of your answers, to give feedback, never your audio.
+    OfferReady never receives your audio. Your browser turns speech into
+    text; depending on the browser, its own speech service may process the
+    audio (for example Google, in Chrome). OfferReady receives only the text
+    of your answers, to give feedback, and the API doesn't store it. Recent
+    sessions are kept in this browser only. If you'd rather not use a speech
+    service, tick **Type my answers instead of speaking**.
 
 ??? question "It cut me off while I was thinking"
     Raise **Auto-stop after silence** to 5 or 8 seconds, or set it to **Off**

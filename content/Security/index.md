@@ -18,7 +18,7 @@ can check. Full details are in the [Privacy Policy](../Privacy/index.md).
 | **Only you can read your data** | Every account table in our database has row-level security: each signed-in user can read and change only their own rows. |
 | **Your resume stays on your device by default** | Resume sync is off unless you turn it on. When it's off, your resume is sent only with the request that needs it and isn't stored on our servers. |
 | **AI requests aren't stored** | Our API sends the text needed for each AI request to OpenAI and doesn't write your resume, answers or transcripts to its logs. Data sent through OpenAI's API isn't used to train its models by default. |
-| **Your voice stays out of our servers** | Voice mock interviews use your browser's speech recognition. We never receive your audio. |
+| **Your voice stays out of our servers** | Voice mock interviews use your browser's speech recognition. We never receive your audio: only the text of your answers is sent, for feedback. Depending on the browser, its own speech service may process the audio (for example Google, in Chrome). |
 | **We never see your card** | Payments go through Stripe's checkout. We don't receive or store your full card number. |
 | **No ads, no trackers** | There's no advertising, no third-party analytics and no tracking pixels. We don't sell your data. |
 | **Protection against hidden instructions** | Job posts and answers you paste are passed to the AI as data, with protections against instructions hidden inside them. Scores need evidence quoted from your answer, and resume quotes are checked against your real text. |
@@ -28,7 +28,8 @@ can check. Full details are in the [Privacy Policy](../Privacy/index.md).
 
 - **Download your data:** Account → Your data → **Download my data**.
 - **Delete your data:** Account → Your data → **Delete my data**.
-- **Pause sync** on any device from the Account page.
+- **Resume sync** is off unless you turn it on (Account → Your data), and turning it off deletes the account copy.
+- **Sync** runs while you're signed in. Sign out on a device to stop it syncing; **Delete my data** pauses it on that device.
 - **Shared interview questions** are opt-in for each debrief. A company's questions
   appear only after at least 3 different people have shared for it, and
   never with your name.
