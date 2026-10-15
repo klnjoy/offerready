@@ -127,14 +127,26 @@ anything**.
 2. A bullet marked **Needs a fact from you** has a gap in [brackets]. Fill in
    your real number or detail first.
 3. **Put them in your resume:**
-   - **Update my saved resume** applies the accepted bullets to the resume
-     saved in OfferReady, or
+   - **Save tailored copy** saves a copy of your resume with the accepted
+     bullets, **with this job only**. Your main resume doesn't change, so your
+     other jobs keep using it. Or:
    - **Copy into your resume file** and paste over the old bullets in Word or
      Google Docs.
-4. **Next: re-check my fit** runs the match again so you can see the
-   difference.
+4. **Next: re-check my fit** runs the match again with the tailored copy, so
+   you can see the difference.
 
-**Undo my edits** puts your saved resume back the way it was.
+**Undo my edits** on a bullet puts back the AI's suggestion before you edited it.
+
+### Where the tailored copy is
+
+On the job's **Resume match** tab, under **Tailored for this job**:
+
+- **Show the tailored resume**, **Copy the text** or **Download .txt**.
+- **Tailor again** to change it.
+- **Use my main resume instead** deletes the copy (it asks first). The job
+  goes back to your main resume.
+
+The tailored copy is kept on this device, like your main resume.
 
 ## Your plan
 
@@ -163,6 +175,10 @@ near the end, and keeps the day before light.
     Your resume doesn't show it clearly enough for the match to find it. Add a
     bullet that names the skill and a result, or use **Tailor my resume**.
     Then re-check the match.
+
+??? question "Does tailoring change my resume for my other jobs?"
+    No. Tailoring saves a separate copy with the job you tailored it for. Your
+    main resume, and every other job, stay as they were.
 
 ??? question "Does tailoring make things up?"
     No. It only rewords what's already in your resume. Anything it would need

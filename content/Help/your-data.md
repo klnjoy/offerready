@@ -22,6 +22,7 @@ to your account while you're signed in, so you can pick up on any device.
 | Offers you're comparing | ✓ | ✓ |
 | Help assistant chats | ✓ | ✓ |
 | **Your resume** | ✓ | **Only if you turn on resume sync** |
+| **Tailored resume copies** (one per job) | ✓ | No, this device only |
 | **Interview notes** (until you turn them into a debrief) | ✓ | No, this device only |
 | **Recent voice sessions** (transcripts) | ✓ | No. Only the score, if you choose **Save to readiness** |
 

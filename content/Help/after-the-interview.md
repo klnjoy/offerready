@@ -68,6 +68,24 @@ shows the round, the date, the outcome, your questions and your notes.
 The debrief page lists **Questions to revisit**: the ones you rated Bad, so
 you can practise them again.
 
+## Questions you were asked
+
+Every question from your real interviews is kept in one place: **Menu** →
+your job → **Interview day and after** → **Questions you were asked**.
+
+- **This job** or **All jobs**: see the questions from one job, or from every
+  interview you've logged. They stay even after you delete a job.
+- A question asked in more than one interview shows **Asked 2 times** (or
+  more), with the date, round and your note from each time.
+- **Search** your questions and notes, and filter by how it went (for
+  example **Went badly**).
+- **Practise with AI Coach** opens the coach with that question filled in.
+- **Edit in the debrief** to change the question, the rating or your note.
+- **Download as .md** keeps a copy for your own notes.
+
+Questions come from your debriefs. Typed something into **Interview notes**?
+Turn the notes into a debrief and they appear here.
+
 ## Share questions anonymously (optional)
 
 Tick **Share the questions from this round anonymously** to help others
