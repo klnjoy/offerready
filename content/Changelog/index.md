@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **A clearer Progress page.** Are you ready (with a trend line), where you
+  stand by area (technical, behavioral, system design, leadership), your
+  recent answers and retries, and next steps in interview terms. The
+  forecast now waits for 3 practice days.
 - **A simpler AI Coach.** Tap a question for your job and get a 30-second
   and a full answer with three things to remember. Change it with one tap
   (Shorter, Add numbers, STAR, More technical, Different example), ask
