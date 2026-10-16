@@ -137,6 +137,7 @@ markdown_extensions:
 # NAV:BEGIN
 nav:
   - Home: index.md
+  - Where to start: Where-To-Start/index.md
   - Learn:
       - Foundations (GenAI Topics):
           - Overview: GenAI-Topics/index.md

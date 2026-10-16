@@ -807,12 +807,24 @@ def write_index(md_catalog, modules) -> None:
         "interview guides by role and level.</p>",
         "",
         '<p class="home-cta" markdown>'
-        "[Browse GenAI topics](GenAI-Topics/index.md){ .md-button .md-button--primary }"
+        "[Where to start](Where-To-Start/index.md){ .md-button .md-button--primary }"
+        "&nbsp;"
+        "[Browse GenAI topics](GenAI-Topics/index.md){ .md-button }"
         "&nbsp;"
         f"[Open the OfferReady app]({app}){{ .md-button }}"
         "</p>",
         "",
         "</div>",
+        "",
+        "## Not sure where to begin?",
+        "",
+        "Pick what fits you. Each link opens an ordered list of pages to read.",
+        "",
+        "| If you... | Start with |",
+        "| --- | --- |",
+        "| Have an interview in the next 2 weeks | [Your role guide and its 14-day plan](Where-To-Start/index.md#2-which-role) |",
+        "| Are learning, no interview yet | [The core path for your role](Where-To-Start/index.md#2-which-role) |",
+        "| Are new to GenAI | [New to GenAI, in order](Where-To-Start/index.md#new-to-genai) |",
         "",
         "## What's in the library",
         "",
@@ -917,7 +929,7 @@ def write_nav(md_catalog, modules) -> None:
     #   "  - Tab:"            (2 spaces)  top-level tab / group
     #   "      - Section:"    (6 spaces)  a section inside a group
     #   "          - Page"    (10 spaces) a page inside a section
-    nav = ["nav:", "  - Home: index.md"]
+    nav = ["nav:", "  - Home: index.md", "  - Where to start: Where-To-Start/index.md"]
     # STUDY LIBRARY ONLY. The interactive product (Analyze, My Jobs, Check My
     # Fit, Questions, Defend, Dashboard, Practice, Mock Interview, Account)
     # moved to the OfferReady app (klnjoy/offerready-app). Its old pages here
