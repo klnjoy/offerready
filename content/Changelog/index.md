@@ -11,6 +11,8 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Where to start** in the study library: pick how much time you have and
+  your role, and read the pages in order. Also on the home page.
 - **Who's interviewing you?** On Questions for this job, pick a recruiter,
   hiring manager, technical peer, director or business partner to see what
   they care about and get the questions they're likely to ask.
