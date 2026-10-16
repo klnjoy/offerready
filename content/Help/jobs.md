@@ -152,6 +152,20 @@ the common basics. Only add skills you really have.
 steps: screening software filters, a recruiter's quick scan, the hiring
 manager's close read, and who gets invited, with what helps at each one.
 
+## Skills this job wants
+
+Also on **Resume match**, **Skills this job wants** lists the skills the job
+asks for and ticks the ones your resume already shows. Open a missing skill
+to see how to get it:
+
+- **Learn:** the study library page for it, and the official docs.
+- **Build:** a small project that proves it.
+- **Prove it:** a resume line to adapt once it's true, with your real numbers.
+- **Optional certification**, where a common one exists.
+
+**Ask the AI Coach** opens the coach with that skill, and **How to succeed**
+has five short tips. It uses no credits.
+
 ## Tailor your resume
 
 On the **Resume** tab choose **Tailor my resume for this job**. OfferReady

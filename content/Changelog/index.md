@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Skills this job wants.** On Resume match: which skills the job asks for,
+  which your resume shows, and for each missing one how to learn it, a project
+  to build, a resume line and an optional certification.
 - **Phone layout.** A bottom bar (Today, Practice, Coach, Progress) and a **+**
   button for quick actions, one thumb-tap away.
 - **Where to start** in the study library: pick how much time you have and
