@@ -59,8 +59,11 @@ Every job page and practice tool shows where you are, like the study notes:
 - **On a phone**, **Today** is your home screen for the job:
   - **Today's session**: the next task and one **Start** button (then
     **Continue**), with a bar showing how much of today is done;
-  - three numbers: **Ready** (your readiness and its change this week),
-    **Interview** (days left) and **Resume** (match %);
+  - **When is your interview?** until you add the date (the plan assumes
+    two weeks until then);
+  - three numbers: **Ready** (your readiness, and its change this week with
+    what caused it: practice or resume), **Interview** (days left; before you
+    set a date, **Answered** questions instead) and **Resume** (match %);
   - **This week**: a ✓ on each day you practised, your streak, and a star on
     your interview day. Tap a day to see its plan;
   - **Today's plan** with a tick for each task, and **Catch up** for tasks
