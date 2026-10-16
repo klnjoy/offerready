@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Clearer answer feedback.** A score ring, then **Fix these first** with
+  how many points each fix is worth, then **Try again** and **Show me a
+  stronger version** right there. Retries keep your words and show the gain,
+  for example 52 → 74.
 - **Keep up with AI.** A new page with news and free courses from Anthropic,
   OpenAI, Google DeepMind, LangChain and Hugging Face, the topics interviewers
   ask about (tokenization, agents, MCP, prompting) and a weekly habit that
