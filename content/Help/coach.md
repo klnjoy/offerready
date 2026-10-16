@@ -23,8 +23,9 @@ The coach is only as good as what it can read. Add these first:
 - **Your resume**;
 - **A few STAR stories** ([Your stories](practice.md#3-your-stories)).
 
-The **Your context** panel shows what the coach can see. If something is
-missing, it says so with a link to add it ("No resume yet. Add one").
+The **Your context** panel shows the job, what the role needs, and **What
+the coach uses**: your resume and your stories, each marked **✓** or **Add**
+(tap to add it), and the gaps to cover.
 
 ## How to use it
 
