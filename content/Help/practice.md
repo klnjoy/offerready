@@ -67,9 +67,11 @@ your resume, saved to the job.
    design** or **Leadership**, or choose **Practise the next one**.
 4. Open a question. **Say it out loud first**, then type the main points. Use
    **Start 2-minute timer** to keep it to interview length.
-5. Choose **Get feedback**. You see your score, what the interviewer listens
-   for, what a strong answer says, and the follow-up they'd ask next.
-6. **Try again and compare**, or **Answer the follow-up**.
+5. Choose **Get feedback**. You see your score out of 100, whether it meets
+   the senior bar, and **Fix these first**: the weakest parts of your answer,
+   the ones worth the most points first (for example "Result with numbers,
+   up to +19"). **Full scoring** has every part with the words that earned it.
+6. **Try again**, **Show me a stronger version**, or **Answer the follow-up**.
 
 **Get more questions** adds new ones and keeps the ones you've practised.
 **Why these questions** shows which skills and gaps they came from.
@@ -193,12 +195,20 @@ trade-off in a design question), are capped, so a high score means something.
 Each result also has a **staff upgrade**: the one thing that would lift the
 answer a level.
 
-## Try again and compare
+## Make it stronger, then try again
 
-After feedback, choose **Try again and compare**. The new score and every
-criterion that changed are shown side by side, for example "42% → 61%" and
-"Vague → Solid". **Save this version** keeps your best answer for this job
-under **Your answers** in the AI Interview Coach.
+- **Show me a stronger version** rewrites your answer using only what you
+  wrote, your resume and your stories. It never invents experience, and it
+  flags any number that isn't in your material.
+- **Try again** keeps your own words in the box and lists the fixes above it,
+  so you can add what was missing. If you opened the stronger version,
+  **Now say it in your words** keeps it on screen for reference only. Write
+  your own version: grading copied text would teach you nothing.
+- Get feedback again to see the change, for example **52 → 74, ▲ +22**, and
+  every part that moved ("Vague → Solid"). A better score also counts toward
+  your readiness.
+- **Save** keeps your best answer for this job under **Your answers** in the
+  AI Interview Coach.
 
 ## Common questions
 
