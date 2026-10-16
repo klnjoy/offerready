@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **A new Today on phones.** One **Start** button for today's session,
+  readiness with its change this week, days to your interview, resume match,
+  a week strip with your streak, and your gaps to close.
 - **Tidier tabs.** Today's plan and Coach's context are grouped lists with
   one status each; Progress puts your top 3 (tap a row to start) above the
   score breakdown and asks for your interview date in one place.
