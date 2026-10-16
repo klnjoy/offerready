@@ -11,11 +11,12 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
-- **Open forward deployed engineer roles, updated daily.** From AI
-  companies' own public job boards. **Prepare for this role** adds the
-  posting as your job and checks it against your saved resume: gaps, likely
-  questions and a daily practice plan for that exact role. Find it on the
-  12-week roadmap.
+- **Open roles in the USA, updated daily.** AI / ML engineer, data
+  engineer, forward deployed, architect and platform jobs from companies' own
+  public job boards, with filters for Snowflake, Databricks, dbt, Spark and
+  more. **Prepare** adds a posting as your job and checks it against your
+  saved resume: gaps, likely questions and a daily practice plan. Find it in
+  Jobs, Add a job and More.
 - **12-week AI roadmap.** In Practice › Keep up with AI: what to learn,
   what to build and which interview questions to practise each week, for an
   AI engineer or a forward deployed engineer. Free courses from the makers,
