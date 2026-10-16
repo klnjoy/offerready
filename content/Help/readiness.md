@@ -41,25 +41,33 @@ more than a week, the forecast assumes your pace slows down.
 
 ## The readiness page
 
-**Readiness** in the top bar (**Progress** on a phone) shows, for each job,
-in this order:
+**Readiness** in the top bar (**Progress** on a phone) answers three
+questions for each job, in this order:
 
-- **Your score** and what it means;
-- **Readiness forecast**: your ready date against your interview date. With
-  no date set yet, **Set your interview date** is here;
-- **Your top 3 this week**: the three things that would raise your score
-  most, biggest gains first. Tap a row to start it; **+10** is roughly how
-  many points it can add;
-- **What makes up your score**: resume, practice and stories, each with its
-  part of the score;
-- **Your score over time**;
-- **Your skills for this job**: how each of the job's skills is going.
+- **Are you ready?** Your score, what it means, a small trend line (for
+  example "▲ 18 since Oct 1") and your interview countdown, or **Set your
+  interview date**.
+- **Where you stand:** your average score in **Technical**, **Behavioral**,
+  **System design** and **Leadership**, with the ready line at 80%. Areas you
+  haven't tried say **Not tried**.
+- **Your recent answers:** your last five scored answers for this job, and
+  how much a retry improved them (for example "First try 42% → now 66%").
+
+Then:
+
+- **Your next steps:** the most useful things to do now, in interview terms
+  ("Answer 3 system design questions", "Retry your 31% answer"), each with a
+  rough gain in points.
+- **Readiness forecast:** your ready date at your current pace. It appears
+  after you've practised on 3 different days, so one good day can't skew it.
+- **Details** (folded): what makes up your score (resume match, answer
+  quality, practice done), your skills for this job, and your score over time.
 
 ## Export a report
 
 **Export** at the top of the readiness page saves the page as a PDF report
-(your score, the ready date, what makes up the score and your top 3 this
-week), dated and named for the job. On a phone, choose **Export**, then
+(your score, where you stand, your recent answers, your next steps and the
+details), dated and named for the job. On a phone, choose **Export**, then
 **Save to Files** or share it. It always prints light, even in dark mode.
 
 ## How to raise your score
