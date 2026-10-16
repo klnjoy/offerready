@@ -35,6 +35,8 @@
 
 'use strict';
 
+const aiCost = require('../aiCost');
+
 const { setCors, send } = require('../http');
 const { getUser } = require('../supabaseAuth');
 const plans = require('../plans');
@@ -337,6 +339,7 @@ async function handler(req, res) {
   const ask = async (extraSystem) => {
     const messages = buildMessages(v);
     if (extraSystem) messages.unshift({ role: 'system', content: extraSystem });
+    const t0 = Date.now();
     const resp = await fetch(OPENAI_URL, {
       method: 'POST',
       signal: controller.signal,
@@ -351,6 +354,7 @@ async function handler(req, res) {
     });
     if (!resp.ok) return { ok: false, status: resp.status };
     const data = await resp.json();
+    await aiCost.track('tailor', data, t0, user && user.id);
     const choice = data && data.choices && data.choices[0];
     return { ok: true, content: choice && choice.message ? choice.message.content : '', finish: choice && choice.finish_reason };
   };

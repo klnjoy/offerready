@@ -28,6 +28,12 @@
  *   }
  * }
  *
+ * GET /api/me/plan?op=costs&days=30  (admins only: ADMIN_EMAILS env var)
+ *   200 { days, since, rows: [{ feature, calls, users, input_tokens, cached_tokens,
+ *         output_tokens, cost_usd, avg_cost_usd, avg_ms, failed }] }
+ *   403 for everyone else; 503 { setup: true } until migration 0017 is applied.
+ * Lives here (not its own file) to stay within the Vercel Hobby function limit.
+ *
  * Never fails because usage storage is missing: the plan still comes back with
  * usage marked unknown, so the app falls back to "allowed".
  */
@@ -38,6 +44,7 @@ const { setCors, send } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
 const { getUsageSummary, LIMITS, periodStart } = require('../_lib/plans');
 const billing = require('../_lib/billing');
+const aiCost = require('../_lib/aiCost');
 
 /** The billing block; never throws (storage errors just hide the portal). */
 async function billingBlock(userId) {
@@ -64,10 +71,19 @@ module.exports = async function handler(req, res) {
   const user = await getUser(req);
   if (!user) { send(res, 401, { error: 'Sign in to see your plan.' }); return; }
 
+  const op = req.query && req.query.op;
+  if (op === 'costs') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see AI costs.' }); return; }
+    try { send(res, 200, await aiCost.summary(req.query.days)); }
+    catch (err) { console.error('[me/plan costs]', err && err.message); send(res, 503, { error: 'Cost log isn’t set up yet. Apply migration 0017_ai_costs.sql in Supabase.', setup: true }); }
+    return;
+  }
+
   try {
     const [summary, bill] = await Promise.all([getUsageSummary(user.id), billingBlock(user.id)]);
     res.setHeader('Cache-Control', 'private, no-store');
-    send(res, 200, Object.assign({}, summary, { billing: bill }));
+    send(res, 200, Object.assign({}, summary, { billing: bill }, aiCost.isAdmin(user.email) ? { is_admin: true } : {}));
   } catch (err) {
     // getUsageSummary already fails open internally; this is a last resort.
     console.error('[me/plan] failure:', err && err.name);
