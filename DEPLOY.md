@@ -29,7 +29,8 @@ GitHub Pages (static site)  ──HTTPS──►  Vercel Function /api/analyze-j
 | `OPENAI_MODEL` | No | `gpt-4o-mini` (default in code if unset) |
 | `ALLOWED_ORIGIN` | No | `https://klnjoy.github.io` (CORS; default already this) |
 | `SUPABASE_URL` / `SUPABASE_ANON_KEY` | For accounts | Sign-in verification (job analysis now requires a free account) |
-| `SUPABASE_SERVICE_ROLE_KEY` | For plans + billing | Server-only; entitlements, usage, subscription mirror |
+| `SUPABASE_SERVICE_ROLE_KEY` | For plans + billing | Server-only; entitlements, usage, subscription mirror, AI cost log |
+| `ADMIN_EMAILS` | Optional | Comma-separated emails that can open the in-app **AI costs** view (More › AI costs). Needs migration `0017_ai_costs.sql`. |
 | `STRIPE_SECRET_KEY` | For billing | `sk_test_…` / `sk_live_…` (server-only) |
 | `STRIPE_WEBHOOK_SECRET` | For billing | `whsec_…` of the `/api/billing/webhook` endpoint |
 | `STRIPE_PASS_JOB_PRICE_ID` | For passes | ONE-TIME price → Job pass (45 days, 1 job), suggested $19 |

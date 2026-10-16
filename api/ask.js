@@ -38,6 +38,8 @@
 
 'use strict';
 
+const aiCost = require('./_lib/aiCost');
+
 const { AREAS } = require('./_lib/areas');
 
 const { lookupResource, RESOURCES } = require('./_lib/skillMap');
@@ -363,12 +365,14 @@ function sse(res, event, data) {
   res.write('event: ' + event + '\ndata: ' + JSON.stringify(data) + '\n\n');
 }
 
-/** Read an OpenAI chat-completions SSE body, calling onText for each delta. */
+/** Read an OpenAI chat-completions SSE body, calling onText for each delta.
+ * Resolves to { usage } (null unless the request set stream_options.include_usage). */
 async function readOpenAIStream(body, onText) {
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buf = '';
   let finished = false;
+  let usage = null;
   const handleLine = (line) => {
     if (!line.startsWith('data:')) return;
     const payload = line.slice(5).trim();
@@ -376,6 +380,7 @@ async function readOpenAIStream(body, onText) {
     if (payload === '[DONE]') { finished = true; return; }
     let j;
     try { j = JSON.parse(payload); } catch (_) { return; }
+    if (j && j.usage) usage = j.usage; // last chunk, with stream_options.include_usage
     const c = j && j.choices && j.choices[0];
     const t = c && c.delta && typeof c.delta.content === 'string' ? c.delta.content : '';
     if (t) onText(t);
@@ -394,6 +399,7 @@ async function readOpenAIStream(body, onText) {
     if (finished) { try { await reader.cancel(); } catch (_) { /* ignore */ } break; }
   }
   if (!finished && buf) handleLine(buf.replace(/\r$/, ''));
+  return { usage };
 }
 
 // --------------------------------------------------------------- handler ---
@@ -437,6 +443,7 @@ async function handler(req, res) {
   const area = (body && typeof body.area === 'string' && body.area) || 'all';
   const wantStream = body.stream === true;
   const messages = buildMessages(question, history, context, area);
+  const costFeature = body.purpose === STORY_COACH ? 'story_coach' : 'help_chat';
 
   const model = process.env.OPENAI_MODEL || DEFAULT_MODEL;
   const controller = new AbortController();
@@ -447,12 +454,13 @@ async function handler(req, res) {
   if (typeof res.on === 'function') res.on('close', onClose);
 
   try {
+    const t0 = Date.now();
     const resp = await fetch(OPENAI_URL, {
       method: 'POST', signal: controller.signal,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
       body: JSON.stringify({
         model, temperature: 0.3, max_tokens: MAX_OUTPUT_TOKENS, messages,
-        ...(wantStream ? { stream: true } : {}),
+        ...(wantStream ? { stream: true, stream_options: { include_usage: true } } : {}),
       }),
     });
     if (resp.status === 429) { send(res, 429, { error: 'Busy right now — try again in a moment.' }); return; }
@@ -460,6 +468,7 @@ async function handler(req, res) {
 
     if (!wantStream) {
       const data = await resp.json();
+      await aiCost.track(costFeature, data, t0, meteredUser && meteredUser.id);
       const raw = data && data.choices && data.choices[0] && data.choices[0].message
         ? data.choices[0].message.content : '';
       const { answer, followups } = splitFollowups(raw || '');
@@ -486,11 +495,12 @@ async function handler(req, res) {
     if (typeof res.flushHeaders === 'function') res.flushHeaders();
 
     const filter = createFollowupFilter();
+    let streamUsage = null;
     try {
-      await readOpenAIStream(resp.body, (t) => {
+      ({ usage: streamUsage } = await readOpenAIStream(resp.body, (t) => {
         const out = filter.push(t);
         if (out) sse(res, 'delta', { t: out });
-      });
+      }));
     } catch (err) {
       if (!res.writableEnded) {
         const msg = err && err.name === 'AbortError'
@@ -510,6 +520,8 @@ async function handler(req, res) {
       sse(res, 'done', extras(question, fin.answer, context, fin.followups));
     }
     res.end();
+    // Logged after the answer is sent, so it never delays the user.
+    await aiCost.track(costFeature, { model, usage: streamUsage }, t0, meteredUser && meteredUser.id);
   } catch (err) {
     if (streaming) {
       if (!res.writableEnded) { sse(res, 'error', { error: 'Something went wrong. Please try again.' }); res.end(); }
@@ -549,6 +561,7 @@ async function storyDraft(req, res, body) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
+    const t0 = Date.now();
     const resp = await fetch(OPENAI_URL, {
       method: 'POST', signal: controller.signal,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
@@ -557,6 +570,7 @@ async function storyDraft(req, res, body) {
     if (resp.status === 429) { send(res, 429, { error: 'Busy right now — try again in a moment.' }); return; }
     if (!resp.ok) { console.error(`story_draft OpenAI status ${resp.status}`); send(res, 502, { error: 'Couldn’t draft the story. Please try again.' }); return; }
     const data = await resp.json();
+    await aiCost.track('story_draft', data, t0, user.id);
     const raw = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
     const draft = parseDraft(raw);
     if (!draft) {
@@ -588,6 +602,7 @@ async function interviewerQuestions(req, res, body) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
+    const t0 = Date.now();
     const resp = await fetch(OPENAI_URL, {
       method: 'POST', signal: controller.signal,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
@@ -596,6 +611,7 @@ async function interviewerQuestions(req, res, body) {
     if (resp.status === 429) { send(res, 429, { error: 'Busy right now — try again in a moment.' }); return; }
     if (!resp.ok) { console.error(`interviewer_questions OpenAI status ${resp.status}`); send(res, 502, { error: 'Couldn’t write the questions. Please try again.' }); return; }
     const data = await resp.json();
+    await aiCost.track('interviewer_qs', data, t0, user.id);
     const raw = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
     const result = parseInterviewer(raw);
     if (!result) { send(res, 502, { error: 'Couldn’t write the questions. Please try again.' }); return; }
@@ -623,6 +639,7 @@ async function debriefFill(req, res, body) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
+    const t0 = Date.now();
     const resp = await fetch(OPENAI_URL, {
       method: 'POST', signal: controller.signal,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
@@ -631,6 +648,7 @@ async function debriefFill(req, res, body) {
     if (resp.status === 429) { send(res, 429, { error: 'Busy right now — try again in a moment.' }); return; }
     if (!resp.ok) { console.error(`debrief_fill OpenAI status ${resp.status}`); send(res, 502, { error: 'Couldn’t fill in the debrief. Please try again.' }); return; }
     const data = await resp.json();
+    await aiCost.track('debrief_fill', data, t0, user.id);
     const raw = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
     const fill = parseFill(raw);
     if (!fill) { send(res, 502, { error: 'Couldn’t find questions in that. Name what they asked, then try again.' }); return; }
@@ -660,6 +678,7 @@ async function storyBatch(req, res, body) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 45000);
   try {
+    const t0 = Date.now();
     const resp = await fetch(OPENAI_URL, {
       method: 'POST', signal: controller.signal,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
@@ -668,6 +687,7 @@ async function storyBatch(req, res, body) {
     if (resp.status === 429) { send(res, 429, { error: 'Busy right now — try again in a moment.' }); return; }
     if (!resp.ok) { console.error(`story_batch OpenAI status ${resp.status}`); send(res, 502, { error: 'Couldn’t draft stories. Please try again.' }); return; }
     const data = await resp.json();
+    await aiCost.track('story_batch', data, t0, user && user.id);
     const raw = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
     const stories = parseBatch(raw);
     if (!stories) { send(res, 422, { error: 'Your resume didn’t give enough to draft stories from. Try Draft it for me on one story instead.' }); return; }

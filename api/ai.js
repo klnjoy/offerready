@@ -47,15 +47,18 @@ const {
 } = require('./_lib/readiness');
 const { importJobUrl } = require('./_lib/jobImport');
 const COPILOT = require('./_lib/copilot');
+const aiCost = require('./_lib/aiCost');
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const REQUEST_TIMEOUT_MS = 45000;
 
-/** One OpenAI JSON call. Returns { ok, content } or { ok:false, status, error }. */
-async function callOpenAI(system, user, maxTokens, temperature) {
+/** One OpenAI JSON call. Returns { ok, content } or { ok:false, status, error }.
+ * `feature` and `userId` label the cost row (api/_lib/aiCost.js). */
+async function callOpenAI(system, user, maxTokens, temperature, feature, userId) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const t0 = Date.now();
   try {
     const resp = await fetch(OPENAI_URL, {
       method: 'POST',
@@ -81,6 +84,7 @@ async function callOpenAI(system, user, maxTokens, temperature) {
       return { ok: false, status: 502, error: 'The AI service returned an error. Please try again.' };
     }
     const data = await resp.json();
+    await aiCost.track(feature || 'other', data, t0, userId);
     const content = data && data.choices && data.choices[0] && data.choices[0].message
       ? data.choices[0].message.content : '';
     return { ok: true, content, model: (data && data.model) || (process.env.OPENAI_MODEL || DEFAULT_MODEL) };
@@ -126,7 +130,7 @@ async function handleAnalyzeJd(body, res, user) {
   // "The analysis could not be understood". Give it ample headroom (more when a
   // resume is present). gpt-4o-mini supports up to 16k output tokens.
   const analyzeMaxTokens = resume ? 4000 : 2600;
-  const out = await callOpenAI(JD_SYSTEM_PROMPT, buildJdUserMessage({ jobDescription, targetRole, resume }), analyzeMaxTokens, 0.2);
+  const out = await callOpenAI(JD_SYSTEM_PROMPT, buildJdUserMessage({ jobDescription, targetRole, resume }), analyzeMaxTokens, 0.2, 'analyze_job', user && user.id);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const parsed = safeParseModelJson(out.content);
   if (!parsed) {
@@ -153,7 +157,7 @@ async function handleGapAnalysis(body, res, user) {
       resumeText: body.resumeText || body.resume,
       resumeSignals: body.resumeSignals,
     }),
-    1200, 0.2
+    1200, 0.2, 'resume_match', user && user.id
   );
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const result = validateGap(safeParseModelJson(out.content));
@@ -238,7 +242,7 @@ async function handleGenerateQuestions(body, res, user) {
   let lastErr = null;
   for (let attempt = 0; attempt < 2 && !result; attempt++) {
     if (attempt && Date.now() - started > 15000) break;
-    const out = await callOpenAI(QUESTIONS_SYSTEM_PROMPT, userMsg, 3200, attempt ? 0.4 : 0.6);
+    const out = await callOpenAI(QUESTIONS_SYSTEM_PROMPT, userMsg, 3200, attempt ? 0.4 : 0.6, 'job_questions', user && user.id);
     if (!out.ok) { lastErr = out; if (out.status === 504 || out.status === 429) break; continue; }
     const r = validateQuestions(safeParseModelJson(out.content));
     if (r.ok) result = r;
@@ -363,7 +367,7 @@ async function handleCopilot(body, res, user) {
     stories: Array.isArray(body.stories) ? body.stories.filter((x) => typeof x === 'string').map((x) => x.slice(0, 1200)).slice(0, 8) : [],
     draft: String(body.draft || '').slice(0, 2500),
   };
-  const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 1600, 0.4);
+  const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 1600, 0.4, 'coach', user && user.id);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const v = COPILOT.validateCopilot(safeParseModelJson(out.content), input);
   if (!v.ok) { send(res, 502, { error: 'The AI Interview Coach could not build an answer this time. Please try again.' }); return; }

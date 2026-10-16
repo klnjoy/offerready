@@ -22,6 +22,8 @@
 
 'use strict';
 
+const aiCost = require('../../_lib/aiCost');
+
 const { setCors, send } = require('../../_lib/http');
 const { getUser } = require('../../_lib/supabaseAuth');
 const { checkQuota, recordUse, quotaError } = require('../../_lib/plans');
@@ -109,6 +111,7 @@ module.exports = async function handler(req, res) {
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
+    const t0 = Date.now();
     const resp = await fetch(OPENAI_URL, {
       method: 'POST',
       signal: controller.signal,
@@ -136,6 +139,7 @@ module.exports = async function handler(req, res) {
     }
 
     const data = await resp.json();
+    await aiCost.track('drill_generate', data, t0, user && user.id);
     const content = data && data.choices && data.choices[0] && data.choices[0].message
       ? data.choices[0].message.content : '';
     const parsed = safeParseJson(content);
