@@ -56,6 +56,10 @@ offers**. See [After the interview](after-the-interview.md).
 
 Every job page and practice tool shows where you are, like the study notes:
 
+- **On a phone**, **Today** shows what to do today for your job. Tap **Today ▾**
+  for a calendar of your plan: dots mark plan days, a bright dot a finished
+  day and an orange ring your interview. Pick a day to see its tasks, or set
+  it as your interview day.
 - **On a phone**, the bar at the bottom has **Today** (your job's plan),
   **Practice**, **Coach**, **Progress** (readiness) and **More** (your streak,
   and everything else: jobs, stories, debriefs, the study library, account,
