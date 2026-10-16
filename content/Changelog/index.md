@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Keep up with AI.** A new page with news and free courses from Anthropic,
+  OpenAI, Google DeepMind, LangChain and Hugging Face, the topics interviewers
+  ask about (tokenization, agents, MCP, prompting) and a weekly habit that
+  turns reading into a practised answer.
 - **One Today, phone and computer.** The computer gets the same Today as the
   phone, in two columns. Job tabs are now **Today**, **Resume match** and
   **Interviews**; settings moved to **⚙︎** by the job name. On phones the tab
