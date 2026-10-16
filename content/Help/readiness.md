@@ -41,13 +41,17 @@ more than a week, the forecast assumes your pace slows down.
 
 ## The readiness page
 
-**Readiness** in the top bar shows, for each job:
+**Readiness** in the top bar (**Progress** on a phone) shows, for each job,
+in this order:
 
+- **Your score** and what it means;
+- **Readiness forecast**: your ready date against your interview date. With
+  no date set yet, **Set your interview date** is here;
+- **Your top 3 this week**: the three things that would raise your score
+  most, biggest gains first. Tap a row to start it; **+10** is roughly how
+  many points it can add;
 - **What makes up your score**: resume, practice and stories, each with its
   part of the score;
-- **Your top 3 this week**: the three things that would raise your score most,
-  biggest gains first (the points are estimates);
-- **Readiness forecast**: your ready date against your interview date;
 - **Your score over time**;
 - **Your skills for this job**: how each of the job's skills is going.
 

@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Tidier tabs.** Today's plan and Coach's context are grouped lists with
+  one status each; Progress puts your top 3 (tap a row to start) above the
+  score breakdown and asks for your interview date in one place.
 - **No repeats across tabs.** Practice is one list of the five ways to
   practise, each with its own status (Next, progress, Done, weakest topic).
   More keeps only what isn't on another tab, and Today drops links that
