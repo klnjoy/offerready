@@ -51,6 +51,8 @@ const { buildDraftMessages, parseDraft, buildBatchMessages, parseBatch, NOTES_MA
 const STORY_BATCH = 'story_batch';
 const DEBRIEF_FILL = 'debrief_fill';
 const { buildFillMessages, parseFill, RECAP_MAX } = require('./_lib/debriefFill');
+const INTERVIEWER_QS = 'interviewer_questions';
+const { TYPE_KEYS: INTERVIEWER_TYPES, buildInterviewerMessages, parseInterviewer } = require('./_lib/interviewerQs');
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
@@ -416,6 +418,7 @@ async function handler(req, res) {
   if (body && body.purpose === STORY_DRAFT) { await storyDraft(req, res, body); return; }
   if (body && body.purpose === STORY_BATCH) { await storyBatch(req, res, body); return; }
   if (body && body.purpose === DEBRIEF_FILL) { await debriefFill(req, res, body); return; }
+  if (body && body.purpose === INTERVIEWER_QS) { await interviewerQuestions(req, res, body); return; }
   const question = body && typeof body.question === 'string' ? body.question.trim() : '';
   if (!question) { send(res, 400, { error: 'Please enter a question.' }); return; }
   if (question.length > Q_MAX) { send(res, 413, { error: 'Question is too long.' }); return; }
@@ -569,6 +572,40 @@ async function storyDraft(req, res, body) {
   }
 }
 
+
+/**
+ * purpose 'interviewer_questions': likely questions from one kind of
+ * interviewer (body.interviewer) for the user's job ({result}). Signed in
+ * only; rate limited like the rest of /api/ask. Not metered.
+ */
+async function interviewerQuestions(req, res, body) {
+  const type = typeof body.interviewer === 'string' ? body.interviewer : '';
+  if (!INTERVIEWER_TYPES.includes(type)) { send(res, 400, { error: 'Pick who is interviewing you.' }); return; }
+  const user = await getUser(req);
+  if (!user) { send(res, 401, { error: 'Sign in to get questions for your interviewer.', signin: true }); return; }
+  const ctx = sanitizeContext(body.context);
+  const messages = buildInterviewerMessages(type, cleanStr(body.role, 80), ctx && ctx.job);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const resp = await fetch(OPENAI_URL, {
+      method: 'POST', signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+      body: JSON.stringify({ model: process.env.OPENAI_MODEL || DEFAULT_MODEL, temperature: 0.4, max_tokens: 1400, messages, response_format: { type: 'json_object' } }),
+    });
+    if (resp.status === 429) { send(res, 429, { error: 'Busy right now — try again in a moment.' }); return; }
+    if (!resp.ok) { console.error(`interviewer_questions OpenAI status ${resp.status}`); send(res, 502, { error: 'Couldn’t write the questions. Please try again.' }); return; }
+    const data = await resp.json();
+    const raw = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
+    const result = parseInterviewer(raw);
+    if (!result) { send(res, 502, { error: 'Couldn’t write the questions. Please try again.' }); return; }
+    send(res, 200, { result });
+  } catch (e) {
+    send(res, e && e.name === 'AbortError' ? 504 : 502, { error: 'Couldn’t write the questions. Please try again.' });
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /**
  * purpose 'debrief_fill': the user's recap of a real interview -> questions,
