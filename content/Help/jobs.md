@@ -148,6 +148,10 @@ with missing keywords. It runs in your browser on your resume (or this job's
 tailored copy) and uses no credits. Every company's tools differ; these are
 the common basics. Only add skills you really have.
 
+**How shortlisting works** (open it under the checks) explains the four usual
+steps: screening software filters, a recruiter's quick scan, the hiring
+manager's close read, and who gets invited, with what helps at each one.
+
 ## Tailor your resume
 
 On the **Resume** tab choose **Tailor my resume for this job**. OfferReady
