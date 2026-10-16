@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **One home for each thing.** Your job's questions live in Practice (the
+  Coach now suggests hard questions from your gaps, and any question can be
+  sent to the Coach). Gaps live on Resume match, not on Today, Progress and
+  Coach as well.
 - **A clearer Progress page.** Are you ready (with a trend line), where you
   stand by area (technical, behavioral, system design, leadership), your
   recent answers and retries, and next steps in interview terms. The

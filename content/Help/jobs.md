@@ -23,9 +23,8 @@ page has three tabs: **Today**, **Resume match** and **Interviews**.
 | **This week** | A ✓ on each day you practised, your streak, a star on interview day. Pick a day to see its plan. |
 | **Your interviews** | Interview notes and debriefs for each round. |
 | **Full plan and job details** | Every day to your interview (with **Add to calendar**), set-up, and what the role asks for. |
-| **Ready · Answered · Resume** | Your readiness (and its change this week), questions answered (or days to your interview) and resume match. |
+| **Ready · Answered · Resume** | Your readiness (and its change this week), questions answered (or days to your interview) and resume match. Your gaps are on **Resume match**. |
 | **Interview** | Your interview date and a countdown. |
-| **Gaps to close** | Skills the job asks for that your resume doesn't show. Tap one to practise it. |
 | **Role guide** | How this type of interview is run. |
 
 ### Job settings (⚙︎)
@@ -75,8 +74,6 @@ Every job page and practice tool shows where you are, like the study notes:
     your interview day. Tap a day to see its plan;
   - **Today's plan** with a tick for each task, and **Catch up** for tasks
     left from earlier days;
-  - **Gaps to close**: skills the job asks for that your resume doesn't show.
-    Tap one to practise it.
 
   Tap **Today ▾**
   for a calendar of your plan: dots mark plan days, a bright dot a finished

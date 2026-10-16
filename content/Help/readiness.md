@@ -61,7 +61,8 @@ Then:
 - **Readiness forecast:** your ready date at your current pace. It appears
   after you've practised on 3 different days, so one good day can't skew it.
 - **Details** (folded): what makes up your score (resume match, answer
-  quality, practice done), your skills for this job, and your score over time.
+  quality, practice done) and your score over time. Skill gaps are on the
+  job's **Resume match** tab.
 
 ## Export a report
 
