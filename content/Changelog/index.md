@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **A simpler AI Coach.** Tap a question for your job and get a 30-second
+  and a full answer with three things to remember. Change it with one tap
+  (Shorter, Add numbers, STAR, More technical, Different example), ask
+  follow-ups in the same thread, and practise saying it.
 - **Clearer answer feedback.** A score ring, then **Fix these first** with
   how many points each fix is worth, then **Try again** and **Show me a
   stronger version** right there. Retries keep your words and show the gain,

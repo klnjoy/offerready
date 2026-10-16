@@ -366,6 +366,11 @@ async function handleCopilot(body, res, user) {
     resume: String(body.resume || '').slice(0, 8000),
     stories: Array.isArray(body.stories) ? body.stories.filter((x) => typeof x === 'string').map((x) => x.slice(0, 1200)).slice(0, 8) : [],
     draft: String(body.draft || '').slice(0, 2500),
+    refine: COPILOT.REFINES[body.refine] ? body.refine : '',
+    previous: String(body.previous || '').slice(0, 2500),
+    thread: body.thread && typeof body.thread === 'object'
+      ? { question: String(body.thread.question || '').slice(0, 400), answer: String(body.thread.answer || '').slice(0, 1200) }
+      : null,
   };
   const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 1600, 0.4, 'coach', user && user.id);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }

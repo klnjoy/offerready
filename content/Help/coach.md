@@ -23,30 +23,29 @@ The coach is only as good as what it can read. Add these first:
 - **Your resume**;
 - **A few STAR stories** ([Your stories](practice.md#3-your-stories)).
 
-The **Your context** panel shows the job, what the role needs, and **What
-the coach uses**: your resume and your stories, each marked **✓** or **Add**
-(tap to add it), and the gaps to cover.
+The **Using** line at the top shows the job, whether your resume is saved
+(**✓ Resume** or **+ Add resume**), how many stories you have, and the gaps
+to cover. Tap any of them to change or add it.
 
 ## How to use it
 
-1. Open **AI Coach** in the top bar. Check the job at the top.
-2. Pick a question **predicted for this job**, or type any question you were
-   asked or expect in **Interview question**.
-3. Choose what the coach should do:
-
-| Button | You get |
-|---|---|
-| **Build my answer** | A speakable answer from your experience |
-| **Find my best example** | The strongest real project to use, and how to use it |
-| **STAR it** | A behavioral answer as situation, task, action, result |
-| **Explain the trade-off** | The options, what you give up, and when your choice would flip |
-| **System design outline** | Requirements through to cost, in order |
-| **Likely follow-ups** | What they'll ask next, and how to handle it |
+1. Open **Coach**. Check the job in the **Using** line.
+2. Tap one of the **Questions for this job**, or type any question in **Ask any
+   interview question** and press **Ask**. There's no mode to pick first.
+3. Read the answer:
+   - **30 seconds** and **Full answer**: two lengths of the same answer to
+     say out loud;
+   - **Remember**: the three things to keep in mind when you say it;
+   - **Where this comes from**: your best example and every point with its
+     source (below).
+4. Change it with one tap: **Shorter**, **Add numbers**, **STAR format**,
+   **More technical** or **Different example**.
+5. **Practise saying it**: answer in your own words and get scored. The
+   coach's answer stays hidden unless you open it.
+6. Tap a question under **They'll likely ask next** to continue in the same
+   thread, or **Start a new question**.
 
 ## Reading the answer
-
-You get an **Answer outline** and a **Say it like this** version you can say
-out loud.
 
 Every point in the outline has a **source label**:
 
@@ -57,7 +56,7 @@ Every point in the outline has a **source label**:
 | **General knowledge** | General technical knowledge, not a claim about you. |
 | **Suggestion: only if true for you** | Something you could say, but only if it really happened. |
 
-**Numbers are checked.** Any figure in "Say it like this" that isn't in your
+**Numbers are checked.** Any figure in the answer that isn't in your
 resume, stories or draft is flagged under **Check these numbers**. Use your
 real figure or cut it. Anything in **[brackets]** is a detail for you to fill
 in. The coach never invents your numbers silently.
