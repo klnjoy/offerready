@@ -45,7 +45,8 @@ switch tools any time, and each one keeps your progress.
 - **Keep up with AI** (under Learn AI, and in **More**): news and free
   courses straight from the companies building the tools (Anthropic, OpenAI,
   Google DeepMind, LangChain, Hugging Face), the topics interviewers ask about
-  (tokenization, agentic AI, MCP, prompting), and a 10-minute weekly habit.
+  (tokenization, agentic AI, cost and token efficiency, MCP, prompting), and
+  a 10-minute weekly habit.
   Each topic has a **Practise** link that opens the AI Coach on a likely
   question, such as "What's a recent development in AI that you find
   interesting?". These are outside sources; links open in a new tab.
