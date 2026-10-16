@@ -82,7 +82,11 @@ Skip any step you don't need. [Practice](practice.md) explains each one.
 Also on the job page:
 
 - **Do this next**: the single most useful thing to do right now.
-- **Your plan for today**: today's tasks, about 5 to 30 minutes each. Tick
+- **Your plan for today**: about 40 minutes at most, always starting with
+  **Answer 3 questions for this job**. Skills you're missing (dbt, Kafka)
+  get **Study**; experience you're missing ("leading teams") gets **Prepare
+  your answer**, which opens the AI Coach on that question so you can shape an
+  honest answer from your closest real example. Tick
   them off as you go.
 - **Readiness**: your score for this job, and your ready date once you've
   practised for a few days.

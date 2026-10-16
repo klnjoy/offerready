@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Plans that fit a day.** Each day is about 40 minutes and starts with
+  answering questions for the job. Missing experience becomes "Prepare your
+  answer" instead of "Study", and readiness changes say what caused them.
 - **A new Today on phones.** One **Start** button for today's session,
   readiness with its change this week, days to your interview, resume match,
   a week strip with your streak, and your gaps to close.
