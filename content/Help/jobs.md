@@ -56,7 +56,19 @@ offers**. See [After the interview](after-the-interview.md).
 
 Every job page and practice tool shows where you are, like the study notes:
 
-- **On a phone**, **Today** shows what to do today for your job. Tap **Today ▾**
+- **On a phone**, **Today** is your home screen for the job:
+  - **Today's session**: the next task and one **Start** button (then
+    **Continue**), with a bar showing how much of today is done;
+  - three numbers: **Ready** (your readiness and its change this week),
+    **Interview** (days left) and **Resume** (match %);
+  - **This week**: a ✓ on each day you practised, your streak, and a star on
+    your interview day. Tap a day to see its plan;
+  - **Today's plan** with a tick for each task, and **Catch up** for tasks
+    left from earlier days;
+  - **Gaps to close**: skills the job asks for that your resume doesn't show.
+    Tap one to practise it.
+
+  Tap **Today ▾**
   for a calendar of your plan: dots mark plan days, a bright dot a finished
   day and an orange ring your interview. Pick a day to see its tasks, or set
   it as your interview day.
