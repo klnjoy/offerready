@@ -51,6 +51,13 @@ more than a week, the forecast assumes your pace slows down.
 - **Your score over time**;
 - **Your skills for this job**: how each of the job's skills is going.
 
+## Export a report
+
+**Export** at the top of the readiness page saves the page as a PDF report
+(your score, the ready date, what makes up the score and your top 3 this
+week), dated and named for the job. On a phone, choose **Export**, then
+**Save to Files** or share it. It always prints light, even in dark mode.
+
 ## How to raise your score
 
 1. **Close resume gaps**: [tailor your resume](jobs.md#tailor-your-resume),
