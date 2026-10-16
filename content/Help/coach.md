@@ -25,13 +25,17 @@ The coach is only as good as what it can read. Add these first:
 
 The **Using** line at the top shows the job, whether your resume is saved
 (**✓ Resume** or **+ Add resume**), how many stories you have, and the gaps
-to cover. Tap any of them to change or add it.
+Tap any of them to change or add it.
 
 ## How to use it
 
 1. Open **Coach**. Check the job in the **Using** line.
-2. Tap one of the **Questions for this job**, or type any question in **Ask any
-   interview question** and press **Ask**. There's no mode to pick first.
+2. Tap one of the **Hard questions for you** (built from the gaps between
+   your resume and the job, plus "Tell me about yourself" and "Why this
+   role"), or type any question in **Ask any interview question** and press
+   **Ask**. There's no mode to pick first. Your job's full question list is in
+   **Practice › Questions for this job**; open a question there and choose
+   **See an answer built from your resume** to bring it here.
 3. Read the answer:
    - **30 seconds** and **Full answer**: two lengths of the same answer to
      say out loud;
