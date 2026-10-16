@@ -56,3 +56,29 @@ test('prompt fences material, forbids invention, and includes the mode', () => {
   assert.match(C.SYSTEM_PROMPT, /Never invent employers/);
   assert.match(C.SYSTEM_PROMPT, /no live-interview|PRACTISE/);
 });
+
+test('Coach v2: refine uses the previous answer as the thing to change, not as a source', () => {
+  const input = { question: 'Tell me about Kafka', refine: 'shorter', previous: 'I cut lag 40% with Kafka', resume: 'Built a Kafka pipeline for orders.' };
+  const msg = C.buildUserMessage(input);
+  assert.ok(msg.startsWith('TASK: ' + C.REFINES.shorter));
+  assert.ok(msg.includes('I cut lag 40% with Kafka'));
+  const v = C.validateCopilot({
+    headline: 'h',
+    outline: [{ point: 'p', source: 'you', quote: 'I cut lag 40% with Kafka' }, { point: 'q', source: 'resume', quote: 'Built a Kafka pipeline for orders' }],
+    improved_answer: 'I built a Kafka pipeline and cut lag 40%.', short_answer: 'Kafka pipeline, lag down 40%.', key_points: ['a', 'b', 'c', 'd'],
+  }, input);
+  assert.strictEqual(v.ok, true);
+  assert.strictEqual(v.result.outline[0].source, 'suggestion', 'AI-written previous answer is not the candidate\'s words');
+  assert.strictEqual(v.result.outline[1].source, 'resume');
+  assert.deepStrictEqual(v.result.unverified, ['40%'], 'numbers carried over from the previous answer still need checking');
+  assert.strictEqual(v.result.key_points.length, 3);
+  assert.ok(v.result.short_answer);
+});
+
+test('Coach v2: a follow-up carries the thread; unknown refine is ignored', () => {
+  const msg = C.buildUserMessage({ question: 'What if they push back on cost?', thread: { question: 'Why Snowflake?', answer: 'Because of separation of storage and compute.' } });
+  assert.ok(msg.includes('EARLIER IN THIS THREAD'));
+  assert.ok(msg.includes('Why Snowflake?'));
+  const m2 = C.buildUserMessage({ question: 'Q here please', refine: 'bogus' });
+  assert.ok(m2.startsWith('TASK: ' + C.MODES.answer));
+});
