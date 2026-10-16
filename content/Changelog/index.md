@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **12-week AI roadmap.** In Practice › Keep up with AI: what to learn,
+  what to build and which interview questions to practise each week, for an
+  AI engineer or a forward deployed engineer. Free courses from the makers,
+  in order; tick off each week as you go.
 - **Coach: get your answers ready.** The Coach now opens on the answers to
   have ready for your job, with how many are ready, and each one marked
   Build, Ready or with your last practice score. Gap questions read the way
