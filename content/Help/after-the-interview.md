@@ -5,16 +5,17 @@ description: Interview notes during the interview, debriefs afterwards, editing 
 
 # After the interview
 
-Everything here is on the job page's **After the interview** tab, and in the
-**Interview day** section of the Overview tab.
+Everything here is in the job's **Interviews** tab (on a phone: **Your
+interviews** near the bottom of Today).
 
 ## Take notes during the interview
 
 A plain notepad for the real interview. It has no AI and no microphone: it's
 just you typing.
 
-1. Open the job and choose **Interview notes** (in **Interview day** on the
-   Overview tab). On the day of your interview it's also **Do this next**.
+1. Open the job and choose **Interviews** › **Interview notes**, or the **+**
+   button › **Interview notes** on a phone. On the day of your interview,
+   Today shows it at the top.
    The Mock interview page has **Real interview today? Take notes**.
 2. Type each question as it's asked under **Question you were asked** and
    press **Enter**. Questions are numbered, with room for a short note.
@@ -76,7 +77,7 @@ you can practise them again.
 ## Questions you were asked
 
 Every question from your real interviews is kept in one place: **Menu** →
-your job → **Interview day and after** → **Questions you were asked**.
+your job → **Interviews** → **Questions you were asked**.
 
 - **This job** or **All jobs**: see the questions from one job, or from every
   interview you've logged. They stay even after you delete a job.
@@ -131,7 +132,7 @@ results.
 ??? question "Where can I see my interview notes later?"
     Before you turn them into a debrief: open **Interview notes** from the job
     page, where they're still saved on this device. After: in the debrief under
-    **Debrief history** on the job's **After the interview** tab. Your
+    **Debrief history** on the job's **Interviews** section. Your
     questions are listed there and your other notes are under **Your notes**.
 
 ??? question "Can I edit a debrief after saving it?"

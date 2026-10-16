@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **One Today, phone and computer.** The computer gets the same Today as the
+  phone, in two columns. Job tabs are now **Today**, **Resume match** and
+  **Interviews**; settings moved to **⚙︎** by the job name. On phones the tab
+  row is gone.
 - **Plans that fit a day.** Each day is about 40 minutes and starts with
   answering questions for the job. Missing experience becomes "Prepare your
   answer" instead of "Study", and readiness changes say what caused them.

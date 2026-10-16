@@ -11,24 +11,24 @@ plan, practice progress, resume match and debriefs.
 ## The job page
 
 Open a job from **Jobs** in the top bar. At the top you'll see the job title,
-**Rename**, and **Switch job** to jump to another job. The page has four tabs.
+**Rename**, **⚙︎ Settings**, and **Switch job** to jump to another job. The
+page has three tabs: **Today**, **Resume match** and **Interviews**.
 
-### Overview
+### Today
 
 | Section | What it does |
 |---|---|
-| **Interview** | Your interview date and a countdown. **Save date** or **Change date**. |
-| **Do this next** | The single most useful thing to do now, with one button. |
-| **Every day** | The four practice steps in order, with ticks for the ones you've done and a **Next** tag. Any time: AI Interview Coach and Question bank. |
-| **Your plan for today** | Today's tasks for this job. Tick them off as you finish. |
-| **Readiness** | Your score for this job, your streak and tasks done this week. **Details** opens the full readiness page. |
-| **Interview day** | **Interview notes** for the real interview, and **Log a round** afterwards. |
-| **The plan to day N** | The days ahead, each with its tasks. **Add to calendar** and **Show all** days. |
-| **Role guide** | A guide to how this type of interview is run. |
-| **Set up once** | Job, date, resume, gaps checked, and the optional tailoring. It folds away once done. |
-| **About this job** | What the role asks for, from the description. |
+| **Today's session** | The next task and one **Start** button (then **Continue**). If something comes first, such as adding your resume or logging an interview, it says so here instead. |
+| **Today's plan** | Today's tasks, about 40 minutes, starting with questions for this job. Tick them off. **Catch up** holds tasks left from earlier days. |
+| **This week** | A ✓ on each day you practised, your streak, a star on interview day. Pick a day to see its plan. |
+| **Your interviews** | Interview notes and debriefs for each round. |
+| **Full plan and job details** | Every day to your interview (with **Add to calendar**), set-up, and what the role asks for. |
+| **Ready · Answered · Resume** | Your readiness (and its change this week), questions answered (or days to your interview) and resume match. |
+| **Interview** | Your interview date and a countdown. |
+| **Gaps to close** | Skills the job asks for that your resume doesn't show. Tap one to practise it. |
+| **Role guide** | How this type of interview is run. |
 
-### Settings
+### Job settings (⚙︎)
 
 A plain form for this job. Nothing changes until you press a button.
 
@@ -56,7 +56,14 @@ offers**. See [After the interview](after-the-interview.md).
 
 Every job page and practice tool shows where you are, like the study notes:
 
-- **On a phone**, **Today** is your home screen for the job:
+- **On a computer**, a job has three tabs: **Today**, **Resume match** and
+  **Interviews**, with **⚙︎ Settings** next to the job name. Today shows the
+  same session, plan and week as the phone, with your numbers, interview date,
+  gaps and role guide on the right.
+- **On a phone**, **Today** is your home screen for the job, with no extra
+  tabs: the **Resume** tile opens your resume match, **Your interviews**
+  (near the bottom) opens notes and debriefs, and **⚙︎** next to the job name
+  opens its settings:
   - **Today's session**: the next task and one **Start** button (then
     **Continue**), with a bar showing how much of today is done;
   - **When is your interview?** until you add the date (the plan assumes
@@ -88,9 +95,9 @@ Every job page and practice tool shows where you are, like the study notes:
   any part to go up a level.
 - **The folder list** on the left of a computer, like the study notes. Under
   **Your jobs**, each job is a folder, in the order you prepare:
-  **Overview**, **Resume match**, **Practise every day** (the four steps,
+  **Today**, **Resume match**, **Practise every day** (the four steps,
   ticked when done), **AI Interview Coach**, **Any time** (Question bank,
-  Readiness), **Interview day and after** (Interview notes during the
+  Readiness), **Interviews** (Interview notes during the
   interview, Debriefs to log a round and see past ones, Questions you were
   asked, Compare offers), and **Job settings** last. The
   folders you're in are open; choose any folder to open or close it.
@@ -230,7 +237,7 @@ near the end, and keeps the day before light.
 
 ??? question "The job title is wrong"
     Choose **Rename** next to the title on the job page, or change it on the
-    **Settings** tab and choose **Save changes**. Imported jobs use the
+    **Job settings** (⚙︎ next to the job name) and choose **Save changes**. Imported jobs use the
     exact title from the posting.
 
 ??? question "Can I edit the job description after adding the job?"
