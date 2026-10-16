@@ -29,15 +29,20 @@ The steps are a **suggestion, not a gate**. Skip any you don't need: for
 example, skip trade-off drills for a role with no design round. You can
 switch tools any time, and each one keeps your progress.
 
-## For you and Learn AI
+## The Practice page
 
-The top of **Practice** has two rows of cards you can swipe:
+**Practice** lists each way to practise once, with where you are on it:
 
-- **For you:** your next steps for the job you're on, next one first, plus
-  your weakest topic and the AI Coach.
-- **Learn AI:** short reads from the study library (how LLMs work, prompts,
-  RAG, vector databases, agents, MCP, evaluation, deployment). Topics your
-  job mentions come first, marked **In your job**.
+- **Ways to practise:** Questions for this job, Trade-off drills, Your
+  stories, Mock interview and the Question bank. Each row shows its status:
+  **Next** (with progress, such as *1/5*), **Step 2**, **Done**, or for the
+  question bank your **weakest topic**, which opens the bank on that topic.
+- **Learn AI:** a row of cards you can swipe, with short reads from the study
+  library (how LLMs work, prompts, RAG, vector databases, agents, MCP,
+  evaluation, deployment). Topics your job mentions come first, marked
+  **In your job**.
+
+The AI Coach has its own tab, so it isn't repeated here.
 
 ## 1. Questions for this job
 

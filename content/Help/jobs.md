@@ -61,9 +61,11 @@ Every job page and practice tool shows where you are, like the study notes:
   day and an orange ring your interview. Pick a day to see its tasks, or set
   it as your interview day.
 - **On a phone**, the bar at the bottom has **Today** (your job's plan),
-  **Practice**, **Coach**, **Progress** (readiness) and **More** (your streak,
-  and everything else: jobs, stories, debriefs, the study library, account,
-  help and sign out). The round **+** button
+  **Practice** (questions, drills, stories, mocks and the question bank),
+  **Coach**, **Progress** (readiness) and **More** (what isn't on another
+  tab: your jobs, interview notes, debriefs, questions you were asked,
+  compare offers, the study library, account, help and sign out). Each item
+  has one home, so nothing is listed twice. The round **+** button
   next to it has quick actions: **Add a job**, **Interview notes**, **Log a
   round**, **Quick story** and **Ask for help**.
 - **The trail** at the top, for example
