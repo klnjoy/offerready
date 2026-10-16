@@ -57,7 +57,9 @@ offers**. See [After the interview](after-the-interview.md).
 Every job page and practice tool shows where you are, like the study notes:
 
 - **On a phone**, the bar at the bottom has **Today** (your job's plan),
-  **Practice**, **Coach** and **Progress** (readiness). The round **+** button
+  **Practice**, **Coach**, **Progress** (readiness) and **More** (your streak,
+  and everything else: jobs, stories, debriefs, the study library, account,
+  help and sign out). The round **+** button
   next to it has quick actions: **Add a job**, **Interview notes**, **Log a
   round**, **Quick story** and **Ask for help**.
 - **The trail** at the top, for example
