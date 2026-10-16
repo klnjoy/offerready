@@ -56,6 +56,10 @@ offers**. See [After the interview](after-the-interview.md).
 
 Every job page and practice tool shows where you are, like the study notes:
 
+- **On a phone**, the bar at the bottom has **Today** (your job's plan),
+  **Practice**, **Coach** and **Progress** (readiness). The round **+** button
+  next to it has quick actions: **Add a job**, **Interview notes**, **Log a
+  round**, **Quick story** and **Ask for help**.
 - **The trail** at the top, for example
   *Jobs › Senior AI Engineer › Practise every day › Trade-off drill*. Choose
   any part to go up a level.
