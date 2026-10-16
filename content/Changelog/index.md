@@ -11,6 +11,11 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Who's interviewing you?** On Questions for this job, pick a recruiter,
+  hiring manager, technical peer, director or business partner to see what
+  they care about and get the questions they're likely to ask.
+- **Will it get shortlisted?** The Resume match tab checks your resume for
+  what screening software and recruiters look for, with a fix for each.
 - **Faster.** Adding a job opens it as soon as it's saved and compares your
   resume in the background; questions for a job come in about half the time
   (16 first, then **Get more questions**).

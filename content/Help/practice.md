@@ -50,6 +50,19 @@ your resume, saved to the job.
 **Get more questions** adds new ones and keeps the ones you've practised.
 **Why these questions** shows which skills and gaps they came from.
 
+### Who's interviewing you?
+
+Each kind of interviewer asks different things. Under **Who's interviewing
+you?** pick **Recruiter / HR**, **Hiring manager**, **Technical peer**,
+**Director / VP** or **Business partner** to see what they care about and how
+to answer. Then choose **Get their likely questions** for about 8 questions
+that person is likely to ask for this job, each with why they ask and how to
+answer, and **Practise with AI Coach**.
+
+You can add **Their title** (for example "Director of Data Platform") to make
+the questions closer. Only the interviewer's role and your job are used; we
+don't look anyone up. The questions are kept on this device for each job.
+
 ## 2. Trade-off drills
 
 You make a design call on a real scenario, then hold it while the

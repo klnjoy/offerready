@@ -117,6 +117,27 @@ The match compares the job's requirements with your resume:
 **See the full match** opens every requirement, with why it matters and what
 the interviewer is likely to ask.
 
+## Will it get shortlisted?
+
+Under your resume on the **Resume match** tab, **Will it get shortlisted?**
+checks what screening software (ATS) and a recruiter's quick scan look for:
+
+- **Job keywords:** how many of the job's skills and keywords your resume
+  uses, and which are missing.
+- **Main skills near the top:** whether your matching skills appear in the
+  top third, where recruiters look first.
+- **The job's title:** whether your resume uses the same title.
+- **Standard section headings:** Experience, Education and Skills.
+- **Contact details:** email and phone as plain text.
+- **Results with numbers:** how many bullets show a measurable result.
+- **Length:** about 1–2 pages.
+- **Readable by screening software:** no scanned PDF, tables or columns.
+
+Each item that needs work says how to fix it, and **Tailor my resume** helps
+with missing keywords. It runs in your browser on your resume (or this job's
+tailored copy) and uses no credits. Every company's tools differ; these are
+the common basics. Only add skills you really have.
+
 ## Tailor your resume
 
 On the **Resume** tab choose **Tailor my resume for this job**. OfferReady
