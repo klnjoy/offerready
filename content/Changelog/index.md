@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 13 October
+- **Coach: get your answers ready.** The Coach now opens on the answers to
+  have ready for your job, with how many are ready, and each one marked
+  Build, Ready or with your last practice score. Gap questions read the way
+  an interviewer asks them. Opening a saved answer doesn't use an AI call.
 - **One home for each thing.** Your job's questions live in Practice (the
   Coach now suggests hard questions from your gaps, and any question can be
   sent to the Coach). Gaps live on Resume match, not on Today, Progress and
