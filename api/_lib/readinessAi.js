@@ -41,6 +41,21 @@ const GAP_SYSTEM_PROMPT = [
   '}',
   '',
   'If the resume is thin or missing, score low and say so plainly.',
+  '',
+  'HOW TO WRITE EACH LIST ITEM (people scan these as chips):',
+  '- A short noun phrase, 2 to 6 words, in plain words. No full sentences.',
+  '- Name the concrete thing: "Kafka", "C-level stakeholder management",',
+  '  "Systems integrator partnerships", not a description of it.',
+  '- Never start with filler: "Experience with/in", "Ability to", "Proven track',
+  '  record of", "Strong", "Hands-on", "Familiarity with", "Specific",',
+  '  "Demonstrated", "Excellent", "Knowledge of".',
+  '- strengths: what the resume actually shows, with the evidence in a few',
+  '  words, e.g. "Python and AWS data pipelines (15 years)", "OpenAI API in',
+  '  production (500 daily users)". Only use numbers that are in the resume.',
+  '- missingKeywords: exact terms from the job description (1 to 4 words),',
+  '  as written there.',
+  '- Do not repeat the same idea in two lists.',
+  '- summary: second person ("You..."), 1 to 2 short sentences, no buzzwords.',
 ].join('\n');
 
 function buildGapUserMessage(input) {
@@ -71,10 +86,30 @@ function clampInt(n, lo, hi) {
   return Math.max(lo, Math.min(hi, n));
 }
 
+// Filler some models still add at the start of a chip, removed so every item
+// reads as a short label ("Kafka", not "Experience with Kafka").
+const FILLER = /^(?:(?:proven|demonstrated|strong|solid|deep|extensive|excellent|hands-on|specific|prior|relevant|direct|good|working|practical)\s+)*(?:track record (?:of|in)\s+|ability to\s+|experience (?:with|in|of|on)\s+|experience\s+(?=[a-z]+ing\b)|familiarity with\s+|knowledge of\s+|understanding of\s+|expertise in\s+|proficiency (?:in|with)\s+)?/i;
+function tidy(s) {
+  let t = String(s).trim().replace(/\s+/g, ' ').replace(/[.;]+$/, '');
+  const cut = t.replace(FILLER, '');
+  if (cut.length >= 3) t = cut;
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
 function strArr(v, max) {
   return Array.isArray(v)
     ? v.filter((s) => typeof s === 'string' && s.trim()).map((s) => s.trim().slice(0, 160)).slice(0, max || 12)
     : [];
+}
+
+/** Drop exact repeats (case-insensitive) across the lists, first one wins. */
+function dedupeLists(o) {
+  const seen = new Set();
+  const out = {};
+  for (const k of Object.keys(o)) {
+    out[k] = o[k].filter((x) => { const n = x.toLowerCase(); if (seen.has(n)) return false; seen.add(n); return true; });
+  }
+  return out;
 }
 
 function validateGap(parsed) {
@@ -88,10 +123,12 @@ function validateGap(parsed) {
       behavioralScore: clampInt(parsed.behavioralScore, 0, 100),
       architectureScore: clampInt(parsed.architectureScore, 0, 100),
       domainScore: clampInt(parsed.domainScore, 0, 100),
-      strengths: strArr(parsed.strengths, 12),
-      missingSkills: strArr(parsed.missingSkills, 12),
-      missingKeywords: strArr(parsed.missingKeywords, 15),
-      missingExperience: strArr(parsed.missingExperience, 10),
+      ...dedupeLists({
+        strengths: strArr(parsed.strengths, 12).map(tidy),
+        missingSkills: strArr(parsed.missingSkills, 12).map(tidy),
+        missingKeywords: strArr(parsed.missingKeywords, 15).map((k) => String(k).trim().replace(/[.;]+$/, '')),
+        missingExperience: strArr(parsed.missingExperience, 10).map(tidy),
+      }),
       summary: typeof parsed.summary === 'string' ? parsed.summary.trim().slice(0, 500) : '',
     },
   };
