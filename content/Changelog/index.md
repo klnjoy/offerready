@@ -11,6 +11,20 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Interview notes do more of the typing.** Notes start at the round your
+  last debrief said was next, can carry over what went badly last time, and
+  show the job's likely questions for that round to tap when they're asked.
+  A new "Questions you asked them" list suggests good questions and keeps
+  yours for next time.
+- **Debriefs in a minute.** One-tap notes for each question (Blanked, Ran
+  out of time, Good example…), quick notes for the round, and the job's
+  likely questions to add with a tap.
+- **Share notes, debriefs and questions** by the phone's share sheet,
+  email, WhatsApp, text, LinkedIn or X, always with the OfferReady link.
+- **Questions you were asked: add one directly**, with the round and how it
+  went.
+- **Compare offers fills itself in** from a saved job (company, title, level,
+  work setup), with quick picks for bonus, sign-on and notes.
 - **Quick story opens again** from the + button, with writing it yourself
   first. Letting the AI draft it (1 story credit) is now an optional step.
 - **Hints before the answer.** Every practice question shows a short "how
