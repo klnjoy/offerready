@@ -14,7 +14,7 @@ There's no subscription and nothing to cancel.
 |---|---|---|---|
 | **Free** | $0 | Resets monthly | Trying the full prep loop on one job |
 | **Job pass** | $19 once | 45 days | One interview you've booked |
-| **30-day pass** | $29 once | 30 days | A few interviews this month |
+| **30-day pass** | $19 once | 30 days | A few interviews this month |
 | **90-day pass** | $59 once | 90 days | A full job search (recommended) |
 | **1-year pass** | $99 once | 365 days | Ongoing prep, or several searches |
 | **Mock interview pack** | $15 once | Never expires | 10 extra mock credits, on any plan |
