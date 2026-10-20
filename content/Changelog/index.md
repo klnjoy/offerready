@@ -10,6 +10,24 @@ New features and improvements, newest first.
 
 ## October 2026
 
+### Week of 20 October
+- **New logo.** A ring with a check and a green arrow, on the app icon, in
+  the app and on this site.
+- **Re-check your fit after tailoring.** The fit check now reads your whole
+  resume (long two-page resumes were cut short, so tailored bullets near the
+  end didn't count). If the score stays the same, it says why: tailoring
+  rewords what you have, and the remaining gaps need a real example.
+- **After a mock interview on Free,** a card shows your scores from that
+  mock and what a pass adds. "Not now" hides it for a week.
+- **Clearer numbers.** Practice lists your four plan steps apart from the
+  tools you can use any time; Progress shows its parts as points; Today says
+  how long each step and the whole session take.
+- **Easier to find things on phones.** The menu button no longer slips off
+  narrow screens, and the menu is grouped as Get started, Prepare, For your
+  role and Resources. The launch screen shows only in the installed app.
+- Creating an account now shows the Terms and Privacy Policy, and the
+  iPhone install steps mention scrolling the share sheet.
+
 ### Week of 13 October
 - **Open roles in the USA, updated daily.** AI / ML engineer, data
   engineer, forward deployed, architect and platform jobs from companies' own
