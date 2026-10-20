@@ -17,6 +17,7 @@
  *   plan_known: boolean,           // false if the entitlement lookup itself failed
  *   pass: { kind, kinds, starts_at, expires_at, since } | null,  // live one-time pass(es)
  *   credits: { voice_mock: number },  // mock pack credits left (never expire)
+ *   mock_costs: { text, voice },      // mock credits one session costs (passes.MOCK_COSTS)
  *   billing: {
  *     options: ('job'|'pass30'|'pass90'|'pass365'|'mock10'|'monthly'|'annual')[],  // Checkout options this deployment sells
  *     portal: boolean,                           // a Stripe customer exists -> POST /api/billing/portal works
@@ -167,6 +168,6 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     // getUsageSummary already fails open internally; this is a last resort.
     console.error('[me/plan] failure:', err && err.name);
-    send(res, 200, { plan: 'free', plan_known: false, usage: {}, usage_known: false, limits: LIMITS, period_start: periodStart(), billing: { options: billing.availableOptions(), portal: false, pro_source: null, pro_expires_at: null, pro_interval: null, cancel_at_period_end: false, pass_kind: null, pass_kinds: [] }, pass: null, credits: { voice_mock: 0 } });
+    send(res, 200, { plan: 'free', plan_known: false, usage: {}, usage_known: false, limits: LIMITS, period_start: periodStart(), billing: { options: billing.availableOptions(), portal: false, pro_source: null, pro_expires_at: null, pro_interval: null, cancel_at_period_end: false, pass_kind: null, pass_kinds: [] }, pass: null, credits: { voice_mock: 0 }, mock_costs: require('../_lib/passes').MOCK_COSTS });
   }
 };

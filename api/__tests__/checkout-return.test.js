@@ -14,7 +14,7 @@ const { returnUrls } = require('../billing/checkout');
 test('returnUrls: app requests return to the product app', () => {
   const u = returnUrls('https://klnjoy.github.io', { app: true });
   assert.equal(u.successUrl, 'https://klnjoy.github.io/offerready-app/jobs?upgraded=1');
-  assert.equal(u.cancelUrl, 'https://klnjoy.github.io/offerready-app/account?canceled=1');
+  assert.equal(u.cancelUrl, 'https://klnjoy.github.io/offerready-app/pricing?canceled=1');
 });
 
 test('returnUrls: a JSON string body is parsed', () => {

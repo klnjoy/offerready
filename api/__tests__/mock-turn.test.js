@@ -65,8 +65,8 @@ function stubFetch(opts = {}) {
 
 function stubPlans(q) {
   const log = { check: 0, record: 0 };
-  plans.checkQuota = async (uid, feature) => { log.check++; log.lastFeature = feature; log.uid = uid; return q || { ok: true, plan: 'free', used: 0, limit: 1 }; };
-  plans.recordUse = async (uid, feature) => { log.record++; log.recordFeature = feature; };
+  plans.checkQuota = async (uid, feature, cost) => { log.check++; log.lastFeature = feature; log.uid = uid; log.checkCost = cost; return q || { ok: true, plan: 'free', used: 0, limit: 1 }; };
+  plans.recordUse = async (uid, feature, cost) => { log.record++; log.recordFeature = feature; log.recordCost = cost; };
   return log;
 }
 
@@ -173,7 +173,9 @@ test('turn 0 success → checks + records one use, returns token, feedback, plan
   assert.equal(b.followup, MODEL_OK.followup);
   assert.deepEqual(b.questions, ['Q two?', 'Q three?']);
   assert.equal(b.next_question, undefined, 'next_question only when need_next');
-  assert.deepEqual(b.quota, { plan: 'free', used: 1, limit: 1 });
+  assert.deepEqual(b.quota, { plan: 'free', used: 3, limit: 1, cost: 3, mode: 'voice' });
+  assert.equal(log.checkCost, 3, 'a voice mock (no mode sent) costs VOICE_MOCK_CREDITS');
+  assert.equal(log.recordCost, 3);
   // OpenAI request shape: JSON mode, default model, untrusted data delimited.
   const oa = calls.find((c) => c.url.includes('openai'));
   const sent = JSON.parse(oa.init.body);
@@ -458,5 +460,31 @@ test('deep mode through the handler: follow-up 2 of 3 returned, 3 of 3 answered 
   assert.equal(res.statusCode, 200);
   assert.equal(res.json().followup, undefined);
   assert.equal(log.check, 0, 'one quota unit per session, regardless of depth');
+  assert.equal(log.record, 0);
+});
+
+test('credits: a text mock costs 1 credit, a voice mock VOICE_MOCK_CREDITS; charged on turn 0 only', async () => {
+  const passes = require('../_lib/passes');
+  assert.equal(passes.mockCost('text'), 1);
+  assert.equal(passes.mockCost('voice'), passes.VOICE_MOCK_CREDITS);
+  assert.equal(passes.mockCost(undefined), passes.VOICE_MOCK_CREDITS);
+  stubFetch({ user: USER });
+  let log = stubPlans({ ok: true, plan: 'free', used: 0, limit: 1 });
+  let res = mockRes();
+  await handler(req(baseBody({ mode: 'text' })), res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(log.checkCost, 1);
+  assert.equal(log.recordCost, 1);
+  assert.deepEqual(res.json().quota, { plan: 'free', used: 1, limit: 1, cost: 1, mode: 'text' });
+  // Short of credits for voice: 403 says how many it needs and what's left.
+  log = stubPlans({ ok: false, plan: 'free', used: 0, limit: 1, credits: 0 });
+  res = mockRes();
+  await handler(req(baseBody({ mode: 'voice' })), res);
+  assert.equal(res.statusCode, 403);
+  const b = res.json();
+  assert.equal(b.cost, passes.VOICE_MOCK_CREDITS);
+  assert.equal(b.credits_left, 1);
+  assert.equal(b.mode, 'voice');
+  assert.match(b.error, /needs 3 mock credits and you have 1 left.*text mock/);
   assert.equal(log.record, 0);
 });

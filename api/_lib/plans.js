@@ -4,8 +4,10 @@
  * CONTRACT (other endpoints call these; keep signatures stable):
  *   LIMITS                      { free: {feature: number|null}, pro: {...} }
  *   getPlan(userId)             -> Promise<'free'|'pro'>
- *   checkQuota(userId, feature) -> Promise<{ ok, plan, used, limit }>
- *   recordUse(userId, feature)  -> Promise<void>
+ *   checkQuota(userId, feature, cost?) -> Promise<{ ok, plan, used, limit }>
+ *   recordUse(userId, feature, cost?)  -> Promise<void>
+ * `cost` (default 1) is how many units one use takes: mock interviews are
+ * counted in credits (passes.mockCost: text 1, voice VOICE_MOCK_CREDITS).
  * Fails safe: if usage storage is unavailable, checkQuota allows the request
  * (never locks paying or free users out because of our own outage) and logs.
  *
@@ -54,7 +56,7 @@ const NOUNS = {
   saved_jobs: ['saved job', 'saved jobs'],
   analyses: ['job analysis', 'job analyses'],
   ai_grading: ['AI answer grading', 'AI answer gradings'],
-  voice_mock: ['voice session', 'voice sessions'],
+  voice_mock: ['mock credit', 'mock credits'],
   custom_scenarios: ['custom scenario', 'custom scenarios'],
   premium_scenarios: ['premium scenario', 'premium scenarios'],
   story_ai: ['story coaching session', 'story coaching sessions'],
@@ -203,8 +205,11 @@ async function savedJobsCount(userId) {
   catch (err) { logOnce('jobs-count-error', err && err.name); return null; }
 }
 
-/** Usage against the plan's own allowance (no credits). */
-async function allowanceQuota(userId, feature, r) {
+function costOf(cost) { return Math.max(1, Math.floor(Number(cost) || 1)); }
+
+/** Usage against the plan's own allowance (no credits). ok = `cost` more units fit. */
+async function allowanceQuota(userId, feature, r, cost) {
+  const need = costOf(cost);
   const { plan, known, pass } = r;
   const { limits, since } = allowanceOf(r);
   const base = { plan, pass: pass ? pass.kind : null };
@@ -225,41 +230,50 @@ async function allowanceQuota(userId, feature, r) {
     used = counts ? (counts[feature] || 0) : null;
   }
   if (used === null) return Object.assign(base, { ok: true, used: 0, limit, unknown: true });
-  return Object.assign(base, { ok: used < limit, used, limit });
+  return Object.assign(base, { ok: used + need <= limit, used, limit });
 }
 
 /**
- * May `userId` use `feature` once more? Counts this month on Free / a
- * subscription, or since the pass started on a pass. When the allowance is
- * used up, credit-pack features (voice_mock) fall back to the credit balance.
- * @returns {Promise<{ ok, plan, used, limit, pass, unknown?, credit?, credits? }>}
+ * May `userId` use `feature` once more, at `cost` units (default 1)? Counts
+ * this month on Free / a subscription, or since the pass started on a pass.
+ * For credit-pack features (voice_mock) what's left of the allowance plus the
+ * pack balance must cover the cost.
+ * @returns {Promise<{ ok, plan, used, limit, pass, cost, unknown?, credit?, credits? }>}
  */
-async function checkQuota(userId, feature) {
+async function checkQuota(userId, feature, cost) {
+  const need = costOf(cost);
   const r = await resolvePlan(userId);
-  const q = await allowanceQuota(userId, feature, r);
+  const q = Object.assign(await allowanceQuota(userId, feature, r, need), { cost: need });
   if (q.ok || passes.CREDIT_FEATURES.indexOf(feature) === -1) return q;
   const bal = await passes.creditBalance(userId);
   const credits = bal ? (bal[feature] || 0) : 0;
-  if (credits > 0) return Object.assign(q, { ok: true, credit: true, credits });
+  const left = q.limit === null ? 0 : Math.max(0, q.limit - q.used);
+  if (left + credits >= need) return Object.assign(q, { ok: true, credit: true, credits });
   return Object.assign(q, { credits });
 }
 
-/** Record one successful use. Never throws; errors log once. */
-async function recordUse(userId, feature) {
+/** Record one successful use, `cost` units (default 1). Never throws; errors log once. */
+async function recordUse(userId, feature, cost) {
   if (!userId || METERED.indexOf(feature) === -1) return;
   if (!configured()) { logOnce('supabase-not-configured'); return; }
-  // Past the plan's allowance, this use was paid for with a pack credit.
+  const need = costOf(cost);
+  // The part of this use past the plan's allowance is paid with pack credits.
   if (passes.CREDIT_FEATURES.indexOf(feature) !== -1) {
     try {
-      const q = await allowanceQuota(userId, feature, await resolvePlan(userId));
-      if (!q.unknown && q.limit !== null && q.used >= q.limit) await passes.spendCredit(userId, feature);
+      const q = await allowanceQuota(userId, feature, await resolvePlan(userId), 1);
+      if (!q.unknown && q.limit !== null) {
+        const over = Math.min(need, Math.max(0, q.used + need - q.limit));
+        if (over > 0) await passes.spendCredit(userId, feature, over);
+      }
     } catch (err) { logOnce('credit-spend-error', err && err.name); }
   }
   try {
+    // One row per unit, in one insert (PostgREST takes an array).
+    const row = { user_id: userId, feature };
     const resp = await rest('/usage_events', {
       method: 'POST',
       headers: svcHeaders({ Prefer: 'return=minimal' }),
-      body: JSON.stringify({ user_id: userId, feature }),
+      body: JSON.stringify(need === 1 ? row : Array.from({ length: need }, () => row)),
     });
     if (!resp.ok) logOnce('usage-record-failed (is migration 0010 applied?)', resp.status);
   } catch (err) {
@@ -281,6 +295,11 @@ function quotaMessage(q, feature) {
   if (feature === 'saved_jobs') {
     if (q.pass) return `Your ${passLabel(q.pass)} includes ${q.limit} ${nounFor(feature, q.limit)}. Delete one you no longer need, or get a bigger pass.`;
     return `Free includes ${q.limit} ${nounFor(feature, q.limit)}. Get a pass to save more, or delete one you no longer need.`;
+  }
+  // Some credits left, but not enough for this mock (a voice mock costs more).
+  const left = q.limit ? Math.max(0, q.limit - (q.used || 0)) + (q.credits || 0) : 0;
+  if (pack && left > 0 && (q.cost || 1) > left) {
+    return `This mock needs ${q.cost} mock credits and you have ${left} left. A text mock (typed answers) uses ${passes.TEXT_MOCK_CREDITS}. ${q.pass || q.plan === 'pro' ? 'A mock pack adds more.' : 'A pass or a mock pack adds more.'}`;
   }
   if (!q.limit) {
     return `${nounFor(feature, 2).replace(/^./, (c) => c.toUpperCase())} come with any pass.`;
@@ -310,7 +329,11 @@ function quotaError(q, feature) {
     plan: q.plan,
   };
   if (q.pass) body.pass = q.pass;
-  if (pack) body.pack = true;
+  if (pack) {
+    body.pack = true;
+    body.cost = q.cost || 1;
+    body.credits_left = (q.limit ? Math.max(0, q.limit - (q.used || 0)) : 0) + (q.credits || 0);
+  }
   if (feature !== 'saved_jobs' && !q.pass) body.resets_at = periodEnd();
   return body;
 }
@@ -349,6 +372,7 @@ async function getUsageSummary(userId) {
     period_end: until,
     pass: pass ? { kind: pass.kind, kinds: pass.kinds, starts_at: pass.starts_at, expires_at: pass.ends, since: pass.since } : null,
     credits: credits || { voice_mock: 0 },
+    mock_costs: passes.MOCK_COSTS,
   };
 }
 
