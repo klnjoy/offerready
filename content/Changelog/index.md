@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Step-by-step guide** in the Help Center: every screen in plain words.
+  The one-minute demo now says where each feature is on the phone and lists
+  what's new (open roles, roadmap, question of the day, sharing, credits).
 - **Quick story opens again** from the + button, with writing it yourself
   first. Letting the AI draft it (1 story credit) is now an optional step.
 - **Hints before the answer.** Every practice question shows a short "how

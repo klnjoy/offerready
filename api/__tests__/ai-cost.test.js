@@ -110,3 +110,38 @@ test('GET /api/me/plan?op=costs: admins get the summary, others 403', async () =
     assert.strictEqual(b.status, 403);
   });
 });
+
+test('GET /api/me/plan?op=metrics: admins get metrics + costs; others 403; missing function -> 503 setup', async () => {
+  const plan = require('../me/plan');
+  const metrics = { people: 12, events: [{ event: 'page_view', count: 40, people: 12 }] };
+  let fnMissing = false;
+  const mk = (email) => {
+    global.fetch = async (url) => {
+      const u = String(url);
+      if (u.includes('/auth/v1/user')) return json(200, { id: 'u1', email });
+      if (u.includes('/rpc/admin_metrics')) return fnMissing ? json(404, { code: 'PGRST202' }) : json(200, metrics);
+      if (u.includes('/rpc/ai_cost_summary')) return json(200, [{ feature: 'coach', calls: 1 }]);
+      return json(200, []);
+    };
+  };
+  const run = async () => {
+    let out = null;
+    const res = { statusCode: 200, headers: {}, status(c) { this.statusCode = c; return this; }, setHeader(k, v) { this.headers[k] = v; }, end(b) { if (b) out = JSON.parse(b); }, json(b) { out = b; return this; }, send(b) { out = typeof b === 'string' ? JSON.parse(b) : b; return this; } };
+    await plan({ method: 'GET', headers: { authorization: 'Bearer tok' }, query: { op: 'metrics', days: '7' } }, res);
+    return { status: res.statusCode, out };
+  };
+  await withEnv({ SUPABASE_URL: 'https://p.supabase.co', SUPABASE_ANON_KEY: 'anon', SUPABASE_SERVICE_ROLE_KEY: 'svc', ADMIN_EMAILS: 'boss@example.com' }, async () => {
+    mk('boss@example.com');
+    const a = await run();
+    assert.strictEqual(a.status, 200);
+    assert.deepStrictEqual(a.out.metrics, metrics);
+    assert.strictEqual(a.out.costs.rows.length, 1);
+    fnMissing = true;
+    const c = await run();
+    assert.strictEqual(c.status, 503);
+    assert.strictEqual(c.out.setup, true);
+    fnMissing = false;
+    mk('user@example.com');
+    assert.strictEqual((await run()).status, 403);
+  });
+});
