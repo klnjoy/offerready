@@ -42,7 +42,7 @@ const {
 } = require('./_lib/readinessAi');
 const { touchJobStats } = require('./_lib/jobs');
 const {
-  ownsJob, saveGapAnalysis, saveQuestions, getGapAnalysis, getQuestions,
+  ownsJob, saveGapAnalysis, saveQuestions, getGapAnalysis, getQuestions, getOtherJobPrompts,
   getPracticeSessions, computeReadiness, saveProgressSnapshot,
 } = require('./_lib/readiness');
 const { importJobUrl } = require('./_lib/jobImport');
@@ -223,6 +223,10 @@ async function handleGenerateQuestions(body, res, user) {
   if (more && owned) {
     try { existing = await getQuestions(user.id, jobId); } catch (_e) { existing = []; }
   }
+  // Questions already written for the user's other jobs: this job's set must
+  // not repeat them (two data jobs used to get near-identical sets).
+  let otherJobs = [];
+  try { otherJobs = await getOtherJobPrompts(user.id, jobId, 30); } catch (_e) { otherJobs = []; }
   const userMsg = buildQuestionsUserMessage({
     jobTitle: body.jobTitle || body.targetRole,
     seniority: body.seniority || analysis.seniority,
@@ -233,6 +237,8 @@ async function handleGenerateQuestions(body, res, user) {
     missingKeywords: gapResult && gapResult.missingKeywords,
     missingExperience: gapResult && gapResult.missingExperience,
     avoid: existing.map((q) => q && q.prompt).filter(Boolean),
+    otherJobs,
+    company: body.company || analysis.company,
   });
 
   // One retry when the model returns an incomplete set (and there's time left
@@ -372,7 +378,7 @@ async function handleCopilot(body, res, user) {
       ? { question: String(body.thread.question || '').slice(0, 400), answer: String(body.thread.answer || '').slice(0, 1200) }
       : null,
   };
-  const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 1600, 0.4, 'coach', user && user.id);
+  const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 1900, 0.4, 'coach', user && user.id);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const v = COPILOT.validateCopilot(safeParseModelJson(out.content), input);
   if (!v.ok) { send(res, 502, { error: 'The AI Interview Coach could not build an answer this time. Please try again.' }); return; }

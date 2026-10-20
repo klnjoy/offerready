@@ -82,3 +82,15 @@ test('Coach v2: a follow-up carries the thread; unknown refine is ignored', () =
   const m2 = C.buildUserMessage({ question: 'Q here please', refine: 'bogus' });
   assert.ok(m2.startsWith('TASK: ' + C.MODES.answer));
 });
+
+test('copilot: flow and code are optional, clamped, and default to [] / null', () => {
+  const C = require('../_lib/copilot');
+  const base = { headline: 'h', outline: [{ point: 'p', source: 'general' }] };
+  let r = C.validateCopilot(base, {});
+  assert.deepEqual(r.result.flow, []);
+  assert.equal(r.result.code, null);
+  r = C.validateCopilot({ ...base, flow: ['Kafka: buffers events', 'Spark: transforms', 1, ''], code: { language: 'Python!', snippet: Array.from({ length: 30 }, (_, i) => 'x' + i).join('\n') } }, {});
+  assert.deepEqual(r.result.flow, ['Kafka: buffers events', 'Spark: transforms']);
+  assert.equal(r.result.code.language, 'python');
+  assert.equal(r.result.code.snippet.split('\n').length, 15);
+});

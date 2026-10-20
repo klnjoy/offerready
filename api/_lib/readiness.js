@@ -191,6 +191,24 @@ async function getQuestions(userId, jobId) {
   }
 }
 
+/**
+ * Recent question prompts from the user's OTHER jobs (newest first), so a new
+ * job's set doesn't repeat what they already practise elsewhere. [] on error.
+ */
+async function getOtherJobPrompts(userId, jobId, limit) {
+  if (!userId) return [];
+  try {
+    const qs = `user_id=eq.${enc(userId)}` + (jobId ? `&job_id=neq.${enc(jobId)}` : '') +
+      `&select=prompt&order=created_at.desc&limit=${Math.max(1, Math.min(60, limit || 30))}`;
+    const resp = await restFetch('/questions?' + qs, { method: 'GET', headers: serviceHeaders() });
+    if (!resp.ok) return [];
+    const rows = await resp.json();
+    return Array.isArray(rows) ? rows.map((r) => r && r.prompt).filter(Boolean) : [];
+  } catch (_e) {
+    return [];
+  }
+}
+
 // ---------------------------------------------------------------------------
 // progress_metrics — append-only snapshots per job (for the readiness trend).
 // ---------------------------------------------------------------------------
@@ -494,7 +512,7 @@ module.exports = {
   readinessByJob,
   ownsJob, practiceSchemaReady,
   saveGapAnalysis, getGapAnalysis,
-  saveQuestions, getQuestions,
+  saveQuestions, getQuestions, getOtherJobPrompts,
   saveProgressSnapshot, getProgress,
   savePracticeSession, getPracticeSessions, computeReadiness,
   completePracticeAtomic,
