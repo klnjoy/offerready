@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **7-day free trial.** New accounts get the full prep loop for one job for
+  their first 7 days (1 job analysis, the full drill library, more AI
+  feedback and mock credits), no card. Home shows the days left; then Free
+  continues with its monthly limits.
 - **Step-by-step guide** in the Help Center: every screen in plain words.
   The one-minute demo now says where each feature is on the phone and lists
   what's new (open roles, roadmap, question of the day, sharing, credits).

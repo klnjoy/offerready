@@ -34,6 +34,12 @@ function bearerToken(req) {
  * Resolve the authenticated user for this request, or null.
  * @returns {Promise<{id:string, email:string|null, raw:object}|null>}
  */
+// When each user signed up (from their verified token), for the 7-day free
+// trial in plans.js. Per instance; plans.js falls back to the admin API.
+const signups = new Map();
+function rememberSignup(id, at) { if (signups.size > 5000) signups.clear(); signups.set(id, at); }
+function signedUpAt(id) { return signups.get(id) || null; }
+
 async function getUser(req) {
   const url = process.env.SUPABASE_URL;
   const anon = process.env.SUPABASE_ANON_KEY;
@@ -55,6 +61,7 @@ async function getUser(req) {
     if (!resp.ok) return null; // 401/403 for bad/expired token
     const u = await resp.json();
     if (!u || !u.id) return null;
+    if (u.created_at) rememberSignup(u.id, u.created_at);
     return { id: u.id, email: u.email || null, raw: u };
   } catch (_err) {
     // Network error / abort / bad JSON — deny.
@@ -79,4 +86,4 @@ async function requireUser(req, res, send) {
   return user;
 }
 
-module.exports = { getUser, requireUser, bearerToken };
+module.exports = { getUser, requireUser, bearerToken, signedUpAt, rememberSignup };
