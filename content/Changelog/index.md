@@ -11,6 +11,8 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Mock interview pack is on sale: $9** for 10 mock credits that never
+  expire (up to 3 voice or 10 text mocks).
 - **Question of the day keeps its own record.** Answers are saved apart from
   your job practice (they don't change a job's plan or readiness), with a
   daily streak on Home and a list of every one you answered.
