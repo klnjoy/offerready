@@ -25,6 +25,11 @@
  *                          while followup_depth < max_followups (server-enforced),
  *                          so the default (max 1) keeps the original behaviour:
  *                          a follow-up answer never gets another follow-up.
+ *   mode:          'voice' | 'text'  how the candidate answers this session
+ *                          (typed answers = 'text'). Read on turn 0 only; it
+ *                          sets the session's price in mock credits
+ *                          (passes.mockCost: text 1, voice VOICE_MOCK_CREDITS).
+ *                          Missing = 'voice'.
  *   diagram:       string  optional whiteboard description for system design
  *                          ("Components: …; Flows: A → B (label)"), ≤ 2000.
  *                          Untrusted data, fenced like the transcript.
@@ -41,10 +46,10 @@
  * Access + cost:
  *   anonymous                      -> 401
  *   no OPENAI_API_KEY              -> 503 { fallback:true }
- *   turn 0 over the monthly quota  -> 403 { upgrade:true, feature:'voice_mock', used, limit, plan }
+ *   turn 0 short of mock credits   -> 403 { upgrade:true, feature:'voice_mock', used, limit, plan, cost, credits_left }
  *   turn > 0 without a valid token -> 409 { restart:true }
- * A session is ONE quota unit: checkQuota runs on turn 0 only and recordUse
- * after a successful turn-0 response. Later turns must present the signed
+ * A session is charged once, on turn 0, at its mode's credit cost: checkQuota
+ * runs on turn 0 only and recordUse after a successful turn-0 response. Later turns must present the signed
  * session_token issued on turn 0 (HMAC over user + session + time), so a
  * client can't skip the quota by claiming turn_index > 0.
  *
@@ -62,6 +67,7 @@ const crypto = require('crypto');
 const { setCors, send } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
 const plans = require('../_lib/plans');
+const passes = require('../_lib/passes');
 
 const FEATURE = 'voice_mock';
 const DEFAULT_MODEL = 'gpt-4o-mini';
@@ -247,6 +253,7 @@ function parseBody(body) {
     ok: true,
     value: {
       turn, question, type, style, length, sid, transcript, isFollowup,
+      mode: body.mode === 'text' ? 'text' : 'voice',
       maxFollowups, depth,
       allowFollowup: body.allow_followup !== false && depth < maxFollowups,
       diagram: sanitizeDiagram(body.diagram),
@@ -461,20 +468,17 @@ async function handler(req, res) {
 
   // 4) Session = one quota unit. Turn 0 checks quota; later turns need our token.
   const first = v.turn === 0;
+  const cost = passes.mockCost(v.mode);
   let quota = null;
   if (first) {
     try {
-      quota = await plans.checkQuota(user.id, FEATURE);
+      quota = await plans.checkQuota(user.id, FEATURE, cost);
     } catch (err) {
       console.error('mock-turn quota check failed:', err && err.name);
       quota = { ok: true, plan: 'free', used: 0, limit: null }; // fail safe, per plans.js contract
     }
     if (quota && quota.ok === false) {
-      send(res, 403, {
-        error: 'You’ve used all your voice mock sessions for this month.',
-        upgrade: true, feature: FEATURE,
-        used: quota.used, limit: quota.limit, plan: quota.plan,
-      });
+      send(res, 403, Object.assign(plans.quotaError(Object.assign({ cost }, quota), FEATURE), { mode: v.mode }));
       return;
     }
   } else if (!verifyToken(v.token, user.id, v.sid)) {
@@ -519,8 +523,8 @@ async function handler(req, res) {
 
     const payload = { ok: true, model, session_token: first ? issueToken(user.id, v.sid) : v.token, ...result.value };
     if (first) {
-      try { await plans.recordUse(user.id, FEATURE); } catch (err) { console.error('mock-turn recordUse failed:', err && err.name); }
-      if (quota) payload.quota = { plan: quota.plan, used: (Number(quota.used) || 0) + 1, limit: quota.limit };
+      try { await plans.recordUse(user.id, FEATURE, cost); } catch (err) { console.error('mock-turn recordUse failed:', err && err.name); }
+      if (quota) payload.quota = { plan: quota.plan, used: (Number(quota.used) || 0) + cost, limit: quota.limit, cost, mode: v.mode };
     }
     send(res, 200, payload);
   } catch (err) {

@@ -11,6 +11,14 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Mock interviews now use credits.** A text mock (typed answers) uses 1
+  credit and a voice mock uses 3, however many follow-ups you get. Free has
+  1 credit a month; the Job pass 4, 30-day pass 8, 90-day pass 20 and 1-year
+  pass 40; a mock pack adds 10 that never expire. Your account shows how many
+  are left, and when a voice mock doesn't fit, the setup offers a text mock.
+- **Open roles: filter by state.** Pick any US state to see roles there,
+  including remote roles listed for that state.
+- **Cancelled checkout** brings you back to Pricing with nothing charged.
 - **Question of the day.** Home shows one interview question a day from the
   question bank, with an Answer it button. Turn on the daily notification to
   get it every morning (on iPhone, from the app added to your Home Screen).

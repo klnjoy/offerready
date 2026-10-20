@@ -5,8 +5,12 @@
  * of days with a fixed allowance for its WHOLE length (not per month), so AI
  * cost per pass is bounded. Buying again before a pass ends starts the new
  * pass when the current one ends (no days lost); its allowance is usable
- * straight away. Mock packs add voice mock interview credits that never
- * expire and are spent only after the plan's own allowance runs out.
+ * straight away. Mock interviews are counted in MOCK CREDITS: the voice_mock
+ * allowance of Free and of each pass is a credit pool, a text mock (typed
+ * answers) costs 1 credit and a voice mock costs VOICE_MOCK_CREDITS. Mock
+ * packs add credits that never expire and are spent only after the plan's own
+ * pool runs out. (The feature key stays 'voice_mock' so stored usage rows and
+ * the DB CHECK constraints keep working; one usage row = one credit.)
  *
  * Storage (migration 0014): public.passes and public.credit_ledger, written
  * only here with the service-role key, from the verified Stripe webhook.
@@ -46,8 +50,17 @@ const PASSES = {
 };
 const PASS_KINDS = Object.keys(PASSES);
 
+// What one mock session costs, in mock credits. Change VOICE_MOCK_CREDITS here
+// only: /api/me/plan sends these costs to the app, which shows them.
+const VOICE_MOCK_CREDITS = 3;
+const TEXT_MOCK_CREDITS = 1;
+const MOCK_COSTS = { text: TEXT_MOCK_CREDITS, voice: VOICE_MOCK_CREDITS };
+
+/** Credits a mock session costs: 'text' (typed answers) or anything else = voice. */
+function mockCost(mode) { return mode === 'text' ? TEXT_MOCK_CREDITS : VOICE_MOCK_CREDITS; }
+
 const PACKS = {
-  mock10: { feature: 'voice_mock', amount: 10, label: '10 extra mock interviews' },
+  mock10: { feature: 'voice_mock', amount: 10, label: '10 mock credits' },
 };
 const PACK_KINDS = Object.keys(PACKS);
 
@@ -192,14 +205,15 @@ async function creditBalance(userId) {
   } catch (_) { return null; }
 }
 
-/** Spend one credit. Never throws (a failed debit only means one free use). */
-async function spendCredit(userId, feature) {
+/** Spend `n` pack credits (default 1). Never throws (a failed debit only means a free use). */
+async function spendCredit(userId, feature, n) {
+  const amount = Math.max(1, Math.floor(Number(n) || 1));
   if (!configured() || CREDIT_FEATURES.indexOf(feature) === -1) return false;
   try {
     const resp = await rest('/credit_ledger', {
       method: 'POST',
       headers: svcHeaders({ Prefer: 'return=minimal' }),
-      body: JSON.stringify({ user_id: userId, feature, delta: -1, source: 'use' }),
+      body: JSON.stringify({ user_id: userId, feature, delta: -amount, source: 'use' }),
     });
     if (!resp.ok) console.error('[passes] credit debit failed', resp.status);
     return resp.ok;
@@ -346,6 +360,7 @@ async function revokePack(userId, kind, sessionId, reason) {
 
 module.exports = {
   PASSES, PASS_KINDS, PACKS, PACK_KINDS, CREDIT_FEATURES, DAY_MS,
+  VOICE_MOCK_CREDITS, TEXT_MOCK_CREDITS, MOCK_COSTS, mockCost,
   isPass, isPack, priceFor, validPrice,
   livePasses, combine, passCoverage, lastPassCustomer,
   creditBalance, spendCredit,

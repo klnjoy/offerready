@@ -55,7 +55,7 @@ function returnUrls(origin, body) {
     const appPath = (process.env.APP_BASE_PATH || '/offerready-app').replace(/\/+$/, '');
     return {
       successUrl: base + appPath + '/jobs?upgraded=1',
-      cancelUrl: base + appPath + '/account?canceled=1',
+      cancelUrl: base + appPath + '/pricing?canceled=1',
     };
   }
   return {

@@ -279,7 +279,7 @@ test('recordUse: inserts {user_id, feature} with the service role; never throws 
 
 test('quotaError: Free over quota -> upgrade body with friendly message', () => {
   const b = plans.quotaError({ ok: false, plan: 'free', used: 1, limit: 1 }, 'voice_mock');
-  assert.equal(b.error, "You've used 1 of 1 voice sessions this month on Free. Get a pass or a mock pack for more.");
+  assert.equal(b.error, "You've used 1 of 1 mock credits this month on Free. Get a pass or a mock pack for more.");
   assert.equal(b.pack, true);
   assert.equal(b.upgrade, true);
   assert.equal(b.feature, 'voice_mock');
@@ -300,7 +300,7 @@ test('quotaError: Pro at a fair-use cap is not told to upgrade (unless a mock pa
   assert.ok(g.resets_at);
   const b = plans.quotaError({ ok: false, plan: 'pro', used: 40, limit: 40 }, 'voice_mock');
   assert.equal(b.upgrade, true);
-  assert.match(b.error, /fair-use limit of 40 voice sessions on Pro\. It resets on the 1st \(UTC\)\. Add a mock pack/);
+  assert.match(b.error, /fair-use limit of 40 mock credits on Pro\. It resets on the 1st \(UTC\)\. Add a mock pack/);
 });
 
 // ---- summary (GET /api/me/plan) -------------------------------------------------
@@ -555,5 +555,44 @@ test('credits: within the allowance no credit is spent; with no credits the limi
     const q = await plans.checkQuota(USER, 'voice_mock');
     assert.equal(q.ok, false);
     assert.equal(q.credits, 0);
+  } finally { s.restore(); }
+});
+
+test('credits: a voice mock costs 3 — allowance remainder plus pack credits must cover it; the overflow is debited', async () => {
+  const passes = require('../_lib/passes');
+  const V = passes.VOICE_MOCK_CREDITS;
+  // 90-day pass: 20 credits, 18 used -> 2 left. Voice (3) needs 1 pack credit.
+  const pass = { kind: 'pass90', starts_at: new Date(Date.now() - 864e5).toISOString(), expires_at: new Date(Date.now() + 30 * 864e5).toISOString() };
+  plans._internal._reset();
+  let world = { passes: [pass], counts: { voice_mock: 18 }, credits: {} };
+  let s = stub(world);
+  try {
+    const q = await plans.checkQuota(USER, 'voice_mock', V);
+    assert.equal(q.ok, false, '2 left, no pack credits: a voice mock does not fit');
+    assert.equal(q.cost, V);
+    assert.match(plans.quotaError(q, 'voice_mock').error, /needs 3 mock credits and you have 2 left/);
+    assert.equal((await plans.checkQuota(USER, 'voice_mock', 1)).ok, true, 'a text mock still fits');
+  } finally { s.restore(); }
+  plans._internal._reset();
+  world = { passes: [pass], counts: { voice_mock: 18 }, credits: { voice_mock: 5 } };
+  s = stub(world);
+  try {
+    const q = await plans.checkQuota(USER, 'voice_mock', V);
+    assert.equal(q.ok, true);
+    assert.equal(q.credit, true);
+    await plans.recordUse(USER, 'voice_mock', V);
+    assert.deepEqual(world.debits.map((d) => d.delta), [-1], 'only the part past the allowance is paid with pack credits');
+    const ins = s.calls.filter((c) => c.url.includes('/usage_events') && c.method === 'POST');
+    assert.equal(ins.length, 1, 'one insert');
+    assert.equal(ins[0].body.length, V, 'one usage row per credit');
+  } finally { s.restore(); }
+});
+
+test('credits: Free has 1 credit a month — a text mock fits, a voice mock does not', async () => {
+  plans._internal._reset();
+  const s = stub({ pro: false, counts: { voice_mock: 0 }, credits: {} });
+  try {
+    assert.equal((await plans.checkQuota(USER, 'voice_mock', 1)).ok, true);
+    assert.equal((await plans.checkQuota(USER, 'voice_mock', 3)).ok, false);
   } finally { s.restore(); }
 });
