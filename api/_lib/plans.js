@@ -336,7 +336,8 @@ function passLabel(kind) { return (passes.PASSES[kind] && passes.PASSES[kind].la
 /** Friendly explanation for an over-quota result. */
 function quotaMessage(q, feature) {
   const planName = q.plan === 'pro' ? 'Pro' : 'Free';
-  const pack = passes.CREDIT_FEATURES.indexOf(feature) !== -1;
+  // Mention the mock pack only when it can be bought (its Stripe price is set).
+  const pack = passes.CREDIT_FEATURES.indexOf(feature) !== -1 && !!passes.priceFor('mock10');
   if (q.trial && feature !== 'saved_jobs' && !(pack && (q.credits || 0) > 0)) {
     const until = new Date(q.trial).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
     return `Your free trial (until ${until}) includes ${q.limit || 0} ${nounFor(feature, q.limit || 0)}${q.limit ? ', and you’ve used them' : ''}. A pass gives you far more, and nothing renews.`;
@@ -347,8 +348,8 @@ function quotaMessage(q, feature) {
   }
   // Some credits left, but not enough for this mock (a voice mock costs more).
   const left = q.limit ? Math.max(0, q.limit - (q.used || 0)) + (q.credits || 0) : 0;
-  if (pack && left > 0 && (q.cost || 1) > left) {
-    return `This mock needs ${q.cost} mock credits and you have ${left} left. A text mock (typed answers) uses ${passes.TEXT_MOCK_CREDITS}. ${q.pass || q.plan === 'pro' ? 'A mock pack adds more.' : 'A pass or a mock pack adds more.'}`;
+  if (passes.CREDIT_FEATURES.indexOf(feature) !== -1 && left > 0 && (q.cost || 1) > left) {
+    return `This mock needs ${q.cost} mock credits and you have ${left} left. A text mock (typed answers) uses ${passes.TEXT_MOCK_CREDITS}. ${pack ? (q.pass || q.plan === 'pro' ? 'A mock pack adds more.' : 'A pass or a mock pack adds more.') : 'Another pass adds more.'}`;
   }
   if (!q.limit) {
     return `${nounFor(feature, 2).replace(/^./, (c) => c.toUpperCase())} come with any pass.`;

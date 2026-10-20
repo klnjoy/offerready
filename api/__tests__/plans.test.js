@@ -117,6 +117,7 @@ test.beforeEach(() => {
 test.afterEach(() => {
   test.mock.restoreAll();
   delete process.env.OPENAI_API_KEY;
+  delete process.env.STRIPE_MOCK_PACK_PRICE_ID;
 });
 
 // ---- limits contract ----------------------------------------------------------
@@ -281,6 +282,7 @@ test('recordUse: inserts {user_id, feature} with the service role; never throws 
 // ---- 403 shape ------------------------------------------------------------------
 
 test('quotaError: Free over quota -> upgrade body with friendly message', () => {
+  process.env.STRIPE_MOCK_PACK_PRICE_ID = 'price_pack'; // the pack is on sale here
   const b = plans.quotaError({ ok: false, plan: 'free', used: 1, limit: 1 }, 'voice_mock');
   assert.equal(b.error, "You've used 1 of 1 mock credits this month on Free. Get a pass or a mock pack for more.");
   assert.equal(b.pack, true);
@@ -297,6 +299,7 @@ test('quotaError: Free over quota -> upgrade body with friendly message', () => 
 });
 
 test('quotaError: Pro at a fair-use cap is not told to upgrade (unless a mock pack helps)', () => {
+  process.env.STRIPE_MOCK_PACK_PRICE_ID = 'price_pack'; // the pack is on sale here
   const g = plans.quotaError({ ok: false, plan: 'pro', used: 400, limit: 400 }, 'ai_grading');
   assert.equal(g.upgrade, false);
   assert.match(g.error, /fair-use limit of 400 AI answer gradings on Pro/);
@@ -639,4 +642,14 @@ test('trial: a pass or Pro is never in trial', async () => {
   plans._internal._reset();
   const s = stub({ pro: true, signup: new Date().toISOString() });
   try { assert.equal(await plans.inTrial(USER), false); } finally { s.restore(); }
+});
+
+test('quotaError: the mock pack is not offered when it is not on sale', () => {
+  const was = process.env.STRIPE_MOCK_PACK_PRICE_ID;
+  delete process.env.STRIPE_MOCK_PACK_PRICE_ID;
+  try {
+    const b = plans.quotaError({ ok: false, plan: 'free', used: 1, limit: 1 }, 'voice_mock');
+    assert.doesNotMatch(b.error, /mock pack/);
+    assert.match(b.error, /Get a pass for more/);
+  } finally { if (was !== undefined) process.env.STRIPE_MOCK_PACK_PRICE_ID = was; }
 });
