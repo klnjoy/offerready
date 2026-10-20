@@ -40,7 +40,8 @@ module.exports = async function handler(req, res) {
   if (!row) { send(res, 404, { error: 'Scenario not found.' }); return; }
 
   // 3) Authorization — must hold the required entitlement (fail closed).
-  const ok = await hasEntitlement(user.id, row.required_entitlement);
+  // The 7-day free trial opens the full library too (plans.inTrial).
+  const ok = (await hasEntitlement(user.id, row.required_entitlement)) || (await require('../../_lib/plans').inTrial(user.id).catch(() => false));
   if (!ok) {
     // Return only the teaser + an upgrade signal — never the protected body.
     send(res, 403, {

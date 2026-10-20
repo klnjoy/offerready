@@ -77,6 +77,9 @@ function stub(world) {
       const n = world.jobs || 0;
       return json(200, [], { 'content-range': n ? `0-${n - 1}/${n}` : '*/0' });
     }
+    if (u.startsWith(SB + '/auth/v1/admin/users/')) {
+      return world.signup ? json(200, { id: USER, created_at: world.signup }) : json(404, {});
+    }
     if (u.startsWith('https://api.openai.com/')) {
       if (world.openai === 'error') return json(500, {});
       return json(200, { model: 'gpt-test', choices: [{ message: { content: JSON.stringify(world.openai || {}) } }] });
@@ -595,4 +598,45 @@ test('credits: Free has 1 credit a month — a text mock fits, a voice mock does
     assert.equal((await plans.checkQuota(USER, 'voice_mock', 1)).ok, true);
     assert.equal((await plans.checkQuota(USER, 'voice_mock', 3)).ok, false);
   } finally { s.restore(); }
+});
+
+test('trial: first 7 days after sign-up get the trial allowance (1 analysis, 40 feedback), counted since sign-up', async () => {
+  plans._internal._reset();
+  const signup = new Date(Date.now() - 2 * 864e5).toISOString();
+  const s = stub({ pro: false, signup, counts: { analyses: 0, ai_grading: 12 } });
+  try {
+    const a = await plans.checkQuota(USER, 'analyses');
+    assert.equal(a.limit, plans.TRIAL_LIMITS.analyses);
+    assert.equal(a.limit, 1);
+    const g = await plans.checkQuota(USER, 'ai_grading');
+    assert.equal(g.limit, 40);
+    assert.equal(g.ok, true);
+    const since = s.calls.find((c) => c.url.includes('/rpc/usage_counts')).body.p_since;
+    assert.equal(since, new Date(Date.parse(signup)).toISOString(), 'trial usage counts from sign-up');
+    assert.equal(await plans.inTrial(USER), true);
+    const e = plans.quotaError({ ok: false, plan: 'free', used: 1, limit: 1, trial: new Date(Date.now() + 5 * 864e5).toISOString() }, 'analyses');
+    assert.match(e.error, /free trial/);
+    assert.ok(e.trial_ends_at);
+    assert.equal(e.resets_at, undefined);
+  } finally { s.restore(); }
+});
+
+test('trial: after 7 days the Free limits apply, counted from the trial end (not the month start)', async () => {
+  plans._internal._reset();
+  const signup = new Date(Date.now() - 9 * 864e5).toISOString();
+  const s = stub({ pro: false, signup, counts: { analyses: 0 } });
+  try {
+    const a = await plans.checkQuota(USER, 'analyses');
+    assert.equal(a.limit, plans.LIMITS.free.analyses);
+    assert.equal(await plans.inTrial(USER), false);
+    const since = s.calls.find((c) => c.url.includes('/rpc/usage_counts')).body.p_since;
+    const trialEnd = new Date(Date.parse(signup) + 7 * 864e5).toISOString();
+    assert.equal(since, trialEnd > plans.periodStart() ? trialEnd : plans.periodStart());
+  } finally { s.restore(); }
+});
+
+test('trial: a pass or Pro is never in trial', async () => {
+  plans._internal._reset();
+  const s = stub({ pro: true, signup: new Date().toISOString() });
+  try { assert.equal(await plans.inTrial(USER), false); } finally { s.restore(); }
 });

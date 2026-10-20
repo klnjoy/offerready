@@ -37,6 +37,12 @@ Free limits are per month. A pass's allowance is for the whole pass.
 | Plan calendar export | — | Included | Included | Included | Included |
 | Study library, question bank, flashcards, timed exams | Included | Included | Included | Included | Included |
 
+**New accounts start with a 7-day free trial**, no card needed: the full prep
+loop for one job, including the whole trade-off drill library, with 1 job
+analysis, 40 AI feedbacks, 6 mock credits, 10 story coaching sessions and 3
+resume tailoring runs. After 7 days the Free limits in the table apply,
+counted from the day the trial ends.
+
 Mock interviews are counted in **credits**: a text mock (you type your
 answers) uses 1 credit and a voice mock uses 3, however many follow-ups it has.
 So Free covers one text mock a month, and the 90-day pass covers up to 6 voice

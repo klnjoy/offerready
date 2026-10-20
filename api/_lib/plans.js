@@ -44,6 +44,13 @@ const LIMITS = {
   pro:  { saved_jobs: null, analyses: 60, ai_grading: 400, voice_mock: 40, custom_scenarios: 40, premium_scenarios: null, story_ai: 150, prep_plan: null, resume_tailor: 100 },
 };
 
+// The 7-day free trial: new accounts get the full prep loop for one job for
+// their first TRIAL_DAYS, with one job analysis (each analysis is the costly
+// AI call). Then the normal Free limits apply, counted from the end of the
+// trial, so trial use doesn't eat into the first Free month.
+const TRIAL_DAYS = 7;
+const TRIAL_LIMITS = { saved_jobs: 1, analyses: 1, ai_grading: 40, voice_mock: 6, custom_scenarios: 3, premium_scenarios: null, story_ai: 10, prep_plan: null, resume_tailor: 3 };
+
 // Features counted as monthly usage_events (saved_jobs counts jobs rows;
 // premium_scenarios is a library gate checked by entitlement in [slug].js;
 // prep_plan is unlimited on both plans). resume_tailor needs migration 0011
@@ -132,7 +139,7 @@ async function passFor(userId) {
 async function resolvePlan(userId) {
   if (!userId) return { plan: 'free', known: true, pass: null };
   const hit = planCache.get(userId);
-  if (hit && Date.now() - hit.at < PLAN_TTL_MS) return { plan: hit.plan, known: true, pass: hit.pass };
+  if (hit && Date.now() - hit.at < PLAN_TTL_MS) return { plan: hit.plan, known: true, pass: hit.pass, trial: hit.trial ? trialWindow(hit.trial.starts) : null };
   if (!configured()) { logOnce('supabase-not-configured'); return { plan: 'free', known: false, pass: null }; }
 
   const pass = await passFor(userId);
@@ -153,8 +160,9 @@ async function resolvePlan(userId) {
     if (!resp.ok) { logOnce('plan-lookup-failed', resp.status); return { plan: 'free', known: false, pass: null }; }
     const rows = await resp.json();
     const plan = Array.isArray(rows) && rows.length > 0 ? 'pro' : 'free';
-    planCache.set(userId, { plan, pass: null, at: Date.now() });
-    return { plan, known: true, pass: null };
+    const trial = plan === 'free' ? trialWindow(await signupOf(userId)) : null;
+    planCache.set(userId, { plan, pass: null, trial, at: Date.now() });
+    return { plan, known: true, pass: null, trial };
   } catch (err) {
     logOnce('plan-lookup-error', err && err.name);
     return { plan: 'free', known: false, pass: null };
@@ -164,7 +172,44 @@ async function resolvePlan(userId) {
 /** The limits and counting window that apply to a resolved plan. */
 function allowanceOf(r) {
   if (r.pass) return { limits: r.pass.limits, since: r.pass.since, until: r.pass.ends };
+  if (r.plan === 'free' && r.trial) {
+    if (r.trial.active) return { limits: TRIAL_LIMITS, since: r.trial.starts, until: r.trial.ends };
+    // After the trial, Free counts from whichever is later: the month start or the trial end.
+    const ps = periodStart();
+    return { limits: LIMITS.free, since: r.trial.ends > ps ? r.trial.ends : ps, until: periodEnd() };
+  }
   return { limits: LIMITS[r.plan] || LIMITS.free, since: periodStart(), until: periodEnd() };
+}
+
+const signupCache = new Map(); // userId -> ISO created_at (never changes)
+
+/** When the account was created (ISO), or null when unknown. Never throws. */
+async function signupOf(userId) {
+  if (signupCache.has(userId)) return signupCache.get(userId);
+  let at = require('./supabaseAuth').signedUpAt(userId);
+  if (!at && configured()) {
+    try {
+      const resp = await fetch(String(process.env.SUPABASE_URL).replace(/\/+$/, '') + '/auth/v1/admin/users/' + encodeURIComponent(userId), { headers: svcHeaders() });
+      if (resp.ok) { const u = await resp.json(); at = (u && (u.created_at || (u.user && u.user.created_at))) || null; }
+    } catch (_) { at = null; }
+  }
+  if (at) signupCache.set(userId, at);
+  return at || null;
+}
+
+/** { active, starts, ends } for an account's 7-day trial, or null when unknown. */
+function trialWindow(createdAt, nowMs) {
+  const s = Date.parse(createdAt || '');
+  if (isNaN(s)) return null;
+  const now = typeof nowMs === 'number' ? nowMs : Date.now();
+  const e = s + TRIAL_DAYS * 864e5;
+  return { active: now < e, starts: new Date(s).toISOString(), ends: new Date(e).toISOString() };
+}
+
+/** True while the account is in its free trial (and has no pass or subscription). */
+async function inTrial(userId) {
+  const r = await resolvePlan(userId);
+  return r.plan === 'free' && !!(r.trial && r.trial.active);
 }
 
 /** 'free' | 'pro' (cached 60s per user). Uncertain lookups read as 'free'. */
@@ -212,7 +257,7 @@ async function allowanceQuota(userId, feature, r, cost) {
   const need = costOf(cost);
   const { plan, known, pass } = r;
   const { limits, since } = allowanceOf(r);
-  const base = { plan, pass: pass ? pass.kind : null };
+  const base = { plan, pass: pass ? pass.kind : null, trial: r.trial && r.trial.active && !pass ? r.trial.ends : null };
   if (!Object.prototype.hasOwnProperty.call(limits, feature)) {
     return Object.assign(base, { ok: true, used: 0, limit: null });
   }
@@ -292,6 +337,10 @@ function passLabel(kind) { return (passes.PASSES[kind] && passes.PASSES[kind].la
 function quotaMessage(q, feature) {
   const planName = q.plan === 'pro' ? 'Pro' : 'Free';
   const pack = passes.CREDIT_FEATURES.indexOf(feature) !== -1;
+  if (q.trial && feature !== 'saved_jobs' && !(pack && (q.credits || 0) > 0)) {
+    const until = new Date(q.trial).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    return `Your free trial (until ${until}) includes ${q.limit || 0} ${nounFor(feature, q.limit || 0)}${q.limit ? ', and you’ve used them' : ''}. A pass gives you far more, and nothing renews.`;
+  }
   if (feature === 'saved_jobs') {
     if (q.pass) return `Your ${passLabel(q.pass)} includes ${q.limit} ${nounFor(feature, q.limit)}. Delete one you no longer need, or get a bigger pass.`;
     return `Free includes ${q.limit} ${nounFor(feature, q.limit)}. Get a pass to save more, or delete one you no longer need.`;
@@ -334,7 +383,8 @@ function quotaError(q, feature) {
     body.cost = q.cost || 1;
     body.credits_left = (q.limit ? Math.max(0, q.limit - (q.used || 0)) : 0) + (q.credits || 0);
   }
-  if (feature !== 'saved_jobs' && !q.pass) body.resets_at = periodEnd();
+  if (q.trial) body.trial_ends_at = q.trial;
+  else if (feature !== 'saved_jobs' && !q.pass) body.resets_at = periodEnd();
   return body;
 }
 
@@ -367,19 +417,20 @@ async function getUsageSummary(userId) {
     plan_known: known,
     usage,
     usage_known: usageKnown,
-    limits: { free: LIMITS.free, pro: LIMITS.pro, passes: passLimits },
+    limits: { free: LIMITS.free, pro: LIMITS.pro, passes: passLimits, trial: TRIAL_LIMITS },
     period_start: since,
     period_end: until,
     pass: pass ? { kind: pass.kind, kinds: pass.kinds, starts_at: pass.starts_at, expires_at: pass.ends, since: pass.since } : null,
+    trial: r.trial ? { active: r.trial.active, ends_at: r.trial.ends, days: TRIAL_DAYS } : null,
     credits: credits || { voice_mock: 0 },
     mock_costs: passes.MOCK_COSTS,
   };
 }
 
-function _reset() { planCache.clear(); logged.clear(); }
+function _reset() { planCache.clear(); logged.clear(); signupCache.clear(); }
 
 module.exports = {
-  LIMITS, getPlan, checkQuota, recordUse,
+  LIMITS, TRIAL_LIMITS, TRIAL_DAYS, inTrial, trialWindow, getPlan, checkQuota, recordUse,
   quotaError, quotaMessage, getUsageSummary, periodStart, periodEnd, METERED,
   _internal: { _reset, planCache, resolvePlan, allowanceQuota },
 };
