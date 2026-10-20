@@ -11,6 +11,11 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Question of the day keeps its own record.** Answers are saved apart from
+  your job practice (they don't change a job's plan or readiness), with a
+  daily streak on Home and a list of every one you answered.
+- **Pricing shows only what you can buy.** Passes or the mock pack that
+  aren't on sale are hidden instead of saying "Available soon".
 - **7-day free trial.** New accounts get the full prep loop for one job for
   their first 7 days (1 job analysis, the full drill library, more AI
   feedback and mock credits), no card. Home shows the days left; then Free
