@@ -240,10 +240,13 @@ function validateQuestions(parsed) {
   const counts = {};
   for (const q of raw) {
     if (!q || typeof q !== 'object') continue;
-    const category = String(q.category || '').toLowerCase().replace(/[\s-]+/g, '_');
+    let category = String(q.category || '').toLowerCase().replace(/[\s-]+/g, '_');
     if (VALID_CATEGORIES.indexOf(category) === -1) continue;
     const prompt = typeof q.prompt === 'string' ? q.prompt.trim() : '';
     if (!prompt) continue;
+    // A "tell me about a time" story question is behavioral, whatever the
+    // model labelled it (a mislabel steers the weakest-area advice wrong).
+    if (category === 'technical' && /\b(tell me about a time|(?:give|share|describe|walk me through)\s+(?:me\s+)?(?:an?\s+)?(?:example|time|situation)\b|an example of a time|a time when you)/i.test(prompt)) category = 'behavioral';
     let difficulty = String(q.difficulty || 'medium').toLowerCase();
     if (VALID_DIFFICULTY.indexOf(difficulty) === -1) difficulty = 'medium';
     clean.push({ category, difficulty, prompt: prompt.slice(0, 600) });
