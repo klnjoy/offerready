@@ -11,6 +11,11 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Roadmap: our study library, week by week, with code to run.** Each week
+  links the matching chapters here (Week 1 · Ch 1 LLM fundamentals, and so
+  on), and weeks 1 to 8 include a short Python example you can edit and run
+  right on the page, no setup or API key. Open roles and the roadmap are
+  now on Home.
 - **Open roles show job type, pay and visa.** Each card shows full-time (W2)
   or contract (C2C / W2), the pay range when the posting lists one, and
   whether the posting says it sponsors visas. New filters: Sponsors visas,
