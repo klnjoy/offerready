@@ -17,7 +17,7 @@ There's no subscription and nothing to cancel.
 | **30-day pass** | $29 once | 30 days | A few interviews this month |
 | **90-day pass** | $59 once | 90 days | A full job search (recommended) |
 | **1-year pass** | $99 once | 365 days | Ongoing prep, or several searches |
-| **Mock interview pack** | $15 once | Never expires | 10 extra voice mocks, on any plan |
+| **Mock interview pack** | $15 once | Never expires | 10 extra mock credits, on any plan |
 
 ## Every limit
 
@@ -28,7 +28,7 @@ Free limits are per month. A pass's allowance is for the whole pass.
 | Saved jobs | 1 | 1 | 5 | 15 | 40 |
 | Job analyses | 3 | 10 | 30 | 80 | 200 |
 | AI feedback on answers (incl. the AI Interview Coach) | 5 | 100 | 250 | 600 | 1,500 |
-| Voice mock interviews | 1 | 4 | 8 | 20 | 40 |
+| Mock interview credits (text mock 1, voice mock 3) | 1 | 4 | 8 | 20 | 40 |
 | Drills written for your job | — | 5 | 15 | 40 | 100 |
 | Trade-off drill library | Previews | Full | Full | Full | Full |
 | STAR story coaching | 3 | 20 | 50 | 120 | 300 |
@@ -36,6 +36,11 @@ Free limits are per month. A pass's allowance is for the whole pass.
 | Day-by-day plan | Included | Included | Included | Included | Included |
 | Plan calendar export | — | Included | Included | Included | Included |
 | Study library, question bank, flashcards, timed exams | Included | Included | Included | Included | Included |
+
+Mock interviews are counted in **credits**: a text mock (you type your
+answers) uses 1 credit and a voice mock uses 3, however many follow-ups it has.
+So Free covers one text mock a month, and the 90-day pass covers up to 6 voice
+mocks or 20 text mocks. Your account page shows how many credits are left.
 
 The [pricing page](https://klnjoy.github.io/offerready-app/pricing) always has
 the current limits.
@@ -105,7 +110,7 @@ Refunds are covered in the [terms](../Terms/index.md#7-refunds).
     the reset date.
 
 ??? question "Do mock pack credits expire?"
-    No. They're used after your plan's voice mocks run out, on any plan.
+    No. They're used after your plan's own mock credits run out, on any plan.
 
 ??? question "I paid but still see the free plan"
     Reload the page. If it still shows Free after a minute, sign out and back

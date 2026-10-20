@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Step-by-step guide** in the Help Center: every screen in plain words.
+  The one-minute demo now says where each feature is on the phone and lists
+  what's new (open roles, roadmap, question of the day, sharing, credits).
 - **Role alerts.** On Open roles, set your filters and tap "Alert me about
   new roles like these". Once a day you get a notification when new matching
   roles are posted (needs notifications on; on iPhone, from the Home Screen

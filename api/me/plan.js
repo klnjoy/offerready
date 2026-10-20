@@ -30,6 +30,9 @@
  * }
  *
  * GET /api/me/plan?op=costs&days=30  (admins only: ADMIN_EMAILS env var)
+ * GET /api/me/plan?op=metrics&days=30 (admins only) -> { days, since, metrics, costs }:
+ *   people, sign-ups, events, page views, feedback, usage and passes sold
+ *   (SQL function admin_metrics, migration 0019) plus the AI cost summary.
  *   200 { days, since, rows: [{ feature, calls, users, input_tokens, cached_tokens,
  *         output_tokens, cost_usd, avg_cost_usd, avg_ms, failed }] }
  *   403 for everyone else; 503 { setup: true } until migration 0017 is applied.
@@ -131,6 +134,24 @@ async function dailyPush(req, res) {
   send(res, 200, { ok: true, devices: subs.length, sent, removed, failed });
 }
 
+
+/** All admin dashboard numbers for a period, from the admin_metrics() SQL function. */
+async function adminMetrics(since) {
+  const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase not configured');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 9000);
+  try {
+    const resp = await fetch(url + '/rest/v1/rpc/admin_metrics', {
+      method: 'POST', signal: controller.signal,
+      headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_since: since }),
+    });
+    if (!resp.ok) throw new Error('admin_metrics ' + resp.status);
+    return await resp.json();
+  } finally { clearTimeout(timer); }
+}
 module.exports = async function handler(req, res) {
   setCors(res, req.headers && req.headers.origin);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
@@ -158,6 +179,20 @@ module.exports = async function handler(req, res) {
     if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see AI costs.' }); return; }
     try { send(res, 200, await aiCost.summary(req.query.days)); }
     catch (err) { console.error('[me/plan costs]', err && err.message); send(res, 503, { error: 'Cost log isn’t set up yet. Apply migration 0017_ai_costs.sql in Supabase.', setup: true }); }
+    return;
+  }
+
+  if (op === 'metrics') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see metrics.' }); return; }
+    const days = Math.max(1, Math.min(365, Math.round(Number(req.query.days) || 30)));
+    const since = new Date(Date.now() - days * 86400000).toISOString();
+    const [m, costs] = await Promise.all([
+      adminMetrics(since).catch((err) => { console.error('[me/plan metrics]', err && err.message); return null; }),
+      aiCost.summary(days).catch(() => null),
+    ]);
+    if (!m) { send(res, 503, { error: 'Metrics aren’t set up yet. Apply migration 0019_admin_metrics.sql in Supabase.', setup: true, costs }); return; }
+    send(res, 200, { days, since, metrics: m, costs });
     return;
   }
 

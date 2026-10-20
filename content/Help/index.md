@@ -13,6 +13,10 @@ OfferReady is a web app that helps you prepare for one real job interview at a
 time. You add the job and your resume. OfferReady works out what the interview
 will test, has you practise it, and shows the day you'll be ready.
 
+!!! tip "Never used an app like this?"
+    Start with the [Step-by-step guide](step-by-step.md): every screen in plain
+    words, from opening the app to comparing offers.
+
 !!! tip "New here? Read these three first"
     1. [Getting started](getting-started.md): your first job in about five minutes.
     2. [Jobs and your resume](jobs.md): what the job page shows you.
@@ -22,6 +26,7 @@ will test, has you practise it, and shows the day you'll be ready.
 
 | Page | What it covers |
 |---|---|
+| [Step-by-step guide](step-by-step.md) | Every screen in plain words, in the order you'll use them |
 | [Getting started](getting-started.md) | Sign in, add your first job, add your resume, the one-time setup |
 | [Jobs and your resume](jobs.md) | The job page, adding jobs, resume match and gaps, tailoring your resume, your daily plan |
 | [Practice](practice.md) | The practice path: questions for the job, trade-off drills, STAR stories, the question bank, and how answers are graded |
