@@ -13,8 +13,7 @@ There's no subscription and nothing to cancel.
 | Plan | Price | Length | Good for |
 |---|---|---|---|
 | **Free** | $0 | Resets monthly | Trying the full prep loop on one job |
-| **Job pass** | $19 once | 45 days | One interview you've booked |
-| **30-day pass** | $19 once | 30 days | A few interviews this month |
+| **30-day pass** | $19 once | 30 days | An interview or a few this month |
 | **90-day pass** | $59 once | 90 days | A full job search (recommended) |
 | **1-year pass** | $99 once | 365 days | Ongoing prep, or several searches |
 | **Mock interview pack** | $9 once | Never expires | 10 extra mock credits, on any plan |
@@ -23,19 +22,19 @@ There's no subscription and nothing to cancel.
 
 Free limits are per month. A pass's allowance is for the whole pass.
 
-| What | Free (a month) | Job pass | 30-day | 90-day | 1-year |
-|---|---|---|---|---|---|
-| Saved jobs | 1 | 1 | 5 | 15 | 40 |
-| Job analyses | 3 | 10 | 30 | 80 | 200 |
-| AI feedback on answers (incl. the AI Interview Coach) | 5 | 100 | 250 | 600 | 1,500 |
-| Mock interview credits (text mock 1, voice mock 3) | 1 | 4 | 8 | 20 | 40 |
-| Drills written for your job | — | 5 | 15 | 40 | 100 |
-| Trade-off drill library | Previews | Full | Full | Full | Full |
-| STAR story coaching | 3 | 20 | 50 | 120 | 300 |
-| Resume tailoring | 2 | 10 | 30 | 80 | 200 |
-| Day-by-day plan | Included | Included | Included | Included | Included |
-| Plan calendar export | — | Included | Included | Included | Included |
-| Study library, question bank, flashcards, timed exams | Included | Included | Included | Included | Included |
+| What | Free (a month) | 30-day | 90-day | 1-year |
+|---|---|---|---|---|
+| Saved jobs | 1 | 5 | 15 | 40 |
+| Job analyses | 3 | 30 | 80 | 200 |
+| AI feedback on answers (incl. the AI Interview Coach) | 5 | 250 | 600 | 1,500 |
+| Mock interview credits (text mock 1, voice mock 3) | 1 | 8 | 20 | 40 |
+| Drills written for your job | — | 15 | 40 | 100 |
+| Trade-off drill library | Previews | Full | Full | Full |
+| STAR story coaching | 3 | 50 | 120 | 300 |
+| Resume tailoring | 2 | 30 | 80 | 200 |
+| Day-by-day plan | Included | Included | Included | Included |
+| Plan calendar export | — | Included | Included | Included |
+| Study library, question bank, flashcards, timed exams | Included | Included | Included | Included |
 
 **New accounts start with a 7-day free trial**, no card needed: the full prep
 loop for one job, including the whole trade-off drill library, with 1 job
