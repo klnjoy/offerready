@@ -1,8 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="96 96 320 320" role="img" aria-label="OfferReady">
-  <title>OfferReady</title>
-  <!-- Header mark: a ring with a check whose stroke ends in a green arrow.
-       White on the navy header bar; same geometry as the app icon. -->
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#ffffff" stroke-width="44"/>
-  <path d="M165 275 L248 352 L303.1 272.3" fill="none" stroke="#ffffff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M360 190 L327.8 289.3 L278.5 255.2 Z" fill="#22c07a" stroke="#22c07a" stroke-width="8" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="OfferReady">
+<rect width="512" height="512" rx="116.0" fill="#0c1c38"/>
+<circle cx="256.0" cy="256.0" r="150.0" fill="none" stroke="#ffffff" stroke-width="44.0"/>
+<path d="M165.0 275.0 L248.0 352.0 L303.1 272.3" fill="none" stroke="#ffffff" stroke-width="48.0" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M360.0 190.0 L327.8 289.3 L278.5 255.2 Z" fill="#22c07a" stroke="#22c07a" stroke-width="8.0" stroke-linejoin="round"/>
 </svg>
