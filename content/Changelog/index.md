@@ -11,6 +11,14 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Open roles show job type, pay and visa.** Each card shows full-time (W2)
+  or contract (C2C / W2), the pay range when the posting lists one, and
+  whether the posting says it sponsors visas. New filters: Sponsors visas,
+  Contract / C2C and Shows pay. When a posting doesn't say, we leave it out.
+- **Tailor: save to your resume.** After you put the accepted bullets into
+  your resume for a job, Tailor asks whether to update your main resume too,
+  and you can download the updated resume as a Word file.
+- **Today is now Home** in the tab bar.
 - **New logo.** A ring with a check and a green arrow, on the app icon, in
   the app and on this site.
 - **Re-check your fit after tailoring.** The fit check now reads your whole
