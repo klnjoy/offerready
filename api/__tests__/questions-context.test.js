@@ -106,7 +106,7 @@ test('buildQuestionsUserMessage: still works with only a JD (no analysis signals
   assert.ok(!/REQUIRED TECHNOLOGIES:/.test(msg));
   assert.ok(!/GAP-ANALYSIS FOCUS/.test(msg));
   assert.ok(msg.includes('generic job description'));
-  assert.ok(/10 technical, 10 behavioral, 5 system_design, 5 leadership/.test(msg));
+  assert.ok(/6 technical, 5 behavioral, 3 system_design, 2 leadership/.test(msg), "asks for the real target counts");
 });
 
 test('buildQuestionsUserMessage: "more" mode lists the already-asked questions to avoid', () => {
@@ -114,4 +114,12 @@ test('buildQuestionsUserMessage: "more" mode lists the already-asked questions t
   assert.match(msg, /ALREADY ASKED/);
   assert.ok(msg.includes('- How do you handle late data in Spark?'));
   assert.ok(!buildQuestionsUserMessage(DATA_ENGINEER).includes('ALREADY ASKED'));
+});
+
+test('buildQuestionsUserMessage: other jobs\' questions are listed as not-to-reuse; company is named', () => {
+  const { buildQuestionsUserMessage: b } = require('../_lib/readinessAi');
+  const msg = b({ jobTitle: 'Data Engineer', jobDescription: 'Build dbt models on Snowflake for the payments team.', company: 'Acme', otherJobs: ['Explain Snowflake micro-partitions.'] });
+  assert.match(msg, /COMPANY: Acme/);
+  assert.match(msg, /OTHER JOBS \(do NOT reuse[\s\S]*- Explain Snowflake micro-partitions\./);
+  assert.doesNotMatch(b({ jobTitle: 'x', jobDescription: 'y'.repeat(40) }), /OTHER JOBS/);
 });

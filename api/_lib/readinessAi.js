@@ -202,8 +202,10 @@ function ctxList(arr, max, itemLen) {
 function buildQuestionsUserMessage(input) {
   const {
     jobTitle, seniority, jobDescription,
-    technologies, coreSkills, missingSkills, missingKeywords, missingExperience, avoid,
+    technologies, coreSkills, missingSkills, missingKeywords, missingExperience, avoid, otherJobs, company,
   } = input || {};
+  const otherList = Array.isArray(otherJobs) ? otherJobs.filter((x) => typeof x === 'string' && x.trim()).slice(0, 30).map((x) => x.trim().slice(0, 140)) : [];
+  const counts = Object.keys(QUESTION_TARGETS).map((c) => QUESTION_TARGETS[c] + ' ' + c).join(', ');
   const avoidList = Array.isArray(avoid) ? avoid.filter((x) => typeof x === 'string' && x.trim()).slice(0, 60).map((x) => x.trim().slice(0, 160)) : [];
 
   const techs = ctxList(technologies, 15, 60);
@@ -215,6 +217,7 @@ function buildQuestionsUserMessage(input) {
 
   return [
     'JOB TITLE: ' + String(jobTitle || 'unspecified').slice(0, 200),
+    company ? 'COMPANY: ' + String(company).slice(0, 120) : '',
     seniority ? 'SENIORITY: ' + String(seniority).slice(0, 120) : '',
     techs.length ? 'REQUIRED TECHNOLOGIES: ' + techs.join(', ') : '',
     skills.length ? 'CORE SKILLS: ' + skills.join(', ') : '',
@@ -225,8 +228,11 @@ function buildQuestionsUserMessage(input) {
     '',
     'Ground EVERY question in the role above: name its specific technologies,',
     'skills, and gap-focus areas. Technical and system-design questions must be',
-    'specific to this stack (not generic). Generate the full question set as JSON',
-    'now (10 technical, 10 behavioral, 5 system_design, 5 leadership).',
+    'specific to this stack (not generic). Behavioral and leadership questions',
+    'must name a responsibility or situation from THIS job description (not the',
+    'generic set every company asks). Generate the full question set as JSON',
+    'now (' + counts + ').',
+    otherList.length ? '\nQUESTIONS FROM THE CANDIDATE\'S OTHER JOBS (do NOT reuse or lightly rephrase these; this job needs its own set):\n' + otherList.map((x) => '- ' + x).join('\n') : '',
     avoidList.length ? '\nALREADY ASKED (the candidate has these; do NOT repeat or rephrase them. Cover different topics, scenarios and depths of the same job):\n' + avoidList.map((x) => '- ' + x).join('\n') : '',
   ].filter(Boolean).join('\n');
 }

@@ -11,6 +11,18 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Quick story opens again** from the + button, with writing it yourself
+  first. Letting the AI draft it (1 story credit) is now an optional step.
+- **Hints before the answer.** Every practice question shows a short "how
+  to answer" frame for its type (story, design, trade-off, hands-on,
+  concept) before you reveal the strong answer.
+- **Strong answers with diagrams and code.** For design questions the AI
+  Coach adds an architecture flow you can draw, and for hands-on questions a
+  short code example. Mock interview feedback links to the matching study
+  notes.
+- **Each job gets its own questions.** New question sets no longer reuse
+  the ones written for your other jobs, and story questions name this job's
+  responsibilities.
 - **Mock interviews now use credits.** A text mock (typed answers) uses 1
   credit and a voice mock uses 3, however many follow-ups you get. Free has
   1 credit a month; the Job pass 4, 30-day pass 8, 90-day pass 20 and 1-year
