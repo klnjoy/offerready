@@ -1,26 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="OfferReady">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="96 96 320 320" role="img" aria-label="OfferReady">
   <title>OfferReady</title>
-  <!--
-    Header mark: a circle with a road/path rising into an upward arrow — the
-    "path to the offer". Fitted tightly to a 40x40 viewBox so it fills the
-    header logo slot (no dead space that created the logo-to-title gap). Circle
-    + road in white; arrowhead in brand green so it carries the palette and
-    stays legible on the navy header bar.
-  -->
-  <!-- outer ring, open at top-right where the arrow breaks out -->
-  <path d="M33 11 A15 15 0 1 0 35 21"
-        fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
-  <!-- perspective road narrowing upward toward the arrow -->
-  <path d="M13 33 L19 20 L25 11"
-        fill="none" stroke="#ffffff" stroke-width="5"
-        stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M21 33 L23 22 L26 13"
-        fill="none" stroke="#ffffff" stroke-width="1.8"
-        stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
-  <!-- rising arrow shaft + head in brand green, breaking out of the ring -->
-  <path d="M23 18 L37 4"
-        fill="none" stroke="#22c07a" stroke-width="4" stroke-linecap="round"/>
-  <path d="M29 3 L38 3 L38 12"
-        fill="none" stroke="#22c07a" stroke-width="4"
-        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Header mark: a ring with a check whose stroke ends in a green arrow.
+       White on the navy header bar; same geometry as the app icon. -->
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#ffffff" stroke-width="44"/>
+  <path d="M165 275 L248 352 L303.1 272.3" fill="none" stroke="#ffffff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M360 190 L327.8 289.3 L278.5 255.2 Z" fill="#22c07a" stroke="#22c07a" stroke-width="8" stroke-linejoin="round"/>
 </svg>

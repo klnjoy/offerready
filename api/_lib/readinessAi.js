@@ -74,7 +74,9 @@ function buildGapUserMessage(input) {
     String(jobDescription || '').slice(0, 6000),
     '',
     'CANDIDATE RESUME:',
-    String(resumeText || '').slice(0, 6000) || sigLines || '(no resume provided)',
+    // 12k chars covers a full two-page resume: bullets near the end (often
+    // the ones just tailored) used to be cut off, so a re-check never moved.
+    String(resumeText || '').slice(0, 12000) || sigLines || '(no resume provided)',
     '',
     'Compare and return the gap analysis JSON now.',
   ].join('\n');
