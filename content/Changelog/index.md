@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Question of the day.** Home shows one interview question a day from the
+  question bank, with an Answer it button. Turn on the daily notification to
+  get it every morning (on iPhone, from the app added to your Home Screen).
 - **Roadmap: our study library, week by week, with code to run.** Each week
   links the matching chapters here (Week 1 · Ch 1 LLM fundamentals, and so
   on), and weeks 1 to 8 include a short Python example you can edit and run

@@ -45,6 +45,7 @@ const { getUser } = require('../_lib/supabaseAuth');
 const { getUsageSummary, LIMITS, periodStart } = require('../_lib/plans');
 const billing = require('../_lib/billing');
 const aiCost = require('../_lib/aiCost');
+const push = require('../_lib/push');
 
 /** The billing block; never throws (storage errors just hide the portal). */
 async function billingBlock(userId) {
@@ -63,15 +64,94 @@ async function billingBlock(userId) {
   };
 }
 
+// ---- daily question push --------------------------------------------------
+
+function svc(extra) {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return Object.assign({ apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' }, extra || {});
+}
+function restUrl(path) {
+  const url = process.env.SUPABASE_URL;
+  return url && process.env.SUPABASE_SERVICE_ROLE_KEY ? url.replace(/\/+$/, '') + '/rest/v1' + path : null;
+}
+
+/** POST { subscription } saves this device; DELETE { endpoint } removes it. */
+async function savePush(req, res, user) {
+  const body = typeof req.body === 'string' ? safeJson(req.body) : (req.body || {});
+  const sub = body.subscription || {};
+  const endpoint = String((req.method === 'DELETE' ? body.endpoint : sub.endpoint) || '');
+  if (!/^https:\/\/[^\s]{10,2000}$/.test(endpoint)) { send(res, 400, { error: 'A push subscription is required.' }); return; }
+  const url = restUrl(req.method === 'DELETE'
+    ? '/push_subscriptions?endpoint=eq.' + encodeURIComponent(endpoint) + '&user_id=eq.' + encodeURIComponent(user.id)
+    : '/push_subscriptions?on_conflict=endpoint');
+  if (!url) { send(res, 503, { error: 'Storage isn’t configured.', setup: true }); return; }
+  try {
+    const r = req.method === 'DELETE'
+      ? await fetch(url, { method: 'DELETE', headers: svc({ Prefer: 'return=minimal' }) })
+      : await fetch(url, {
+        method: 'POST',
+        headers: svc({ Prefer: 'resolution=merge-duplicates,return=minimal' }),
+        body: JSON.stringify({ endpoint, user_id: user.id, p256dh: (sub.keys && sub.keys.p256dh) || null, auth: (sub.keys && sub.keys.auth) || null, fail_count: 0 }),
+      });
+    if (r.status === 404) { send(res, 503, { error: 'Daily notifications need a database update (migration 0018).', setup: true }); return; }
+    if (!r.ok) { send(res, 502, { error: 'Couldn’t save that. Please try again.' }); return; }
+    send(res, 200, { ok: true, on: req.method !== 'DELETE' });
+  } catch (_e) {
+    send(res, 502, { error: 'Couldn’t save that. Please try again.' });
+  }
+}
+
+function safeJson(s) { try { return JSON.parse(s); } catch (_e) { return {}; } }
+
+/** Vercel cron (GET /api/cron/daily-question, Bearer CRON_SECRET): one push per device. */
+async function dailyPush(req, res) {
+  const secret = process.env.CRON_SECRET;
+  const auth = (req.headers && req.headers.authorization) || '';
+  if (!secret || auth !== 'Bearer ' + secret) { send(res, 401, { error: 'Unauthorized.' }); return; }
+  if (!push.configured()) { send(res, 503, { error: 'VAPID keys are not set.' }); return; }
+  const listUrl = restUrl('/push_subscriptions?select=endpoint,fail_count&limit=5000');
+  if (!listUrl) { send(res, 503, { error: 'Storage isn’t configured.' }); return; }
+  let subs = [];
+  try { const r = await fetch(listUrl, { headers: svc() }); subs = r.ok ? await r.json() : []; } catch (_e) { subs = []; }
+  let sent = 0, removed = 0, failed = 0;
+  const now = new Date().toISOString();
+  for (let i = 0; i < subs.length; i += 20) {
+    await Promise.all(subs.slice(i, i + 20).map(async (s) => {
+      let out;
+      try { out = await push.sendPush(s.endpoint); } catch (_e) { out = { ok: false, gone: false }; }
+      const where = restUrl('/push_subscriptions?endpoint=eq.' + encodeURIComponent(s.endpoint));
+      try {
+        if (out.gone || (!out.ok && (s.fail_count || 0) >= 4)) { removed++; await fetch(where, { method: 'DELETE', headers: svc() }); }
+        else if (out.ok) { sent++; await fetch(where, { method: 'PATCH', headers: svc(), body: JSON.stringify({ last_sent_at: now, fail_count: 0 }) }); }
+        else { failed++; await fetch(where, { method: 'PATCH', headers: svc(), body: JSON.stringify({ fail_count: (s.fail_count || 0) + 1 }) }); }
+      } catch (_e) { /* bookkeeping is best-effort */ }
+    }));
+  }
+  send(res, 200, { ok: true, devices: subs.length, sent, removed, failed });
+}
+
 module.exports = async function handler(req, res) {
   setCors(res, req.headers && req.headers.origin);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
+  const op = req.query && req.query.op;
+
+  // Daily question push (lives here to stay within the Hobby function limit).
+  if (op === 'daily-push') { await dailyPush(req, res); return; }
+  if (op === 'push-key' && req.method === 'GET') {
+    if (!push.configured()) { send(res, 503, { error: 'Daily notifications aren’t set up on this deployment yet.', setup: true }); return; }
+    send(res, 200, { publicKey: process.env.VAPID_PUBLIC_KEY }); return;
+  }
+  if (op === 'push' && (req.method === 'POST' || req.method === 'DELETE')) {
+    const u = await getUser(req);
+    if (!u) { send(res, 401, { error: 'Sign in to turn on daily notifications.' }); return; }
+    await savePush(req, res, u); return;
+  }
+
   if (req.method !== 'GET') { send(res, 405, { error: 'Method not allowed.' }); return; }
 
   const user = await getUser(req);
   if (!user) { send(res, 401, { error: 'Sign in to see your plan.' }); return; }
 
-  const op = req.query && req.query.op;
   if (op === 'costs') {
     res.setHeader('Cache-Control', 'private, no-store');
     if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see AI costs.' }); return; }

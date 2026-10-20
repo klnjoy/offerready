@@ -26,6 +26,16 @@
     {
       "source": "/api/premium/tailor",
       "destination": "/api/ai?op=tailor"
+    },
+    {
+      "source": "/api/cron/daily-question",
+      "destination": "/api/me/plan?op=daily-push"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/daily-question",
+      "schedule": "0 13 * * *"
     }
   ]
 }
