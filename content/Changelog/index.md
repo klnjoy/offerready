@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **One $19 pass.** The Job pass is no longer sold: the 30-day pass costs the
+  same and includes more (5 saved jobs instead of 1). If you already have a
+  Job pass, it keeps working until it ends.
 - **Mock interview pack is on sale: $9** for 10 mock credits that never
   expire (up to 3 voice or 10 text mocks).
 - **Question of the day keeps its own record.** Answers are saved apart from

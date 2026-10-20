@@ -191,7 +191,7 @@ get it as a notification.
 
 - **Free**: 1 saved job and a monthly allowance, including 1 mock credit (one
   text mock). See [Plans and billing](account-billing.md).
-- **Passes** are paid once and never renew: Job pass, 30-day, 90-day and
-  1-year. A **mock pack** adds 10 mock credits.
+- **Passes** are paid once and never renew: 30-day ($19), 90-day ($59) and
+  1-year ($99). A **mock pack** adds 10 mock credits.
 - Stuck? **More** → **Help** to ask how anything works, or **Send feedback** to
   tell us. See also [Troubleshooting](troubleshooting.md).

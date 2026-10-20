@@ -109,7 +109,7 @@ debrief. See [After the interview](after-the-interview.md).
     in to save a job and use the AI features.
 
 ??? question "Can I add more than one job?"
-    The free plan and the Job pass keep 1 saved job. The 30-day pass keeps 5,
+    The free plan keeps 1 saved job. The 30-day pass keeps 5,
     the 90-day pass 15 and the 1-year pass 40. See
     [Plans and billing](account-billing.md).
 

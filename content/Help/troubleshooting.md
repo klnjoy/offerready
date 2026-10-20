@@ -56,7 +56,7 @@ nothing here helps, see [Still stuck?](#still-stuck) at the end.
     link.
 
 ??? question "I can't add another job" or "Save this job doesn't work"
-    The free plan and the Job pass keep 1 saved job. When you press **Save
+    The free plan keeps 1 saved job. When you press **Save
     this job** with a full plan, a message under the button says so and lists
     your saved jobs: choose **Delete and save this one instead** on one you no
     longer need, and the new job is saved in its place. Or get a pass that
