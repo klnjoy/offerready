@@ -157,6 +157,14 @@ Behavioral questions ("Tell me about a time…") need real stories.
 2. Add one directly with **Add a question you were asked**.
 3. Tap **Practise with AI Coach** on any question that went badly.
 
+### Step 13b. Look back at past jobs
+
+1. **Jobs** → **Job history** (or **More** → **Job history**).
+2. Each job shows its outcome and what you did for it. Tap a job to see every
+   question, drill, mock, story, debrief and saved answer, with links.
+3. Search by job or company, or filter by **Offer**, **Rejected** or
+   **Deleted**. Deleted jobs keep their history here.
+
 ### Step 14. Compare offers
 
 1. **More** → **Compare offers** → **Add an offer**.

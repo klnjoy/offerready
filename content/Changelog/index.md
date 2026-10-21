@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Job history.** Jobs → *Job history* (or More) keeps every job you've
+  prepared for, with all its practice, stories, debriefs, saved answers and
+  outcome, even after you delete the job. Search it, filter by outcome, and
+  browse by month.
 - **Your practice log.** Practice → *Your practice log* (or More) shows what you
   practised each day, newest first: questions, drills, stories and mocks. The
   Practice page shows today and yesterday at a glance. Each plan step now
