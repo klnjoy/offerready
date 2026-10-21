@@ -25,7 +25,7 @@ Free limits are per month. A pass's allowance is for the whole pass.
 | What | Free (a month) | 30-day | 90-day | 1-year |
 |---|---|---|---|---|
 | Saved jobs | 1 | 5 | 15 | 40 |
-| Job analyses | 3 | 30 | 80 | 200 |
+| Job analyses | 3 | 15 | 40 | 100 |
 | AI feedback on answers (incl. the AI Interview Coach) | 5 | 250 | 600 | 1,500 |
 | Mock interview credits (text mock 1, voice mock 3) | 1 | 8 | 20 | 40 |
 | Drills written for your job | — | 15 | 40 | 100 |

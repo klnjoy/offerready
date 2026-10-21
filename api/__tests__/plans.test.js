@@ -480,10 +480,10 @@ function passRow(kind, startOffsetDays, days) {
 test('pass: a live 90-day pass makes the user pro with the pass allowance, counted since it started', async () => {
   plans._internal._reset();
   const p = passRow('pass90', -10, 90);
-  const s = stub({ passes: [p], counts: { analyses: 79 } });
+  const s = stub({ passes: [p], counts: { analyses: 39 } });
   try {
     const q = await plans.checkQuota(USER, 'analyses');
-    assert.deepEqual({ ok: q.ok, plan: q.plan, used: q.used, limit: q.limit, pass: q.pass }, { ok: true, plan: 'pro', used: 79, limit: 80, pass: 'pass90' });
+    assert.deepEqual({ ok: q.ok, plan: q.plan, used: q.used, limit: q.limit, pass: q.pass }, { ok: true, plan: 'pro', used: 39, limit: 40, pass: 'pass90' });
     const rpc = s.calls.find((c) => c.url.includes('/rpc/usage_counts'));
     assert.equal(rpc.body.p_since, p.starts_at);
     assert.equal(s.calls.filter((c) => c.url.includes('/entitlements')).length, 0, 'no entitlement lookup needed');
@@ -492,12 +492,12 @@ test('pass: a live 90-day pass makes the user pro with the pass allowance, count
 
 test('pass: allowance is for the whole pass, not monthly; over it the message offers another pass', async () => {
   plans._internal._reset();
-  const s = stub({ passes: [passRow('pass30', -3, 30)], counts: { analyses: 30 } });
+  const s = stub({ passes: [passRow('pass30', -3, 30)], counts: { analyses: 15 } });
   try {
     const q = await plans.checkQuota(USER, 'analyses');
     assert.equal(q.ok, false);
     const b = plans.quotaError(q, 'analyses');
-    assert.match(b.error, /used all 30 job analyses in your 30-day pass\. Buy another pass/);
+    assert.match(b.error, /used all 15 job analyses in your 30-day pass\. Buy another pass/);
     assert.equal(b.upgrade, true);
     assert.equal(b.pass, 'pass30');
     assert.equal(b.resets_at, undefined);
@@ -652,4 +652,14 @@ test('quotaError: the mock pack is not offered when it is not on sale', () => {
     assert.doesNotMatch(b.error, /mock pack/);
     assert.match(b.error, /Get a pass for more/);
   } finally { if (was !== undefined) process.env.STRIPE_MOCK_PACK_PRICE_ID = was; }
+});
+
+test('pass: bought before the analyses change keeps its original analyses', async () => {
+  plans._internal._reset();
+  const p = { ...passRow('pass90', -10, 90), created_at: '2026-10-01T12:00:00Z' };
+  const s = stub({ passes: [p], counts: { analyses: 50 } });
+  try {
+    const q = await plans.checkQuota(USER, 'analyses');
+    assert.deepEqual({ ok: q.ok, limit: q.limit }, { ok: true, limit: 80 });
+  } finally { s.restore(); }
 });
