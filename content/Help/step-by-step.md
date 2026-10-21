@@ -60,6 +60,11 @@ a plan for each day until the interview.
 Open **Home**. The top of the screen shows today's tasks. Tap the first one and
 follow it; each task is a few minutes.
 
+On **Practice** you work in **rounds**. One round is 3 questions, a trade-off
+drill, a story and a mock interview, in any order and on any days. When a
+round is done, tap **Start round 2**: the steps reset and you get new
+questions. Repeat rounds until your interview.
+
 ### Step 5. Answer the questions for this job
 
 1. Tap the **Practice** tab, then **Questions for this job**.
