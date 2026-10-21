@@ -63,7 +63,9 @@ follow it; each task is a few minutes.
 On **Practice** you work in **rounds**. One round is 3 questions, a trade-off
 drill, a story and a mock interview, in any order and on any days. When a
 round is done, tap **Start round 2**: the steps reset and you get new
-questions. Repeat rounds until your interview.
+questions. After **3 rounds**, take the **final test**: a full mock interview
+run like the real one (5 questions, a tough interviewer, follow-ups, feedback
+at the end). **Job history** keeps every round.
 
 ### Step 5. Answer the questions for this job
 
