@@ -11,9 +11,9 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
-- **Practice in rounds.** Your plan for a job is now a round: 3 questions, a
-  drill, a story and a mock. Finish it, tap *Start round 2*, and do it again
-  with new questions until your interview.
+- **Practice in rounds, then a final test.** Do 3 rounds for a job (each: 3
+  questions, a drill, a story and a mock), then take the *final test*: a full
+  mock run like the real interview. Job history keeps every round.
 - **Job history.** Jobs → *Job history* (or More) keeps every job you've
   prepared for, with all its practice, stories, debriefs, saved answers and
   outcome, even after you delete the job. Search it, filter by outcome, and
