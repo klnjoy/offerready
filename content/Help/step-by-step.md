@@ -120,6 +120,9 @@ Behavioral questions ("Tell me about a time…") need real stories.
 2. You see one readiness score per job and the day you're likely to be ready,
    compared with your interview date.
 3. Tap **Export PDF** to keep a copy.
+4. To see what you did yesterday (or any day), open **Practice → Your practice
+   log**. It lists each day's questions, drills, stories and mocks, with a
+   link to do more.
 
 ## Part 3. Interview day and after
 

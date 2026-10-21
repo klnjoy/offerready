@@ -11,6 +11,11 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Your practice log.** Practice → *Your practice log* (or More) shows what you
+  practised each day, newest first: questions, drills, stories and mocks. The
+  Practice page shows today and yesterday at a glance. Each plan step now
+  says its goal (3 questions, then 1 drill, 1 story, 1 mock) and how often
+  you've done it.
 - **One $19 pass.** The Job pass is no longer sold: the 30-day pass costs the
   same and includes more (5 saved jobs instead of 1). If you already have a
   Job pass, it keeps working until it ends.
