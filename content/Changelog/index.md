@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## October 2026
 
 ### Week of 20 October
+- **Job analyses match saved jobs.** New passes include 15 (30-day), 40
+  (90-day) or 100 (1-year) job analyses. Passes bought earlier keep what they
+  came with.
 - **Practice in rounds, then a final test.** Do 3 rounds for a job (each: 3
   questions, a drill, a story and a mock), then take the *final test*: a full
   mock run like the real interview. Job history keeps every round.

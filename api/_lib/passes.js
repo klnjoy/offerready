@@ -37,15 +37,15 @@ const PASSES = {
   },
   pass30: {
     days: 30, label: '30-day pass',
-    limits: { saved_jobs: 5, analyses: 30, ai_grading: 250, voice_mock: 8, custom_scenarios: 15, premium_scenarios: null, story_ai: 50, prep_plan: null, resume_tailor: 30 },
+    limits: { saved_jobs: 5, analyses: 15, ai_grading: 250, voice_mock: 8, custom_scenarios: 15, premium_scenarios: null, story_ai: 50, prep_plan: null, resume_tailor: 30 },
   },
   pass90: {
     days: 90, label: '90-day pass',
-    limits: { saved_jobs: 15, analyses: 80, ai_grading: 600, voice_mock: 20, custom_scenarios: 40, premium_scenarios: null, story_ai: 120, prep_plan: null, resume_tailor: 80 },
+    limits: { saved_jobs: 15, analyses: 40, ai_grading: 600, voice_mock: 20, custom_scenarios: 40, premium_scenarios: null, story_ai: 120, prep_plan: null, resume_tailor: 80 },
   },
   pass365: {
     days: 365, label: '1-year pass',
-    limits: { saved_jobs: 40, analyses: 200, ai_grading: 1500, voice_mock: 40, custom_scenarios: 100, premium_scenarios: null, story_ai: 300, prep_plan: null, resume_tailor: 200 },
+    limits: { saved_jobs: 40, analyses: 100, ai_grading: 1500, voice_mock: 40, custom_scenarios: 100, premium_scenarios: null, story_ai: 300, prep_plan: null, resume_tailor: 200 },
   },
 };
 const PASS_KINDS = Object.keys(PASSES);
@@ -117,13 +117,18 @@ async function livePasses(userId, nowMs) {
   const resp = await rest(
     `/passes?user_id=eq.${encodeURIComponent(userId)}` +
       `&expires_at=gt.${encodeURIComponent(new Date(now).toISOString())}` +
-      '&select=kind,starts_at,expires_at,stripe_customer_id&order=starts_at.asc',
+      '&select=kind,starts_at,expires_at,stripe_customer_id,created_at&order=starts_at.asc',
     { method: 'GET', headers: svcHeaders() }
   );
   if (!resp.ok) throw new Error('passes read ' + resp.status);
   const rows = await resp.json();
   return Array.isArray(rows) ? rows.filter((r) => r && isPass(r.kind)) : [];
 }
+
+/** Job analyses were lowered on this date (to match saved jobs); passes bought
+ * before it keep the analyses they were sold with. */
+const ANALYSES_CUTOFF = Date.parse('2026-10-21T04:00:00Z');
+const LEGACY_ANALYSES = { pass30: 30, pass90: 80, pass365: 200 };
 
 /**
  * Combine live passes into one allowance:
@@ -142,8 +147,10 @@ function combine(rows, nowMs) {
   let current = null;
   for (const r of rows) {
     const def = PASSES[r.kind];
+    const bought = Date.parse(r.created_at || '');
+    const legacy = Number.isFinite(bought) && bought < ANALYSES_CUTOFF;
     for (const f of Object.keys(def.limits)) {
-      const v = def.limits[f];
+      const v = f === 'analyses' && legacy && LEGACY_ANALYSES[r.kind] != null ? LEGACY_ANALYSES[r.kind] : def.limits[f];
       if (!(f in limits)) limits[f] = v;
       else if (limits[f] === null || v === null) limits[f] = null;
       else limits[f] += v;
