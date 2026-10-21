@@ -10,6 +10,18 @@ New features and improvements, newest first.
 
 ## October 2026
 
+### Week of 21 October
+- **Clearer Practice screen.** Each round shows *Round 1 of 3* and *0 of 4
+  activities completed*; the main button follows your progress (start,
+  continue, next round, final assessment, review feedback). The final
+  assessment sits on its own after round 3.
+- **Readiness from evidence.** Practice shows what your scored answers,
+  drills, stories and mocks say, area by area, plus gaps from your resume
+  match. Until there is enough evidence it says *Building your readiness
+  profile* instead of a number. It doesn't predict hiring decisions.
+- **Paced to your interview date.** With a date set, Practice suggests how
+  often to do a round, or what to focus on if time is short.
+
 ### Week of 20 October
 - **Job analyses match saved jobs.** New passes include 15 (30-day), 40
   (90-day) or 100 (1-year) job analyses. Passes bought earlier keep what they
