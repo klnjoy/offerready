@@ -10,7 +10,7 @@ of the [practice path](practice.md), so the path is shown at the top. Pick
 **voice** or **text**.
 
 !!! tip "See a report first"
-    The [sample report](https://klnjoy.github.io/offerready-app/sample-report)
+    The [sample report](https://getofferready.app/sample-report)
     shows what you get after a voice mock, on sample data.
 
 ## Voice interview

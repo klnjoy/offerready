@@ -13,7 +13,7 @@ read the pages **in the order shown**. Each page also has **Next** at the bottom
 - **Interview in the next 2 weeks:** open your role guide below and go
   straight to its **14-day plan**. Then the
   [Master Cheat Sheets](../Personal-SourceCode/Interview_Cheat_Sheets.md), and
-  practise your real job in the [OfferReady app](https://klnjoy.github.io/offerready-app/).
+  practise your real job in the [OfferReady app](https://getofferready.app/).
 - **Interview in about a month:** read your whole role guide below, then follow
   the [30-Day Prep Plan](../Personal-SourceCode/Interview_30_Day_Plan.md).
 - **No interview yet, learning:** read the core path for your role below, one
@@ -100,4 +100,4 @@ Then pick your role above.
 
 - **Behavioral round:** [Behavioral / STAR](../Personal-SourceCode/Behavioral_STAR_Interview_QA.md). Write your stories in the app's **Your stories**.
 - **The night before:** [Master Cheat Sheets](../Personal-SourceCode/Interview_Cheat_Sheets.md).
-- **Practise your real job:** add the job in the [OfferReady app](https://klnjoy.github.io/offerready-app/). It writes questions for that job, checks your resume and shows your readiness.
+- **Practise your real job:** add the job in the [OfferReady app](https://getofferready.app/). It writes questions for that job, checks your resume and shows your readiness.

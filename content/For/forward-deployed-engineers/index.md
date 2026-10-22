@@ -33,13 +33,13 @@ the project.
 
 1. **Add the job.** FDE postings vary a lot (model providers, AI startups,
    enterprise vendors). The job page shows what this team actually needs and
-   where your resume is thin. [Add a job →](https://klnjoy.github.io/offerready-app/analyze)
+   where your resume is thin. [Add a job →](https://getofferready.app/analyze)
 2. **Customer scenario drills.** In trade-off drills you make a design call
    for a customer, then hold it while the interviewer pushes on their stack,
    data access, cost and what happens when the model is wrong.
 3. **Stories for the customer rounds.** Write STAR stories about ambiguous
    engagements, difficult stakeholders and a deployment you rescued. The
-   [AI Interview Coach](https://klnjoy.github.io/offerready-app/coach) shapes
+   [AI Interview Coach](https://getofferready.app/coach) shapes
    them into answers without inventing anything.
 4. **Mock the presentation.** A voice mock with Deep mode keeps asking "why?",
    like a sceptical customer stakeholder.
@@ -52,5 +52,5 @@ the project.
 - [FDE interview Q&A](../../Personal-SourceCode/Forward_Deployed_Engineer_Interview_QA.md) and [FDE customer Q&A](../../Personal-SourceCode/FDE_Customer_Interview_QA.md)
 - [FDE coding prep](../../Personal-SourceCode/FDE_Coding_Interview_Prep.md) and [live-coding scenarios](../../Personal-SourceCode/FDE_LiveCoding_Scenarios_Prep.md)
 
-[Start preparing free](https://klnjoy.github.io/offerready-app/analyze){ .md-button .md-button--primary }
+[Start preparing free](https://getofferready.app/analyze){ .md-button .md-button--primary }
 [Compare OfferReady](../../Compare/index.md){ .md-button }

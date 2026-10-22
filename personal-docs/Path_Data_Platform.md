@@ -249,9 +249,9 @@ governance. See the [Staff / Principal guide](Path_Staff_Principal_Architect.md)
 
 ## Practise this in OfferReady
 
-[:material-briefcase-plus: Add a job](https://klnjoy.github.io/offerready-app/analyze){ .md-button .md-button--primary target=_blank rel=noopener }
-[:material-microphone: Voice mock](https://klnjoy.github.io/offerready-app/interview/voice){ .md-button target=_blank rel=noopener }
-[:material-dumbbell: Practice questions](https://klnjoy.github.io/offerready-app/practice){ .md-button target=_blank rel=noopener }
+[:material-briefcase-plus: Add a job](https://getofferready.app/analyze){ .md-button .md-button--primary target=_blank rel=noopener }
+[:material-microphone: Voice mock](https://getofferready.app/interview/voice){ .md-button target=_blank rel=noopener }
+[:material-dumbbell: Practice questions](https://getofferready.app/practice){ .md-button target=_blank rel=noopener }
 
 - **Add a job** reads the job description and builds a plan around your gaps.
 - **Voice mock** runs a spoken interview. Turn on **Deep follow-ups** to be

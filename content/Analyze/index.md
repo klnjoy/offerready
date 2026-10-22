@@ -15,8 +15,8 @@ search:
 This tool now lives in the OfferReady app, with your saved jobs and readiness.
 The study library you're on now holds the learning material.
 
-[Open Analyze a job](https://klnjoy.github.io/offerready-app/analyze){ .md-button .md-button--primary }
+[Open Analyze a job](https://getofferready.app/analyze){ .md-button .md-button--primary }
 
 <script>
-  location.replace("https://klnjoy.github.io/offerready-app/analyze" + location.search + location.hash);
+  location.replace("https://getofferready.app/analyze" + location.search + location.hash);
 </script>

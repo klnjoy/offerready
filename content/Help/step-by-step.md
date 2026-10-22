@@ -21,8 +21,8 @@ that, jump to the part you need.
 
 ### Step 1. Open the app
 
-1. Go to [klnjoy.github.io/offerready-app](https://klnjoy.github.io/offerready-app/).
-2. Optional: watch the [one-minute demo](https://klnjoy.github.io/offerready-app/demo)
+1. Go to [getofferready.app](https://getofferready.app/).
+2. Optional: watch the [one-minute demo](https://getofferready.app/demo)
    to see every feature.
 3. Want it like a phone app? Follow [Get the app](get-the-app.md). On iPhone:
    open the link in Safari, tap **Share**, then **Add to Home Screen**.

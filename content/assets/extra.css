@@ -1639,7 +1639,7 @@ a.ig-feature.ig-link .ig-d {
 /* ============================================================
    Brand alignment with the app (light scheme): white header and tabs,
    navy wordmark and mark, navy primary buttons with 8px corners, and a
-   light hero, matching klnjoy.github.io/offerready-app. Dark scheme keeps
+   light hero, matching getofferready.app. Dark scheme keeps
    the navy chrome above, which matches the app's dark mode.
    ============================================================ */
 [data-md-color-scheme="default"] .md-header,

@@ -15,8 +15,8 @@ search:
 This tool now lives in the OfferReady app, with your saved jobs and readiness.
 The study library you're on now holds the learning material.
 
-[Open Interview practice](https://klnjoy.github.io/offerready-app/practice){ .md-button .md-button--primary }
+[Open Interview practice](https://getofferready.app/practice){ .md-button .md-button--primary }
 
 <script>
-  location.replace("https://klnjoy.github.io/offerready-app/practice" + location.search + location.hash);
+  location.replace("https://getofferready.app/practice" + location.search + location.hash);
 </script>

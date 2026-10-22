@@ -13,7 +13,7 @@ icon: material/shield-account
 ## Who we are
 
 OfferReady is an interview-preparation service: the OfferReady app
-(`klnjoy.github.io/offerready-app`), this study library, and the OfferReady API
+(`getofferready.app`), this study library, and the OfferReady API
 that powers the app. In this policy "OfferReady", "we" and "us" refer to
 **OfferReady LLC**, the service operator. Contact us at
 **learncreativly@gmail.com** with privacy questions or requests.

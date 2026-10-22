@@ -11,9 +11,9 @@ before the interview to work out what you'd say, then practise saying it
 yourself. It never runs during a live interview.
 
 !!! tip "See it first"
-    [Try a sample question](https://klnjoy.github.io/offerready-app/try) with no
+    [Try a sample question](https://getofferready.app/try) with no
     account, or watch the seven-step walkthrough on the
-    [demo page](https://klnjoy.github.io/offerready-app/demo#coach).
+    [demo page](https://getofferready.app/demo#coach).
 
 ## Before you start
 

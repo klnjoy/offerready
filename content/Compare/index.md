@@ -73,4 +73,4 @@ proof that you're improving.
 *Competitor descriptions come from their public websites and published
 reviews as of October 2026 and may change.*
 
-[Start preparing free](https://klnjoy.github.io/offerready-app/analyze){ .md-button .md-button--primary }
+[Start preparing free](https://getofferready.app/analyze){ .md-button .md-button--primary }

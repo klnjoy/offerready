@@ -15,8 +15,8 @@ search:
 This tool now lives in the OfferReady app, with your saved jobs and readiness.
 The study library you're on now holds the learning material.
 
-[Open My jobs](https://klnjoy.github.io/offerready-app/jobs){ .md-button .md-button--primary }
+[Open My jobs](https://getofferready.app/jobs){ .md-button .md-button--primary }
 
 <script>
-  location.replace("https://klnjoy.github.io/offerready-app/jobs" + location.search + location.hash);
+  location.replace("https://getofferready.app/jobs" + location.search + location.hash);
 </script>
