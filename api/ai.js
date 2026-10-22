@@ -157,10 +157,12 @@ async function handleGapAnalysis(body, res, user) {
       resumeText: body.resumeText || body.resume,
       resumeSignals: body.resumeSignals,
     }),
-    1200, 0.2, 'resume_match', user && user.id
+    // The per-requirement evidence list roughly doubles the output.
+    2600, 0.2, 'resume_match', user && user.id
   );
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
-  const result = validateGap(safeParseModelJson(out.content));
+  // Quotes are checked against the resume that was sent (never stored).
+  const result = validateGap(safeParseModelJson(out.content), String(body.resumeText || body.resume || '').slice(0, 12000));
   if (!result.ok) { send(res, 502, { error: 'Could not produce a gap analysis. Please try again.' }); return; }
 
   // Persist to the job when a job_id is supplied and owned by this user.

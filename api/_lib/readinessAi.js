@@ -14,6 +14,8 @@
 
 'use strict';
 
+const { normalizeRequirements } = require('./fitEvidence');
+
 // ===========================================================================
 // GAP ANALYSIS — resume signals vs JD -> match score + gaps + readiness bands.
 // ===========================================================================
@@ -37,7 +39,15 @@ const GAP_SYSTEM_PROMPT = [
   '  "missingSkills": [string],          // required skills not evidenced',
   '  "missingKeywords": [string],        // JD keywords absent from the resume',
   '  "missingExperience": [string],      // experience signals the JD wants but resume lacks',
-  '  "summary": string                   // 1-2 sentences, blunt and useful',
+  '  "summary": string,                  // 1-2 sentences, blunt and useful',
+  '  "requirements": [                   // the job\'s requirements, max 12, most important first',
+  '    { "requirement": string,          // as the job states it, 2-8 words',
+  '      "importance": "essential"|"preferred",',
+  '      "status": "supported"|"partial"|"missing",',
+  '      "evidence": string,             // EXACT quote copied from the resume, max 25 words, or ""',
+  '      "why": string,                  // 1 sentence: what the quote shows, or what is missing',
+  '      "next": string }                // 1 sentence: an honest next step',
+  '  ]',
   '}',
   '',
   'If the resume is thin or missing, score low and say so plainly.',
@@ -56,6 +66,23 @@ const GAP_SYSTEM_PROMPT = [
   '  as written there.',
   '- Do not repeat the same idea in two lists.',
   '- summary: second person ("You..."), 1 to 2 short sentences, no buzzwords.',
+  '',
+  'REQUIREMENTS (the job-fit explorer):',
+  '- List the requirements the JOB DESCRIPTION actually states. Never add one it',
+  '  does not support.',
+  '- importance: "essential" when the job says required, must, minimum, or it is',
+  '  a core responsibility; "preferred" when it says preferred, nice to have,',
+  '  bonus, plus, or ideally.',
+  '- status "supported": a resume line clearly shows it. "partial": a resume',
+  '  line shows something related but weaker (less scope, older, adjacent tool).',
+  '  "missing": nothing in the resume shows it.',
+  '- evidence: for supported or partial, copy the resume words EXACTLY (max 25',
+  '  words). Do not paraphrase, merge lines, or add numbers. If you cannot copy',
+  '  a real line, the status is "missing" and evidence is "".',
+  '- next: an honest step. If they have real experience the resume omits, say',
+  '  to add that real example. If they do not, suggest learning or building it,',
+  '  or preparing to discuss transferable work. Never suggest claiming',
+  '  experience, titles, tools or results they do not have.',
 ].join('\n');
 
 function buildGapUserMessage(input) {
@@ -114,7 +141,7 @@ function dedupeLists(o) {
   return out;
 }
 
-function validateGap(parsed) {
+function validateGap(parsed, resumeText) {
   if (!parsed || typeof parsed !== 'object') return { ok: false, reason: 'not-object' };
   if (parsed.matchScore == null) return { ok: false, reason: 'no-score' };
   return {
@@ -132,6 +159,7 @@ function validateGap(parsed) {
         missingExperience: strArr(parsed.missingExperience, 10).map(tidy),
       }),
       summary: typeof parsed.summary === 'string' ? parsed.summary.trim().slice(0, 500) : '',
+      requirements: normalizeRequirements(parsed.requirements, resumeText || ''),
     },
   };
 }
