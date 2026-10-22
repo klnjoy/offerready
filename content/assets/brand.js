@@ -1,10 +1,10 @@
-/* OfferReady wordmark: recolor "Offer" white + "Ready" brand green — matching
+/* OfferReady wordmark: recolor "Offer" white + "Ready" brand blue — matching
    the standalone pricing/paywall pages. Applied in TWO places: the MkDocs header
    title AND the home-page hero <h1>. Runs on load and re-applies after Material's
    instant-navigation swaps. Safe/no-op if a target isn't found; preserves any
    heading permalink anchor. */
 (function () {
-  // Split the "OfferReady" wordmark into Offer + green "Ready", replacing ONLY
+  // Split the "OfferReady" wordmark into Offer + blue "Ready", replacing ONLY
   // the leading text node so we don't clobber a heading's permalink anchor
   // (MkDocs appends <a class="headerlink">¶</a> inside the hero <h1>).
   function splitWordmark(el) {
