@@ -32,7 +32,7 @@ theme:
     code: JetBrains Mono
   icon:
     repo: material/github
-  # primary/accent are "custom" so the OfferReady navy+green palette defined in
+  # primary/accent are "custom" so the OfferReady navy+blue palette defined in
   # assets/extra.css (--md-primary-fg-color / --md-accent-fg-color) drives the
   # header, links, and controls in both light and dark schemes.
   palette:

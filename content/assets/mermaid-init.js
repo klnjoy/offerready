@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
           primaryColor: "#eef3fa",
           primaryBorderColor: "#16305c",
           primaryTextColor: "#0c1c38",
-          lineColor: "#1a9e64",
+          lineColor: "#2f7bff",
           fontFamily: "Inter, system-ui, sans-serif",
         },
         flowchart: { curve: "basis", htmlLabels: true },

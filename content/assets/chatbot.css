@@ -1,14 +1,14 @@
 /* OfferReady Help — study library assistant (chatbot.js).
  * Everything is scoped under .orh / #orh-root, so the legacy #kb-* rules in
  * extra.css never apply. Sizes are in px because Material scales its root
- * font size. Brand: ink #0c1c38 / #16305c, signal #1a9e64, canvas #f4f6f9. */
+ * font size. Brand: ink #0c1c38 / #16305c, signal #2f7bff, canvas #f4f6f9. */
 
 .orh {
   --orh-ink: #0c1c38;
   --orh-ink-2: #16305c;
-  --orh-signal: #1a9e64;
-  --orh-signal-2: #158452;
-  --orh-signal-bright: #22c07a;
+  --orh-signal: #2f7bff;
+  --orh-signal-2: #1d5fd6;
+  --orh-signal-bright: #4da3ff;
   --orh-canvas: #f4f6f9;
   --orh-surface: #ffffff;
   --orh-surface-2: #f8fafc;
@@ -42,8 +42,8 @@
 }
 [data-md-color-scheme="slate"] .orh {
   --orh-ink-2: #1f4277;
-  --orh-signal: #3cc488;
-  --orh-signal-2: #2fb179;
+  --orh-signal: #3976c7;
+  --orh-signal-2: #2c67b4;
   --orh-canvas: #0b1322;
   --orh-surface: #111b2d;
   --orh-surface-2: #152137;
@@ -96,11 +96,11 @@
 .orh .orh-head { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 10px 12px 16px; background: #0c1c38; color: #fff; }
 .orh .orh-head-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; }
 .orh .orh-title-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.orh .orh-mark { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: rgba(34, 192, 122, 0.16); color: #22c07a; }
+.orh .orh-mark { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: rgba(30, 102, 196, 0.16); color: #4da3ff; }
 .orh .orh-title { color: #fff; font-size: 15.5px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
 .orh .orh-pill { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 3px 9px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.82); font-size: 12px; white-space: nowrap; }
 .orh .orh-pill-text { overflow: hidden; text-overflow: ellipsis; }
-.orh .orh-pill-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: #22c07a; box-shadow: 0 0 0 3px rgba(34, 192, 122, 0.2); }
+.orh .orh-pill-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: #4da3ff; box-shadow: 0 0 0 3px rgba(30, 102, 196, 0.2); }
 .orh .orh-tools { display: flex; align-items: center; gap: 2px; flex: none; }
 .orh .orh-tool { display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 30px; min-width: 30px; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: rgba(255, 255, 255, 0.86); font-size: 12.5px; font-weight: 600; cursor: pointer; }
 .orh .orh-tool:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); color: #fff; }
@@ -147,7 +147,7 @@
 
 .orh .orh-actions { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 2px; }
 .orh a.orh-action { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; padding: 7px 11px; background: #0c1c38; color: #fff; font-size: 13px; font-weight: 650; text-decoration: none; }
-.orh a.orh-action svg { color: #22c07a; }
+.orh a.orh-action svg { color: #4da3ff; }
 .orh a.orh-action:hover { background: #16305c; color: #fff; }
 [data-md-color-scheme="slate"] .orh a.orh-action { background: #1f4277; }
 .orh .orh-cites { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; border-top: 1px solid var(--orh-border); padding-top: 7px; font-size: 13px; }
@@ -204,9 +204,9 @@
 /* ---- header: context + topic focus ---- */
 .orh .orh-subhead { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
 .orh .orh-subhead .orh-pill { flex: 1 1 140px; min-width: 0; max-width: max-content; }
-.orh .orh-topic { position: relative; display: inline-flex; align-items: center; gap: 6px; flex: 0 1 auto; min-width: 0; height: 26px; padding: 0 4px 0 10px; border-radius: 999px; background: rgba(34, 192, 122, 0.14); border: 1px solid rgba(34, 192, 122, 0.4); color: #c9f2dd; font-size: 12px; cursor: pointer; }
-.orh .orh-topic:hover { background: rgba(34, 192, 122, 0.22); }
-.orh .orh-topic-label { font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; font-size: 10.5px; color: #8fe3b9; }
+.orh .orh-topic { position: relative; display: inline-flex; align-items: center; gap: 6px; flex: 0 1 auto; min-width: 0; height: 26px; padding: 0 4px 0 10px; border-radius: 999px; background: rgba(30, 102, 196, 0.14); border: 1px solid rgba(30, 102, 196, 0.4); color: #c8dbf3; font-size: 12px; cursor: pointer; }
+.orh .orh-topic:hover { background: rgba(30, 102, 196, 0.22); }
+.orh .orh-topic-label { font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; font-size: 10.5px; color: #8db3e5; }
 .orh .orh-topic select { appearance: none; -webkit-appearance: none; border: 0; background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23c9f2dd' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 6px center; color: #fff; font: inherit; font-weight: 600; padding: 0 22px 0 0; height: 24px; max-width: 190px; text-overflow: ellipsis; cursor: pointer; outline: none; }
 .orh .orh-topic select option, .orh .orh-topic select optgroup { color: #15233b; background: #fff; font-weight: 500; }
 .orh .orh-topic select optgroup { font-weight: 700; }
