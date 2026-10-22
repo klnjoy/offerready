@@ -42,12 +42,12 @@ these the role leans towards.
 
 1. **Add the job.** Paste the job link. You get what the role asks for, how
    your resume matches, and a plan up to your interview date.
-   [Add a job →](https://klnjoy.github.io/offerready-app/analyze)
+   [Add a job →](https://getofferready.app/analyze)
 2. **Run the architect trade-off drills.** You make a design call, then the
    interviewer pushes back with "why?", a new constraint and an incident.
    The AI Architect (multi-tenant platform), Data Architect (Snowflake
    Cortex) and Databricks lakehouse drills fit this role directly, and you can
-   write a drill for your exact job. [Open trade-off drills →](https://klnjoy.github.io/offerready-app/defend)
+   write a drill for your exact job. [Open trade-off drills →](https://getofferready.app/defend)
 3. **Practise the questions for that job.** Questions are written from the job
    and your gaps, and each answer is graded against a rubric.
 4. **Prepare your influence stories.** Write STAR stories for leadership,
@@ -63,5 +63,5 @@ these the role leans towards.
 - [Databricks](../../Technologies/databricks/index.md) and [Databricks Q&A](../../Personal-SourceCode/Databricks_Interview_QA.md), [Snowflake](../../Technologies/snowflake/index.md) and [Snowflake Cortex](../../Snowflake-Cortex/index.md)
 - [Staff and Principal Engineers](../staff-engineers/index.md): what changes at the next level
 
-[Start preparing free](https://klnjoy.github.io/offerready-app/analyze){ .md-button .md-button--primary }
+[Start preparing free](https://getofferready.app/analyze){ .md-button .md-button--primary }
 [Compare OfferReady](../../Compare/index.md){ .md-button }

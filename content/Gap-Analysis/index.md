@@ -15,8 +15,8 @@ search:
 This tool now lives in the OfferReady app, with your saved jobs and readiness.
 The study library you're on now holds the learning material.
 
-[Open Check my fit](https://klnjoy.github.io/offerready-app/fit){ .md-button .md-button--primary }
+[Open Check my fit](https://getofferready.app/fit){ .md-button .md-button--primary }
 
 <script>
-  location.replace("https://klnjoy.github.io/offerready-app/fit" + location.search + location.hash);
+  location.replace("https://getofferready.app/fit" + location.search + location.hash);
 </script>

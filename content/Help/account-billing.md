@@ -49,7 +49,7 @@ answers) uses 1 credit and a voice mock uses 3, however many follow-ups it has.
 So Free covers one text mock a month, and the 90-day pass covers up to 6 voice
 mocks or 20 text mocks. Your account page shows how many credits are left.
 
-The [pricing page](https://klnjoy.github.io/offerready-app/pricing) always has
+The [pricing page](https://getofferready.app/pricing) always has
 the current limits.
 
 ## Usage alerts

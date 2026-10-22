@@ -30,7 +30,7 @@
   const IS_HOSTED = Boolean(HOSTED) || !ON_LOCALHOST;
   const ASK_PATH = IS_HOSTED ? "/api/ask" : "/ask";
   const CAN_STREAM = IS_HOSTED && typeof ReadableStream !== "undefined" && typeof TextDecoder !== "undefined";
-  const APP_URL = (window.OFFERREADY_APP_URL || "https://klnjoy.github.io/offerready-app").replace(/\/$/, "");
+  const APP_URL = (window.OFFERREADY_APP_URL || "https://getofferready.app").replace(/\/$/, "");
   const SESSION_KEY = "offerready.studyhelp.v2"; // legacy, imported once
   const STORE_KEY = "offerready.studyhelp.chats.v3";
   const UI_KEY = "offerready.studyhelp.ui.v1"; // open/wide: per tab

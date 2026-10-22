@@ -25,7 +25,7 @@ explain the cost and governance side of your design.
 
 1. **Add the job.** You see which of its tools and skills your resume already
    shows and which you need to back up with an example.
-   [Add a job →](https://klnjoy.github.io/offerready-app/analyze)
+   [Add a job →](https://getofferready.app/analyze)
 2. **Drill the trade-offs.** Choose CDC or batch, then hold that choice while
    the interviewer asks about replays, schema changes and cost. There are
    drills for a Databricks lakehouse, a batch and streaming pipeline, and dbt.
@@ -40,5 +40,5 @@ explain the cost and governance side of your design.
 - [SQL Q&A](../../Personal-SourceCode/SQL_Interview_QA.md) and [Data Engineering Q&A](../../Personal-SourceCode/DataEngineering_Interview_QA.md)
 - [Snowflake](../../Technologies/snowflake/index.md), [Databricks](../../Technologies/databricks/index.md) ([Q&A](../../Personal-SourceCode/Databricks_Interview_QA.md)), [dbt](../../Technologies/dbt/index.md)
 
-[Start preparing free](https://klnjoy.github.io/offerready-app/analyze){ .md-button .md-button--primary }
+[Start preparing free](https://getofferready.app/analyze){ .md-button .md-button--primary }
 [Compare OfferReady](../../Compare/index.md){ .md-button }

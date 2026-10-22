@@ -25,14 +25,14 @@ whether you can defend every choice when the interviewer pushes back.
 
 1. **Add the job.** Paste the job link. You get the skills it asks for, how
    your resume matches, and a plan up to your interview date.
-   [Add a job →](https://klnjoy.github.io/offerready-app/analyze)
+   [Add a job →](https://getofferready.app/analyze)
 2. **Practise the questions for that job.** Questions are written from the job
    and from the gaps in your resume. Each answer is graded against a rubric,
    with a quote from your answer as evidence for every score.
 3. **Defend your trade-offs.** In trade-off drills the interviewer challenges your design:
    "why not fine-tune?", "what happens when retrieval returns nothing?".
 4. **Build answers from your own experience.** The
-   [AI Interview Coach](https://klnjoy.github.io/offerready-app/coach) builds
+   [AI Interview Coach](https://getofferready.app/coach) builds
    an answer from your resume and stories, labels where each point came from,
    and flags numbers you haven't shown it.
 5. **Run a mock.** A voice or text mock interview, with follow-ups on what you actually said.
@@ -43,5 +43,5 @@ whether you can defend every choice when the interviewer pushes back.
 - [GenAI interview Q&A](../../Personal-SourceCode/GenAI_Interview_QA.md) and [Agents Q&A](../../Personal-SourceCode/Agents_Interview_QA.md)
 - [RAG](../../GenAI-Topics/rag/index.md), [Observability and evaluation](../../GenAI-Topics/observability/index.md)
 
-[Start preparing free](https://klnjoy.github.io/offerready-app/analyze){ .md-button .md-button--primary }
+[Start preparing free](https://getofferready.app/analyze){ .md-button .md-button--primary }
 [Compare OfferReady](../../Compare/index.md){ .md-button }

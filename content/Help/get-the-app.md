@@ -9,7 +9,7 @@ OfferReady installs straight from the website, with no app store. It gets its
 own icon and window, opens on your job, and keeps your work on the device.
 It's built from the same code as the website, so both are always up to date.
 
-You can also open [Get the app](https://klnjoy.github.io/offerready-app/app)
+You can also open [Get the app](https://getofferready.app/app)
 in OfferReady, or choose **Get the app** in the top bar. On a computer or
 Android phone, that button installs it in one click.
 

@@ -15,8 +15,8 @@ search:
 This tool now lives in the OfferReady app, with your saved jobs and readiness.
 The study library you're on now holds the learning material.
 
-[Open Defend your decisions](https://klnjoy.github.io/offerready-app/defend){ .md-button .md-button--primary }
+[Open Defend your decisions](https://getofferready.app/defend){ .md-button .md-button--primary }
 
 <script>
-  location.replace("https://klnjoy.github.io/offerready-app/defend" + location.search + location.hash);
+  location.replace("https://getofferready.app/defend" + location.search + location.hash);
 </script>

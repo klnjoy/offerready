@@ -261,9 +261,9 @@ the trade-off for every choice and how you'd verify at scale. See the
 
 Reading is not practice. Run the questions out loud against a real job.
 
-[:material-briefcase-plus: Add a job](https://klnjoy.github.io/offerready-app/analyze){ .md-button .md-button--primary target=_blank rel=noopener }
-[:material-microphone: Voice mock](https://klnjoy.github.io/offerready-app/interview/voice){ .md-button target=_blank rel=noopener }
-[:material-dumbbell: Practice questions](https://klnjoy.github.io/offerready-app/practice){ .md-button target=_blank rel=noopener }
+[:material-briefcase-plus: Add a job](https://getofferready.app/analyze){ .md-button .md-button--primary target=_blank rel=noopener }
+[:material-microphone: Voice mock](https://getofferready.app/interview/voice){ .md-button target=_blank rel=noopener }
+[:material-dumbbell: Practice questions](https://getofferready.app/practice){ .md-button target=_blank rel=noopener }
 
 - **Add a job** reads the job description and builds a plan around your gaps.
 - **Voice mock** runs a spoken interview. Turn on **Deep follow-ups** to get the

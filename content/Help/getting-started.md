@@ -9,9 +9,9 @@ Your first job, start to finish, in about five minutes.
 
 ## 1. Open the app and sign in
 
-Go to the [OfferReady app](https://klnjoy.github.io/offerready-app/). You can
-look around, watch the [one-minute demo](https://klnjoy.github.io/offerready-app/demo)
-and [try a sample question](https://klnjoy.github.io/offerready-app/try)
+Go to the [OfferReady app](https://getofferready.app/). You can
+look around, watch the [one-minute demo](https://getofferready.app/demo)
+and [try a sample question](https://getofferready.app/try)
 without an account.
 
 To save jobs and use the AI features, choose **Sign in** in the top right:

@@ -24,7 +24,7 @@ GPU capacity, an LLM gateway and shared evaluation.
 ## How to prepare with OfferReady
 
 1. **Add the job.** The job page shows what that team runs and where your
-   resume is thin. [Add a job →](https://klnjoy.github.io/offerready-app/analyze)
+   resume is thin. [Add a job →](https://getofferready.app/analyze)
 2. **Trade-off and incident drills.** Defend a rollout plan, then handle the
    follow-up: "the canary is fine, but p99 doubled for one tenant".
 3. **AI Interview Coach.** Turn a real incident from your resume into a
@@ -38,5 +38,5 @@ GPU capacity, an LLM gateway and shared evaluation.
 - [DevOps Q&A](../../Personal-SourceCode/DevOps_Interview_QA.md) and [AWS Q&A](../../Personal-SourceCode/AWS_Interview_QA.md)
 - [Kubernetes and containers](../../GenAI-Topics/kubernetes/index.md), [LLMOps](../../GenAI-Topics/llmops/index.md), [Reliability](../../GenAI-Topics/reliability/index.md)
 
-[Start preparing free](https://klnjoy.github.io/offerready-app/analyze){ .md-button .md-button--primary }
+[Start preparing free](https://getofferready.app/analyze){ .md-button .md-button--primary }
 [Compare OfferReady](../../Compare/index.md){ .md-button }

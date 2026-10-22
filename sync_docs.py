@@ -794,7 +794,7 @@ def write_index(md_catalog, modules) -> None:
     # Study-library landing. The interactive product (analyze a job, check fit,
     # questions, defend, readiness) lives in the OfferReady app; this site is
     # the learning material behind it.
-    app = "https://klnjoy.github.io/offerready-app/"
+    app = "https://getofferready.app/"
     lines = [
         '<div class="or-hero" markdown>',
         "",
@@ -897,7 +897,7 @@ def _retired_homepage_sections_unused():
 # Nav (rewrites mkdocs.yml between markers), with section icons
 # ---------------------------------------------------------------------------
 
-APP_URL = "https://klnjoy.github.io/offerready-app/"
+APP_URL = "https://getofferready.app/"
 
 
 # Help Center pages, in reading order (files under content/Help/).
