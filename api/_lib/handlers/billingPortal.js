@@ -17,7 +17,7 @@
 
 'use strict';
 
-const { setCors, send } = require('../http');
+const { setCors, send, getDefaultOrigin } = require('../http');
 const { getUser } = require('../supabaseAuth');
 const { createPortalSession } = require('../stripe');
 const billing = require('../billing');
@@ -44,7 +44,7 @@ async function handler(req, res) {
   const state = await billing.getBillingState(user.id);
   if (!state.customerId) { send(res, 404, { error: 'No billing account yet.' }); return; }
 
-  const origin = (req.headers && req.headers.origin) || (process.env.ALLOWED_ORIGIN || 'https://klnjoy.github.io');
+  const origin = (req.headers && req.headers.origin) || getDefaultOrigin();
   try {
     const session = await createPortalSession({ customerId: state.customerId, returnUrl: returnUrl(origin) });
     if (!session || !session.url) { send(res, 502, { error: 'Could not open billing. Please try again.' }); return; }

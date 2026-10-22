@@ -23,7 +23,7 @@
 
 'use strict';
 
-const { setCors, send } = require('../_lib/http');
+const { setCors, send, getDefaultOrigin } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
 const { createCheckoutSession } = require('../_lib/stripe');
 const billing = require('../_lib/billing');
@@ -100,7 +100,7 @@ async function handler(req, res) {
   const user = await getUser(req);
   if (!user) { send(res, 401, { error: 'Sign in to upgrade.' }); return; }
 
-  const origin = (req.headers && req.headers.origin) || (process.env.ALLOWED_ORIGIN || 'https://klnjoy.github.io');
+  const origin = (req.headers && req.headers.origin) || getDefaultOrigin();
   const urls = returnUrls(origin, req.body);
 
   // Reuse the Stripe customer we already know (best-effort; never blocks checkout).

@@ -108,11 +108,14 @@ How to answer:
 // ---------------------------------------------------------------- helpers ---
 
 function setCors(res, origin) {
-  // Normalize trailing slashes so a stray slash in ALLOWED_ORIGIN can't break
-  // the exact-match CORS check the browser requires.
-  const allowed = (process.env.ALLOWED_ORIGIN || 'https://klnjoy.github.io').replace(/\/+$/, '');
+  // ALLOWED_ORIGIN is a comma-separated exact-origin allowlist. Keep this
+  // local helper's narrower method list while matching shared CORS behavior.
+  const allowed = [...new Set((process.env.ALLOWED_ORIGIN || 'https://klnjoy.github.io')
+    .split(',')
+    .map(value => value.trim().replace(/\/+$/, ''))
+    .filter(Boolean))];
   const reqOrigin = (origin || '').replace(/\/+$/, '');
-  const value = reqOrigin && reqOrigin === allowed ? origin : allowed;
+  const value = reqOrigin && allowed.includes(reqOrigin) ? origin : allowed[0] || 'https://klnjoy.github.io';
   res.setHeader('Access-Control-Allow-Origin', value);
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
