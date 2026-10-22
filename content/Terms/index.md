@@ -12,9 +12,9 @@ icon: material/file-document-outline
 
 ## 1. Who you're agreeing with
 
-These terms are an agreement between you and **OfferReady** ("we", "us"). By
-creating an account, buying a plan or using the OfferReady app or study library
-(the "Service"), you agree to these terms and to the
+These terms are an agreement between you and **OfferReady LLC** ("we", "us").
+By creating an account, buying a plan or using the OfferReady app or study
+library (the "Service"), you agree to these terms and to the
 [Privacy Policy](../Privacy/index.md). If you don't agree, please don't use the
 Service.
 
