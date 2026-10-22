@@ -17,14 +17,14 @@
 
 'use strict';
 
-const { setCors, send, getDefaultOrigin } = require('../http');
+const { setCors, send, getDefaultOrigin, appBasePath } = require('../http');
 const { getUser } = require('../supabaseAuth');
 const { createPortalSession } = require('../stripe');
 const billing = require('../billing');
 
 function returnUrl(origin) {
   const base = String(origin || '').replace(/\/+$/, '');
-  const appPath = (process.env.APP_BASE_PATH || '/offerready-app').replace(/\/+$/, '');
+  const appPath = appBasePath(base);
   return base + appPath + '/account';
 }
 

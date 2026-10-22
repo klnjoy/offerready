@@ -662,6 +662,20 @@ test('portal: creates a session for the mirrored customer with return_url /accou
   } finally { s.restore(); }
 });
 
+test('portal: from the custom domain, return_url is the app at the root', async () => {
+  process.env.STRIPE_SECRET_KEY = 'sk_test_x';
+  const handler = require('../_lib/handlers/billingPortal');
+  const s = stub({ subscriptions: [{ user_id: USER, stripe_customer_id: 'cus_123', stripe_subscription_id: 'sub_1', status: 'active' }] });
+  try {
+    const r = req('POST', {}, 'good-token');
+    r.headers.origin = 'https://getofferready.app';
+    const res = fakeRes();
+    await handler(r, res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(s.w.stripeCalls[0].params.get('return_url'), 'https://getofferready.app/account');
+  } finally { s.restore(); }
+});
+
 test('portal: a sprint-only buyer uses the customer remembered on the pass; Stripe error -> 502', async () => {
   process.env.STRIPE_SECRET_KEY = 'sk_test_x';
   const handler = require('../_lib/handlers/billingPortal');
