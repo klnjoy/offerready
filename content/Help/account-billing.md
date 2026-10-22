@@ -6,7 +6,9 @@ description: The free plan, one-time passes, every limit, usage alerts, paying, 
 # Plans and billing
 
 Start free. When an interview is booked, a one-time pass covers your search.
-There's no subscription and nothing to cancel.
+The passes currently shown are one-time purchases and do not renew. If you
+have an older subscription, manage or cancel it from **Account → Manage
+billing**.
 
 ## Plans
 
@@ -101,8 +103,9 @@ Refunds are covered in the [terms](../Terms/index.md#7-refunds).
 ## Common questions
 
 ??? question "Is there a subscription?"
-    No. Passes are one-time payments with a fixed length. Nothing renews and
-    there's nothing to cancel.
+    The passes currently offered are one-time payments with a fixed length and
+    do not renew. If you have an older subscription, use **Account → Manage
+    billing** to review or cancel it.
 
 ??? question "What happens when my pass ends?"
     You go back to the free plan. Your jobs, practice, stories and debriefs

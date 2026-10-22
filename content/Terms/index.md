@@ -4,24 +4,22 @@ icon: material/file-document-outline
 
 # Terms of Service
 
-*Last updated:* October 2026
+*Last updated:* October 22, 2026
 
 !!! warning "Plain-English terms, not legal advice"
-    These terms are written in plain English. They are not legal advice. Items
-    marked **[Owner to confirm: …]** must be decided by the business owner (and
-    ideally reviewed by a lawyer) before launch.
+    These terms are written in plain English and are not legal advice. They do
+    not limit consumer rights that cannot legally be limited.
 
 ## 1. Who you're agreeing with
 
-These terms are an agreement between you and **[Owner to confirm: legal name
-of the business entity and its registered address]** ("OfferReady", "we",
-"us"). By creating an account, buying a plan or using the OfferReady app or
-study library (the "Service"), you agree to these terms and to the
+These terms are an agreement between you and **OfferReady** ("we", "us"). By
+creating an account, buying a plan or using the OfferReady app or study library
+(the "Service"), you agree to these terms and to the
 [Privacy Policy](../Privacy/index.md). If you don't agree, please don't use the
 Service.
 
-You must be at least **[Owner to confirm: minimum age, e.g. 16]** and able to
-enter into this agreement.
+You must be able to enter into this agreement. The Service is not directed at
+children under 16.
 
 ## 2. What OfferReady is
 
@@ -56,41 +54,31 @@ terms.
 
 - **Free.** Core features with monthly limits, described on the
   [Pricing](../assets/pricing.html) page and in the app.
-- **Pro (monthly or annual).** A subscription that **renews automatically** at
-  the end of each billing period (monthly or yearly) at the price shown at
-  checkout, until you cancel.
-- **Interview Sprint pass.** A **one-time payment** for 30 days of Pro. It
-  **does not renew** and you won't be charged again unless you buy another
-  pass.
-- Payments are processed by **Stripe**. Prices are shown at checkout, including
-  any taxes that apply. **[Owner to confirm: currency, and whether prices
-  include sales tax or VAT]**
-- **Fair use.** Pro includes generous monthly limits on AI features to keep the
-  service fast and affordable for everyone. Current limits are shown on the
-  Account page.
-- **Price changes.** If we change the price of a subscription, we'll tell you
-  in advance and the new price will apply from your next renewal. You can cancel
-  before then.
+- **Passes and credit packs.** These are one-time purchases. A pass ends on its
+  stated expiry date and does not renew. Credit packs follow the expiry terms
+  shown on the Pricing page.
+- **Subscriptions, if offered.** The checkout page will show the price, billing
+  period and renewal terms before you confirm. A subscription renews until you
+  cancel it using the method shown at checkout or in your billing account.
+- Payments are processed by **Stripe**. The checkout page shows the currency,
+  total and any applicable taxes before you pay.
+- Current plan allowances and limits are shown on the Pricing and Account pages.
 
 ## 6. Cancelling
 
-- Cancel any time from **Account → Manage billing**, which opens the Stripe
-  billing portal. You can also switch between monthly and annual, update your
-  card and download invoices there.
-- When you cancel, Pro stays active until the end of the period you've paid
-  for, then your account returns to Free. Your saved data stays unless you
-  delete it.
-- A Sprint pass simply ends after its 30 days; there is nothing to cancel.
+- If you have a subscription, cancel it using **Account → Manage billing** or
+  the cancellation method shown at checkout. Access normally continues through
+  the paid period, as described in your billing details.
+- A pass ends on its stated expiry date; there is nothing to cancel. Your saved
+  data stays unless you delete it.
 
 ## 7. Refunds
 
-**[Owner to confirm: refund policy.]** For example: whether first-time
-subscribers can get a refund within a set number of days
-(**[Owner to confirm: refund window]**), whether partial periods are refunded
-after cancelling, and how Sprint pass refunds work. Until this section is
-confirmed, contact us through the [Contact](../Contact/index.md) page about any
-billing problem and we'll look at it case by case. Nothing in these terms
-limits refund rights you have under the law where you live.
+If you believe you were charged in error or have another billing problem,
+contact **support@offerready.io**. We review refund requests individually.
+Cancelling a subscription or pass does not by itself submit a refund request.
+Nothing in these terms limits refund rights you have under the law where you
+live.
 
 ## 8. Acceptable use
 
@@ -123,7 +111,7 @@ will tell you first and give you a chance to fix the problem.
   data → **Download my data**).
 - **Deletion.** You can delete your saved jobs, synced data and the data on
   your device at any time (Account → Your data → **Delete my data**). To delete
-  your whole account, email **[support email]** or use the
+  your whole account, email **support@offerready.io** or use the
   [Contact](../Contact/index.md) page.
 
 ## 10. Our content
@@ -142,9 +130,8 @@ working.
 ## 12. Availability and changes
 
 We work to keep OfferReady available and to improve it, which means features
-may change. If we remove a paid feature that is a main reason people pay for
-Pro, we'll tell subscribers in advance. **[Owner to confirm: whether a
-pro-rated refund is offered when a paid feature is removed]**
+may change. If a change materially affects a paid feature, we will provide any
+notice or remedy required by applicable law.
 
 ## 13. Disclaimers
 
@@ -156,22 +143,22 @@ its content (including AI output) is accurate or complete.
 
 To the extent the law allows, OfferReady is not liable for indirect,
 incidental, or consequential losses (such as a missed job opportunity), and
-our total liability for any claim is limited to the amount you paid us in the
-**[Owner to confirm: period, e.g. 12 months]** before the claim. Nothing in
-these terms limits liability that can't be limited by law.
+our total liability for any claim is limited to the amount you paid us for the
+Service, to the extent that limit is allowed by law. Nothing in these terms
+limits liability that can't be limited by law.
 
 ## 15. Ending this agreement
 
 You can stop using the Service and delete your data at any time. We may end
 or suspend your access if you seriously or repeatedly break these terms. If we
-close your account without a breach on your part, we'll refund any unused
-prepaid time. **[Owner to confirm]**
+close your account without a breach on your part, we will provide any refund
+required by applicable law.
 
 ## 16. Governing law
 
-These terms are governed by the laws of **[Owner to confirm: governing law and
-jurisdiction]**. If you live in a country whose consumer laws give you more
-protection, those protections still apply.
+Nothing in these terms takes away consumer protections or rights that apply
+under the laws where you live. Any dispute will be handled by a court with
+jurisdiction under applicable law.
 
 ## 17. Changes to these terms
 
@@ -181,7 +168,7 @@ Continuing to use the Service after that means you accept the new terms.
 
 ## 18. Contact
 
-Questions about these terms: email **[support email]** or see the
+Questions about these terms: email **support@offerready.io** or see the
 [Contact](../Contact/index.md) page.
 
 ## Related

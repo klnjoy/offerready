@@ -4,21 +4,19 @@ icon: material/shield-account
 
 # Privacy Policy
 
-*Last updated:* October 2026
+*Last updated:* October 22, 2026
 
 !!! note "Plain-English summary, not legal advice"
     This page describes, in plain English, what OfferReady collects, why, and
-    what you can do about it. It is not legal advice. Items marked
-    **[Owner to confirm: …]** still need a decision from the business owner
-    before launch.
+    what you can do about it. It is not legal advice.
 
 ## Who we are
 
 OfferReady is an interview-preparation service: the OfferReady app
 (`klnjoy.github.io/offerready-app`), this study library, and the OfferReady API
-that powers the app. In this policy "OfferReady", "we" and "us" means
-**[Owner to confirm: legal name of the business entity and its registered
-address]**, which is responsible for your data.
+that powers the app. In this policy "OfferReady", "we" and "us" refer to the
+service operator. Contact us at **support@offerready.io** with privacy
+questions or requests.
 
 Questions or requests about your data: see [Contact](../Contact/index.md).
 
@@ -47,8 +45,8 @@ Questions or requests about your data: see [Contact](../Contact/index.md).
 | **Usage counts**: how many times you used each metered feature this month | When you use a metered feature (for example an analysis or a voice mock) | To apply plan limits fairly | Supabase |
 | **Synced preparation data**: your plan progress, interview dates, STAR stories, interview debriefs, offers you're comparing, practice history and scores, help-chat conversations, and which job you're working on | While you are signed in. Sign out on a device to stop it syncing; after **Delete my data**, sync stays paused on that device until you turn it back on. | So the same preparation shows up on every device you sign in on | Supabase, until you delete it |
 | **Your resume text** | Only if you turn on **resume sync** (off by default) | So you don't have to add your resume again on another device | Supabase, until you turn sync off and delete it, or delete your data. With resume sync off, your resume stays in your browser only. |
-| **Billing details**: your Stripe customer id, plan, renewal and expiry dates | When you buy a pass or a mock interview pack | To give you the features you paid for | Supabase (status only) and Stripe (payment details) |
-| **Error reports**: the page path (no query string), the error message and technical trace, your browser's user-agent, the app version, and your account id if you're signed in | When something breaks in the app | To find and fix bugs | Supabase. Before sending, the app removes query strings and anything that looks like an email address or a token, and sends at most 10 reports per visit. **[Owner to confirm: retention period for error reports, e.g. 90 days]** |
+| **Billing details**: your Stripe customer id, plan, and any expiry or renewal dates | When you buy a pass, a mock interview pack, or a subscription if one is offered | To provide the features you paid for | Supabase (status only) and Stripe (payment details) |
+| **Error reports**: the page path (no query string), the error message and technical trace, your browser's user-agent, the app version, and your account id if you're signed in | When something breaks in the app | To find and fix bugs | Supabase. Before sending, the app removes query strings and anything that looks like an email address or a token, and sends at most 10 reports per visit. We keep reports only as long as needed to investigate and improve the service, subject to legal requirements. |
 | **Product usage events**: which app pages you open and when you finish key steps (adding a job, practising a question, finishing a drill or mock, starting checkout), with a random browser id, a random visit id, the app version and your account id if you're signed in. Never the content: no job descriptions, resumes, answers or emails. | While you use the app, unless your browser sends "Do Not Track" | To see which steps people use and where they get stuck, so we fix the right things | Supabase, first-party only. At most 200 events per visit. |
 | **Feedback you send**: your message, the optional 1-5 rating, the page you sent it from, the app version, your browser's user-agent, your account id if you're signed in, and whether we may email you about it | When you use **Send feedback** | To improve OfferReady and, if you ticked the box, to reply | Supabase |
 | **Shared interview questions** (opt-in per debrief): the company, role family, level, round type, the month, the questions you logged and how each went, and the round outcome | Only when you tick **Share the questions from this round anonymously** on a debrief | To show which questions each company asks. Other users only ever see questions for a company once at least 3 different people have shared for it, and never who shared them | Supabase, linked to your account so you can un-share or delete it. Never shared: your name, interviewers, notes or the exact date. |
@@ -76,11 +74,13 @@ help-chat answers and the voice interviewer's follow-ups.
   result (for example a saved job keeps its description and analysis), and it
   does not write the content of your resume, answers or transcripts to its
   logs.
-- OpenAI processes the text under its API terms. Under those terms, data sent
-  through the API is not used to train OpenAI's models by default, and OpenAI
-  may keep it for a limited period for abuse monitoring.
-  **[Owner to confirm: OpenAI data-processing agreement in place, and whether
-  zero data retention applies]**
+- OpenAI processes the text under its API terms. OpenAI says API data is not
+  used to train or improve its models by default. Standard abuse-monitoring
+  logs may include prompts and responses and are generally retained for up to
+  30 days; retention controls and exceptions depend on the account and feature
+  used. OfferReady does not advertise Zero Data Retention. See
+  [OpenAI's API data controls](https://developers.openai.com/api/docs/guides/your-data)
+  for details.
 - AI output can be wrong. See the [Disclaimer](../Disclaimer/index.md).
 
 ## Voice mock interviews
@@ -141,12 +141,13 @@ from our server, not from you.
 ## How long we keep data
 
 - Account data and saved preparation data: until you delete it or ask us to
-  delete your account.
-- Billing records: as long as the law requires us to keep them, even after you
-  delete your account. **[Owner to confirm: billing record retention period]**
-- Error reports: **[Owner to confirm: retention period, e.g. 90 days]**
-- Usage events: **[Owner to confirm: retention period, e.g. 12 months]**
-- Feedback: until it has been dealt with, or until you ask us to delete it.
+  delete your account, subject to backups and legal requirements.
+- Billing records: for as long as needed to provide billing support and meet
+  legal, tax and accounting obligations, even after account deletion.
+- Error reports and usage events: for as long as needed to operate, secure and
+  improve the service, then deleted or de-identified where practical.
+- Feedback: until it has been dealt with, or until you ask us to delete it,
+  subject to legal requirements.
 - Shared interview questions and interview results: until you un-share them,
   delete them from the Account page, or delete your account.
 
@@ -160,23 +161,22 @@ from our server, not from you.
   preparation data and synced resume, and everything OfferReady keeps in that
   browser. It does not delete your sign-in account or billing records.
 - **Delete your account.** To delete your account entirely, email
-  **[support email]** from the address you signed up with, or see the
-  [Contact](../Contact/index.md) page. **[Owner to confirm: response time for
-  account deletion requests, e.g. within 30 days]**
-- **Cancel billing.** Use **Manage billing** on the Account page. Deleting your
-  data does not cancel a subscription.
+  **support@offerready.io** from the address you signed up with, or see the
+  [Contact](../Contact/index.md) page. We may ask for information to verify
+  your request and will process it as required by applicable law.
+- **Cancel billing.** If you have an active subscription, cancel it through
+  **Manage billing** on the Account page. Deleting your data does not cancel
+  an active subscription.
 - Depending on where you live, you may have further rights (for example to
   access, correct or object to processing of your data, or to complain to a
-  data-protection authority). Contact us to use them.
-  **[Owner to confirm: applicable privacy laws (e.g. GDPR/UK GDPR, CCPA),
-  international transfer safeguards, and whether a representative or DPO is
-  required]**
+  data-protection authority). Contact us to use them. Where required, we will
+  provide information about international data transfers and applicable
+  safeguards in response to a request.
 
 ## Children
 
 OfferReady is meant for adults preparing for job interviews. It is not
 directed at children under 16, and we do not knowingly collect their data.
-**[Owner to confirm: minimum age]**
 
 ## Security
 
