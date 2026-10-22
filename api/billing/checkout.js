@@ -23,7 +23,7 @@
 
 'use strict';
 
-const { setCors, send, getDefaultOrigin } = require('../_lib/http');
+const { setCors, send, getDefaultOrigin, appBasePath } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
 const { createCheckoutSession } = require('../_lib/stripe');
 const billing = require('../_lib/billing');
@@ -45,14 +45,14 @@ function parseBody(body) {
 }
 
 // Where Stripe sends the user back. The product app
-// (https://klnjoy.github.io/offerready-app/) sends { app: true } so users land
+// (https://getofferready.app, or klnjoy.github.io/offerready-app) sends { app: true } so users land
 // back in the app; anything else keeps the original study-site pages.
 function returnUrls(origin, body) {
   const base = String(origin || '').replace(/\/+$/, '');
   let b = body;
   if (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = null; } }
   if (b && b.app === true) {
-    const appPath = (process.env.APP_BASE_PATH || '/offerready-app').replace(/\/+$/, '');
+    const appPath = appBasePath(base);
     return {
       successUrl: base + appPath + '/jobs?upgraded=1',
       cancelUrl: base + appPath + '/pricing?canceled=1',

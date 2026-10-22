@@ -18,6 +18,18 @@ function getDefaultOrigin() {
   return getAllowedOrigins()[0] || 'https://klnjoy.github.io';
 }
 
+/**
+ * Path the product app is mounted at on `origin`, for Stripe return URLs.
+ * GitHub Pages serves it under /offerready-app (or APP_BASE_PATH); a custom
+ * domain such as https://getofferready.app serves it at the root.
+ */
+function appBasePath(origin) {
+  let host = '';
+  try { host = new URL(String(origin || '')).hostname; } catch (e) { host = ''; }
+  if (host.endsWith('github.io')) return (process.env.APP_BASE_PATH || '/offerready-app').replace(/\/+$/, '');
+  return '';
+}
+
 function setCors(res, origin) {
   const allowed = getAllowedOrigins();
   const reqOrigin = (origin || '').replace(/\/+$/, '');
@@ -33,4 +45,4 @@ function send(res, status, payload) {
   res.end(JSON.stringify(payload));
 }
 
-module.exports = { setCors, send, getDefaultOrigin };
+module.exports = { setCors, send, getDefaultOrigin, appBasePath };
