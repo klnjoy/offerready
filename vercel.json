@@ -28,6 +28,10 @@
       "destination": "/api/ai?op=tailor"
     },
     {
+      "source": "/api/premium/appkit",
+      "destination": "/api/ai?op=appkit"
+    },
+    {
       "source": "/api/cron/daily-question",
       "destination": "/api/me/plan?op=daily-push"
     }

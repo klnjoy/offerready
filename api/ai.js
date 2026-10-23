@@ -292,10 +292,13 @@ async function handleImportJobUrl(req, res, body) {
 }
 
 module.exports = async function handler(req, res) {
-  // /api/premium/tailor is rewritten here (vercel.json) to stay within the
-  // serverless function limit; it is a separate handler.
-  const op = (req && req.query && req.query.op) || ((typeof (req && req.url) === 'string' && /[?&]op=tailor(&|$)/.test(req.url)) ? 'tailor' : '');
+  // /api/premium/tailor and /api/premium/appkit are rewritten here
+  // (vercel.json) to stay within the serverless function limit; each is a
+  // separate handler.
+  const urlOp = typeof (req && req.url) === 'string' ? (/[?&]op=(tailor|appkit)(&|$)/.exec(req.url) || [])[1] || '' : '';
+  const op = (req && req.query && req.query.op) || urlOp;
   if (op === 'tailor') return require('./_lib/handlers/tailor')(req, res);
+  if (op === 'appkit') return require('./_lib/handlers/appKit')(req, res);
   setCors(res, req.headers && req.headers.origin);
   if (req.method === 'OPTIONS') { res.status(204).end(); return; }
   if (req.method !== 'POST') { send(res, 405, { error: 'Method not allowed.' }); return; }
