@@ -1,0 +1,42 @@
+# API unit tests (node --test, no dependencies, no network): every OpenAI,
+# Supabase and Stripe call is stubbed inside the tests, so no secrets are
+# needed and nothing real is called.
+name: API tests
+
+on:
+  pull_request:
+    paths:
+      - "api/**"
+      - "package.json"
+      - "vercel.json"
+      - ".github/workflows/api-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+      - "package.json"
+      - "vercel.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Run API tests
+        run: npm test
