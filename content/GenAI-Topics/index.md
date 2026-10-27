@@ -42,6 +42,7 @@ flowchart LR
     Want the business view? [AI economics in 2026](ai-economics/index.md):
     who gets paid, why inference is the bill that grows, and the interview
     questions it brings.
+    Ready to build? [7 AI projects that get you interviews](../Projects/portfolio/index.md).
 
 ## 1. Foundations
 
