@@ -15,24 +15,44 @@ platform or forward-deployed roles who need to explain *why* a design works, not
 just which library to import. If you'd rather build something first, start with
 the [Setup Guides](../Setup-Guides/index.md) and come back here for the theory.
 
-## Suggested learning path
+## Learn → Build → Ship → Grow
+
+Every topic an AI engineer is expected to know, in the order to learn it, and
+the page here that covers it. Learn one topic a week and build something small
+with each one.
 
 ```mermaid
 flowchart LR
-    F[1. Foundations<br/>LLMs, prompts, context, embeddings] --> R[2. Retrieval<br/>RAG, vector DB, tuning, graphs]
-    R --> O[3. Orchestration & agents<br/>LangChain, LangGraph, MCP, A2A]
-    O --> P[4. Production<br/>eval, LLMOps, cost, reliability, infra]
-    P --> T[5. Landscape<br/>trends]
+    L[Learn<br/>how LLMs work, prompts,<br/>context, models] --> B[Build<br/>embeddings, vector DBs, RAG,<br/>agents and frameworks]
+    B --> S[Ship<br/>MCP, safety, evals,<br/>observability, cost, ops]
+    S --> G[Grow<br/>projects, interviews,<br/>economics, trends]
 ```
 
-1. **Foundations** give you the vocabulary every other page uses.
-2. **Retrieval** is the most common system-design prompt.
-3. **Orchestration and agents** is where staff-level questions about control,
-   safety and tool design come in.
-4. **Production** is what separates senior answers from demos: evaluation, cost,
-   failure handling and deployment.
-5. **Trends** keeps your answers current. Read it last and re-read it before
-   interviews.
+| Stage | Topic | Read |
+|---|---|---|
+| **Learn** | How LLMs work: tokens, attention, sampling, temperature | [LLM Fundamentals](llm-fundamentals/index.md) |
+| | Prompt engineering: few-shot, chain of thought, structured output | [Prompt Engineering](prompt-engineering/index.md) |
+| | Context engineering: memory, retrieval, what goes in the window | [Context Engineering](context-engineering/index.md) |
+| | Models and model choice: open vs closed, cost, latency, quality | [LLM Fundamentals](llm-fundamentals/index.md) · [AI economics](ai-economics/index.md) |
+| **Build** | Embeddings and embedding models | [Embedding Models](embeddings/index.md) |
+| | Vector databases: indexing, chunking, similarity search | [Vector DB](vector-db/index.md) |
+| | RAG: retrieval, re-ranking, hybrid search, RAG vs fine-tuning | [RAG](rag/index.md) · [Retrieval Tuning](retrieval-tuning/index.md) |
+| | Knowledge graphs and GraphRAG | [Graph DB](graph-db/index.md) |
+| | Agents: tool calling, planning, reflection, memory, multi-agent | [Agent Engineering](agent-engineering/index.md) · [Building Agents](agent-principles/index.md) · [7 diagrams](agent-diagrams/index.md) |
+| | Frameworks and platforms | [LangChain](langchain/index.md) · [LangGraph](langgraph/index.md) · [Bedrock](bedrock/index.md) · [AgentCore](agentcore/index.md) |
+| **Ship** | MCP and agent-to-agent protocols | [MCP](mcp/index.md) · [A2A](a2a/index.md) |
+| | Safety: prompt injection, guardrails, output validation, access | [AI Security](../AI-Security/index.md) · [Guardrails](agent-diagrams/index.md#5-guardrails-and-permissions) |
+| | Evals and observability: tracing, regression tests, LLM judges | [Observability & Eval](observability/index.md) |
+| | Production: rate limits, caching, queues, scaling, incidents | [LLMOps](llmops/index.md) · [Reliability](reliability/index.md) · [Kubernetes](kubernetes/index.md) · [DevOps for AI](devops-ai/index.md) |
+| | Cost control | [Cost Optimization](cost-optimization/index.md) |
+| **Grow** | Portfolio projects | [7 AI projects](../Projects/portfolio/index.md) |
+| | Courses, if you need the basics first | [Free courses, in order](free-courses/index.md) |
+| | The business side | [AI economics](ai-economics/index.md) · [Trends & market](trends/index.md) |
+| | Interview preparation | [OfferReady app](https://getofferready.app/analyze): plan, practice and mock interviews for your job |
+
+Not covered here yet: multimodal AI (vision, speech, image and video
+generation) and AI coding tools. Their official docs are the best place to
+start.
 
 !!! tip "Short on time? Start with the pictures"
     [Agentic AI in 7 diagrams](agent-diagrams/index.md): harness, context,
