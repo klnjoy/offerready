@@ -137,6 +137,18 @@ async function dailyPush(req, res) {
 }
 
 
+/** Country (ISO code) and region code from Vercel's geo headers; '' when absent. */
+function geoFromHeaders(h) {
+  const clean = (v, re) => { let x = String(v || '').trim(); try { x = decodeURIComponent(x); } catch (_e) { /* keep raw */ } return re.test(x) ? x : ''; };
+  return {
+    country: clean(h['x-vercel-ip-country'], /^[A-Z]{2}$/).toUpperCase(),
+    region: clean(h['x-vercel-ip-country-region'], /^[A-Za-z0-9]{1,3}$/).toUpperCase(),
+  };
+}
+
+/** Plan counts and visitor locations (admin_plans_geo(), migration 0022). */
+async function adminPlansGeo(since) { return adminRpc('admin_plans_geo', since); }
+
 /** All admin dashboard numbers for a period, from the admin_metrics() SQL function. */
 async function adminMetrics(since) { return adminRpc('admin_metrics', since); }
 
@@ -176,6 +188,15 @@ module.exports = async function handler(req, res) {
     await savePush(req, res, u); return;
   }
 
+  // Coarse location for first-party analytics: country and region from the
+  // headers Vercel adds to every request. No IP address or city is returned
+  // or stored, and no sign-in is needed.
+  if (op === 'geo' && req.method === 'GET') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    send(res, 200, geoFromHeaders(req.headers || {}));
+    return;
+  }
+
   if (req.method !== 'GET') { send(res, 405, { error: 'Method not allowed.' }); return; }
 
   const user = await getUser(req);
@@ -204,12 +225,14 @@ module.exports = async function handler(req, res) {
     if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see metrics.' }); return; }
     const days = Math.max(1, Math.min(365, Math.round(Number(req.query.days) || 30)));
     const since = new Date(Date.now() - days * 86400000).toISOString();
-    const [m, costs] = await Promise.all([
+    const [m, costs, extra] = await Promise.all([
       adminMetrics(since).catch((err) => { console.error('[me/plan metrics]', err && err.message); return null; }),
       aiCost.summary(days).catch(() => null),
+      // Optional until migration 0022 is applied: the rest of the page still loads.
+      adminPlansGeo(since).catch(() => null),
     ]);
     if (!m) { send(res, 503, { error: 'Metrics aren’t set up yet. Apply migration 0019_admin_metrics.sql in Supabase.', setup: true, costs }); return; }
-    send(res, 200, { days, since, metrics: m, costs });
+    send(res, 200, { days, since, metrics: m, costs, plans: extra ? extra.plans || [] : null, geo: extra ? extra.geo || [] : null });
     return;
   }
 
