@@ -1,6 +1,6 @@
 ---
 title: Compare OfferReady
-description: How OfferReady compares with general chatbots, live interview assistants and human mock interview platforms such as interviewing.io, and when each one makes sense.
+description: How OfferReady compares with general chatbots, live interview assistants and human mock interview platforms, and when each one makes sense.
 icon: material/scale-balance
 ---
 
@@ -26,9 +26,8 @@ their *live* mode, which is what sets them apart.
 
 ## Live interview assistants
 
-Some tools, such as Final Round AI and CoPilot Interview, advertise real-time
-help during live interviews, including modes designed not to show up on screen
-share. OfferReady deliberately doesn't do this:
+Some tools advertise real-time help during live interviews, including
+modes designed not to show up on screen share. OfferReady deliberately doesn't do this:
 
 - Many employers forbid outside help in interviews, and candidates who are
   caught are removed from the process.
@@ -41,9 +40,9 @@ We give you the same speed while you *practise*: instant answer outlines
 from your own experience, likely follow-ups, and examples from your resume.
 You then rehearse until you can say the answer yourself.
 
-## Human mock interviews (interviewing.io and similar)
+## Human mock interviews
 
-Platforms such as interviewing.io give you something OfferReady can't: a
+Human mock interview platforms give you something OfferReady can't: a
 mock interview with a senior, staff or principal engineer from a large tech
 company, with written feedback, a recording, a live coding environment and,
 for strong performers, possible referrals. They also offer an AI interviewer
@@ -58,7 +57,7 @@ for coding and system design.
 | **Live coding environment** | Yes | Not yet: coding concepts are in the question bank |
 | **After the real interview** | No | Interview notes, then a debrief that feeds your plan |
 | **Roles** | Strongest for software engineering | AI, data, platform, forward-deployed and architect roles |
-| **Price** | Listed from about $179 a session; company-specific sessions cost more | Free to start; one-time passes from $19 |
+| **Price** | Often over $100 a session | Free to start; one-time passes from $19 |
 
 **Use both.** Prepare every day with OfferReady, then book one or two human
 mocks when your readiness says you're close, so the expensive sessions test
@@ -70,7 +69,7 @@ If you need one concept explained, a chatbot is great. OfferReady is for when
 you have a real interview coming up and want a plan, honest feedback and
 proof that you're improving.
 
-*Competitor descriptions come from their public websites and published
-reviews as of October 2026 and may change.*
+*Descriptions of other kinds of tools are general, based on public
+information as of October 2026, and may change.*
 
 [Start preparing free](https://getofferready.app/analyze){ .md-button .md-button--primary }
