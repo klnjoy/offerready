@@ -34,6 +34,12 @@ flowchart LR
 5. **Trends** keeps your answers current. Read it last and re-read it before
    interviews.
 
+!!! tip "Short on time? Start with the pictures"
+    [Agentic AI in 7 diagrams](agent-diagrams/index.md): harness, context,
+    tools, memory, guardrails, evals and tracing, each as one flow diagram
+    and five steps. New to AI? [Free courses, in order](free-courses/index.md)
+    lists the few you need, stage by stage.
+
 ## 1. Foundations
 
 <div class="grid cards" markdown>
