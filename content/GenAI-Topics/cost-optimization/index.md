@@ -139,3 +139,7 @@ flowchart TB
     request-size caps, per-tenant cost dashboards with alerts, and graceful
     degradation (cheaper model or queued processing) instead of a hard failure
     when a soft limit is reached.
+
+---
+
+**See also:** [AI economics in 2026](../ai-economics/index.md): who gets paid along the chain from chips to apps, and how interviewers ask about it.

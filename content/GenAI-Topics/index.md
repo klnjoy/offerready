@@ -39,6 +39,9 @@ flowchart LR
     tools, memory, guardrails, evals and tracing, each as one flow diagram
     and five steps. New to AI? [Free courses, in order](free-courses/index.md)
     lists the few you need, stage by stage.
+    Want the business view? [AI economics in 2026](ai-economics/index.md):
+    who gets paid, why inference is the bill that grows, and the interview
+    questions it brings.
 
 ## 1. Foundations
 
