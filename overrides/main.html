@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block extrahead %}
+{{ super() }}
+<script>
+  /* The study library lives at getofferready.app/library/. Old github.io
+     links forward there (same page, same anchor). Runs only on github.io, so
+     the copy served through getofferready.app is never redirected. */
+  (function () {
+    if (location.hostname !== "klnjoy.github.io") return;
+    var rest = location.pathname.replace(/^\/offerready\/?/, "");
+    location.replace("https://getofferready.app/library/" + rest + location.search + location.hash);
+  })();
+</script>
+{% endblock %}
