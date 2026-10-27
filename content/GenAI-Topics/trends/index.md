@@ -108,7 +108,7 @@ bolted on (source: medium.com):
 ## 5. The job market read
 
 From current interview guides
-(industry sources: interviewcoder.co, tekrecruiter.com, lockedinai.com):
+(public interview guides and job postings, 2026):
 
 - Senior **agentic AI** roles are paying strongly (reports cite ~$140–300k for
   senior engineers) and the bar rose fast.
