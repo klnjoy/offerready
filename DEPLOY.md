@@ -31,6 +31,7 @@ GitHub Pages (static site)  ──HTTPS──►  Vercel Function /api/analyze-j
 | `SUPABASE_URL` / `SUPABASE_ANON_KEY` | For accounts | Sign-in verification (job analysis now requires a free account) |
 | `SUPABASE_SERVICE_ROLE_KEY` | For plans + billing | Server-only; entitlements, usage, subscription mirror, AI cost log |
 | `ADMIN_EMAILS` | Optional | Comma-separated emails that can open the in-app **AI costs** view (More › AI costs). Needs migration `0017_ai_costs.sql`. |
+| `METRICS_EXCLUDE_EMAILS` | Optional | More comma-separated emails (testers) to leave out of the admin numbers. Everyone in `ADMIN_EMAILS` is always left out. Needs migration `0023_admin_exclude_team.sql`. |
 | `STRIPE_SECRET_KEY` | For billing | `sk_test_…` / `sk_live_…` (server-only) |
 | `STRIPE_WEBHOOK_SECRET` | For billing | `whsec_…` of the `/api/billing/webhook` endpoint |
 | `STRIPE_PASS_JOB_PRICE_ID` | For passes | ONE-TIME price → Job pass (45 days, 1 job), suggested $19 |

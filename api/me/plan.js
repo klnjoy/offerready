@@ -146,16 +146,39 @@ function geoFromHeaders(h) {
   };
 }
 
-/** Plan counts and visitor locations (admin_plans_geo(), migration 0022). */
-async function adminPlansGeo(since) { return adminRpc('admin_plans_geo', since); }
+/**
+ * Team accounts left out of the admin numbers so the dashboard shows real
+ * users only: everyone in ADMIN_EMAILS plus METRICS_EXCLUDE_EMAILS
+ * (comma-separated, lower-cased). Admin access is unchanged.
+ */
+function teamEmails() {
+  const list = (v) => String(v || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return Array.from(new Set(list(process.env.ADMIN_EMAILS).concat(list(process.env.METRICS_EXCLUDE_EMAILS))));
+}
 
-/** All admin dashboard numbers for a period, from the admin_metrics() SQL function. */
-async function adminMetrics(since) { return adminRpc('admin_metrics', since); }
+/**
+ * Calls the team-excluding function from migration 0023 (<fn>2); until that
+ * migration is applied, falls back to the original function so the
+ * dashboard keeps working (team activity then still counts).
+ */
+async function adminRpcExcludingTeam(fn, since) {
+  try { return await adminRpc(fn + '2', since, { p_exclude: teamEmails() }); }
+  catch (err) {
+    console.warn('[me/plan] ' + fn + '2 unavailable, using ' + fn + ':', err && err.message);
+    return adminRpc(fn, since);
+  }
+}
 
-/** Who the people are (accounts + anonymous visitors), from admin_people() (migration 0021). */
-async function adminPeople(since) { return adminRpc('admin_people', since); }
+/** Plan counts and visitor locations (admin_plans_geo(), migrations 0022/0023). */
+async function adminPlansGeo(since) { return adminRpcExcludingTeam('admin_plans_geo', since); }
 
-async function adminRpc(fn, since) {
+/** All admin dashboard numbers for a period (admin_metrics(), migrations 0019/0023). */
+async function adminMetrics(since) { return adminRpcExcludingTeam('admin_metrics', since); }
+
+/** Who the people are (accounts + anonymous visitors), admin_people() (migrations 0021/0023). */
+async function adminPeople(since) { return adminRpcExcludingTeam('admin_people', since); }
+
+async function adminRpc(fn, since, extra) {
   const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error('Supabase not configured');
@@ -165,7 +188,7 @@ async function adminRpc(fn, since) {
     const resp = await fetch(url + '/rest/v1/rpc/' + fn, {
       method: 'POST', signal: controller.signal,
       headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_since: since }),
+      body: JSON.stringify(Object.assign({ p_since: since }, extra || {})),
     });
     if (!resp.ok) throw new Error(fn + ' ' + resp.status);
     return await resp.json();
@@ -246,3 +269,5 @@ module.exports = async function handler(req, res) {
     send(res, 200, { plan: 'free', plan_known: false, usage: {}, usage_known: false, limits: LIMITS, period_start: periodStart(), billing: { options: billing.availableOptions(), portal: false, pro_source: null, pro_expires_at: null, pro_interval: null, cancel_at_period_end: false, pass_kind: null, pass_kinds: [] }, pass: null, credits: { voice_mock: 0 }, mock_costs: require('../_lib/passes').MOCK_COSTS });
   }
 };
+
+module.exports._teamEmails = teamEmails;
