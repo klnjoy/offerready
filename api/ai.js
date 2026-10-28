@@ -8,6 +8,7 @@
  *   analyze_jd         -> structured JD analysis (auth required, free accounts included)
  *   gap_analysis       -> resume-vs-JD match score + gaps (auth required)
  *   generate_questions -> categorized interview questions from a JD (auth required)
+ *   topic_questions    -> 5 fresh AI questions + answers on one bank topic (auth required)
  *   import_job_url     -> fetch a job posting from a link (sign-in optional, no LLM;
  *                         20/min per IP; see api/_lib/jobImport.js for the SSRF guards)
  *
@@ -47,6 +48,7 @@ const {
 } = require('./_lib/readiness');
 const { importJobUrl } = require('./_lib/jobImport');
 const COPILOT = require('./_lib/copilot');
+const TOPIC_Q = require('./_lib/topicQuestions');
 const aiCost = require('./_lib/aiCost');
 
 const DEFAULT_MODEL = 'gpt-4o-mini';
@@ -346,6 +348,14 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  if (action === 'topic_questions') {
+    const user = await getUser(req);
+    if (!user) { send(res, 401, { error: 'Sign in to get AI questions. It\'s free.', signin: true }); return; }
+    if (!rateLimit.enforce(req, res, { scope: 'ai', userId: user.id })) return;
+    await handleTopicQuestions(body, res, user);
+    return;
+  }
+
   if (action === 'copilot') {
     const user = await getUser(req);
     if (!user) { send(res, 401, { error: 'Sign in to use the AI Interview Coach.' }); return; }
@@ -389,4 +399,19 @@ async function handleCopilot(body, res, user) {
   if (!v.ok) { send(res, 502, { error: 'The AI Interview Coach could not build an answer this time. Please try again.' }); return; }
   await recordUse(user.id, 'ai_grading');
   send(res, 200, { ok: true, action: 'copilot', result: v.result });
+}
+
+/**
+ * topic_questions — 5 fresh questions with model answers on one bank topic
+ * (api/_lib/topicQuestions.js). Not metered, like generate_questions; the
+ * cost is logged per call as feature "topic_questions" (admin AI costs).
+ */
+async function handleTopicQuestions(body, res, user) {
+  const r = TOPIC_Q.readInput(body);
+  if (!r.ok) { send(res, 400, { error: r.error }); return; }
+  const out = await callOpenAI(TOPIC_Q.SYSTEM_PROMPT, TOPIC_Q.buildUserMessage(r.input), 1800, 0.7, 'topic_questions', user && user.id);
+  if (!out.ok) { send(res, out.status, { error: out.error }); return; }
+  const v = TOPIC_Q.validate(safeParseModelJson(out.content), r.input);
+  if (!v.ok) { send(res, 502, { error: 'Couldn’t write questions this time. Please try again.' }); return; }
+  send(res, 200, { ok: true, action: 'topic_questions', topic: r.input.topic, questions: v.questions });
 }
