@@ -16,7 +16,7 @@ OfferReady is an interview-preparation service: the OfferReady app
 (`getofferready.app`), this study library, and the OfferReady API
 that powers the app. In this policy "OfferReady", "we" and "us" refer to
 **OfferReady**, the service operator. Contact us at
-**learncreativly@gmail.com** with privacy questions or requests.
+**[hello@getofferready.app](mailto:hello@getofferready.app)** with privacy questions or requests.
 
 Questions or requests about your data: see [Contact](../Contact/index.md).
 
@@ -161,7 +161,7 @@ from our server, not from you.
   preparation data and synced resume, and everything OfferReady keeps in that
   browser. It does not delete your sign-in account or billing records.
 - **Delete your account.** To delete your account entirely, email
-  **learncreativly@gmail.com** from the address you signed up with, or see the
+  **[hello@getofferready.app](mailto:hello@getofferready.app)** from the address you signed up with, or see the
   [Contact](../Contact/index.md) page. We may ask for information to verify
   your request and will process it as required by applicable law.
 - **Cancel billing.** If you have an active subscription, cancel it through

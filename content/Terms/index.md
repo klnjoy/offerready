@@ -75,7 +75,7 @@ terms.
 ## 7. Refunds
 
 If you believe you were charged in error or have another billing problem,
-contact **learncreativly@gmail.com**. We review refund requests individually.
+contact **[hello@getofferready.app](mailto:hello@getofferready.app)**. We review refund requests individually.
 Cancelling a subscription or pass does not by itself submit a refund request.
 Nothing in these terms limits refund rights you have under the law where you
 live.
@@ -111,7 +111,7 @@ will tell you first and give you a chance to fix the problem.
   data → **Download my data**).
 - **Deletion.** You can delete your saved jobs, synced data and the data on
   your device at any time (Account → Your data → **Delete my data**). To delete
-  your whole account, email **learncreativly@gmail.com** or use the
+  your whole account, email **[hello@getofferready.app](mailto:hello@getofferready.app)** or use the
   [Contact](../Contact/index.md) page.
 
 ## 10. Our content
@@ -168,7 +168,7 @@ Continuing to use the Service after that means you accept the new terms.
 
 ## 18. Contact
 
-Questions about these terms: email **learncreativly@gmail.com** or see the
+Questions about these terms: email **[hello@getofferready.app](mailto:hello@getofferready.app)** or see the
 [Contact](../Contact/index.md) page.
 
 ## Related
