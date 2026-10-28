@@ -4,7 +4,7 @@ icon: material/shield-account
 
 # Privacy Policy
 
-*Last updated:* October 22, 2026
+*Last updated:* October 27, 2026
 
 !!! note "Plain-English summary, not legal advice"
     This page describes, in plain English, what OfferReady collects, why, and
@@ -15,7 +15,7 @@ icon: material/shield-account
 OfferReady is an interview-preparation service: the OfferReady app
 (`getofferready.app`), this study library, and the OfferReady API
 that powers the app. In this policy "OfferReady", "we" and "us" refer to
-**OfferReady LLC**, the service operator. Contact us at
+**OfferReady**, the service operator. Contact us at
 **learncreativly@gmail.com** with privacy questions or requests.
 
 Questions or requests about your data: see [Contact](../Contact/index.md).
