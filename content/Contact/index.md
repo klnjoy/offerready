@@ -6,7 +6,7 @@ icon: material/email-outline
 
 Questions, feedback, bug reports or partnership ideas are all welcome.
 
-- **Account, billing and privacy requests:** email **learncreativly@gmail.com**. Use
+- **Account, billing and privacy requests:** email **[hello@getofferready.app](mailto:hello@getofferready.app)**. Use
   email for anything personal: billing questions, refunds, deleting your
   account, or a data request.
 - **Bugs, content errors and ideas:** open an issue in the project's GitHub
@@ -35,7 +35,7 @@ Questions, feedback, bug reports or partnership ideas are all welcome.
     ---
 
     Billing, refunds, cancelling, deleting your account or a privacy request.
-    Email **learncreativly@gmail.com** from the address you signed up with.
+    Email **[hello@getofferready.app](mailto:hello@getofferready.app)** from the address you signed up with.
 
 -   :material-lifebuoy: __Help with the app__
 
@@ -68,7 +68,7 @@ Questions, feedback, bug reports or partnership ideas are all welcome.
 !!! warning "Keep private details out of public issues"
     GitHub issues are public. Never include API keys, passwords, personal data
     or confidential material from an employer or interview. For billing, account
-    deletion, or a privacy or data request, email **learncreativly@gmail.com** instead.
+    deletion, or a privacy or data request, email **[hello@getofferready.app](mailto:hello@getofferready.app)** instead.
 
 We aim to reply within a few business days.
 
