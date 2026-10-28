@@ -222,6 +222,16 @@ nav:
           - Hackathon Build Challenges: Personal-SourceCode/Lab_Hackathon_Builds.md
   - Interview Prep:
       - Personal-SourceCode/Interview_Guide_Overview.md
+      - Company guides:
+          - Companies/index.md
+          - Amazon: Companies/amazon.md
+          - Google: Companies/google.md
+          - Meta: Companies/meta.md
+          - Microsoft: Companies/microsoft.md
+          - OpenAI: Companies/openai.md
+          - Anthropic: Companies/anthropic.md
+          - Databricks: Companies/databricks.md
+          - Snowflake: Companies/snowflake.md
       - Role guides:
           - AI Engineer: Personal-SourceCode/Path_AI_Engineer.md
           - Forward Deployed Engineer: Personal-SourceCode/Path_FDE.md

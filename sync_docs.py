@@ -150,6 +150,13 @@ NAV_LABEL_OVERRIDES: dict[str, tuple[int, str]] = {
 }
 
 
+# Company interview guides under content/Companies/<slug>.md, in nav order.
+COMPANY_GUIDES = [
+    ("amazon", "Amazon"), ("google", "Google"), ("meta", "Meta"), ("microsoft", "Microsoft"),
+    ("openai", "OpenAI"), ("anthropic", "Anthropic"), ("databricks", "Databricks"), ("snowflake", "Snowflake"),
+]
+
+
 def categorize(title: str, rel_dest: str) -> str:
     hay = f"{title} {rel_dest}".lower()
     for name, _icon, keywords in CATEGORIES:
@@ -1134,6 +1141,15 @@ def write_nav(md_catalog, modules) -> None:
         # Overview page as the bare section index (icon + landing).
         if index_base in available:
             nav.append(f"      - {available[index_base]}")
+        # Company guides (hand-authored in content/Companies): how each company
+        # says it interviews, from its own published guidance, plus practice.
+        company_dir = CONTENT_DIR / "Companies"
+        if (company_dir / "index.md").exists():
+            nav.append("      - Company guides:")
+            nav.append("          - Companies/index.md")
+            for slug, label in COMPANY_GUIDES:
+                if (company_dir / f"{slug}.md").exists():
+                    nav.append(f"          - {label}: Companies/{slug}.md")
 
         for group_label, pages in groups:
             present = [(b, lbl) for b, lbl in pages if b in available]
