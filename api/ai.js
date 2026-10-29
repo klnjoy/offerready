@@ -5,7 +5,8 @@
  * grow features without adding a serverless function per feature (Vercel Hobby
  * caps at 12). Dispatch on body.action:
  *
- *   analyze_jd         -> structured JD analysis (auth required, free accounts included)
+ *   analyze_jd         -> structured JD analysis (free accounts; before sign-in, a free
+ *                         preview: a few per network per day, migration 0026)
  *   gap_analysis       -> resume-vs-JD match score + gaps (auth required)
  *   generate_questions -> categorized interview questions from a JD (auth required)
  *   topic_questions    -> 5 fresh AI questions + answers on one bank topic (auth required)
@@ -114,7 +115,39 @@ function attachResources(analysis) {
   return Object.assign({}, analysis, { preparationPlan: plan, offerReadyResources: resources });
 }
 
-async function handleAnalyzeJd(body, res, user) {
+/**
+ * May this visitor (not signed in) have a free analysis now? Counts it if so.
+ * The network is a one-way hash of the IP address with a server secret; the
+ * address is never stored. Limits: ANON_PREVIEWS_PER_NETWORK (default 2) and
+ * ANON_PREVIEWS_PER_DAY in total (default 300). False on any doubt.
+ */
+async function takeAnonPreview(req) {
+  try {
+    const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const ip = rateLimit.clientIp(req);
+    if (!url || !key || !ip || ip === 'unknown') return false;
+    const salt = process.env.ANON_PREVIEW_SALT || key;
+    const netKey = require('crypto').createHash('sha256').update(salt + ':' + ip).digest('hex');
+    const perKey = Math.max(0, Math.round(Number(process.env.ANON_PREVIEWS_PER_NETWORK) || 2));
+    const perDay = Math.max(0, Math.round(Number(process.env.ANON_PREVIEWS_PER_DAY) || 300));
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    try {
+      const resp = await fetch(url + '/rest/v1/rpc/take_anon_preview', {
+        method: 'POST', signal: controller.signal,
+        headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_key: netKey, p_per_key: perKey, p_per_day: perDay }),
+      });
+      if (!resp.ok) return false;
+      return (await resp.json()) === true;
+    } finally { clearTimeout(timer); }
+  } catch (_) {
+    return false;
+  }
+}
+
+async function handleAnalyzeJd(body, res, user, extra) {
   const v = validateInput(body);
   if (!v.ok) { send(res, v.status, { error: v.error }); return; }
   // Monthly quota (the handler only reaches here with a user). Fails open on
@@ -145,7 +178,7 @@ async function handleAnalyzeJd(body, res, user) {
   }
   const analysis = attachResources(normalizeAnalysis(parsed, Boolean(resume)));
   if (user) await recordUse(user.id, 'analyses'); // only after a successful analysis
-  send(res, 200, { ok: true, action: 'analyze_jd', analysis });
+  send(res, 200, Object.assign({ ok: true, action: 'analyze_jd', analysis }, extra && extra.preview ? { preview: true } : {}));
 }
 
 async function handleGapAnalysis(body, res, user) {
@@ -333,7 +366,17 @@ module.exports = async function handler(req, res) {
   // The others require identity so results can be attributed/persisted.
   if (action === 'analyze_jd') {
     const user = bearerToken(req) ? await getUser(req) : null;
-    if (!user) { send(res, 401, { error: 'Sign in to analyze a job. It\'s free.', signin: true }); return; }
+    if (!user) {
+      // A free preview before sign-in: a few per network per day and a daily
+      // total (migration 0026). Anything unsure (no migration, no address,
+      // storage down) falls back to asking for sign-in, so the cost stays bounded.
+      if (!rateLimit.enforce(req, res, { scope: 'ai', perIp: 6 })) return;
+      if (!(await takeAnonPreview(req))) {
+        send(res, 401, { error: 'Sign in to analyze a job. It\'s free.', signin: true }); return;
+      }
+      await handleAnalyzeJd(body, res, null, { preview: true });
+      return;
+    }
     if (!rateLimit.enforce(req, res, { scope: 'ai', userId: user.id })) return;
     await handleAnalyzeJd(body, res, user);
     return;
