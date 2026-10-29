@@ -126,6 +126,50 @@ Can you explain each without notes?
     validate the route, and trace it so misroutes are visible. Keep specialist
     boundaries non-overlapping so the choice is unambiguous.
 
+??? question "Walk me through the layers of an AI agent, from request to result."
+    **Input** cleans, validates and extracts what arrives (text, files, events)
+    and marks outside content as data, not instructions. **Reasoning** (an LLM
+    plus a pattern such as ReAct, plan-and-execute or a router) decides the next
+    step. **Memory** supplies context beyond one call: the conversation, retrieved
+    facts, the user profile. **Tools** reach live data and other systems.
+    **Action** does the chosen step: reply, write, notify, hand off. **Output**
+    shapes the result for a person or a program (schema, citations). **Feedback**
+    checks it (code checks, a judge, the user) and either retries, re-plans or
+    stores what was learned. The loop between reasoning and tools, plus feedback,
+    is what makes it an agent rather than a single model call.
+
+??? question "What belongs in the input layer of an agent, and why does it matter?"
+    Format conversion (OCR, speech to text, payload parsing), validation (types,
+    size limits, required fields, with clear errors instead of guessing), privacy
+    (mask data you shouldn't keep) and extraction of the intent and IDs. It is also
+    the first prompt-injection defence: text from documents, web pages, emails or
+    tools is labelled as data and never followed as instructions. Bad input
+    handling shows up later as wrong tool calls and invented answers.
+
+??? question "How do you design the action layer so an agent can't do something harmful by mistake?"
+    Order actions by risk: reply, draft for approval, write inside the agent's own
+    system, change something that matters elsewhere. The riskier the action, the
+    more it needs: narrow permissions, policy checks in code, idempotency so a
+    retry can't repeat it, an audit log, a way to undo, and human approval above a
+    threshold. Ask a clarifying question instead of acting when the request is
+    ambiguous and a wrong guess is costly.
+
+??? question "What does the feedback layer do in an agent, and how do you keep it from looping forever?"
+    It checks each result and turns the outcome into improvement: code checks
+    (schema valid, query ran, totals add up), an LLM judge for qualities code can't
+    test, and user signals such as corrections or thumbs down. A failed check
+    triggers a retry with a changed approach or a re-plan; lasting preferences go
+    to memory. Cap retries at two or three, then return a clear message or hand
+    off to a person. Offline, collect failures into an eval set and fix the cause.
+
+??? question "Design a basic agent from scratch. What do you decide, in what order?"
+    1) The task in one sentence and what "done" means. 2) Inputs and their limits.
+    3) The reasoning pattern plus step, time and cost limits. 4) The minimum memory
+    needed. 5) The smallest tool set, reads separate from writes, and which actions
+    need approval. 6) The output format for each consumer and the "I don't know"
+    path. 7) Feedback before launch: code checks, a retry cap, an eval set of real
+    tasks and tracing for every step.
+
 ---
 
 ## Memory & context

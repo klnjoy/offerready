@@ -201,6 +201,8 @@ TOPICS: list[tuple[str, str, str, str]] = [
      "Stateful, multi-step agent workflows as graphs."),
     ("mcp", "MCP", ":material-connection:",
      "Model Context Protocol: connect LLMs to tools and data."),
+    ("agent-architecture", "Agent Architecture", ":material-layers-triple:",
+     "The seven layers of an agent, from input to feedback, step by step."),
     ("agent-engineering", "Agent Engineering", ":material-robot-industrial:",
      "Agent patterns, tool design, multi-agent, reliability."),
     ("agent-principles", "Building Agents — Deep Dive", ":material-robot-industrial:",
