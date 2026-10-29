@@ -228,6 +228,46 @@ Can you explain each without notes?
 
 ---
 
+## SDLC vs the AI lifecycle
+
+??? question "How is building an AI-powered application different from building traditional software?"
+    Traditional software is deterministic: logic is written in code and tests
+    give pass or fail (the SDLC). An AI-powered app keeps that lifecycle for the
+    UI, APIs and data, and adds a second loop for the AI part: define a quality
+    bar, build an eval set, iterate on prompts, retrieval and model choice, gate
+    releases on evals as well as tests, and monitor quality, cost and drift in
+    production, feeding failures back into the eval set.
+
+??? question "What is the AI development lifecycle (AIDLC), and how does it differ from the SDLC?"
+    Frame the problem and metric, collect and label data, prepare it, choose or
+    train a model, evaluate on held-out data, deploy, monitor and retrain.
+    Behaviour comes from data rather than code, results are probabilistic and
+    judged by metrics, and the system can degrade with no code change because
+    data drifts, so monitoring and retraining are built in. (Some vendors use
+    "AI-DLC" for using AI agents to build ordinary software; ask which is meant.)
+
+??? question "In an LLM feature, what plays the role that unit tests play in normal software?"
+    An eval set: real inputs with expected outcomes or scoring rules, run on
+    every change to prompts, retrieval, tools or model. Code checks where
+    possible (valid JSON, correct numbers, the cited source exists), LLM judges
+    for what code can't check, and periodic human review to keep the judges
+    honest. Unit tests still cover the code around it.
+
+??? question "What do you version in an AI-powered app that you wouldn't in a traditional one?"
+    Prompts and system instructions, model name and version, sampling settings,
+    retrieval settings and the index build, tool definitions, guardrail rules,
+    and the eval set with its results. Each changes behaviour, so each must be
+    reproducible and reversible.
+
+??? question "Your LLM feature passed every test at launch, but a month later answers got worse with no code change. What happened?"
+    Likely the provider updated a model behind an unpinned alias, the documents
+    behind retrieval changed or went stale, or user questions shifted. Check
+    traces and quality metrics over time, pin the model version, re-run the
+    eval set to find the regression, add the new failures to it, fix and
+    re-evaluate before shipping, and alert on quality metrics, not just errors.
+
+---
+
 ## Cost, latency, production
 
 ??? question "Your LLM feature is too slow and too expensive. Levers?"

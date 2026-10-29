@@ -160,6 +160,7 @@ nav:
           - Bedrock: GenAI-Topics/bedrock/index.md
           - "Observability & Eval": GenAI-Topics/observability/index.md
           - "Reliability & Distributed Systems": GenAI-Topics/reliability/index.md
+          - SDLC vs AI Lifecycle: GenAI-Topics/ai-lifecycle/index.md
           - LLMOps / Deployment: GenAI-Topics/llmops/index.md
           - "Kubernetes & Containers": GenAI-Topics/kubernetes/index.md
           - DevOps for AI: GenAI-Topics/devops-ai/index.md

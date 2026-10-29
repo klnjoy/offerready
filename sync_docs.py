@@ -217,6 +217,8 @@ TOPICS: list[tuple[str, str, str, str]] = [
      "Tracing, LLM-as-judge, metrics, guardrails, monitoring."),
     ("reliability", "Reliability & Distributed Systems", ":material-shield-refresh:",
      "Retries, circuit breakers, idempotency, and AI failure modes."),
+    ("ai-lifecycle", "SDLC vs AI Lifecycle", ":material-sync:",
+     "Traditional, AI and AI-powered apps: how each is built, tested and run."),
     ("llmops", "LLMOps / Deployment", ":material-cog-sync:",
      "Serving, scaling, caching, cost, and lifecycle."),
     ("kubernetes", "Kubernetes & Containers", ":material-kubernetes:",
