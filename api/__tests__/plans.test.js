@@ -446,7 +446,7 @@ test('jobs POST: Pro with many jobs -> saved', async () => {
   } finally { s.restore(); }
 });
 
-test('ai analyze_jd: signed-in Free over quota -> 403 analyses; anonymous -> 401 sign-in (not metered)', async () => {
+test('ai analyze_jd: signed-in Free over quota -> 403 analyses; anonymous without a free preview -> 401 sign-in (not metered)', async () => {
   process.env.OPENAI_API_KEY = 'k';
   const handler = require('../ai');
   const body = { action: 'analyze_jd', jobDescription: 'We are hiring a senior data engineer to build pipelines with Snowflake and dbt. '.repeat(3) };
@@ -463,9 +463,12 @@ test('ai analyze_jd: signed-in Free over quota -> 403 analyses; anonymous -> 401
   try {
     const res = fakeRes();
     await handler(req('POST', body), res);
-    assert.equal(res.statusCode, 401, 'anonymous runs must sign in first');
+    // Anonymous: only the free-preview check (migration 0026) may be asked;
+    // when it doesn't say yes, sign-in is required and nothing is metered or spent.
+    assert.equal(res.statusCode, 401, 'anonymous runs must sign in first when no free preview is left');
     assert.equal(res.json().signin, true);
-    assert.ok(!s.calls.some((c) => c.url.includes('supabase')));
+    assert.ok(!s.calls.some((c) => c.url.includes('supabase') && !c.url.includes('/rpc/take_anon_preview')), 'no usage metering for anonymous runs');
+    assert.ok(!s.calls.some((c) => c.url.includes('openai')));
   } finally { s.restore(); }
 });
 
