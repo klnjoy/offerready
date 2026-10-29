@@ -38,7 +38,7 @@ flowchart LR
 | | Vector databases: indexing, chunking, similarity search | [Vector DB](vector-db/index.md) |
 | | RAG: retrieval, re-ranking, hybrid search, RAG vs fine-tuning | [RAG](rag/index.md) · [Retrieval Tuning](retrieval-tuning/index.md) |
 | | Knowledge graphs and GraphRAG | [Graph DB](graph-db/index.md) |
-| | Agents: tool calling, planning, reflection, memory, multi-agent | [Agent Engineering](agent-engineering/index.md) · [Building Agents](agent-principles/index.md) · [7 diagrams](agent-diagrams/index.md) |
+| | Agents: tool calling, planning, reflection, memory, multi-agent | [Agent architecture](agent-architecture/index.md) · [Agent Engineering](agent-engineering/index.md) · [Building Agents](agent-principles/index.md) · [7 diagrams](agent-diagrams/index.md) |
 | | Frameworks and platforms | [LangChain](langchain/index.md) · [LangGraph](langgraph/index.md) · [Bedrock](bedrock/index.md) · [AgentCore](agentcore/index.md) |
 | **Ship** | MCP and agent-to-agent protocols | [MCP](mcp/index.md) · [A2A](a2a/index.md) |
 | | Safety: prompt injection, guardrails, output validation, access | [AI Security](../AI-Security/index.md) · [Guardrails](agent-diagrams/index.md#5-guardrails-and-permissions) |

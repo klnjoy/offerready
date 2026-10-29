@@ -152,6 +152,7 @@ nav:
           - LangChain: GenAI-Topics/langchain/index.md
           - LangGraph: GenAI-Topics/langgraph/index.md
           - MCP: GenAI-Topics/mcp/index.md
+          - Agent Architecture: GenAI-Topics/agent-architecture/index.md
           - Agent Engineering: GenAI-Topics/agent-engineering/index.md
           - Building Agents — Deep Dive: GenAI-Topics/agent-principles/index.md
           - A2A Communication: GenAI-Topics/a2a/index.md

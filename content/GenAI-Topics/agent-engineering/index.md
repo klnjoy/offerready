@@ -28,6 +28,7 @@ patterns, tool design, control, and reliability.
     This page is the survey. For a code-level deep dive — each **principle** and
     **pattern** with mechanism, code, trade-offs, and anti-patterns — see
     **[Building AI Agents — Principles & Patterns](../agent-principles/index.md)**.
+    New to agents? Start with **[Agent architecture, layer by layer](../agent-architecture/index.md)**.
 
 <!-- RELATED-MODULE -->
 
