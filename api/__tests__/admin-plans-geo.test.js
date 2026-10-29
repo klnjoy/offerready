@@ -70,3 +70,28 @@ test('op=metrics includes plans and geo when migration 0022 is applied, null whe
     assert.strictEqual(res.out.geo, null);
   });
 });
+
+test('op=metrics includes the funnel when migration 0025 is applied, null when not', async () => {
+  const plan = require('../me/plan');
+  const f = { visited: 9, opened_add: 4, submitted: 3, asked_sign_in: 3, signed_in: 1, saw_analysis: 1, saved_job: 1, practised: 0, came_back: 2 };
+  let missing = false;
+  let body = null;
+  global.fetch = async (url, init) => {
+    const u = String(url);
+    if (u.includes('/auth/v1/user')) return json(200, { id: 'u1', email: 'boss@example.com' });
+    if (u.includes('/rpc/admin_funnel2')) { body = JSON.parse(init.body); return missing ? json(404, { code: 'PGRST202' }) : json(200, f); }
+    if (u.includes('/rpc/admin_metrics')) return json(200, { people: 1, events: [] });
+    return json(200, []);
+  };
+  await withEnv({ SUPABASE_URL: 'https://p.supabase.co', SUPABASE_ANON_KEY: 'anon', SUPABASE_SERVICE_ROLE_KEY: 'svc', ADMIN_EMAILS: 'boss@example.com' }, async () => {
+    let res = mockRes();
+    await plan({ method: 'GET', headers: { authorization: 'Bearer tok' }, query: { op: 'metrics', days: '30' } }, res);
+    assert.deepStrictEqual(res.out.funnel, f);
+    assert.deepStrictEqual(body.p_exclude, ['boss@example.com'], 'the team is left out');
+    missing = true;
+    res = mockRes();
+    await plan({ method: 'GET', headers: { authorization: 'Bearer tok' }, query: { op: 'metrics', days: '30' } }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.out.funnel, null);
+  });
+});
