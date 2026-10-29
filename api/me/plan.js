@@ -38,7 +38,8 @@
  *   (product_events). Visitors an admin hid are left out (migration 0024).
  * POST|DELETE /api/me/plan?op=hide-visitor { id } (admins only): mark an 8-char visitor
  *   id as the team's own, or undo it; all admin numbers then leave it out (0024).
- * GET /api/me/plan?op=metrics&days=30 (admins only) -> { days, since, metrics, costs }:
+ * GET /api/me/plan?op=metrics&days=30 (admins only) -> { days, since, metrics, costs, plans, geo, funnel }:
+ *   funnel = browsers reaching each step (admin_funnel2, migration 0025; null until applied);
  *   people, sign-ups, events, page views, feedback, usage and passes sold
  *   (SQL function admin_metrics, migration 0019) plus the AI cost summary.
  *   200 { days, since, rows: [{ feature, calls, users, input_tokens, cached_tokens,
@@ -362,14 +363,16 @@ module.exports = async function handler(req, res) {
     if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see metrics.' }); return; }
     const days = Math.max(1, Math.min(365, Math.round(Number(req.query.days) || 30)));
     const since = new Date(Date.now() - days * 86400000).toISOString();
-    const [m, costs, extra] = await Promise.all([
+    const [m, costs, extra, funnel] = await Promise.all([
       adminMetrics(since).catch((err) => { console.error('[me/plan metrics]', err && err.message); return null; }),
       aiCost.summary(days).catch(() => null),
       // Optional until migration 0022 is applied: the rest of the page still loads.
       adminPlansGeo(since).catch(() => null),
+      // Optional until migration 0025 is applied.
+      adminRpc('admin_funnel2', since, { p_exclude: teamEmails() }).catch(() => null),
     ]);
     if (!m) { send(res, 503, { error: 'Metrics aren’t set up yet. Apply migration 0019_admin_metrics.sql in Supabase.', setup: true, costs }); return; }
-    send(res, 200, { days, since, metrics: m, costs, plans: extra ? extra.plans || [] : null, geo: extra ? extra.geo || [] : null });
+    send(res, 200, { days, since, metrics: m, costs, plans: extra ? extra.plans || [] : null, geo: extra ? extra.geo || [] : null, funnel: funnel && typeof funnel === 'object' ? funnel : null });
     return;
   }
 
