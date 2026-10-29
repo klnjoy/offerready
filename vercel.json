@@ -34,12 +34,20 @@
     {
       "source": "/api/cron/daily-question",
       "destination": "/api/me/plan?op=daily-push"
+    },
+    {
+      "source": "/api/cron/emails",
+      "destination": "/api/me/plan?op=lifecycle-emails"
     }
   ],
   "crons": [
     {
       "path": "/api/cron/daily-question",
       "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/emails",
+      "schedule": "0 15 * * *"
     }
   ]
 }

@@ -45,6 +45,13 @@
  *   200 { days, since, rows: [{ feature, calls, users, input_tokens, cached_tokens,
  *         output_tokens, cost_usd, avg_cost_usd, avg_ms, failed }] }
  *   403 for everyone else; 503 { setup: true } until migration 0017 is applied.
+ * Emails (migration 0027, api/_lib/emails.js):
+ *   GET /api/cron/emails -> ?op=lifecycle-emails (Vercel cron, Bearer CRON_SECRET): the daily
+ *     welcome / follow-up / monthly update run; a dry run until LIFECYCLE_EMAILS=on,
+ *     RESEND_API_KEY and EMAIL_POSTAL_ADDRESS are set.
+ *   POST ?op=welcome-email (signed in): the welcome right after sign-in, same rules.
+ *   GET|POST ?op=unsubscribe&u=&t= (signed link, no sign-in): the unsubscribe page / action.
+ *   GET ?op=email-status, GET ?op=email-preview&kind=, POST ?op=email-test { kind } (admins only).
  * Lives here (not its own file) to stay within the Vercel Hobby function limit.
  *
  * Never fails because usage storage is missing: the plan still comes back with
@@ -59,6 +66,8 @@ const { getUsageSummary, LIMITS, periodStart } = require('../_lib/plans');
 const billing = require('../_lib/billing');
 const aiCost = require('../_lib/aiCost');
 const push = require('../_lib/push');
+const emails = require('../_lib/emails');
+const monthlyUpdate = require('../_lib/monthlyUpdate');
 
 /** The billing block; never throws (storage errors just hide the portal). */
 async function billingBlock(userId) {
@@ -143,6 +152,135 @@ async function dailyPush(req, res) {
   send(res, 200, { ok: true, devices: subs.length, sent, removed, failed });
 }
 
+
+// ---- welcome, follow-up and monthly update emails (migration 0027) ---------
+
+/** People who may get an email (email_people(), migration 0027). */
+async function emailPeople(userId, includeTeam) {
+  const url = restUrl('/rpc/email_people');
+  if (!url) throw new Error('Supabase not configured');
+  const r = await fetch(url, {
+    method: 'POST', headers: svc(),
+    body: JSON.stringify({ p_since: '1970-01-01T00:00:00Z', p_exclude: includeTeam ? [] : teamEmails(), p_user: userId || null }),
+  });
+  if (!r.ok) throw new Error('email_people ' + r.status);
+  const rows = await r.json();
+  return Array.isArray(rows) ? rows : [];
+}
+
+/** Claims (user, kind) in email_sends before sending; false if already sent. */
+async function claimEmail(userId, kind) {
+  const r = await fetch(restUrl('/email_sends?on_conflict=user_id,kind'), {
+    method: 'POST', headers: svc({ Prefer: 'resolution=ignore-duplicates,return=representation' }),
+    body: JSON.stringify({ user_id: userId, kind }),
+  });
+  if (!r.ok) throw new Error('email_sends ' + r.status);
+  const rows = await r.json().catch(() => []);
+  return Array.isArray(rows) && rows.length === 1;
+}
+
+/** After a send: keep the provider id, or free the claim so a later run retries. */
+async function settleEmail(userId, kind, out) {
+  const where = restUrl('/email_sends?user_id=eq.' + encodeURIComponent(userId) + '&kind=eq.' + encodeURIComponent(kind));
+  try {
+    if (out.ok) { if (out.id) await fetch(where, { method: 'PATCH', headers: svc(), body: JSON.stringify({ provider_id: out.id }) }); }
+    else await fetch(where, { method: 'DELETE', headers: svc() });
+  } catch (_e) { /* best-effort */ }
+}
+
+/** Claims, sends and settles one email. Returns true when it went out. */
+async function deliverEmail(person, kind) {
+  const msg = emails.build(kind, person, monthlyUpdate);
+  if (!msg) return false;
+  if (!(await claimEmail(person.user_id, kind))) return false;
+  const out = await emails.sendEmail(person.email, msg, person.user_id);
+  await settleEmail(person.user_id, kind, out);
+  if (!out.ok) console.warn('[emails] send failed', kind, out.status);
+  return out.ok;
+}
+
+/** Who would get which email on a run now: [{ person, kind }]. */
+async function plannedEmails(now) {
+  const people = await emailPeople(null, false);
+  const out = [];
+  for (const p of people) { const kind = emails.pickEmail(p, now, monthlyUpdate); if (kind) out.push({ person: p, kind }); }
+  // Onboarding emails first, the monthly update after, within the daily cap.
+  out.sort((a, b) => (/^monthly:/.test(a.kind) ? 1 : 0) - (/^monthly:/.test(b.kind) ? 1 : 0));
+  return out;
+}
+
+function countKinds(list) {
+  const c = {};
+  for (const x of list) c[x.kind] = (c[x.kind] || 0) + 1;
+  return c;
+}
+
+/** Vercel cron (GET /api/cron/emails, Bearer CRON_SECRET). Dry run unless fully set up. */
+async function emailRun(req, res) {
+  const secret = process.env.CRON_SECRET;
+  const auth = (req.headers && req.headers.authorization) || '';
+  if (!secret || auth !== 'Bearer ' + secret) { send(res, 401, { error: 'Unauthorized.' }); return; }
+  let planned;
+  try { planned = await plannedEmails(Date.now()); }
+  catch (err) { console.error('[emails run]', err && err.message); send(res, 503, { error: 'Emails need migration 0027_lifecycle_emails.sql.', setup: true }); return; }
+  const missing = emails.missingSettings();
+  if (missing.length) { send(res, 200, { ok: true, dry_run: true, missing, would_send: countKinds(planned) }); return; }
+  const batch = planned.slice(0, emails.dailyCap());
+  let sent = 0, skipped = 0, failed = 0;
+  for (let i = 0; i < batch.length; i += 5) {
+    await Promise.all(batch.slice(i, i + 5).map(async (x) => {
+      try { (await deliverEmail(x.person, x.kind)) ? sent++ : skipped++; }
+      catch (err) { failed++; console.error('[emails run]', err && err.message); }
+    }));
+  }
+  send(res, 200, { ok: true, dry_run: false, sent, skipped, failed, left_for_tomorrow: planned.length - batch.length, kinds: countKinds(batch) });
+}
+
+/** GET|POST /api/me/plan?op=unsubscribe&u=&t= (no sign-in; signed link). */
+async function unsubscribe(req, res) {
+  const q = req.query || {};
+  const userId = String(q.u || '');
+  const token = String(q.t || '');
+  const html = (status, state) => {
+    res.status(status).setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.end(emails.unsubPage(state, userId, token));
+  };
+  if (!/^[0-9a-f-]{36}$/i.test(userId) || !emails.checkUnsubToken(userId, token)) { html(400, 'bad'); return; }
+  if (req.method === 'GET') { html(200, 'ask'); return; }
+  if (req.method !== 'POST') { html(405, 'bad'); return; }
+  const undo = q.undo === '1';
+  try {
+    const r = undo
+      ? await fetch(restUrl('/email_unsubscribes?user_id=eq.' + encodeURIComponent(userId)), { method: 'DELETE', headers: svc() })
+      : await fetch(restUrl('/email_unsubscribes?on_conflict=user_id'), {
+        method: 'POST', headers: svc({ Prefer: 'resolution=ignore-duplicates,return=minimal' }),
+        body: JSON.stringify({ user_id: userId, source: 'link' }),
+      });
+    if (!r.ok) throw new Error('email_unsubscribes ' + r.status);
+    html(200, undo ? 'back' : 'done');
+  } catch (err) {
+    console.error('[emails unsubscribe]', err && err.message);
+    html(503, 'later');
+  }
+}
+
+/** A person row for previews and test sends: the admin's own, or a sample. */
+async function sampleEmailPerson(user) {
+  let row = null;
+  try { row = (await emailPeople(user.id, true))[0] || null; } catch (_e) { row = null; }
+  return Object.assign({
+    user_id: user.id, email: user.email, first_name: null, confirmed_at: new Date().toISOString(),
+    job_id: null, job_title: null, job_company: null, practised: false, paid: false, sent: [],
+  }, row || {}, row && row.job_id ? {} : { job_id: '00000000-0000-0000-0000-000000000000', job_title: 'Machine Learning Engineer', job_company: 'Example Co' });
+}
+
+function previewKind(k) {
+  const kind = String(k || '');
+  if (emails.KINDS.includes(kind)) return kind;
+  if (kind === 'monthly') return 'monthly:' + monthlyUpdate.month;
+  return null;
+}
 
 /** Country (ISO code) and region code from Vercel's geo headers; '' when absent. */
 function geoFromHeaders(h) {
@@ -285,6 +423,45 @@ module.exports = async function handler(req, res) {
 
   // Daily question push (lives here to stay within the Hobby function limit).
   if (op === 'daily-push') { await dailyPush(req, res); return; }
+  // Welcome, follow-up and monthly update emails (migration 0027).
+  if (op === 'lifecycle-emails') { await emailRun(req, res); return; }
+  if (op === 'unsubscribe') { await unsubscribe(req, res); return; }
+  if (op === 'welcome-email' && req.method === 'POST') {
+    // The app calls this once after sign-in so the welcome arrives right away;
+    // the daily run sends it otherwise. Same rules: confirmed, not team, not
+    // unsubscribed, only once, only when emails are switched on.
+    res.setHeader('Cache-Control', 'private, no-store');
+    const u = await getUser(req);
+    if (!u) { send(res, 401, { error: 'Sign in first.' }); return; }
+    if (emails.missingSettings().length) { send(res, 200, { ok: true, sent: false }); return; }
+    try {
+      const p = (await emailPeople(u.id, false))[0];
+      const sent = !!p && emails.pickEmail(p, Date.now(), null) === 'welcome' && await deliverEmail(p, 'welcome');
+      send(res, 200, { ok: true, sent });
+    } catch (err) {
+      console.error('[emails welcome]', err && err.message);
+      send(res, 200, { ok: true, sent: false });
+    }
+    return;
+  }
+  if (op === 'email-test' && req.method === 'POST') {
+    // Admin: send one email to your own address to see it in a real inbox.
+    // Not recorded, so it doesn't change what you'd get later.
+    res.setHeader('Cache-Control', 'private, no-store');
+    const u = await getUser(req);
+    if (!u) { send(res, 401, { error: 'Sign in first.' }); return; }
+    if (!aiCost.isAdmin(u.email)) { send(res, 403, { error: 'Only admins can send test emails.' }); return; }
+    if (!process.env.RESEND_API_KEY) { send(res, 503, { error: 'Add RESEND_API_KEY in Vercel first.', setup: true }); return; }
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const kind = previewKind(body.kind);
+    if (!kind) { send(res, 400, { error: 'Unknown email.' }); return; }
+    const person = await sampleEmailPerson(u);
+    const msg = emails.build(kind, person, monthlyUpdate);
+    const out = await emails.sendEmail(u.email, Object.assign({}, msg, { subject: '[Test] ' + msg.subject }), u.id);
+    if (!out.ok) { send(res, 502, { error: 'Resend didn’t accept it (' + (out.status || 'no answer') + '). Check the key and that your domain is verified.' }); return; }
+    send(res, 200, { ok: true, to: u.email, kind });
+    return;
+  }
   if (op === 'push-key' && req.method === 'GET') {
     if (!push.configured()) { send(res, 503, { error: 'Daily notifications aren’t set up on this deployment yet.', setup: true }); return; }
     send(res, 200, { publicKey: process.env.VAPID_PUBLIC_KEY }); return;
@@ -329,6 +506,26 @@ module.exports = async function handler(req, res) {
 
   const user = await getUser(req);
   if (!user) { send(res, 401, { error: 'Sign in to see your plan.' }); return; }
+
+  if (op === 'email-status' || op === 'email-preview') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see emails.' }); return; }
+    if (op === 'email-preview') {
+      const kind = previewKind(req.query.kind);
+      if (!kind) { send(res, 400, { error: 'Unknown email.' }); return; }
+      send(res, 200, Object.assign({ kind }, emails.build(kind, await sampleEmailPerson(user), monthlyUpdate)));
+      return;
+    }
+    const base = { missing: emails.missingSettings(), daily_cap: emails.dailyCap(), monthly: { month: monthlyUpdate.month, ready: !!monthlyUpdate.ready, subject: monthlyUpdate.subject } };
+    try {
+      const planned = await plannedEmails(Date.now());
+      send(res, 200, Object.assign(base, { ready: true, would_send: countKinds(planned), next: planned.slice(0, 50).map((x) => ({ email: x.person.email, kind: x.kind })) }));
+    } catch (err) {
+      console.error('[emails status]', err && err.message);
+      send(res, 200, Object.assign(base, { ready: false, setup: 'Run migration 0027_lifecycle_emails.sql in Supabase.' }));
+    }
+    return;
+  }
 
   if (op === 'costs') {
     res.setHeader('Cache-Control', 'private, no-store');
