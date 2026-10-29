@@ -32,6 +32,9 @@
  * GET /api/me/plan?op=costs&days=30  (admins only: ADMIN_EMAILS env var)
  * GET /api/me/plan?op=people&days=30 (admins only) -> { days, since, people: { users, visitors } }
  *   (SQL function admin_people, migration 0021).
+ * GET /api/me/plan?op=visits&days=30 (admins only) -> { days, since, capped, visitors: [{ id, release,
+ *   visits, events: [{ at, event, route, visit, props: { country, region, ref, src, … } }] }] }:
+ *   what each not-signed-in browser opened and when (product_events, no migration).
  * GET /api/me/plan?op=metrics&days=30 (admins only) -> { days, since, metrics, costs }:
  *   people, sign-ups, events, page views, feedback, usage and passes sold
  *   (SQL function admin_metrics, migration 0019) plus the AI cost summary.
@@ -178,6 +181,55 @@ async function adminMetrics(since) { return adminRpcExcludingTeam('admin_metrics
 /** Who the people are (accounts + anonymous visitors), admin_people() (migrations 0021/0023). */
 async function adminPeople(since) { return adminRpcExcludingTeam('admin_people', since); }
 
+/**
+ * Every event from browsers that weren't signed in, in the period, grouped by
+ * browser: what each anonymous visitor opened and when, for the admin's
+ * "Not signed in" list (time spent is worked out from these times in the app).
+ * Reads product_events directly with the service role: no migration needed.
+ * Only the short codes the app already stores are returned (route, country,
+ * region, where the visit came from); visitors are keyed by the same 8-char
+ * id as admin_people. Capped at 5,000 events, newest periods first if over.
+ */
+const VISIT_PROPS = ['country', 'region', 'ref', 'src', 'med', 'camp', 'first_ref', 'first_src'];
+async function adminVisits(since) {
+  const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase not configured');
+  const q = 'select=anon_id,session_id,created_at,event,route,props,release'
+    + '&user_id=is.null&created_at=gte.' + encodeURIComponent(since)
+    + '&order=created_at.desc&limit=5000';
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 9000);
+  let rows;
+  try {
+    const resp = await fetch(url + '/rest/v1/product_events?' + q, {
+      signal: controller.signal,
+      headers: { apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json' },
+    });
+    if (!resp.ok) throw new Error('product_events ' + resp.status);
+    rows = await resp.json();
+  } finally { clearTimeout(timer); }
+  const by = new Map();
+  for (const r of (Array.isArray(rows) ? rows : []).slice().reverse()) {
+    const anon = String(r.anon_id || '');
+    if (!anon) continue;
+    const id = anon.slice(0, 8);
+    let v = by.get(id);
+    if (!v) { v = { id, release: null, sessions: [], events: [] }; by.set(id, v); }
+    let visit = v.sessions.indexOf(r.session_id);
+    if (visit < 0) { v.sessions.push(r.session_id); visit = v.sessions.length - 1; }
+    const props = {};
+    const p = r.props && typeof r.props === 'object' ? r.props : {};
+    for (const k of VISIT_PROPS) if (p[k] != null && p[k] !== '') props[k] = String(p[k]).slice(0, 60);
+    if (r.release) v.release = String(r.release).slice(0, 64);
+    v.events.push({ at: r.created_at, event: String(r.event || ''), route: r.route == null ? null : String(r.route).slice(0, 300), visit: visit + 1, props });
+  }
+  return {
+    capped: Array.isArray(rows) && rows.length >= 5000,
+    visitors: Array.from(by.values()).map((v) => ({ id: v.id, release: v.release, visits: v.sessions.length, events: v.events })),
+  };
+}
+
 async function adminRpc(fn, since, extra) {
   const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -240,6 +292,16 @@ module.exports = async function handler(req, res) {
     const since = new Date(Date.now() - days * 86400000).toISOString();
     try { send(res, 200, { days, since, people: await adminPeople(since) }); }
     catch (err) { console.error('[me/plan people]', err && err.message); send(res, 503, { error: 'The people list isn’t set up yet. Run migration 0021_admin_people.sql in Supabase.', setup: true }); }
+    return;
+  }
+
+  if (op === 'visits') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see visits.' }); return; }
+    const days = Math.max(1, Math.min(365, Math.round(Number(req.query.days) || 30)));
+    const since = new Date(Date.now() - days * 86400000).toISOString();
+    try { send(res, 200, Object.assign({ days, since }, await adminVisits(since))); }
+    catch (err) { console.error('[me/plan visits]', err && err.message); send(res, 503, { error: 'Couldn’t read visits right now.' }); }
     return;
   }
 
