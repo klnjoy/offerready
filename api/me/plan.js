@@ -34,7 +34,10 @@
  *   (SQL function admin_people, migration 0021).
  * GET /api/me/plan?op=visits&days=30 (admins only) -> { days, since, capped, visitors: [{ id, release,
  *   visits, events: [{ at, event, route, visit, props: { country, region, ref, src, … } }] }] }:
- *   what each not-signed-in browser opened and when (product_events, no migration).
+ *   what each not-signed-in browser opened, tapped and how far it scrolled, and when
+ *   (product_events). Visitors an admin hid are left out (migration 0024).
+ * POST|DELETE /api/me/plan?op=hide-visitor { id } (admins only): mark an 8-char visitor
+ *   id as the team's own, or undo it; all admin numbers then leave it out (0024).
  * GET /api/me/plan?op=metrics&days=30 (admins only) -> { days, since, metrics, costs }:
  *   people, sign-ups, events, page views, feedback, usage and passes sold
  *   (SQL function admin_metrics, migration 0019) plus the AI cost summary.
@@ -190,7 +193,7 @@ async function adminPeople(since) { return adminRpcExcludingTeam('admin_people',
  * region, where the visit came from); visitors are keyed by the same 8-char
  * id as admin_people. Capped at 5,000 events, newest periods first if over.
  */
-const VISIT_PROPS = ['country', 'region', 'ref', 'src', 'med', 'camp', 'first_ref', 'first_src'];
+const VISIT_PROPS = ['country', 'region', 'ref', 'src', 'med', 'camp', 'first_ref', 'first_src', 'label', 'to', 'depth'];
 async function adminVisits(since) {
   const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -224,10 +227,38 @@ async function adminVisits(since) {
     if (r.release) v.release = String(r.release).slice(0, 64);
     v.events.push({ at: r.created_at, event: String(r.event || ''), route: r.route == null ? null : String(r.route).slice(0, 300), visit: visit + 1, props });
   }
+  const hidden = await hiddenVisitors().catch(() => null);
+  for (const id of hidden || []) by.delete(id);
   return {
+    hide_ready: hidden !== null,
     capped: Array.isArray(rows) && rows.length >= 5000,
     visitors: Array.from(by.values()).map((v) => ({ id: v.id, release: v.release, visits: v.sessions.length, events: v.events })),
   };
+}
+
+/** Service-role REST call on admin_hidden_visitors (migration 0024). */
+async function hiddenRest(method, query, body) {
+  const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase not configured');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 9000);
+  try {
+    const resp = await fetch(url + '/rest/v1/admin_hidden_visitors' + (query ? '?' + query : ''), {
+      method, signal: controller.signal,
+      headers: Object.assign({ apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json' },
+        body ? { 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=minimal' } : {}),
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!resp.ok) throw new Error('admin_hidden_visitors ' + resp.status);
+    return method === 'GET' ? await resp.json() : null;
+  } finally { clearTimeout(timer); }
+}
+
+/** The 8-char ids an admin marked as the team's own ("this is me"). */
+async function hiddenVisitors() {
+  const rows = await hiddenRest('GET', 'select=id');
+  return (Array.isArray(rows) ? rows : []).map((r) => String(r.id || '')).filter(Boolean);
 }
 
 async function adminRpc(fn, since, extra) {
@@ -269,6 +300,27 @@ module.exports = async function handler(req, res) {
   if (op === 'geo' && req.method === 'GET') {
     res.setHeader('Cache-Control', 'private, no-store');
     send(res, 200, geoFromHeaders(req.headers || {}));
+    return;
+  }
+
+  // Admin: mark a not-signed-in visitor as the team's own (POST) or undo it
+  // (DELETE). Every admin number then leaves that browser out (migration 0024).
+  if (op === 'hide-visitor' && (req.method === 'POST' || req.method === 'DELETE')) {
+    res.setHeader('Cache-Control', 'private, no-store');
+    const u = await getUser(req);
+    if (!u) { send(res, 401, { error: 'Sign in first.' }); return; }
+    if (!aiCost.isAdmin(u.email)) { send(res, 403, { error: 'Only admins can hide visitors.' }); return; }
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const id = String(body.id || (req.query && req.query.id) || '').toLowerCase();
+    if (!/^[a-z0-9]{8}$/.test(id)) { send(res, 400, { error: 'That visitor id isn’t valid.' }); return; }
+    try {
+      if (req.method === 'POST') await hiddenRest('POST', '', { id, hidden_by: String(u.email || '').toLowerCase().slice(0, 200) });
+      else await hiddenRest('DELETE', 'id=eq.' + id);
+      send(res, 200, { ok: true, id, hidden: req.method === 'POST' });
+    } catch (err) {
+      console.error('[me/plan hide-visitor]', err && err.message);
+      send(res, 503, { error: 'Hiding visitors isn’t set up yet. Run migration 0024_admin_hidden_visitors.sql in Supabase.', setup: true });
+    }
     return;
   }
 
