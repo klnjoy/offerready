@@ -85,8 +85,27 @@ const GAP_SYSTEM_PROMPT = [
   '  experience, titles, tools or results they do not have.',
 ].join('\n');
 
+/**
+ * The job's requirements from the last check, so a re-check judges the same
+ * list (same wording, same importance) and the score moves only when the
+ * resume does. [{ requirement, importance }] or [].
+ */
+function previousRequirementList(prev) {
+  const list = Array.isArray(prev) ? prev : [];
+  const out = [];
+  for (const r of list) {
+    if (!r || typeof r !== 'object') continue;
+    const requirement = String(r.requirement || '').replace(/\s+/g, ' ').trim().slice(0, 140);
+    if (requirement.length < 2) continue;
+    out.push({ requirement, importance: r.importance === 'preferred' ? 'preferred' : 'essential' });
+    if (out.length >= 14) break;
+  }
+  return out;
+}
+
 function buildGapUserMessage(input) {
-  const { jobTitle, jobDescription, resumeText, resumeSignals } = input || {};
+  const { jobTitle, jobDescription, resumeText, resumeSignals, previousRequirements } = input || {};
+  const prev = previousRequirementList(previousRequirements);
   const sig = resumeSignals && typeof resumeSignals === 'object' ? resumeSignals : null;
   const sigLines = sig
     ? [
@@ -105,8 +124,34 @@ function buildGapUserMessage(input) {
     // the ones just tailored) used to be cut off, so a re-check never moved.
     String(resumeText || '').slice(0, 12000) || sigLines || '(no resume provided)',
     '',
+    ...(prev.length >= 3 ? [
+      'THIS IS A RE-CHECK OF THE SAME JOB. For "requirements", list exactly these,',
+      'with the same wording and importance and in this order, and judge each one',
+      'again (status, evidence, why, next) against the resume above:',
+      JSON.stringify(prev),
+      '',
+    ] : []),
     'Compare and return the gap analysis JSON now.',
   ].join('\n');
+}
+
+/**
+ * The overall match, computed from the requirement rows so it is consistent
+ * and explainable: each requirement counts once (essential twice), supported
+ * = full credit, partial = half, missing or unverified = none. null when
+ * there are too few rows to score (then the model's own number is kept).
+ */
+function requirementScore(requirements) {
+  const rows = Array.isArray(requirements) ? requirements : [];
+  if (rows.length < 3) return null;
+  let total = 0;
+  let got = 0;
+  for (const r of rows) {
+    const w = r.importance === 'preferred' ? 1 : 2;
+    total += w;
+    got += w * (r.status === 'supported' ? 1 : r.status === 'partial' ? 0.5 : 0);
+  }
+  return total ? Math.round((got / total) * 100) : null;
 }
 
 function clampInt(n, lo, hi) {
@@ -144,7 +189,7 @@ function dedupeLists(o) {
 function validateGap(parsed, resumeText) {
   if (!parsed || typeof parsed !== 'object') return { ok: false, reason: 'not-object' };
   if (parsed.matchScore == null) return { ok: false, reason: 'no-score' };
-  return {
+  const out = {
     ok: true,
     result: {
       matchScore: clampInt(parsed.matchScore, 0, 100),
@@ -162,6 +207,10 @@ function validateGap(parsed, resumeText) {
       requirements: normalizeRequirements(parsed.requirements, resumeText || ''),
     },
   };
+  // The headline match follows the requirement rows (stable across re-checks).
+  const fromRows = requirementScore(out.result.requirements);
+  if (fromRows != null) out.result.matchScore = fromRows;
+  return out;
 }
 
 // ===========================================================================
@@ -298,6 +347,7 @@ module.exports = {
   GAP_SYSTEM_PROMPT,
   buildGapUserMessage,
   validateGap,
+  requirementScore,
   QUESTIONS_SYSTEM_PROMPT,
   buildQuestionsUserMessage,
   validateQuestions,

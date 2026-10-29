@@ -184,6 +184,17 @@ async function handleAnalyzeJd(body, res, user, extra) {
 async function handleGapAnalysis(body, res, user) {
   const jobDescription = String(body.jobDescription || '');
   if (jobDescription.trim().length < 30) { send(res, 400, { error: 'A job description is required for gap analysis.' }); return; }
+  // A re-check of a saved job judges the same requirements as last time, so
+  // the score moves only when the resume does (not because the list changed).
+  const gapJobId = body.job_id || body.jobId;
+  let previousRequirements = [];
+  if (gapJobId && user && user.id) {
+    try {
+      const prevRow = await getGapAnalysis(user.id, gapJobId);
+      const prev = prevRow && prevRow.result && prevRow.result.requirements;
+      if (Array.isArray(prev)) previousRequirements = prev;
+    } catch (_e) { previousRequirements = []; }
+  }
   const out = await callOpenAI(
     GAP_SYSTEM_PROMPT,
     buildGapUserMessage({
@@ -191,6 +202,7 @@ async function handleGapAnalysis(body, res, user) {
       jobDescription,
       resumeText: body.resumeText || body.resume,
       resumeSignals: body.resumeSignals,
+      previousRequirements,
     }),
     // The per-requirement evidence list roughly doubles the output.
     2600, 0.2, 'resume_match', user && user.id
