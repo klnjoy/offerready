@@ -14,7 +14,7 @@
 
 'use strict';
 
-const { normalizeRequirements } = require('./fitEvidence');
+const { normalizeRequirements, keepStillTrue } = require('./fitEvidence');
 
 // ===========================================================================
 // GAP ANALYSIS — resume signals vs JD -> match score + gaps + readiness bands.
@@ -186,7 +186,7 @@ function dedupeLists(o) {
   return out;
 }
 
-function validateGap(parsed, resumeText) {
+function validateGap(parsed, resumeText, previousRequirements) {
   if (!parsed || typeof parsed !== 'object') return { ok: false, reason: 'not-object' };
   if (parsed.matchScore == null) return { ok: false, reason: 'no-score' };
   const out = {
@@ -204,7 +204,7 @@ function validateGap(parsed, resumeText) {
         missingExperience: strArr(parsed.missingExperience, 10).map(tidy),
       }),
       summary: typeof parsed.summary === 'string' ? parsed.summary.trim().slice(0, 500) : '',
-      requirements: normalizeRequirements(parsed.requirements, resumeText || ''),
+      requirements: keepStillTrue(normalizeRequirements(parsed.requirements, resumeText || ''), previousRequirements, resumeText || ''),
     },
   };
   // The headline match follows the requirement rows (stable across re-checks).
