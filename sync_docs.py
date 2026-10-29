@@ -808,9 +808,11 @@ def write_index(md_catalog, modules) -> None:
         "",
         '<p class="home-cta" markdown>'
         "[Where to start](Where-To-Start/index.md){ .md-button .md-button--primary }"
-        "&nbsp;"
+        # Plain spaces, not &nbsp;: on phones the buttons stack (flex column)
+        # and a &nbsp; becomes a blank full-height row between them.
+        " "
         "[Browse GenAI topics](GenAI-Topics/index.md){ .md-button }"
-        "&nbsp;"
+        " "
         f"[Open the OfferReady app]({app}){{ .md-button }}"
         "</p>",
         "",
