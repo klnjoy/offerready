@@ -43,6 +43,7 @@ flowchart LR
 | **Ship** | MCP and agent-to-agent protocols | [MCP](mcp/index.md) · [A2A](a2a/index.md) |
 | | Safety: prompt injection, guardrails, output validation, access | [AI Security](../AI-Security/index.md) · [Guardrails](agent-diagrams/index.md#5-guardrails-and-permissions) |
 | | Evals and observability: tracing, regression tests, LLM judges | [Observability & Eval](observability/index.md) |
+| | How AI work differs from normal software: SDLC vs the AI lifecycle | [SDLC vs AI lifecycle](ai-lifecycle/index.md) |
 | | Production: rate limits, caching, queues, scaling, incidents | [LLMOps](llmops/index.md) · [Reliability](reliability/index.md) · [Kubernetes](kubernetes/index.md) · [DevOps for AI](devops-ai/index.md) |
 | | Cost control | [Cost Optimization](cost-optimization/index.md) |
 | **Grow** | Portfolio projects | [7 AI projects](../Projects/portfolio/index.md) |
