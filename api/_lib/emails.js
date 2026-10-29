@@ -61,11 +61,13 @@ function unsubUrl(userId) {
 
 // ---- who gets what --------------------------------------------------------
 
-/** Days since the email address was confirmed (0 on the day itself). */
+/** Days since the email address was confirmed (0 on the day itself). A time
+ * slightly ahead of this server's clock (database clock skew, up to an hour)
+ * counts as just now; -1 when unknown or further in the future. */
 function daysSince(confirmedAt, now) {
   const t = Date.parse(confirmedAt || '');
-  if (!Number.isFinite(t)) return -1;
-  return Math.floor((now - t) / DAY);
+  if (!Number.isFinite(t) || t - now > 3600000) return -1;
+  return Math.max(0, Math.floor((now - t) / DAY));
 }
 
 /** The month key for the monthly update, e.g. '2026-11'. */

@@ -25,6 +25,8 @@ test('pickEmail follows the schedule and never repeats', () => {
   assert.strictEqual(emails.pickEmail(person(9, { paid: true, job_id: 'j', sent: ['practice'] }), NOW), null);
   assert.strictEqual(emails.pickEmail(person(20), NOW), null);
   assert.strictEqual(emails.pickEmail(person(-1), NOW), null);
+  // A confirmation a moment ahead of the server clock still counts as today.
+  assert.strictEqual(emails.pickEmail(person(0, { confirmed_at: new Date(NOW + 5000).toISOString() }), NOW), 'welcome');
   assert.strictEqual(emails.pickEmail(person(0, { confirmed_at: null }), NOW), null);
 });
 
