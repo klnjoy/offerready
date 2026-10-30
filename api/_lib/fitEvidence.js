@@ -85,4 +85,67 @@ function normalizeRequirements(list, resume) {
   return out.filter((r) => r.importance === 'essential').concat(out.filter((r) => r.importance === 'preferred'));
 }
 
-module.exports = { normalizeRequirements, quoteInResume };
+const RANK = { supported: 2, partial: 1, missing: 0, unverified: 0 };
+
+/** Same requirement? Equal after normalizing, or most of the word pairs shared. */
+function sameRequirement(a, b) {
+  const x = norm(a);
+  const y = norm(b);
+  if (!x || !y) return false;
+  if (x === y) return true;
+  const xb = bigrams(x);
+  const yb = new Set(bigrams(y));
+  if (!xb.length || !yb.size) return false;
+  const hit = xb.filter((p) => yb.has(p)).length;
+  return hit / Math.max(xb.length, yb.size) >= 0.6;
+}
+
+/**
+ * A re-check of the same job keeps what is still true. The model judges each
+ * row afresh and can word a quote slightly differently or rate a row lower on
+ * an identical resume, which made a re-check drop after you only ADDED to the
+ * resume. Here, for a previous row that was supported or partial:
+ *  - if its resume quote is still in the resume (checked again, server side),
+ *    the row can't come back lower than before: the previous status, quote and
+ *    reason are kept;
+ *  - if the quote is gone (you removed or rewrote that line), the new judgment
+ *    stands, so the score can still go down when the resume really lost it.
+ * A requirement the model left out this time comes back (judged the same way,
+ * or "missing"), and rows that weren't on the list before are dropped, so the
+ * list stays the same and the score moves only when the resume does.
+ * Only applies when there were 3+ previous rows; otherwise returns `rows`.
+ */
+function keepStillTrue(rows, previous, resume) {
+  const prev = Array.isArray(previous) ? previous.filter((p) => p && typeof p === 'object' && typeof p.requirement === 'string' && p.requirement.trim()) : [];
+  if (prev.length < 3 || !Array.isArray(rows)) return rows;
+  const used = new Set();
+  const out = [];
+  for (const p of prev.slice(0, MAX_ROWS)) {
+    let idx = rows.findIndex((r, i) => !used.has(i) && norm(r.requirement) === norm(p.requirement));
+    if (idx < 0) idx = rows.findIndex((r, i) => !used.has(i) && sameRequirement(r.requirement, p.requirement));
+    const pStatus = STATUS.includes(p.status) ? p.status : 'missing';
+    const pEvidence = typeof p.evidence === 'string' ? p.evidence : '';
+    const stillShown = pStatus !== 'missing' && pEvidence && quoteInResume(pEvidence, resume);
+    const kept = {
+      requirement: clip(p.requirement, 140),
+      importance: IMPORTANCE.includes(p.importance) ? p.importance : 'essential',
+      status: stillShown ? pStatus : 'missing',
+      evidence: stillShown ? clip(pEvidence, 240) : '',
+      why: stillShown ? clip(p.why, 400) : '',
+      next: clip(p.next, 280),
+    };
+    if (idx < 0) { out.push(kept); continue; }
+    used.add(idx);
+    const r = rows[idx];
+    // Same wording and importance as last time; the better of the two
+    // judgments when the old evidence is still really in the resume.
+    const row = Object.assign({}, r, { requirement: kept.requirement, importance: kept.importance });
+    if (stillShown && (RANK[r.status] || 0) < RANK[pStatus]) {
+      row.status = kept.status; row.evidence = kept.evidence; row.why = kept.why;
+    }
+    out.push(row);
+  }
+  return out.filter((r) => r.importance === 'essential').concat(out.filter((r) => r.importance === 'preferred'));
+}
+
+module.exports = { normalizeRequirements, quoteInResume, keepStillTrue };

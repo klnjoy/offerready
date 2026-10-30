@@ -195,6 +195,12 @@ async function handleGapAnalysis(body, res, user) {
       if (Array.isArray(prev)) previousRequirements = prev;
     } catch (_e) { previousRequirements = []; }
   }
+  // No saved check on the server (e.g. the job isn't saved there): use the
+  // rows the app last showed. Every quote is checked against this resume
+  // again, so they can't credit anything the resume doesn't show.
+  if (!previousRequirements.length && Array.isArray(body.previousRequirements)) {
+    previousRequirements = body.previousRequirements.slice(0, 14);
+  }
   const out = await callOpenAI(
     GAP_SYSTEM_PROMPT,
     buildGapUserMessage({
@@ -209,7 +215,7 @@ async function handleGapAnalysis(body, res, user) {
   );
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   // Quotes are checked against the resume that was sent (never stored).
-  const result = validateGap(safeParseModelJson(out.content), String(body.resumeText || body.resume || '').slice(0, 12000));
+  const result = validateGap(safeParseModelJson(out.content), String(body.resumeText || body.resume || '').slice(0, 12000), previousRequirements);
   if (!result.ok) { send(res, 502, { error: 'Could not produce a gap analysis. Please try again.' }); return; }
 
   // Persist to the job when a job_id is supplied and owned by this user.
