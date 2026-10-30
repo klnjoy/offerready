@@ -4,7 +4,7 @@ icon: material/shield-account
 
 # Privacy Policy
 
-*Last updated:* October 27, 2026
+*Last updated:* October 29, 2026
 
 !!! note "Plain-English summary, not legal advice"
     This page describes, in plain English, what OfferReady collects, why, and
@@ -57,8 +57,10 @@ Questions or requests about your data: see [Contact](../Contact/index.md).
 The app saves its working data in your browser's local storage so you can
 pick up where you left off. Some of it stays **only** on your device and is
 never synced: your saved resume (unless you turn on resume sync), recent
-voice-mock sessions with their transcripts, the last job analysis you ran, and
-your preferences. The preparation data listed above is also kept locally, and
+voice-mock sessions with their transcripts, the last job analysis you ran,
+your preferences, your career profile, and the details you keep for
+application forms (contact details, work authorization, salary). The
+preparation data listed above is also kept locally, and
 is copied to your account while you're signed in. Clearing your browser data,
 or using **Delete my data**, removes it from that browser.
 
@@ -114,8 +116,8 @@ needs for its part of the service.
 | Provider | What it does |
 |----------|--------------|
 | Supabase | Database and sign-in |
-| Vercel | Hosts the OfferReady API |
-| GitHub Pages | Hosts the app and this study library |
+| Vercel | Hosts the OfferReady app and API |
+| GitHub Pages | Hosts this study library |
 | OpenAI | AI processing (see above) |
 | Stripe | Payments and the billing portal |
 | Google / GitHub | Sign-in, only if you choose "Continue with Google/GitHub" |

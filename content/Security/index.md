@@ -17,6 +17,8 @@ can check. Full details are in the [Privacy Policy](../Privacy/index.md).
 | **Encrypted connections** | The app, the study library and the API are served only over HTTPS. |
 | **Only you can read your data** | Every account table in our database has row-level security: each signed-in user can read and change only their own rows. |
 | **Your resume stays on your device by default** | Resume sync is off unless you turn it on. When it's off, your resume is sent only with the request that needs it and isn't stored on our servers. |
+| **Your contact details stay on your device** | Your career profile and the details you keep for application forms (contact details, work authorization, salary) are saved in your browser only and never synced. |
+| **Nothing is sent to employers** | Cover letters, application answers and tailored resumes are written for you to copy. OfferReady never fills in or submits an application. |
 | **AI requests aren't stored** | Our API sends the text needed for each AI request to OpenAI and doesn't write your resume, answers or transcripts to its logs. Data sent through OpenAI's API isn't used to train its models by default. |
 | **Your voice stays out of our servers** | Voice mock interviews use your browser's speech recognition. We never receive your audio: only the text of your answers is sent, for feedback. Depending on the browser, its own speech service may process the audio (for example Google, in Chrome). |
 | **We never see your card** | Payments go through Stripe's checkout. We don't receive or store your full card number. |
