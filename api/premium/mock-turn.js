@@ -36,10 +36,16 @@
  *   need_next:     bool    ask the model for the next main question
  *   history:       [{question, answer}]  earlier turns, last 6 kept
  *   job:           {title, company, seniority, skills[≤15]}  untrusted context
+ *   reveal:        bool    "Show me the answer": the candidate is stuck. No
+ *                          answer is graded (scores 1, coverage all missing),
+ *                          no follow-up; improved_answer is a model answer to
+ *                          learn from, phrased as a proposal ("I would…").
  *
  * 200 → { ok, model, session_token, feedback: { scores: {structure, depth,
  *         relevance, communication} (1–5), strengths[], improve[],
- *         strong_answer_outline[] }, followup?, next_question?,
+ *         strong_answer_outline[], score10 (0–10), coverage[{point,
+ *         status: covered|partial|missing}], improved_answer, honesty_note,
+ *         memory_hook }, revealed?, followup?, next_question?,
  *         followup_depth? (depth of the returned follow-up, with followup),
  *         questions? (turn 0: the remaining main questions), quota? (turn 0) }
  *
@@ -73,7 +79,7 @@ const FEATURE = 'voice_mock';
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const REQUEST_TIMEOUT_MS = 30000;
-const MAX_OUTPUT_TOKENS = 1100;
+const MAX_OUTPUT_TOKENS = 1800;
 
 const TRANSCRIPT_MAX = 6000;
 const QUESTION_MAX = 600;
@@ -91,6 +97,11 @@ const OUT_ITEMS = 4;
 const OUT_OUTLINE = 6;
 const OUT_ITEM_CHARS = 260;
 const OUT_Q_CHARS = 320;
+const OUT_COVERAGE = 6;
+const OUT_POINT_CHARS = 140;
+const OUT_IMPROVED_CHARS = 1600;
+const OUT_HOOK_CHARS = 140;
+const COVERAGE_STATUS = ['covered', 'partial', 'missing'];
 
 const TYPES = {
   behavioral: 'Behavioral: past situations, ownership, conflict, influence, failure, impact. Expect STAR-shaped stories with the candidate\'s OWN actions and measurable results.',
@@ -142,6 +153,23 @@ const SYSTEM_PROMPT = [
   '   question of at most 45 words that fits the interview type and the role, does',
   '   not repeat or closely paraphrase any earlier question, and moves to a',
   '   different competency or area. Otherwise set "next_question" to null.',
+  '4b. Coach the candidate like a senior interviewer would after the round:',
+  '   - score10: one overall score 0-10 for this answer (0 = no answer, 5 = names the',
+  '     right ideas but no detail, 8+ = a strong senior answer). Be strict and honest.',
+  '   - coverage: split THE QUESTION into the 2-6 things it actually asks for (each a',
+  '     short noun phrase, e.g. "Agent responsibilities", "Human approval") and mark',
+  '     each "covered", "partial" or "missing" based ONLY on the answer.',
+  '   - improved_answer: rewrite THE CANDIDATE\'S OWN answer as a clear spoken answer',
+  '     (first person, 80-220 words). Keep every true detail they gave and organise it',
+  '     (problem -> design -> risk handled -> result). NEVER invent experience, employers,',
+  '     tools, numbers or results they did not state. Fill missing parts ONLY as',
+  '     proposals in conditional form ("I would…", "In this design I\'d…"), never as',
+  '     things they did. Plain text, no markdown. Empty string when there is no answer',
+  '     and REVEAL is off.',
+  '   - honesty_note: one short sentence telling them what they may present as',
+  '     something they built (from their own words) vs as a proposal. Empty if not needed.',
+  '   - memory_hook: a 3-6 step sequence to remember the ideal structure, joined',
+  '     with " → " (e.g. "Filter → Version → Retrieve → Rerank → Validate").',
   '5. When MAIN QUESTIONS are requested, also return that many distinct main',
   '   questions in "questions", ordered as you would ask them, each different from',
   '   THE QUESTION and from each other.',
@@ -158,7 +186,12 @@ const SYSTEM_PROMPT = [
   '    "scores": { "structure": 1-5, "depth": 1-5, "relevance": 1-5, "communication": 1-5 },',
   '    "strengths": [string],',
   '    "improve": [string],',
-  '    "strong_answer_outline": [string]',
+  '    "strong_answer_outline": [string],',
+  '    "score10": 0-10,',
+  '    "coverage": [{ "point": string, "status": "covered" | "partial" | "missing" }],',
+  '    "improved_answer": string,',
+  '    "honesty_note": string,',
+  '    "memory_hook": string',
   '  },',
   '  "next_question": string | null,',
   '  "questions": [string]',
@@ -249,13 +282,15 @@ function parseBody(body) {
   const maxFollowups = clampInt(body.max_followups === undefined ? 1 : body.max_followups, 1, MAX_FOLLOWUPS_CAP) || 1;
   const claimed = clampInt(body.followup_depth, 0, MAX_FOLLOWUPS_CAP);
   const depth = isFollowup ? Math.max(1, claimed === null ? 1 : claimed) : 0;
+  const reveal = body.reveal === true;
   return {
     ok: true,
     value: {
-      turn, question, type, style, length, sid, transcript, isFollowup,
+      turn, question, type, style, length, sid, transcript: reveal ? '' : transcript, isFollowup,
       mode: body.mode === 'text' ? 'text' : 'voice',
       maxFollowups, depth,
-      allowFollowup: body.allow_followup !== false && depth < maxFollowups,
+      allowFollowup: !reveal && body.allow_followup !== false && depth < maxFollowups,
+      reveal,
       diagram: sanitizeDiagram(body.diagram),
       needNext: body.need_next === true,
       history: sanitizeHistory(body.history),
@@ -322,6 +357,17 @@ function buildMessages(v) {
     fence(v.transcript) || '(the candidate gave no answer)',
     '</candidate_answer>',
   ];
+  if (v.reveal) {
+    lines.push(
+      '',
+      'REVEAL: the candidate pressed "Show me the answer" because they are stuck. Do not grade an',
+      'answer: set every score to 1, score10 to 0, every coverage status to "missing", strengths to',
+      '[], followup to null. Write "improved_answer" as a strong model answer to THE QUESTION for',
+      'this role (120-220 words, spoken, first person), phrased entirely as an approach or proposal',
+      '("I would…", "I\'d start by…"), with NO claims about the candidate\'s past work, employers or',
+      'numbers. "honesty_note" reminds them to swap in their own real example where they have one.',
+    );
+  }
   if (v.diagram) {
     lines.push(
       '',
@@ -394,6 +440,31 @@ function strList(v, maxItems, maxChars) {
   return out;
 }
 
+/** Multi-paragraph plain text: keep paragraph breaks, strip markdown, cap. */
+function longText(v, max) {
+  if (typeof v !== 'string') return '';
+  const s = v.replace(CTRL, '').replace(/\r\n?/g, '\n').replace(/[*_`#]+/g, '')
+    .replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  return s.length > max ? s.slice(0, max - 1).replace(/\s+\S*$/, '') + '…' : s;
+}
+
+/** "What the question asked" checklist: 0–6 {point, status}, deduped. */
+function coverageList(v, reveal) {
+  if (!Array.isArray(v)) return [];
+  const out = [];
+  const seen = new Set();
+  for (const x of v) {
+    if (!x || typeof x !== 'object') continue;
+    const point = oneLine(x.point, OUT_POINT_CHARS).replace(/^[-*•\d.)\s]+/, '');
+    if (!point || seen.has(point.toLowerCase())) continue;
+    seen.add(point.toLowerCase());
+    const st = String(x.status || '').toLowerCase();
+    out.push({ point, status: reveal ? 'missing' : (COVERAGE_STATUS.includes(st) ? st : 'missing') });
+    if (out.length >= OUT_COVERAGE) break;
+  }
+  return out;
+}
+
 /**
  * Validate + clamp the model JSON for this turn. Fails closed ({ok:false})
  * when there are no usable scores; everything else is clamped to the schema.
@@ -418,7 +489,20 @@ function validateTurn(parsed, v) {
     improve: strList(fb.improve, OUT_ITEMS - 1, OUT_ITEM_CHARS),
     strong_answer_outline: strList(fb.strong_answer_outline, OUT_OUTLINE, OUT_ITEM_CHARS),
   };
+  const avg = (scores.structure + scores.depth + scores.relevance + scores.communication) / 4;
+  const s10 = clampInt(fb.score10, 0, 10);
+  feedback.score10 = v.reveal ? 0 : (s10 === null ? Math.round(avg * 2) : s10);
+  feedback.coverage = coverageList(fb.coverage, v.reveal);
+  const improved = longText(fb.improved_answer, OUT_IMPROVED_CHARS);
+  feedback.improved_answer = !v.reveal && !v.transcript ? '' : improved;
+  feedback.honesty_note = oneLine(fb.honesty_note, OUT_ITEM_CHARS);
+  feedback.memory_hook = oneLine(fb.memory_hook, OUT_HOOK_CHARS).replace(/\s*(->|=>)\s*/g, ' → ');
+  if (v.reveal) {
+    for (const k of Object.keys(scores)) scores[k] = 1;
+    feedback.strengths = [];
+  }
   const out = { feedback };
+  if (v.reveal) out.revealed = true;
 
   const followup = v.allowFollowup ? spoken(parsed.followup, OUT_Q_CHARS) : '';
   if (followup) { out.followup = followup; out.followup_depth = v.depth + 1; }
@@ -539,7 +623,7 @@ async function handler(req, res) {
 module.exports = handler;
 // Exposed for unit tests.
 module.exports._internal = {
-  parseBody, sanitizeJob, sanitizeHistory, sanitizeDiagram, buildMessages, validateTurn, safeParseJson,
+  parseBody, coverageList, longText, sanitizeJob, sanitizeHistory, sanitizeDiagram, buildMessages, validateTurn, safeParseJson,
   issueToken, verifyToken, questionsNeeded, SYSTEM_PROMPT,
   TRANSCRIPT_MAX, HISTORY_TURNS, DIAGRAM_MAX, MAX_FOLLOWUPS_CAP,
 };
