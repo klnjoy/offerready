@@ -454,7 +454,7 @@ async function handleCopilot(body, res, user) {
       ? { question: String(body.thread.question || '').slice(0, 400), answer: String(body.thread.answer || '').slice(0, 1200) }
       : null,
   };
-  const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 1900, 0.4, 'coach', user && user.id);
+  const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 2500, 0.4, 'coach', user && user.id);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const v = COPILOT.validateCopilot(safeParseModelJson(out.content), input);
   if (!v.ok) { send(res, 502, { error: 'The AI Interview Coach could not build an answer this time. Please try again.' }); return; }
