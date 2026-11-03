@@ -240,7 +240,9 @@ const QUESTIONS_SYSTEM_PROMPT = [
   '  "questions": [',
   '    { "category": "technical"|"behavioral"|"system_design"|"leadership",',
   '      "difficulty": "easy"|"medium"|"hard",',
-  '      "prompt": string }',
+  '      "area": string,',
+  '      "prompt": string,',
+  '      "points": [string] }',
   '  ]',
   '}',
   '',
@@ -248,6 +250,25 @@ const QUESTIONS_SYSTEM_PROMPT = [
   'Technical questions must reference the actual skills/tech in the JD. System',
   'design questions must be scenario-based. Behavioral/leadership must be STAR-',
   'style. Vary difficulty realistically for the role seniority.',
+  '',
+  'HOW REAL INTERVIEWERS ASK (follow this):',
+  '- First decide the 4-6 core AREAS this role is tested on (the main duties and',
+  '  stack, e.g. for an AI forward deployed engineer: retrieval and vector search,',
+  '  RAG at scale, agents and tool use, production deployment on the named cloud,',
+  '  coding against APIs, customer discovery). Put the area in "area". Cover every',
+  '  core area; spend most questions on the role\'s CORE, not on side skills.',
+  '- Technical questions test knowledge and approach, the way interviewers really',
+  '  ask: "How does X work?", "X vs Y: when would you use each?", "How would you',
+  '  build / scale / secure X?", "What happens when X fails?", "Write code that…".',
+  '  At most ONE technical question may be "describe your experience with…".',
+  '- When the JD lists alternatives ("Java or Node.js", "AWS or Azure"), do not',
+  '  build questions around the alternatives; ask about the role\'s core instead.',
+  '- System design: a concrete scenario with scale (users, documents, latency).',
+  '- "points": 3-5 short bullets a STRONG answer covers, from general expert',
+  '  knowledge (not the candidate\'s resume): the mechanism, the trade-off, the',
+  '  numbers or checks that matter, the common mistake. For behavioral and',
+  '  leadership, the points are what the story must show (scope, own actions,',
+  '  result with a number), never invented facts about the candidate.',
 ].join('\n');
 
 // Short, de-duped list helper for prompt context (cap count + per-item length).
@@ -332,7 +353,16 @@ function validateQuestions(parsed) {
     if (category === 'technical' && /\b(tell me about a time|(?:give|share|describe|walk me through)\s+(?:me\s+)?(?:an?\s+)?(?:example|time|situation)\b|an example of a time|a time when you)/i.test(prompt)) category = 'behavioral';
     let difficulty = String(q.difficulty || 'medium').toLowerCase();
     if (VALID_DIFFICULTY.indexOf(difficulty) === -1) difficulty = 'medium';
-    clean.push({ category, difficulty, prompt: prompt.slice(0, 600) });
+    const points = (Array.isArray(q.points) ? q.points : [])
+      .map((x) => (typeof x === 'string' ? x.replace(/\s+/g, ' ').replace(/^[-*•\d.)\s]+/, '').trim().slice(0, 200) : ''))
+      .filter(Boolean).slice(0, 5);
+    const area = typeof q.area === 'string' ? q.area.replace(/\s+/g, ' ').trim().slice(0, 60) : '';
+    const item = { category, difficulty, prompt: prompt.slice(0, 600) };
+    if (area) item.area = area;
+    // Saved and shown as the question's "signals": what a strong answer covers
+    // (the app already shows these as "Make sure you cover" and grades against them).
+    if (points.length) item.signals = points;
+    clean.push(item);
     counts[category] = (counts[category] || 0) + 1;
   }
 

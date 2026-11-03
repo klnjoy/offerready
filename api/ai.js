@@ -303,7 +303,7 @@ async function handleGenerateQuestions(body, res, user) {
   let lastErr = null;
   for (let attempt = 0; attempt < 2 && !result; attempt++) {
     if (attempt && Date.now() - started > 15000) break;
-    const out = await callOpenAI(QUESTIONS_SYSTEM_PROMPT, userMsg, 3200, attempt ? 0.4 : 0.6, 'job_questions', user && user.id);
+    const out = await callOpenAI(QUESTIONS_SYSTEM_PROMPT, userMsg, 4400, attempt ? 0.4 : 0.6, 'job_questions', user && user.id);
     if (!out.ok) { lastErr = out; if (out.status === 504 || out.status === 429) break; continue; }
     const r = validateQuestions(safeParseModelJson(out.content));
     if (r.ok) result = r;
