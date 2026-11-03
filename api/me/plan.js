@@ -301,6 +301,26 @@ function teamEmails() {
   return Array.from(new Set(list(process.env.ADMIN_EMAILS).concat(list(process.env.METRICS_EXCLUDE_EMAILS))));
 }
 
+/** User ids of the team accounts (teamEmails), via the auth admin API. */
+async function teamUserIds() {
+  const emails = new Set(teamEmails());
+  if (!emails.size) return [];
+  const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return [];
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 9000);
+  try {
+    const resp = await fetch(url + '/auth/v1/admin/users?page=1&per_page=1000', {
+      signal: controller.signal, headers: { apikey: key, Authorization: 'Bearer ' + key },
+    });
+    if (!resp.ok) return [];
+    const j = await resp.json();
+    const users = Array.isArray(j && j.users) ? j.users : [];
+    return users.filter((u) => u && emails.has(String(u.email || '').toLowerCase())).map((u) => u.id);
+  } finally { clearTimeout(timer); }
+}
+
 /**
  * Calls the team-excluding function from migration 0023 (<fn>2); until that
  * migration is applied, falls back to the original function so the
@@ -372,6 +392,80 @@ async function adminVisits(since) {
     hide_ready: hidden !== null,
     capped: Array.isArray(rows) && rows.length >= 5000,
     visitors: Array.from(by.values()).map((v) => ({ id: v.id, release: v.release, visits: v.sessions.length, events: v.events })),
+  };
+}
+
+/** Service-role read of product_events (no migration needed). */
+async function eventRows(query) {
+  const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase not configured');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 9000);
+  try {
+    const resp = await fetch(url + '/rest/v1/product_events?' + query, {
+      signal: controller.signal,
+      headers: { apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json' },
+    });
+    if (!resp.ok) throw new Error('product_events ' + resp.status);
+    const rows = await resp.json();
+    return Array.isArray(rows) ? rows : [];
+  } finally { clearTimeout(timer); }
+}
+
+const SEARCH_HOSTS = /(^|\.)(google|bing|duckduckgo|yahoo|ecosia|brave|yandex|baidu|startpage|qwant)\./i;
+
+/** Where a visit came from, in the dashboard's buckets. Exported for tests. */
+function sourceBucket(props) {
+  const p = props && typeof props === 'object' ? props : {};
+  const src = String(p.src || '').toLowerCase();
+  const ref = String(p.ref || '').toLowerCase();
+  if (/linkedin|lnkd/.test(src) || /linkedin\.|lnkd\.in/.test(ref)) return 'LinkedIn';
+  if (SEARCH_HOSTS.test(ref + '.') || /^(google|bing|duckduckgo|search)$/.test(src)) return 'Search';
+  if (src) return 'Other: ' + src.slice(0, 40);
+  if (!ref || ref === 'direct') return 'Direct';
+  return 'Other: ' + ref.slice(0, 40);
+}
+
+/**
+ * Detail sections for the admin dashboard, counted from product_events only
+ * (no invented numbers): where visits came from (the first page view of each
+ * visit, which carries the source the app has logged since attribution was
+ * added), and which taps and scroll depths happened on which screen (the
+ * label/destination/screen each tap already logs). Team browsers an admin hid
+ * are left out; team accounts are left out by user id. Capped at 5,000 rows each.
+ */
+async function adminBreakdown(since, teamIds) {
+  const base = '&created_at=gte.' + encodeURIComponent(since) + '&order=created_at.desc&limit=5000';
+  const [entries, acts, hidden] = await Promise.all([
+    eventRows('select=anon_id,user_id,created_at,props&event=eq.page_view&props->>entry=eq.1' + base),
+    eventRows('select=anon_id,user_id,event,route,props&event=in.(tap,scrolled)' + base),
+    hiddenVisitors().catch(() => []),
+  ]);
+  const hide = new Set(hidden || []);
+  const team = new Set(teamIds || []);
+  const keep = (r) => !hide.has(String(r.anon_id || '').slice(0, 8)) && !(r.user_id && team.has(r.user_id));
+  const src = new Map();
+  let first = null;
+  for (const r of entries.filter(keep)) {
+    const b = sourceBucket(r.props);
+    src.set(b, (src.get(b) || 0) + 1);
+    if (!first || r.created_at < first) first = r.created_at;
+  }
+  const taps = new Map();
+  for (const r of acts.filter(keep)) {
+    const p = r.props && typeof r.props === 'object' ? r.props : {};
+    const screen = String(r.route || '?').split('?')[0].slice(0, 80);
+    const k = r.event === 'tap'
+      ? 'tap · ' + screen + ' · ' + String(p.label || p.to || 'link').slice(0, 60)
+      : 'scrolled ' + (String(p.depth) === '100' ? 'to the end' : 'half way') + ' · ' + screen;
+    taps.set(k, (taps.get(k) || 0) + 1);
+  }
+  const top = (m, n) => Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => ({ k, v }));
+  return {
+    sources: top(src, 12), sources_from: first,
+    actions: top(taps, 20),
+    capped: entries.length >= 5000 || acts.length >= 5000,
   };
 }
 
@@ -545,6 +639,16 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  if (op === 'breakdown') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see this.' }); return; }
+    const days = Math.max(1, Math.min(365, Math.round(Number(req.query.days) || 30)));
+    const since = new Date(Date.now() - days * 86400000).toISOString();
+    try { send(res, 200, Object.assign({ days, since }, await adminBreakdown(since, await teamUserIds().catch(() => [])))); }
+    catch (err) { console.error('[me/plan breakdown]', err && err.message); send(res, 503, { error: 'Couldn’t read this right now.' }); }
+    return;
+  }
+
   if (op === 'visits') {
     res.setHeader('Cache-Control', 'private, no-store');
     if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see visits.' }); return; }
@@ -585,3 +689,4 @@ module.exports = async function handler(req, res) {
 };
 
 module.exports._teamEmails = teamEmails;
+module.exports._sourceBucket = sourceBucket;
