@@ -161,15 +161,19 @@ async function saveQuestions(userId, jobId, questions) {
     model_answer: q.model_answer ? String(q.model_answer).slice(0, 2000) : null,
     signals: Array.isArray(q.signals) ? q.signals : [],
     sort_order: i,
+    area: q.area ? String(q.area).slice(0, 60) : null,
   }));
   try {
     await restFetch(`/questions?job_id=eq.${enc(jobId)}&user_id=eq.${enc(userId)}`,
       { method: 'DELETE', headers: serviceHeaders() });
-    const resp = await restFetch('/questions', {
+    const post = (body) => restFetch('/questions', {
       method: 'POST',
       headers: serviceHeaders({ Prefer: 'return=minimal' }),
-      body: JSON.stringify(rows),
+      body: JSON.stringify(body),
     });
+    let resp = await post(rows);
+    // Before migration 0028 there is no "area" column: save without it.
+    if (!resp.ok) resp = await post(rows.map(({ area, ...r }) => r)); // eslint-disable-line no-unused-vars
     return resp.ok ? rows.length : 0;
   } catch (_e) {
     return 0;
@@ -180,9 +184,10 @@ async function saveQuestions(userId, jobId, questions) {
 async function getQuestions(userId, jobId) {
   if (!userId || !jobId) return [];
   try {
-    const qs = `job_id=eq.${enc(jobId)}&user_id=eq.${enc(userId)}` +
-      `&select=category,difficulty,prompt,model_answer,signals,sort_order,created_at&order=sort_order.asc`;
-    const resp = await restFetch('/questions?' + qs, { method: 'GET', headers: serviceHeaders() });
+    const base = `job_id=eq.${enc(jobId)}&user_id=eq.${enc(userId)}&order=sort_order.asc&select=category,difficulty,prompt,model_answer,signals,sort_order,created_at`;
+    let resp = await restFetch('/questions?' + base + ',area', { method: 'GET', headers: serviceHeaders() });
+    // Before migration 0028 there is no "area" column.
+    if (!resp.ok) resp = await restFetch('/questions?' + base, { method: 'GET', headers: serviceHeaders() });
     if (!resp.ok) return [];
     const rows = await resp.json();
     return Array.isArray(rows) ? rows : [];
