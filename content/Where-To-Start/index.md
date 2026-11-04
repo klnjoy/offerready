@@ -31,6 +31,8 @@ core pages in order.
 
 Builds LLM features, RAG and agents into products.
 
+**Minimum experience:** 5+ years.
+
 1. [AI Engineer role guide](../Personal-SourceCode/Path_AI_Engineer.md)
 2. [LLM Fundamentals](../GenAI-Topics/llm-fundamentals/index.md)
 3. [Prompt Engineering](../GenAI-Topics/prompt-engineering/index.md)
@@ -39,21 +41,11 @@ Builds LLM features, RAG and agents into products.
 6. [Observability & Eval](../GenAI-Topics/observability/index.md)
 7. Questions: [AI Engineer Q&A](../Personal-SourceCode/AI_Engineer_Interview_QA.md) and [System Design Q&A](../Personal-SourceCode/System_Design_Interview_QA.md)
 
-### Data Engineer / Data Platform Engineer
-
-Owns warehousing, pipelines, modelling and governance, and the data that AI runs on.
-
-1. [Data Platform Engineer role guide](../Personal-SourceCode/Path_Data_Platform.md)
-2. [SQL Q&A](../Personal-SourceCode/SQL_Interview_QA.md) and [Data Engineering Q&A](../Personal-SourceCode/DataEngineering_Interview_QA.md)
-3. Your stack: [Snowflake](../Technologies/snowflake/index.md), [Databricks](../Technologies/databricks/index.md) or [dbt](../Technologies/dbt/index.md)
-4. [Snowflake Cortex](../Snowflake-Cortex/index.md), if the job mentions AI on the warehouse
-5. [RAG](../GenAI-Topics/rag/index.md) and [Embedding Models](../GenAI-Topics/embeddings/index.md), for how data feeds AI
-6. [Cost Optimization](../GenAI-Topics/cost-optimization/index.md)
-7. Questions: [Snowflake](../Personal-SourceCode/Snowflake_Interview_QA.md), [Databricks](../Personal-SourceCode/Databricks_Interview_QA.md) or [dbt](../Personal-SourceCode/dbt_Interview_QA.md) Q&A
-
-### Forward Deployed Engineer
+### AI FDE (Forward Deployed Engineer)
 
 Builds with customers: discovery, prototypes and getting AI into production at their site.
+
+**Minimum experience:** 10 years.
 
 1. [FDE role guide](../Personal-SourceCode/Path_FDE.md)
 2. [RAG](../GenAI-Topics/rag/index.md) and [Agent Engineering](../GenAI-Topics/agent-engineering/index.md)
@@ -61,9 +53,11 @@ Builds with customers: discovery, prototypes and getting AI into production at t
 4. [FDE Customer Q&A](../Personal-SourceCode/FDE_Customer_Interview_QA.md)
 5. Questions: [FDE Q&A](../Personal-SourceCode/Forward_Deployed_Engineer_Interview_QA.md)
 
-### AI Platform Engineer
+### AIOps · LLMOps · MLOps
 
 Builds model serving, LLM gateways, evaluation and the infrastructure under AI apps.
+
+**Minimum experience:** for DevOps people.
 
 1. [AI Platform Engineer role guide](../Personal-SourceCode/Path_AI_Platform_Engineer.md)
 2. [LLMOps / Deployment](../GenAI-Topics/llmops/index.md)
@@ -71,17 +65,6 @@ Builds model serving, LLM gateways, evaluation and the infrastructure under AI a
 4. [Observability & Eval](../GenAI-Topics/observability/index.md) and [Reliability](../GenAI-Topics/reliability/index.md)
 5. [Cost Optimization](../GenAI-Topics/cost-optimization/index.md)
 6. Questions: [ML / AI Platform Q&A](../Personal-SourceCode/ML_AI_Platform_Interview_QA.md)
-
-### Staff / Principal Architect
-
-Sets direction across teams: architecture, trade-offs, security and cost at scale.
-
-1. [Staff / Principal Architect role guide](../Personal-SourceCode/Path_Staff_Principal_Architect.md)
-2. [Senior / Staff / Principal compared](../Personal-SourceCode/Interview_Level_Comparison.md)
-3. [Architecture Overview](../Documentation/architecture-overview/index.md) and [Reference Architectures](../Enterprise/reference-architectures/index.md)
-4. [AI Security](../AI-Security/index.md)
-5. [The Interviewer Keeps Asking Why](../Personal-SourceCode/Interview_Why_Chains.md)
-6. Questions: [Architecture Q&A](../Personal-SourceCode/Architecture_Interview_QA.md) and [Leadership & Delivery Q&A](../Personal-SourceCode/Leadership_Delivery_Interview_QA.md)
 
 ## New to GenAI
 

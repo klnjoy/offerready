@@ -274,6 +274,4 @@ Reading is not practice. Run the questions out loud against a real job.
 !!! note "Related role guides"
     [Forward Deployed Engineer](Path_FDE.md) ·
     [AI Platform Engineer](Path_AI_Platform_Engineer.md) ·
-    [Data Platform Engineer](Path_Data_Platform.md) ·
-    [Staff / Principal AI Architect](Path_Staff_Principal_Architect.md) ·
     [Interview Guide overview](Interview_Guide_Overview.md)

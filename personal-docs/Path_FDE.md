@@ -267,6 +267,4 @@ translation.
 !!! note "Related role guides"
     [AI Engineer](Path_AI_Engineer.md) ·
     [AI Platform Engineer](Path_AI_Platform_Engineer.md) ·
-    [Data Platform Engineer](Path_Data_Platform.md) ·
-    [Staff / Principal AI Architect](Path_Staff_Principal_Architect.md) ·
     [Interview Guide overview](Interview_Guide_Overview.md)

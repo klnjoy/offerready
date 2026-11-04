@@ -1062,11 +1062,12 @@ def write_nav(md_catalog, modules) -> None:
             # senior-vs-staff rubric, likely questions and a 14-day plan.
             # Filenames keep the Path_ prefix so existing links keep working.
             ("Role guides", [
+                # The three roles OfferReady prepares for (same as the app's
+                # "Choose your AI role"). Data Platform and Staff / Principal
+                # pages still build, so old links work, but aren't listed.
                 ("Path_AI_Engineer.md", "AI Engineer"),
-                ("Path_FDE.md", "Forward Deployed Engineer"),
-                ("Path_AI_Platform_Engineer.md", "AI Platform Engineer"),
-                ("Path_Data_Platform.md", "Data Platform Engineer"),
-                ("Path_Staff_Principal_Architect.md", "Staff / Principal AI Architect"),
+                ("Path_FDE.md", "AI FDE (Forward Deployed Engineer)"),
+                ("Path_AI_Platform_Engineer.md", "AIOps · LLMOps · MLOps"),
             ]),
             ("By Level & Role", [
                 ("Interview_Level_Comparison.md", "Senior / Staff / Principal / FDE"),
@@ -1119,8 +1120,7 @@ def write_nav(md_catalog, modules) -> None:
         # synced to Personal-SourceCode/, but their filenames don't match the
         # interview catalog keywords, so register them explicitly (only if the
         # synced file is actually present).
-        for _pb in ("Path_AI_Engineer.md", "Path_Staff_Principal_Architect.md",
-                    "Path_FDE.md", "Path_Data_Platform.md",
+        for _pb in ("Path_AI_Engineer.md", "Path_FDE.md",
                     "Path_AI_Platform_Engineer.md"):
             if (DOCS_DIR / P / _pb).exists():
                 available[_pb] = f"{P}{_pb}"
