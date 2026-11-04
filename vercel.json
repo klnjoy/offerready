@@ -12,6 +12,9 @@
     },
     "api/premium/mock-turn.js": {
       "maxDuration": 60
+    },
+    "api/premium/grade-answer.js": {
+      "maxDuration": 60
     }
   },
   "rewrites": [
