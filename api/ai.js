@@ -303,7 +303,7 @@ async function handleGenerateQuestions(body, res, user) {
   let lastErr = null;
   for (let attempt = 0; attempt < 2 && !result; attempt++) {
     if (attempt && Date.now() - started > 15000) break;
-    const out = await callOpenAI(QUESTIONS_SYSTEM_PROMPT, userMsg, 3200, attempt ? 0.4 : 0.6, 'job_questions', user && user.id);
+    const out = await callOpenAI(QUESTIONS_SYSTEM_PROMPT, userMsg, 4400, attempt ? 0.4 : 0.6, 'job_questions', user && user.id);
     if (!out.ok) { lastErr = out; if (out.status === 504 || out.status === 429) break; continue; }
     const r = validateQuestions(safeParseModelJson(out.content));
     if (r.ok) result = r;
@@ -454,7 +454,7 @@ async function handleCopilot(body, res, user) {
       ? { question: String(body.thread.question || '').slice(0, 400), answer: String(body.thread.answer || '').slice(0, 1200) }
       : null,
   };
-  const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 1900, 0.4, 'coach', user && user.id);
+  const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 2500, 0.4, 'coach', user && user.id);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const v = COPILOT.validateCopilot(safeParseModelJson(out.content), input);
   if (!v.ok) { send(res, 502, { error: 'The AI Interview Coach could not build an answer this time. Please try again.' }); return; }
