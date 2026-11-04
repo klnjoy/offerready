@@ -319,7 +319,7 @@ async function handleGenerateQuestions(body, res, user) {
     const key = (t) => String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
     const seen = new Set(existing.map((q) => key(q.prompt)));
     const fresh = questions.filter((q) => !seen.has(key(q.prompt)));
-    questions = existing.map((q) => ({ category: q.category, difficulty: q.difficulty, prompt: q.prompt, model_answer: q.model_answer, signals: q.signals }))
+    questions = existing.map((q) => ({ category: q.category, difficulty: q.difficulty, prompt: q.prompt, model_answer: q.model_answer, signals: q.signals, area: q.area }))
       .concat(fresh).slice(0, 60);
   }
 
