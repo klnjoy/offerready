@@ -9,7 +9,8 @@
 
 'use strict';
 
-const RECAP_MAX = 3000;
+const RECAP_MAX = 6000; // typed or spoken recap (a 3-minute spoken recap fits)
+const TRANSCRIPT_MAX = 60000; // a meeting transcript the candidate was given (about an hour)
 const ROUNDS = ['recruiter', 'technical', 'system_design', 'behavioral', 'onsite', 'hiring_manager'];
 
 const SYSTEM = `
@@ -29,6 +30,45 @@ Rules:
 Return ONLY JSON:
 {"questions":[{"text":"","rating":"","note":""}],"feeling":0,"round":"","notes":""}
 `.trim();
+
+const TRANSCRIPT_SYSTEM = `
+You turn the transcript of a real job interview into a structured debrief for
+the candidate. The candidate supplied this transcript (the meeting tool or the
+company produced it, or they had permission). It may have speaker names,
+timestamps or caption fragments.
+
+Rules:
+- List the questions the INTERVIEWER asked, in order, including real follow-ups.
+  Skip small talk, logistics and the candidate's own questions. Never add
+  questions that are not in the transcript. One line each, as asked.
+- note per question: one short line on how the candidate answered (the key
+  point they made), then, if something obvious was missing or unclear, what to
+  strengthen next time. Base it ONLY on the transcript. "" if unclear.
+- rating: "" unless the transcript itself makes it plain (the candidate said
+  they didn't know: "bad"; the interviewer clearly praised it: "good").
+- feeling: 0 (a transcript doesn't say how it felt).
+- round: one of ${ROUNDS.join(', ')}, or "" if unclear.
+- notes: who the interviewers were, next steps or anything promised, short.
+Return ONLY JSON:
+{"questions":[{"text":"","rating":"","note":""}],"feeling":0,"round":"","notes":""}
+`.trim();
+
+/** A meeting transcript as the model sees it: no caption numbering or timestamps. */
+function cleanTranscript(t) {
+  return String(t || '')
+    .replace(/^WEBVTT.*$/gm, '')
+    .replace(/^\d+\s*$/gm, '')
+    .replace(/^\s*\d{1,2}:\d{2}(?::\d{2})?[.,]?\d*\s*-->.*$/gm, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function buildTranscriptMessages(transcript, job) {
+  const lines = ['TRANSCRIPT:', cleanTranscript(transcript).slice(0, TRANSCRIPT_MAX)];
+  if (job && job.title) lines.push('', 'Job: ' + s(job.title, 120));
+  return [{ role: 'system', content: TRANSCRIPT_SYSTEM }, { role: 'user', content: lines.join('\n') }];
+}
 
 const s = (v, max) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, max) : '');
 
@@ -57,4 +97,4 @@ function parseFill(raw) {
   return { questions, feeling, round, notes };
 }
 
-module.exports = { buildFillMessages, parseFill, RECAP_MAX };
+module.exports = { buildFillMessages, buildTranscriptMessages, cleanTranscript, parseFill, RECAP_MAX, TRANSCRIPT_MAX };
