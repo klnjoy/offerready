@@ -52,7 +52,7 @@ const STORY_DRAFT = 'story_draft';
 const { buildDraftMessages, parseDraft, buildBatchMessages, parseBatch, NOTES_MAX, RESUME_MAX } = require('./_lib/storyDraft');
 const STORY_BATCH = 'story_batch';
 const DEBRIEF_FILL = 'debrief_fill';
-const { buildFillMessages, parseFill, RECAP_MAX } = require('./_lib/debriefFill');
+const { buildFillMessages, buildTranscriptMessages, parseFill, RECAP_MAX, TRANSCRIPT_MAX } = require('./_lib/debriefFill');
 const INTERVIEWER_QS = 'interviewer_questions';
 const { TYPE_KEYS: INTERVIEWER_TYPES, buildInterviewerMessages, parseInterviewer } = require('./_lib/interviewerQs');
 
@@ -633,20 +633,22 @@ async function interviewerQuestions(req, res, body) {
  */
 async function debriefFill(req, res, body) {
   const recap = typeof body.recap === 'string' ? body.recap.trim() : '';
-  if (recap.length < 15) { send(res, 400, { error: 'Write a few sentences about the interview first.' }); return; }
-  if (recap.length > RECAP_MAX) { send(res, 413, { error: 'That’s too long. Keep it to the main points.' }); return; }
+  // mode "transcript": a meeting transcript the candidate was given, not a recap.
+  const transcript = body.mode === 'transcript';
+  if (recap.length < (transcript ? 80 : 15)) { send(res, 400, { error: transcript ? 'That transcript is too short to find questions in.' : 'Write a few sentences about the interview first.' }); return; }
+  if (recap.length > (transcript ? TRANSCRIPT_MAX : RECAP_MAX)) { send(res, 413, { error: transcript ? 'That transcript is too long. Upload one interview at a time.' : 'That’s too long. Keep it to the main points.' }); return; }
   const user = await getUser(req);
   if (!user) { send(res, 401, { error: 'Sign in to fill in a debrief with AI.', signin: true }); return; }
   const ctx = sanitizeContext(body.context);
-  const messages = buildFillMessages(recap, ctx && ctx.job);
+  const messages = transcript ? buildTranscriptMessages(recap, ctx && ctx.job) : buildFillMessages(recap, ctx && ctx.job);
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), transcript ? 50000 : REQUEST_TIMEOUT_MS);
   try {
     const t0 = Date.now();
     const resp = await fetch(OPENAI_URL, {
       method: 'POST', signal: controller.signal,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-      body: JSON.stringify({ model: process.env.OPENAI_MODEL || DEFAULT_MODEL, temperature: 0.2, max_tokens: 900, messages, response_format: { type: 'json_object' } }),
+      body: JSON.stringify({ model: process.env.OPENAI_MODEL || DEFAULT_MODEL, temperature: 0.2, max_tokens: transcript ? 2400 : 900, messages, response_format: { type: 'json_object' } }),
     });
     if (resp.status === 429) { send(res, 429, { error: 'Busy right now — try again in a moment.' }); return; }
     if (!resp.ok) { console.error(`debrief_fill OpenAI status ${resp.status}`); send(res, 502, { error: 'Couldn’t fill in the debrief. Please try again.' }); return; }
