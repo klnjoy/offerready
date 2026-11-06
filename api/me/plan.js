@@ -296,6 +296,9 @@ function geoFromHeaders(h) {
  * users only: everyone in ADMIN_EMAILS plus METRICS_EXCLUDE_EMAILS
  * (comma-separated, lower-cased). Admin access is unchanged.
  */
+/** ?months= for the monthly view: 1–24, default 12. */
+function monthsParam(v) { return Math.max(1, Math.min(24, Math.round(Number(v) || 12))); }
+
 function teamEmails() {
   const list = (v) => String(v || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
   return Array.from(new Set(list(process.env.ADMIN_EMAILS).concat(list(process.env.METRICS_EXCLUDE_EMAILS))));
@@ -495,6 +498,10 @@ async function hiddenVisitors() {
 }
 
 async function adminRpc(fn, since, extra) {
+  return adminRpcBody(fn, Object.assign({ p_since: since }, extra || {}));
+}
+
+async function adminRpcBody(fn, body) {
   const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error('Supabase not configured');
@@ -504,7 +511,7 @@ async function adminRpc(fn, since, extra) {
     const resp = await fetch(url + '/rest/v1/rpc/' + fn, {
       method: 'POST', signal: controller.signal,
       headers: { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.assign({ p_since: since }, extra || {})),
+      body: JSON.stringify(body),
     });
     if (!resp.ok) throw new Error(fn + ' ' + resp.status);
     return await resp.json();
@@ -659,6 +666,21 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  if (op === 'monthly') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see metrics.' }); return; }
+    const months = monthsParam(req.query.months);
+    const team = req.query.team === '1';
+    try {
+      const rows = await adminRpcBody('admin_monthly', { p_months: months, p_exclude: team ? [] : teamEmails() });
+      send(res, 200, { months, team, rows: Array.isArray(rows) ? rows : [] });
+    } catch (err) {
+      console.error('[me/plan monthly]', err && err.message);
+      send(res, 503, { error: 'Monthly numbers aren’t set up yet. Run migration 0029_admin_monthly.sql in the Supabase SQL editor.', setup: true });
+    }
+    return;
+  }
+
   if (op === 'metrics') {
     res.setHeader('Cache-Control', 'private, no-store');
     if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see metrics.' }); return; }
@@ -689,4 +711,5 @@ module.exports = async function handler(req, res) {
 };
 
 module.exports._teamEmails = teamEmails;
+module.exports._monthsParam = monthsParam;
 module.exports._sourceBucket = sourceBucket;
