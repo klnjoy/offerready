@@ -25,6 +25,7 @@
 'use strict';
 
 const { evidenceFound } = require('./gradeAnswer');
+const { validateDiagram, PROMPT_RULES: DIAGRAM_RULES } = require('./diagram');
 
 const MODES = {
   answer: 'Draft a strong, speakable answer to the question.',
@@ -66,9 +67,7 @@ const SYSTEM_PROMPT = [
   '  words) of the same answer. Use only facts from the material; where a number',
   '  is needed but unknown, write a placeholder in brackets like [X%] or [team size].',
   '- "key_points": the 3 things to remember when saying it, each under 12 words.',
-  '- "flow": ONLY for system design, architecture or pipeline questions (else []):',
-  '  the design as 3-7 steps in data/request order, each "Component: what it does"',
-  '  under 10 words (e.g. "Kafka: buffers events"). Generic building blocks only.',
+  DIAGRAM_RULES,
   '- "code": ONLY when the question asks how to implement, query or write',
   '  something (else null): { "language": string, "snippet": string } with at most',
   '  15 short lines that show the core idea. No secrets, no real company code.',
@@ -96,7 +95,7 @@ const SYSTEM_PROMPT = [
   '  "key_points": [string],         // exactly 3',
   '  "followups": [string],          // 3 likely follow-up questions',
   '  "gaps": [string],               // what to prepare or verify (may be empty)',
-  '  "flow": [string],               // architecture steps, or [] (see rules)',
+  '  "diagram": object | null,       // see the diagram rules',
   '  "code": { "language": string, "snippet": string } | null,',
   '  "expert": { "summary": string, "points": [string] }',
   '}',
@@ -230,6 +229,11 @@ function validateCopilot(parsed, input) {
       followups: arr(parsed.followups, 4, 240),
       gaps: arr(parsed.gaps, 5, 240),
       flow: arr(parsed.flow, 7, 90),
+      // One diagram, from the same content as the answer and checked against it.
+      diagram: validateDiagram(parsed.diagram, {
+        kind: types.includes(parsed.question_type) ? parsed.question_type : 'general',
+        text: [headline, improved, short, ...arr(parsed.key_points, 3, 120), parsed.expert && parsed.expert.summary, ...((parsed.expert && Array.isArray(parsed.expert.points)) ? parsed.expert.points : [])].filter((x) => typeof x === 'string').join('\n'),
+      }),
       code: codeOf(parsed.code),
       expert: expertOf(parsed.expert),
       unverified: unverifiedNumbers(improved + '\n' + short, [resume, stories, String(i.draft || '')].join('\n')),

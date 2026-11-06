@@ -454,7 +454,7 @@ async function handleCopilot(body, res, user) {
       ? { question: String(body.thread.question || '').slice(0, 400), answer: String(body.thread.answer || '').slice(0, 1200) }
       : null,
   };
-  const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 2500, 0.4, 'coach', user && user.id);
+  const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 2800, 0.4, 'coach', user && user.id);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const v = COPILOT.validateCopilot(safeParseModelJson(out.content), input);
   if (!v.ok) { send(res, 502, { error: 'The AI Interview Coach could not build an answer this time. Please try again.' }); return; }
@@ -470,7 +470,7 @@ async function handleCopilot(body, res, user) {
 async function handleTopicQuestions(body, res, user) {
   const r = TOPIC_Q.readInput(body);
   if (!r.ok) { send(res, 400, { error: r.error }); return; }
-  const out = await callOpenAI(TOPIC_Q.SYSTEM_PROMPT, TOPIC_Q.buildUserMessage(r.input), 1800, 0.7, 'topic_questions', user && user.id);
+  const out = await callOpenAI(TOPIC_Q.SYSTEM_PROMPT, TOPIC_Q.buildUserMessage(r.input), 2600, 0.7, 'topic_questions', user && user.id);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   const v = TOPIC_Q.validate(safeParseModelJson(out.content), r.input);
   if (!v.ok) { send(res, 502, { error: 'Couldn’t write questions this time. Please try again.' }); return; }

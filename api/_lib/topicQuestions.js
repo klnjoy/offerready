@@ -9,11 +9,13 @@
 
 'use strict';
 
+const { validateDiagram, PROMPT_RULES: DIAGRAM_RULES } = require('./diagram');
+
 const COUNT = 5;
 
 const SYSTEM_PROMPT = [
   'You write realistic technical interview questions for job seekers, with short model answers.',
-  'Return JSON only: {"questions":[{"q":"...","a":"...","difficulty":"easy|medium|hard"}]}.',
+  'Return JSON only: {"questions":[{"q":"...","a":"...","difficulty":"easy|medium|hard","diagram":null}]}.',
   'Rules:',
   '- Exactly ' + COUNT + ' questions on the given topic, each one different in what it tests (concepts, trade-offs, debugging, design, a scenario).',
   '- Ask what interviewers actually ask for this topic today; no trivia, no product news or prices.',
@@ -22,6 +24,8 @@ const SYSTEM_PROMPT = [
   '- Do not repeat or lightly reword any question in the "avoid" list.',
   '- If a job title is given, lean the questions toward what that role would be asked, still on the topic.',
   '- Behavioral topics: ask situation questions ("Tell me about a time…") and give an answer outline using STAR, never invented personal facts.',
+  'Each question may carry a diagram for its answer (the answer "a" is the text it must agree with):',
+  DIAGRAM_RULES,
 ].join('\n');
 
 function clean(s, max) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, max); }
@@ -59,7 +63,12 @@ function validate(parsed, input) {
     if (seen.has(k)) continue;
     seen.add(k);
     const d = String(x.difficulty || 'medium').toLowerCase();
-    out.push({ q, a, topic: input.topic, difficulty: ['easy', 'medium', 'hard'].includes(d) ? d : 'medium' });
+    const item = { q, a, topic: input.topic, difficulty: ['easy', 'medium', 'hard'].includes(d) ? d : 'medium' };
+    // A story question never gets a diagram; any other only when it matches its answer.
+    const story = /tell me about|a time (when|you)|describe a situation|behaviou?ral|leadership/i.test(q + ' ' + input.topic);
+    const diagram = validateDiagram(x.diagram, { kind: story ? 'behavioral' : 'technical', text: a });
+    if (diagram) item.diagram = diagram;
+    out.push(item);
     if (out.length === COUNT) break;
   }
   return out.length >= 3 ? { ok: true, questions: out } : { ok: false };
