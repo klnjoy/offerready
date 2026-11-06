@@ -710,3 +710,19 @@ test('a level the job description never states is not added to the title', () =>
 test('a bare level as jobTitle is ignored', () => {
   assert.notEqual(dj({}, { jobTitle: 'Senior', roleSummary: 'The Data Engineer will build pipelines.' }), 'Senior');
 });
+
+// AIOps · LLMOps · MLOps (the third AI role): AI plus DevOps -> platform family.
+test('normalizeRoleFamily: MLOps / LLMOps / AIOps titles -> cloud-platform', () => {
+  for (const t of ['MLOps Engineer', 'Senior LLMOps Engineer', 'AIOps Engineer', 'ML Ops Engineer', 'ML Platform Engineer', 'GenAI Ops Engineer']) {
+    assert.equal(normalizeRoleFamily({ title: t, roleSummary: 'Runs LLM agents in production.' }), 'cloud-platform', t);
+  }
+});
+test('normalizeRoleFamily: an AI Engineer who lists MLOps as a skill stays ai-engineer', () => {
+  assert.equal(normalizeRoleFamily({ title: 'AI Engineer', skills: ['MLOps', 'RAG'] }), 'ai-engineer');
+  assert.equal(normalizeRoleFamily({ title: 'ML Engineer, MLOps' }), 'ai-engineer');
+  assert.equal(normalizeRoleFamily({ title: 'Machine Learning Engineer' }), 'ai-engineer');
+});
+test('normalizeRoleFamily: AI Engineer and Forward Deployed unchanged', () => {
+  assert.equal(normalizeRoleFamily({ title: 'Senior AI Engineer' }), 'ai-engineer');
+  assert.equal(normalizeRoleFamily({ title: 'AI Forward Deployed Engineer' }), 'fde');
+});
