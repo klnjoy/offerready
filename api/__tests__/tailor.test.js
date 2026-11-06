@@ -383,3 +383,71 @@ test('validateOutput clamps long text', () => {
   assert.ok(r.value[0].why.length <= 240);
   assert.ok(r.value[0].keywords_added.length <= 6);
 });
+
+// ---- suggested removals ("remove") ----
+const { validateRemove } = handler._internal;
+const SIX = [
+  'Built ELT pipelines in Python that loaded 40 tables into Snowflake',
+  'Ran the office fantasy football league for 3 seasons',
+  'Wrote data quality checks for nightly loads',
+  'Organised the team holiday party',
+  'Maintained Airflow DAGs for 120 daily jobs',
+  'Answered customer phone calls at a retail store',
+];
+const vSix = () => parseBody({ bullets: SIX, resume_text: SIX.join('\n'), job: JOB }).value;
+
+test('remove: keeps valid, unrelated bullets with a reason, sorted', () => {
+  const out = validateRemove({ remove: [{ index: 3, why: 'Not related to data engineering.' }, { index: 1, why: 'A hobby, not work this job needs.' }] }, vSix(), []);
+  assert.deepEqual(out.map((x) => x.index), [1, 3]);
+  assert.equal(out[0].original, SIX[1]);
+  assert.match(out[0].why, /hobby/);
+});
+
+test('remove: never a bullet that names a job skill or gap, a rewritten one, a bad index or one without a reason', () => {
+  const out = validateRemove({ remove: [
+    { index: 0, why: 'Names Snowflake, so it must stay.' },
+    { index: 2, why: 'Mentions data quality, a gap.' },
+    { index: 4, why: 'Airflow is a job skill.' },
+    { index: 5, why: '' },
+    { index: 3, why: 'Already rewritten.' },
+    { index: 99, why: 'Out of range.' },
+    { index: 1, why: 'Hobby.' },
+    { index: 1, why: 'Duplicate.' },
+  ] }, vSix(), [3]);
+  assert.deepEqual(out.map((x) => x.index), [1]);
+});
+
+test('remove: at most a third of the bullets; none for fewer than three; bad input is just empty', () => {
+  const all = { remove: [1, 3, 5].map((i) => ({ index: i, why: 'Unrelated.' })) };
+  assert.equal(validateRemove(all, vSix(), []).length, 2);
+  const two = parseBody({ bullets: SIX.slice(1, 3), job: JOB }).value;
+  assert.equal(validateRemove({ remove: [{ index: 0, why: 'Unrelated.' }] }, two, []).length, 0);
+  assert.deepEqual(validateRemove(null, vSix(), []), []);
+  assert.deepEqual(validateRemove({ remove: 'x' }, vSix(), []), []);
+});
+
+test('the prompt asks for conservative removals the candidate decides', () => {
+  assert.match(SYSTEM_PROMPT, /"remove"/);
+  assert.match(SYSTEM_PROMPT, /at most a third/);
+  assert.match(SYSTEM_PROMPT, /candidate\s+decides/);
+});
+
+test('handler: removals come back beside rewrites, and alone when nothing needs rewriting', async () => {
+  for (const env of ENV_KEYS) process.env[env] = env === 'OPENAI_MODEL' ? '' : 'x';
+  stubFetch({ user: USER, models: [{ suggestions: [{ index: 0, rewritten: 'Built Python ELT pipelines loading 40 tables into Snowflake with dbt models', keywords_added: ['dbt'], why: 'Adds dbt.' }], remove: [{ index: 1, why: 'A hobby, not work this job needs.' }] }] });
+  stubPlans();
+  let res = mockRes();
+  await handler(req({ bullets: SIX, resume_text: SIX.join('\n'), job: JOB }), res);
+  assert.equal(res.statusCode, 200);
+  let b = res.json();
+  assert.equal(b.suggestions.length, 1);
+  assert.deepEqual(b.remove.map((x) => [x.index, x.original]), [[1, SIX[1]]]);
+
+  stubFetch({ user: USER, models: [{ suggestions: [], remove: [{ index: 3, why: 'Not related to this job.' }] }] });
+  res = mockRes();
+  await handler(req({ bullets: SIX, resume_text: SIX.join('\n'), job: JOB }), res);
+  assert.equal(res.statusCode, 200);
+  b = res.json();
+  assert.deepEqual(b.suggestions, []);
+  assert.deepEqual(b.remove.map((x) => x.index), [3]);
+});
