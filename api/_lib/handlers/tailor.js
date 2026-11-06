@@ -13,7 +13,12 @@
  *   job:         { title, company, seniority, skills[≤25], gaps[≤15] }
  *
  * 200 → { ok, model, suggestions: [{ index, original, rewritten,
- *         keywords_added[], why, needs_fact, fact_question? }], quota }
+ *         keywords_added[], why, needs_fact, fact_question? }],
+ *         remove: [{ index, original, why }], quota }
+ * `remove` lists bullets that show nothing this job asks for, as suggestions
+ * the candidate confirms one by one (the app applies them to that job's
+ * tailored copy only). The server drops any that name a job skill or gap,
+ * and keeps at most a third of the bullets (≤ 4).
  *
  * "Add a missing point" (body.mode === 'add'): one NEW bullet written only
  * from the candidate's own notes about a requirement the resume doesn't show.
@@ -102,8 +107,18 @@ const SYSTEM_PROMPT = [
   'anything other than the schema.',
   '',
   'Return one suggestion per input bullet you can genuinely improve (skip a',
-  'bullet only when it is already strong and on target). Output JSON ONLY:',
+  'bullet only when it is already strong and on target).',
+  '',
+  'Also list in "remove" the bullets that do NOT help with this job: they show',
+  'no skill, tool, responsibility or result the job asks for, so cutting them',
+  'makes room for what matters. Be conservative: at most a third of the',
+  'bullets; never a bullet that is the only evidence of something the job',
+  'needs; do not also rewrite a bullet you list in "remove". The candidate',
+  'decides; this only removes it from the copy tailored for this job.',
+  '',
+  'Output JSON ONLY:',
   '{',
+  '  "remove": [ { "index": <bullet number>, "why": string (one sentence: why it does not help for this job) } ],',
   '  "suggestions": [',
   '    {',
   '      "index": <the bullet number from BULLETS, starting at 0>,',
@@ -269,7 +284,7 @@ function clip(s, max) {
 function validateOutput(parsed, v) {
   if (!parsed || typeof parsed !== 'object') return { ok: false, reason: 'not-object' };
   const raw = Array.isArray(parsed.suggestions) ? parsed.suggestions : Array.isArray(parsed) ? parsed : null;
-  if (!raw) return { ok: false, reason: 'no-suggestions' };
+  if (!raw) return { ok: false, reason: Array.isArray(parsed.remove) ? 'empty' : 'no-suggestions' };
   const jobKeys = [...(v.job.skills || []), ...(v.job.gaps || [])];
   const allowedNums = sourceNumbers([v.resumeText, ...v.bullets]);
   const used = new Set();
@@ -314,6 +329,34 @@ function validateOutput(parsed, v) {
   if (!out.length) return { ok: false, reason: 'empty' };
   out.sort((a, b) => a.index - b.index);
   return { ok: true, value: out };
+}
+
+/**
+ * Bullets to suggest removing for this job: valid, unique indexes, not also
+ * rewritten, not naming any job skill or gap, at most a third of the bullets
+ * (and at most 4). Never fails: an unusable list is just empty.
+ */
+const REMOVE_MAX = 4;
+function validateRemove(parsed, v, rewrittenIdx) {
+  const raw = parsed && typeof parsed === 'object' && Array.isArray(parsed.remove) ? parsed.remove : [];
+  const cap = Math.min(REMOVE_MAX, Math.floor(v.bullets.length / 3));
+  const jobKeys = [...(v.job.skills || []), ...(v.job.gaps || [])];
+  const out = [];
+  const used = new Set(rewrittenIdx || []);
+  for (const r of raw) {
+    if (out.length >= cap) break;
+    if (!r || typeof r !== 'object') continue;
+    const index = Math.round(Number(r.index));
+    if (!Number.isInteger(index) || index < 0 || index >= v.bullets.length || used.has(index)) continue;
+    const original = v.bullets[index];
+    // Anything that names what the job asks for stays.
+    if (jobKeys.some((k) => mentions(original, k))) continue;
+    const why = clip(oneLine(r.why, OUT_WHY_MAX * 2), OUT_WHY_MAX);
+    if (!why) continue;
+    used.add(index);
+    out.push({ index, original, why });
+  }
+  return out.sort((a, b) => a.index - b.index);
 }
 
 // ------------------------------------------------------- add a new point ---
@@ -568,13 +611,17 @@ async function handler(req, res) {
       send(res, 200, { ok: true, model, point: added.value, quota: { plan: qa.plan, used: (Number(qa.used) || 0) + (added.value.bullet ? 1 : 0), limit: qa.limit === undefined ? null : qa.limit } });
       return;
     }
-    let result = validateOutput(safeParseJson(r.content), v);
+    let parsedOut = safeParseJson(r.content);
+    let result = validateOutput(parsedOut, v);
     // Unreadable or cut-off JSON: retry once, asking for short, valid JSON.
     if (!result.ok && result.reason !== 'empty') {
       console.error('tailor output failed validation, retrying:', result.reason, r.finish);
       const r2 = await ask('Your previous reply was not valid or was cut off. Reply with a short, valid JSON object only: keep each "why" under 15 words.');
-      if (r2.ok) result = validateOutput(safeParseJson(r2.content), v);
+      if (r2.ok) { parsedOut = safeParseJson(r2.content); result = validateOutput(parsedOut, v); }
     }
+    const remove = validateRemove(parsedOut, v, result.ok ? result.value.map((x) => x.index) : []);
+    // Only removals and no rewrites is still a useful answer.
+    if (!result.ok && result.reason === 'empty' && remove.length) result = { ok: true, value: [] };
     if (!result.ok) {
       console.error('tailor output failed validation:', result.reason);
       if (result.reason === 'empty') {
@@ -591,6 +638,7 @@ async function handler(req, res) {
       ok: true,
       model,
       suggestions: result.value,
+      remove,
       quota: { plan: q.plan, used: (Number(q.used) || 0) + 1, limit: q.limit === undefined ? null : q.limit },
     });
   } catch (err) {
@@ -604,7 +652,7 @@ async function handler(req, res) {
 
 module.exports = handler;
 module.exports._internal = {
-  parseBody, sanitizeJob, buildMessages, validateOutput, safeParseJson, scrubInventedNumbers, sourceNumbers,
+  parseBody, sanitizeJob, buildMessages, validateOutput, validateRemove, safeParseJson, scrubInventedNumbers, sourceNumbers,
   parseAddBody, buildAddMessages, validateAdd,
   parseDraftBody, buildDraftMessages, validateDraft, scrubUnknownNames,
   SYSTEM_PROMPT, MAX_BULLETS, RESUME_MAX, BULLET_MAX,
