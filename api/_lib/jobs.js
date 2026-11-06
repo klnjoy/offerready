@@ -293,8 +293,18 @@ function deriveTitleFromSignals(analysis, levelPrefix) {
  *
  * ctx: { title, roleSummary, skills:[], technologies:[], seniority } (any subset)
  */
+/** AIOps · LLMOps · MLOps is AI plus DevOps: the platform family. Read from
+ * the TITLE only, so an AI Engineer posting that lists MLOps as a skill stays
+ * an AI Engineer. Mirrors client isOpsTitle (lib/roles.ts). */
+function isOpsTitle(title) {
+  const t = String(title || '').toLowerCase();
+  return /\b(ml|llm|ai|gen ?ai)[ -]?ops\b|\bml platform\b|\bmachine learning platform\b/.test(t)
+    && !/\b(ai|ml|genai|gen ai|machine learning) engineer\b/.test(t);
+}
+
 function normalizeRoleFamily(ctx) {
   const c = ctx || {};
+  if (isOpsTitle(c.title)) return 'cloud-platform';
   const hay = [
     c.title || '',
     c.roleSummary || '',
@@ -337,7 +347,7 @@ function normalizeRoleFamily(ctx) {
   // Architecture. These AI rules run before the generic cloud/platform rule so
   // an "AI ... platform" role isn't mislabeled Cloud/Platform. Mirrors client
   // inferScenarioCategory (analyze.js).
-  const aiEngSignal = /\bai engineer|genai|gen ai|ml engineer|rag|agent|agentic|langchain|langgraph|llm|nlp|prompt\b/.test(hay);
+  const aiEngSignal = /\bai engineer|genai|gen ai|ml engineer|machine learning engineer|rag|agent|agentic|langchain|langgraph|llm|nlp|prompt\b/.test(hay);
   const archRoleNoun = /\barchitect\b/.test(hay);
   const archScope = /\bsystem design|multi-?tenant|reference architecture\b/.test(hay);
   if (aiEngSignal) {
@@ -576,6 +586,6 @@ function repairedTitleFor(job) {
 module.exports = {
   listJobs, countJobs, getJob, insertJob, deleteJob,
   deriveJobTitle, cleanTitle, restoreJobContext, GAP_MIN_JD,
-  extractRoleFromSummary, normalizeRoleFamily, deriveTitleFromSignals,
+  extractRoleFromSummary, normalizeRoleFamily, isOpsTitle, deriveTitleFromSignals,
   updateJobFields, touchJobStats, isWeakTitle, repairedTitleFor,
 };
