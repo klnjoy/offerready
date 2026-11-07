@@ -15,3 +15,12 @@ test('prompt teaches the right answer and bans "still learning" filler', () => {
   assert.match(C.SYSTEM_PROMPT, /Never pad with "I'm still learning"/);
   assert.match(C.SYSTEM_PROMPT, /Never invent employers/);
 });
+
+test('coach prompt: diagram and code are required for how-to-build technical questions; expert says the substance', () => {
+  const C = require('../_lib/copilot');
+  assert.match(C.SYSTEM_PROMPT, /diagram is REQUIRED/);
+  assert.match(C.SYSTEM_PROMPT, /"code": REQUIRED when the question is about building/);
+  assert.match(C.SYSTEM_PROMPT, /null for behavioral,\n?.*leadership and purely conceptual/s);
+  assert.match(C.SYSTEM_PROMPT, /NEVER describe what an answer "should"/);
+  assert.match(C.SYSTEM_PROMPT, /No secrets, no keys/);
+});
