@@ -223,13 +223,13 @@ function validateGap(parsed, resumeText, previousRequirements) {
 
 // Target counts per category (spec: 10 technical, 10 behavioral, 5 system
 // design, 5 leadership).
-// A first set of 16 comes back in about half the time of 30; "Get more
-// questions" adds another set that doesn't repeat it.
+// A first set of 10 sharp questions for THIS job (owner, Nov 7: fewer, more
+// relevant); "Get more questions" adds another set that doesn't repeat it.
 const QUESTION_TARGETS = {
-  technical: 6,
-  behavioral: 5,
-  system_design: 3,
-  leadership: 2,
+  technical: 4,
+  behavioral: 3,
+  system_design: 2,
+  leadership: 1,
 };
 const VALID_CATEGORIES = Object.keys(QUESTION_TARGETS);
 const VALID_DIFFICULTY = ['easy', 'medium', 'hard'];
@@ -256,6 +256,15 @@ const QUESTIONS_SYSTEM_PROMPT = [
   'style. Vary difficulty realistically for the role seniority.',
   '',
   'HOW REAL INTERVIEWERS ASK (follow this):',
+  '- QUALITY OVER COUNT: every question must be one THIS employer would ask for',
+  '  THIS role. Tie each one to a duty, tool, requirement or situation named in',
+  '  the job description (say which in "area"). If you cannot point to it in',
+  '  the job description, do not ask it. Never ask the generic set every company',
+  '  asks (tell me about yourself, strengths and weaknesses, a conflict with a',
+  '  coworker, where do you see yourself) unless it is framed around a named',
+  '  duty of this job.',
+  '- Order: the job\'s must-have requirements first, then the gaps listed below.',
+  '  One question per core area before any area gets a second.',
   '- First decide the 4-6 core AREAS this role is tested on (the main duties and',
   '  stack, e.g. for an AI forward deployed engineer: retrieval and vector search,',
   '  RAG at scale, agents and tool use, production deployment on the named cloud,',
@@ -374,7 +383,8 @@ function validateQuestions(parsed) {
 
   // Require a meaningful set: at least half the target in each of the 4 buckets.
   const enough = VALID_CATEGORIES.every((c) => (counts[c] || 0) >= Math.ceil(QUESTION_TARGETS[c] / 2));
-  if (clean.length < 12 || !enough) return { ok: false, reason: 'insufficient', counts: counts };
+  const total = VALID_CATEGORIES.reduce((n, c) => n + QUESTION_TARGETS[c], 0);
+  if (clean.length < Math.ceil(total * 0.7) || !enough) return { ok: false, reason: 'insufficient', counts: counts };
 
   return { ok: true, questions: clean, counts: counts };
 }
