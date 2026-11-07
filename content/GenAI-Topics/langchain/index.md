@@ -6,6 +6,8 @@ icon: material/link-variant
 
 *Last reviewed: October 2026*
 
+*Sources: LangChain's official documentation (docs.langchain.com); verify against it before an interview. Content was rephrased for compliance with licensing restrictions.*
+
 !!! info "What's changed recently"
     - **LangChain 1.0 (October 2025)** slimmed the package around one agent
       abstraction: `create_agent`, which runs on the LangGraph runtime. The

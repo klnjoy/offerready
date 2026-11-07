@@ -6,6 +6,8 @@ icon: material/graph
 
 *Last reviewed: October 2026*
 
+*Sources: LangGraph's official documentation (docs.langchain.com); verify against it before an interview. Content was rephrased for compliance with licensing restrictions.*
+
 !!! info "What's changed recently"
     - **LangGraph 1.0 (October 2025)** is the stable runtime for durable,
       stateful agents, with built-in persistence and human-in-the-loop. It stayed

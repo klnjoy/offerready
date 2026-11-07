@@ -6,6 +6,8 @@ icon: material/account-cog
 
 *Last reviewed: October 2026*
 
+*Sources: AWS's official Amazon Bedrock AgentCore documentation (docs.aws.amazon.com); verify against it before an interview. Content was rephrased for compliance with licensing restrictions.*
+
 !!! info "What's changed recently"
     - **AgentCore went GA in October 2025** as modular services you can adopt one
       at a time: Runtime, Memory, Gateway, Identity, Code Interpreter, Browser, and

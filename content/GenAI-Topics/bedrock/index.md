@@ -6,6 +6,8 @@ icon: material/aws
 
 *Last reviewed: October 2026*
 
+*Sources: AWS's official Amazon Bedrock documentation (docs.aws.amazon.com); verify against it before an interview. Content was rephrased for compliance with licensing restrictions.*
+
 !!! info "What's changed recently"
     - **The Converse API is the default interface.** It is one request shape
       across models, with tool use and streaming. Newer models are usually called

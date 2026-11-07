@@ -6,6 +6,8 @@ icon: material/snowflake
 
 *Last reviewed: October 2026*
 
+*Sources: Snowflake's official documentation (docs.snowflake.com); verify against it before an interview. Content was rephrased for compliance with licensing restrictions.*
+
 !!! info "What's changed recently"
     - **Cortex grew into an agent platform.** Cortex Agents orchestrate Cortex
       Analyst, Cortex Search, code execution, custom tools, and MCP connectors.
