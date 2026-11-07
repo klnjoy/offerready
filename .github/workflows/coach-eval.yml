@@ -1,0 +1,43 @@
+name: Coach eval
+
+# Runs real interview questions through the AI Coach prompt against the real
+# model and checks diagrams, code, the strong-answer box, honesty and
+# injection handling (evals/coach). Weekly to catch model drift, and on any
+# change to the Coach prompt. Needs the OPENAI_API_KEY repository secret
+# (the grading eval uses the same one); without it the job only checks the
+# case file.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "29 9 * * 1" # Mondays 09:29 UTC
+  pull_request:
+    paths:
+      - "api/_lib/copilot.js"
+      - "api/_lib/diagram.js"
+      - "evals/coach/**"
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run coach eval
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+        run: node evals/coach/run.js
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coach-eval-report
+          path: evals/coach/last-report.json
+          if-no-files-found: ignore
