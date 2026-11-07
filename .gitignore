@@ -48,3 +48,4 @@ Thumbs.db
 node_modules/
 .vercel/
 evals/grading/last-report.json
+evals/coach/last-report.json
