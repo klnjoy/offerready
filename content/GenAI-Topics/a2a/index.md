@@ -6,6 +6,8 @@ icon: material/account-switch
 
 *Last reviewed: October 2026*
 
+*Sources: the official A2A protocol specification (a2a-protocol.org); verify against it before an interview. Content was rephrased for compliance with licensing restrictions.*
+
 !!! info "What's changed recently"
     - **A2A is a Linux Foundation project now.** Google created it and donated it
       in mid-2025. In August 2025 IBM's **ACP** (Agent Communication Protocol)

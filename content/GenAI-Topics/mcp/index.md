@@ -6,6 +6,8 @@ icon: material/connection
 
 *Last reviewed: October 2026*
 
+*Sources: the official Model Context Protocol specification (modelcontextprotocol.io); verify against it before an interview. Content was rephrased for compliance with licensing restrictions.*
+
 !!! info "What's changed recently"
     - **Remote servers are now normal.** Spec `2025-03-26` added the
       **Streamable HTTP** transport, replacing the older HTTP+SSE transport. stdio

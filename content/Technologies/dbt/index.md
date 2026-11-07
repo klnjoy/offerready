@@ -6,6 +6,8 @@ icon: material/cube-outline
 
 *Last reviewed: October 2026*
 
+*Sources: dbt's official documentation (docs.getdbt.com); verify against it before an interview. Content was rephrased for compliance with licensing restrictions.*
+
 !!! info "What's changed recently"
     - **dbt v2 is a Rust rewrite** (the engine first previewed as **Fusion** in
       2025). It ships as a single binary using ADBC drivers, parses much faster,

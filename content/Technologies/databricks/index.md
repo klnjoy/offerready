@@ -6,6 +6,8 @@ icon: material/database
 
 *Last reviewed: October 2026*
 
+*Sources: Databricks' official documentation (docs.databricks.com); verify against it before an interview. Content was rephrased for compliance with licensing restrictions.*
+
 !!! info "What's changed recently"
     - **Liquid clustering is the default for new tables.** Databricks recommends
       it over partitioning and `ZORDER` for all new tables. With `CLUSTER BY AUTO`
