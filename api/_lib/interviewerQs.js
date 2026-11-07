@@ -9,6 +9,8 @@
 
 'use strict';
 
+const { fence, NOTE } = require('./untrusted');
+
 const TYPES = {
   recruiter: 'Recruiter or HR screen. Cares about: motivation for this role and company, career story, why leaving, salary expectations, notice period, location or visa, culture fit, communication. Mostly non-technical.',
   hiring_manager: 'Hiring manager (the future boss). Cares about: can you do this exact job from day one, ownership, how you prioritise, how you work with the team, examples from your past roles, what you would do in the first 90 days, gaps in your resume.',
@@ -43,7 +45,7 @@ function buildInterviewerMessages(type, role, job) {
   if (r) lines.push('Their title, as the candidate wrote it: ' + r);
   if (job && job.title) lines.push('', 'JOB: ' + s(job.title, 160) + (job.company ? ' at ' + s(job.company, 120) : ''));
   if (job && Array.isArray(job.skills) && job.skills.length) lines.push('Key skills: ' + job.skills.slice(0, 15).map((k) => s(k, 60)).filter(Boolean).join(', '));
-  return [{ role: 'system', content: SYSTEM }, { role: 'user', content: lines.join('\n') }];
+  return [{ role: 'system', content: SYSTEM + '\n\n' + NOTE }, { role: 'user', content: fence('user_data', lines.join('\n')) }];
 }
 
 function parseInterviewer(raw) {
