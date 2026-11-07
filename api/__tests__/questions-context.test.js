@@ -106,7 +106,7 @@ test('buildQuestionsUserMessage: still works with only a JD (no analysis signals
   assert.ok(!/REQUIRED TECHNOLOGIES:/.test(msg));
   assert.ok(!/GAP-ANALYSIS FOCUS/.test(msg));
   assert.ok(msg.includes('generic job description'));
-  assert.ok(/6 technical, 5 behavioral, 3 system_design, 2 leadership/.test(msg), "asks for the real target counts");
+  assert.ok(/4 technical, 3 behavioral, 2 system_design, 1 leadership/.test(msg), "asks for the real target counts");
 });
 
 test('buildQuestionsUserMessage: "more" mode lists the already-asked questions to avoid', () => {
