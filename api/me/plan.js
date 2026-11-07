@@ -497,6 +497,48 @@ async function hiddenVisitors() {
   return (Array.isArray(rows) ? rows : []).map((r) => String(r.id || '')).filter(Boolean);
 }
 
+/** Recent client errors (client_errors, migration 0013), grouped by message:
+ * count, first/last seen, top routes and releases. No user ids, browsers or
+ * full stacks leave the server; only the stack's first frame. */
+async function adminErrors(since) {
+  const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase not configured');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 9000);
+  let rows;
+  try {
+    const q = '/rest/v1/client_errors?select=created_at,route,message,stack,release&created_at=gte.' + encodeURIComponent(since) + '&order=created_at.desc&limit=1000';
+    const resp = await fetch(url + q, { signal: controller.signal, headers: { apikey: key, Authorization: 'Bearer ' + key } });
+    if (!resp.ok) throw new Error('client_errors ' + resp.status);
+    rows = await resp.json();
+  } finally { clearTimeout(timer); }
+  return groupErrors(Array.isArray(rows) ? rows : []);
+}
+
+/** Group error rows by a normalized message (numbers and ids folded). */
+function groupErrors(rows) {
+  const norm = (m) => String(m || '').replace(/https?:\/\/\S+/g, '<url>').replace(/\b[0-9a-f]{8,}\b/gi, '<id>').replace(/\d+/g, 'N').replace(/\s+/g, ' ').trim().slice(0, 200);
+  const groups = new Map();
+  for (const r of rows) {
+    const k = norm(r.message);
+    if (!k) continue;
+    let g = groups.get(k);
+    if (!g) { g = { message: String(r.message || '').slice(0, 300), count: 0, first_seen: r.created_at, last_seen: r.created_at, routes: {}, releases: {}, frame: '' }; groups.set(k, g); }
+    g.count++;
+    if (r.created_at < g.first_seen) g.first_seen = r.created_at;
+    if (r.created_at > g.last_seen) g.last_seen = r.created_at;
+    const route = String(r.route || '?').split('?')[0].slice(0, 80);
+    g.routes[route] = (g.routes[route] || 0) + 1;
+    if (r.release) g.releases[String(r.release).slice(0, 12)] = (g.releases[String(r.release).slice(0, 12)] || 0) + 1;
+    if (!g.frame && r.stack) { const line = String(r.stack).split('\n').map((x) => x.trim()).find((x) => /^at |@/.test(x)); g.frame = (line || '').replace(/https?:\/\/[^/]+/g, '').slice(0, 160); }
+  }
+  const top = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, n]) => ({ k, n }));
+  const list = [...groups.values()].sort((a, b) => b.count - a.count || (a.last_seen < b.last_seen ? 1 : -1)).slice(0, 30)
+    .map((g) => ({ message: g.message, count: g.count, first_seen: g.first_seen, last_seen: g.last_seen, routes: top(g.routes), releases: top(g.releases), frame: g.frame }));
+  return { total: rows.length, groups: list, capped: rows.length >= 1000 };
+}
+
 async function adminRpc(fn, since, extra) {
   return adminRpcBody(fn, Object.assign({ p_since: since }, extra || {}));
 }
@@ -666,6 +708,16 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  if (op === 'errors') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see errors.' }); return; }
+    const days = Math.max(1, Math.min(90, Math.round(Number(req.query.days) || 7)));
+    const since = new Date(Date.now() - days * 86400000).toISOString();
+    try { send(res, 200, Object.assign({ days, since }, await adminErrors(since))); }
+    catch (err) { console.error('[me/plan errors]', err && err.message); send(res, 503, { error: 'Couldn’t read errors right now.' }); }
+    return;
+  }
+
   if (op === 'monthly') {
     res.setHeader('Cache-Control', 'private, no-store');
     if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see metrics.' }); return; }
@@ -712,4 +764,5 @@ module.exports = async function handler(req, res) {
 
 module.exports._teamEmails = teamEmails;
 module.exports._monthsParam = monthsParam;
+module.exports._groupErrors = groupErrors;
 module.exports._sourceBucket = sourceBucket;
