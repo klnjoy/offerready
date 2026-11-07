@@ -1,0 +1,23 @@
+name: Library freshness
+
+# Lists study-library pages whose "Last reviewed" date is over 90 days old
+# (check_freshness.py), in the job summary. Report only: it never edits or
+# fails anything. Monthly, and on demand.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "13 10 1 * *" # 1st of each month, 10:13 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python check_freshness.py
