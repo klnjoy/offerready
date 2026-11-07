@@ -16,6 +16,9 @@ on:
       - "api/_lib/copilot.js"
       - "api/_lib/diagram.js"
       - "evals/coach/**"
+      - "api/_lib/prompt.js"
+      - "api/_lib/untrusted.js"
+      - "evals/injection/**"
 
 permissions:
   contents: read
@@ -34,6 +37,12 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
         run: node evals/coach/run.js
+      - name: Run prompt-injection check (SEC-1)
+        if: always()
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+        run: node evals/injection/run.js
       - name: Keep the report
         if: always()
         uses: actions/upload-artifact@v4

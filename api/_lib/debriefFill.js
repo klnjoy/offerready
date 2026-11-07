@@ -9,6 +9,8 @@
 
 'use strict';
 
+const { fence, NOTE } = require('./untrusted');
+
 const RECAP_MAX = 6000; // typed or spoken recap (a 3-minute spoken recap fits)
 const TRANSCRIPT_MAX = 60000; // a meeting transcript the candidate was given (about an hour)
 const ROUNDS = ['recruiter', 'technical', 'system_design', 'behavioral', 'onsite', 'hiring_manager'];
@@ -67,7 +69,7 @@ function cleanTranscript(t) {
 function buildTranscriptMessages(transcript, job) {
   const lines = ['TRANSCRIPT:', cleanTranscript(transcript).slice(0, TRANSCRIPT_MAX)];
   if (job && job.title) lines.push('', 'Job: ' + s(job.title, 120));
-  return [{ role: 'system', content: TRANSCRIPT_SYSTEM }, { role: 'user', content: lines.join('\n') }];
+  return [{ role: 'system', content: TRANSCRIPT_SYSTEM + '\n\n' + NOTE }, { role: 'user', content: fence('user_data', lines.join('\n')) }];
 }
 
 const s = (v, max) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, max) : '');
@@ -75,7 +77,7 @@ const s = (v, max) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().sli
 function buildFillMessages(recap, job) {
   const lines = ['RECAP:', String(recap || '').slice(0, RECAP_MAX)];
   if (job && job.title) lines.push('', 'Job: ' + s(job.title, 120));
-  return [{ role: 'system', content: SYSTEM }, { role: 'user', content: lines.join('\n') }];
+  return [{ role: 'system', content: SYSTEM + '\n\n' + NOTE }, { role: 'user', content: fence('user_data', lines.join('\n')) }];
 }
 
 function parseFill(raw) {

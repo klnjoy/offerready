@@ -14,6 +14,8 @@
 
 'use strict';
 
+const { fence, NOTE } = require('./untrusted');
+
 const { normalizeRequirements, keepStillTrue } = require('./fitEvidence');
 
 // ===========================================================================
@@ -83,6 +85,8 @@ const GAP_SYSTEM_PROMPT = [
   '  to add that real example. If they do not, suggest learning or building it,',
   '  or preparing to discuss transferable work. Never suggest claiming',
   '  experience, titles, tools or results they do not have.',
+  '',
+  NOTE,
 ].join('\n');
 
 /**
@@ -117,12 +121,12 @@ function buildGapUserMessage(input) {
     'JOB TITLE: ' + String(jobTitle || 'unspecified').slice(0, 200),
     '',
     'JOB DESCRIPTION:',
-    String(jobDescription || '').slice(0, 6000),
+    fence('job_description', String(jobDescription || '').slice(0, 6000)),
     '',
     'CANDIDATE RESUME:',
     // 12k chars covers a full two-page resume: bullets near the end (often
     // the ones just tailored) used to be cut off, so a re-check never moved.
-    String(resumeText || '').slice(0, 12000) || sigLines || '(no resume provided)',
+    fence('resume', String(resumeText || '').slice(0, 12000) || sigLines || '(no resume provided)'),
     '',
     ...(prev.length >= 3 ? [
       'THIS IS A RE-CHECK OF THE SAME JOB. For "requirements", list exactly these,',
@@ -269,6 +273,8 @@ const QUESTIONS_SYSTEM_PROMPT = [
   '  numbers or checks that matter, the common mistake. For behavioral and',
   '  leadership, the points are what the story must show (scope, own actions,',
   '  result with a number), never invented facts about the candidate.',
+  '',
+  NOTE,
 ].join('\n');
 
 // Short, de-duped list helper for prompt context (cap count + per-item length).
@@ -322,7 +328,7 @@ function buildQuestionsUserMessage(input) {
     gapFocus.length ? 'GAP-ANALYSIS FOCUS (prioritize questions that probe these): ' + gapFocus.join(', ') : '',
     '',
     'JOB DESCRIPTION:',
-    String(jobDescription || '').slice(0, 6000),
+    fence('job_description', String(jobDescription || '').slice(0, 6000)),
     '',
     'Ground EVERY question in the role above: name its specific technologies,',
     'skills, and gap-focus areas. Technical and system-design questions must be',

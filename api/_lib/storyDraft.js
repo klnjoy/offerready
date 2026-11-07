@@ -9,6 +9,8 @@
 
 'use strict';
 
+const { fence, NOTE } = require('./untrusted');
+
 const NOTES_MAX = 1200;
 const FIELD_MAX = { title: 120, situation: 600, task: 400, action: 900, result: 500, metrics: 200 };
 const TAGS = ['leadership', 'conflict', 'failure', 'ambiguity', 'influence', 'delivery', 'technical', 'customer'];
@@ -45,7 +47,7 @@ function buildDraftMessages(notes, job) {
     if (job.title) lines.push('Title: ' + clean(job.title, 120));
     if (Array.isArray(job.skills) && job.skills.length) lines.push('Skills: ' + job.skills.slice(0, 12).map((s) => clean(String(s), 40)).join(', '));
   }
-  return [{ role: 'system', content: SYSTEM }, { role: 'user', content: lines.join('\n') }];
+  return [{ role: 'system', content: SYSTEM + '\n\n' + NOTE }, { role: 'user', content: fence('user_data', lines.join('\n')) }];
 }
 
 /** Parse the model's JSON into a safe draft, or null. */
@@ -84,7 +86,7 @@ function buildBatchMessages(resume, competencies, job) {
   const comps = (Array.isArray(competencies) ? competencies : []).filter((c) => TAGS.includes(c)).slice(0, 8);
   const lines = ['COMPETENCIES NEEDED: ' + (comps.length ? comps.join(', ') : TAGS.slice(0, 4).join(', ')), '', 'RESUME:', String(resume || '').slice(0, RESUME_MAX)];
   if (job && job.title) lines.push('', 'Job (emphasis only, never as facts): ' + clean(job.title, 120));
-  return [{ role: 'system', content: BATCH_SYSTEM }, { role: 'user', content: lines.join('\n') }];
+  return [{ role: 'system', content: BATCH_SYSTEM + '\n\n' + NOTE }, { role: 'user', content: fence('user_data', lines.join('\n')) }];
 }
 
 function parseBatch(raw) {

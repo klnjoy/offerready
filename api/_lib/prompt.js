@@ -14,6 +14,8 @@
 
 'use strict';
 
+const { fence, neutralise, NOTE } = require('./untrusted');
+
 const SYSTEM_PROMPT = `
 You are OfferReady's job-analysis assistant. You help a candidate PREPARE for a
 specific role. You never predict hiring outcomes and never claim someone will
@@ -80,14 +82,16 @@ Rules:
 - Keep arrays concise (max ~8 items each). Keep strings tight and specific.
 - "skills" inside preparationPlan should be short keyword tags (e.g. "RAG",
   "AWS Bedrock", "System Design") so they can be mapped to learning resources.
+
+${NOTE}
 `.trim();
 
 function buildUserMessage({ jobDescription, targetRole, resume }) {
   const parts = [];
-  if (targetRole) parts.push(`TARGET ROLE (candidate-provided): ${targetRole}`);
-  parts.push(`JOB DESCRIPTION:\n${jobDescription}`);
+  if (targetRole) parts.push(`TARGET ROLE (candidate-provided): ${neutralise(targetRole)}`);
+  parts.push(`JOB DESCRIPTION:\n${fence('job_description', jobDescription)}`);
   if (resume && resume.trim()) {
-    parts.push(`CANDIDATE RESUME:\n${resume}`);
+    parts.push(`CANDIDATE RESUME:\n${fence('resume', resume)}`);
   } else {
     parts.push('CANDIDATE RESUME: (none provided)');
   }
