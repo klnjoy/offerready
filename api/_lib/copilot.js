@@ -45,7 +45,7 @@ const REFINES = {
   numbers: 'Strengthen the PREVIOUS ANSWER with concrete numbers and results, using ONLY numbers that appear in the material; where a number is needed but unknown, use a placeholder like [X%].',
   star: 'Restructure the PREVIOUS ANSWER in STAR form (situation, task, action, result) using a real example from the material.',
   technical: 'Make the PREVIOUS ANSWER more technical: name the specific technologies, design choices and trade-offs, using only what the material supports plus general knowledge marked "general".',
-  example: 'Answer the same question using a DIFFERENT real example from the material than the one in the PREVIOUS ANSWER. If there is no other example, say so in "gaps".',
+  example: 'Answer the same question with a DIFFERENT example than the PREVIOUS ANSWER, and make the new answer read clearly different. Use another real example from the material if there is one. If there is not, build the answer around a different concrete scenario framed as how the candidate WOULD approach it ("For instance, I would…"), marked "general" or "suggestion" and never claimed as their past work, set "example.source" to "none", and say in "gaps" that the material has no other real example.',
 };
 
 const SYSTEM_PROMPT = [
@@ -72,6 +72,8 @@ const SYSTEM_PROMPT = [
   '  works or flows (an architecture, a pipeline, RAG, an API, a process), the',
   '  diagram is REQUIRED, usually a "flow" of the real components in request or',
   '  data order. Name each box with a component the answer text also names.',
+  '  For "X vs Y", "which would you choose" or "when to use" questions, a',
+  '  "compare" or "tradeoff" diagram is REQUIRED.',
   '- "code": REQUIRED when the question is about building, implementing,',
   '  querying, configuring or calling something ("how do you build X", "how',
   '  would you implement Y", "write a query for Z"); null for behavioral,',

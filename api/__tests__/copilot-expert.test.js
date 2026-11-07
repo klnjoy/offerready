@@ -24,3 +24,11 @@ test('coach prompt: diagram and code are required for how-to-build technical que
   assert.match(C.SYSTEM_PROMPT, /NEVER describe what an answer "should"/);
   assert.match(C.SYSTEM_PROMPT, /No secrets, no keys/);
 });
+
+test('coach prompt: "Different example" always changes the answer, honestly; comparisons get a compare diagram', () => {
+  const C = require('../_lib/copilot');
+  assert.match(C.REFINES.example, /read clearly different/);
+  assert.match(C.REFINES.example, /never claimed as their past work/);
+  assert.match(C.REFINES.example, /"example\.source" to "none"/);
+  assert.match(C.SYSTEM_PROMPT, /"compare" or "tradeoff" diagram is REQUIRED/);
+});
