@@ -8,7 +8,106 @@ icon: material/history
 
 New features and improvements, newest first.
 
+## November 2026
+
+### Week of 9 November
+- **New open jobs on the front page.** Under the top of the front page, a
+  slowly moving strip shows the newest roles from the roles board, with a
+  *Prepare* link into each one. It pauses when you point at it, and stays
+  still if your device is set to reduce motion.
+- **Find a role by title and location.** The roles board has a search box
+  first on the page.
+- **About this concept, above every answer.** AI Coach answers, graded
+  feedback and the samples on the try page start with a short block: what
+  the idea is, why it exists, and a rule of thumb. It links to the library
+  when the library has a page for it.
+- **Answers about a technology lead with the technology.** Ask about RAG,
+  Informatica IICS or another named tool and the answer starts with its
+  parts and how data flows through them, with a diagram, then ties in your
+  own experience. A RAG answer covers preprocessing and chunking, chunk size
+  and overlap, the vector database, namespaces and collections, similarity
+  search, metadata filtering, reranking, hallucination control, citations
+  and grounding, and RAG as an architecture.
+- **At most 10 questions per job set.** Fewer is fine when the job
+  description supports fewer; sets are never padded. *Your turn* in
+  Practice rotates through at most 10 of them.
+- **Mock interviews end.** The interviewer asks one follow-up per question,
+  and the count of questions done, with the next button, stays in view, so a
+  mock always reaches *See how it went*.
+- **Resume tab: estimated ATS match.** An estimate of how readable your
+  resume is to screening software and how well its keywords match, part by
+  part. Each missing keyword shows where it would go and a line from your
+  own bullets; adding one updates the estimate.
+- **Answer library.** Common application questions answered once, ready to
+  copy into forms.
+- **Not selected?** *Where did it stop?* turns the round that ended it into
+  what to practice next.
+- **Rate a round in one tap.** *How did this round go?* with five stars
+  when you log an interview.
+- **Practice keeps what you skipped skipped**, shows how many are left, and
+  rotates mock interviews.
+- **Clearer screens.** A navy top for Home with one plan per job, cards that
+  stand out from the page background, and a tinted title band on public
+  pages.
+
+### Week of 2 November
+- **Your steps for this job.** Each job's Home shows six steps in one row:
+  job analysis, resume tailor, interview prep, mock interview, final
+  interview and notes, with what's done and where you are.
+- **Game-day screen.** On the morning of the interview, one screen with a
+  short warm-up, your pitch, your stories and your questions.
+- **Answers can carry one diagram** where it makes them clearer, in AI Coach
+  and AI Practice.
+- **Mock interview coaching.** Each answer gets a score out of 10, what it
+  covered, an improved answer built only from what you said, and *Show me
+  the answer*.
+- **Coach shows how a strong candidate answers**, and the interviewer's
+  follow-up questions answer in place.
+- **Practice for a job in three steps:** what they'll test, each topic,
+  then a full mock.
+- **Tailor: titles and removals for this job.** The line under your name
+  can name the role you're applying for; past titles keep their words plus
+  the focus your bullets show. Tailoring can also suggest bullets to leave
+  out of this job's copy; nothing is removed unless you choose it, and your
+  main resume keeps them.
+- **After the interview,** talk it through or bring the meeting's transcript
+  you were given, to fill in your notes.
+- **Resume upload** takes .doc, RTF and ODT as well as PDF, DOCX and TXT.
+- **Role guides** for the three AI roles (AI Engineer, AI Forward Deployed
+  Engineer, AIOps), each with the minimum experience it asks for. AIOps,
+  LLMOps and MLOps jobs get the cloud and platform drills.
+- **Was this answer useful?** in AI Coach, with an optional reason.
+- **Slow feedback is retried once** before showing an error.
+- **Public pages are ready for search engines,** with one page per role.
+
 ## October 2026
+
+### Week of 26 October
+- **Add a missing point.** If you did something a job asks for but your
+  resume leaves it out, write it in your own words (or tap *Draft it for
+  me*) and add it to this job's resume, your main resume or both.
+- **Honest answers right on each gap,** and *What you can do* for every gap
+  in your fit.
+- **Steadier fit scores.** The match comes from the requirement rows, the
+  same rows are checked again on a re-check, and a row only loses credit
+  when its line is gone from your resume.
+- **Try before you sign up.** See a job analysis first, then sign in to save
+  it.
+- **What these roles pay,** from postings that list pay, and roles by
+  country.
+- **Unsent answers and today's session are kept** if you leave the page, and
+  you can download your practice notes.
+- **Steady tab bar on iPhone.**
+- **Library:** agent architecture layer by layer, SDLC vs the AI lifecycle,
+  agentic AI in 7 diagrams with free courses in order, 7 AI projects that
+  get you interviews, AI economics in 2026, and a Learn, Build, Ship, Grow
+  topic map.
+
+### Week of 22 October
+- **Fit check with evidence.** Each requirement shows the line from your
+  resume that supports it, checked against your resume.
+- **Application kit.** A cover letter and answers to application questions,
+  from your verified experience only.
 
 ### Week of 21 October
 - **Clearer Practice screen.** Each round shows *Round 1 of 3* and *0 of 4
