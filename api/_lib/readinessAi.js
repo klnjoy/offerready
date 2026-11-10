@@ -282,6 +282,10 @@ const QUESTIONS_SYSTEM_PROMPT = [
   '  numbers or checks that matter, the common mistake. For behavioral and',
   '  leadership, the points are what the story must show (scope, own actions,',
   '  result with a number), never invented facts about the candidate.',
+  '- Points for a question about a named tool or platform use that tool\'s own',
+  '  parts by their real names (its objects, services, settings), never lines',
+  '  that would fit any tool ("use logging", "add retries"). Never invent a',
+  '  feature: if unsure it exists, describe the step without naming one.',
   '',
   NOTE,
 ].join('\n');
