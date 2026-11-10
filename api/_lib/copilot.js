@@ -101,6 +101,21 @@ const SYSTEM_PROMPT = [
   '  retry mechanisms", "set up alerting") is a failed point: rewrite it with the',
   '  tool\'s own feature that does that job. If you are not sure a feature exists',
   '  in that tool, describe the step without naming a feature; never invent one.',
+  '- SUBJECT FIRST (owner, Nov 10): when the QUESTION names a technology,',
+  '  platform or concept ("your experience with X", "explain X", "how does X',
+  '  work", "how would you use X"), the answer is about X ITSELF, not a resume',
+  '  recap. "headline", "key_points", "improved_answer", "short_answer" and',
+  '  "expert" all lead with X: what it is in one line, then its real components',
+  '  by name and how they connect (the architecture flow), then how they are',
+  '  used for this job. The resume is supporting evidence ONLY where it actually',
+  '  names X or the same work; never fill an X answer with resume items about',
+  '  OTHER tools (an IICS answer is not a Snowflake answer). If the material does',
+  '  not mention X, answer from the subject in first person as how you work with',
+  '  it ("In IICS I build…"), mark it "general"/"suggestion", and say so in',
+  '  "gaps". A "diagram" of type "flow" showing X\'s components in data or',
+  '  request order is REQUIRED for these questions, even when the question is',
+  '  phrased as "your experience with X". No marketing language ("powerful",',
+  '  "seamless", "user-friendly", "cloud-native scalability"): name parts.',
   '- Technical and system design answers must show the RIGHT technical content.',
   '  When the material has no matching example, "improved_answer" explains the',
   '  correct approach in first person as how they would do it ("I\'d use…",',
@@ -138,6 +153,28 @@ function codeOf(c) {
 }
 const strip = (s) => clip(s, 100000).replace(/<\/?(resume|stories|draft|job)>/gi, '');
 
+// SUBJECT FIRST (owner, Nov 10): the technology or concept a question is
+// about, so the answer leads with it instead of a resume recap.
+const KNOWN_SUBJECTS = [
+  ['Informatica IICS', /\b(iics|informatica intelligent cloud services|informatica cloud|cloud data integration|cdi)\b/i],
+  ['Informatica PowerCenter', /\bpower ?center\b/i],
+  ['Snowflake', /\bsnowflake\b/i], ['dbt', /\bdbt\b/i], ['Apache Airflow', /\bairflow\b/i],
+  ['Apache Kafka', /\bkafka\b/i], ['Databricks', /\bdatabricks\b/i], ['Apache Spark', /\b(py)?spark\b/i],
+  ['AWS Glue', /\baws glue\b|\bglue jobs?\b/i], ['Azure Data Factory', /\b(azure data factory|adf)\b/i],
+  ['Amazon Redshift', /\bredshift\b/i], ['Google BigQuery', /\bbig ?query\b/i], ['Kubernetes', /\b(kubernetes|k8s)\b/i],
+  ['Terraform', /\bterraform\b/i], ['Fivetran', /\bfivetran\b/i], ['Talend', /\btalend\b/i], ['SSIS', /\bssis\b/i],
+  ['LangChain', /\blangchain\b/i], ['LangGraph', /\blanggraph\b/i], ['RAG', /\b(rag|retrieval[- ]augmented)\b/i],
+  ['MCP', /\b(mcp|model context protocol)\b/i], ['Snowflake Cortex', /\bcortex\b/i], ['Amazon Bedrock', /\bbedrock\b/i],
+  ['Amazon SageMaker', /\bsagemaker\b/i], ['Delta Lake', /\bdelta lake\b/i], ['Apache Iceberg', /\biceberg\b/i],
+];
+function subjectOf(question) {
+  const q = String(question || '');
+  const known = KNOWN_SUBJECTS.find(([, re]) => re.test(q));
+  if (known) return known[0];
+  const m = q.match(/\b(?:experience (?:with|in|using)|explain|how does|how do you use|walk me through)\s+([A-Z][\w.+#/-]*(?:\s+[A-Z][\w.+#/-]*){0,4})/);
+  return m ? m[1].trim() : '';
+}
+
 /** Build the user message. All candidate material is fenced. */
 function buildUserMessage(input) {
   const i = input || {};
@@ -149,6 +186,7 @@ function buildUserMessage(input) {
     'TASK: ' + (refine ? REFINES[refine] : MODES[mode]),
     thread ? 'EARLIER IN THIS THREAD the candidate asked: ' + clip(thread.question, 400) + '\nand practised this answer: ' + strip(clip(thread.answer, 1200)) + '\nTreat the new QUESTION as a follow-up to it.' : '',
     'QUESTION: ' + clip(i.question, 800),
+    subjectOf(i.question) ? 'SUBJECT OF THE QUESTION: ' + subjectOf(i.question) + ' (apply SUBJECT FIRST: lead with its real components and an architecture flow diagram; use the resume only where it names this subject).' : '',
     i.jobTitle ? 'TARGET ROLE: ' + clip(i.jobTitle, 200) : '',
     Array.isArray(i.requirements) && i.requirements.length ? 'ROLE REQUIREMENTS: ' + i.requirements.slice(0, 15).map((r) => clip(r, 80)).join('; ') : '',
     Array.isArray(i.gaps) && i.gaps.length ? 'KNOWN GAPS: ' + i.gaps.slice(0, 10).map((r) => clip(r, 80)).join('; ') : '',
@@ -271,4 +309,5 @@ function validateCopilot(parsed, input) {
   };
 }
 
-module.exports = { SYSTEM_PROMPT, MODES, REFINES, buildUserMessage, validateCopilot, unverifiedNumbers, expertOf };
+module.exports = {
+  subjectOf, SYSTEM_PROMPT, MODES, REFINES, buildUserMessage, validateCopilot, unverifiedNumbers, expertOf };
