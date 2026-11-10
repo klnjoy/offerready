@@ -20,14 +20,21 @@ test('the prompt steers away from "describe your experience" questions and alter
   assert.match(p, /general expert/);
 });
 
-test('a first set is 10 questions for this job, each tied to the job description', () => {
+test('a set is at most 10 questions for this job, fewer is fine, each tied to the job description', () => {
   const p = r.QUESTIONS_SYSTEM_PROMPT || r._internal.QUESTIONS_SYSTEM_PROMPT;
-  assert.match(p, /Required counts: 4 technical, 3 behavioral, 2 system_design, 1 leadership\./);
+  assert.match(p, /At most: 4 technical, 3 behavioral, 2 system_design, 1 leadership \(10 in all\)\./);
+  assert.match(p, /FEWER IS FINE/);
+  assert.match(p, /Never pad the set/);
   assert.match(p, /QUALITY OVER COUNT/);
   assert.match(p, /If you cannot point to it in\n  the job description, do not ask it/);
   const v = (r.validateQuestions || r._internal.validateQuestions);
   const mk = (c, n) => Array.from({ length: n }, (_, i) => ({ category: c, prompt: c + ' ' + i }));
-  // 7 of 10 with every category represented is enough; 5 is not.
-  assert.ok(v({ questions: [...mk('technical', 3), ...mk('behavioral', 2), ...mk('system_design', 1), ...mk('leadership', 1)] }).ok);
-  assert.ok(!v({ questions: [...mk('technical', 2), ...mk('behavioral', 1), ...mk('system_design', 1), ...mk('leadership', 1)] }).ok);
+  // Fewer than 10 is fine: 6 real questions is a set; 3 is not; none technical is not.
+  assert.ok(v({ questions: [...mk('technical', 3), ...mk('behavioral', 2), ...mk('system_design', 1)] }).ok);
+  assert.ok(!v({ questions: [...mk('technical', 2), ...mk('behavioral', 1)] }).ok);
+  assert.ok(!v({ questions: mk('behavioral', 6) }).ok);
+  // Never more than 10, however many come back.
+  const big = v({ questions: [...mk('technical', 9), ...mk('behavioral', 6), ...mk('system_design', 4), ...mk('leadership', 3)] });
+  assert.ok(big.ok);
+  assert.ok(big.questions.length <= 10);
 });

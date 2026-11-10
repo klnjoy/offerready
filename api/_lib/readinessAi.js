@@ -232,6 +232,8 @@ const QUESTION_TARGETS = {
   leadership: 1,
 };
 const VALID_CATEGORIES = Object.keys(QUESTION_TARGETS);
+/** The fewest questions that still make a set (fewer than 10 is fine). */
+const MIN_QUESTIONS = 4;
 const VALID_DIFFICULTY = ['easy', 'medium', 'hard'];
 
 const QUESTIONS_SYSTEM_PROMPT = [
@@ -250,7 +252,10 @@ const QUESTIONS_SYSTEM_PROMPT = [
   '  ]',
   '}',
   '',
-  'Required counts: ' + Object.keys(QUESTION_TARGETS).map((c) => QUESTION_TARGETS[c] + ' ' + c).join(', ') + '.',
+  'At most: ' + Object.keys(QUESTION_TARGETS).map((c) => QUESTION_TARGETS[c] + ' ' + c).join(', ') + ' (10 in all).',
+  'FEWER IS FINE (owner, Nov 10): ask only questions this job really supports.',
+  'If the job description supports 6 good questions, return 6. Never pad the set',
+  'to reach a count, and never add a generic question to fill a bucket.',
   'Technical questions must reference the actual skills/tech in the JD. System',
   'design questions must be scenario-based. Behavioral/leadership must be STAR-',
   'style. Vary difficulty realistically for the role seniority.',
@@ -347,8 +352,8 @@ function buildQuestionsUserMessage(input) {
     'skills, and gap-focus areas. Technical and system-design questions must be',
     'specific to this stack (not generic). Behavioral and leadership questions',
     'must name a responsibility or situation from THIS job description (not the',
-    'generic set every company asks). Generate the full question set as JSON',
-    'now (' + counts + ').',
+    'generic set every company asks). Generate the question set as JSON now',
+    '(at most ' + counts + '; fewer is fine, never pad).',
     otherList.length ? '\nQUESTIONS FROM THE CANDIDATE\'S OTHER JOBS (do NOT reuse or lightly rephrase these; this job needs its own set):\n' + otherList.map((x) => '- ' + x).join('\n') : '',
     avoidList.length ? '\nALREADY ASKED (the candidate has these; do NOT repeat or rephrase them. Cover different topics, scenarios and depths of the same job):\n' + avoidList.map((x) => '- ' + x).join('\n') : '',
   ].filter(Boolean).join('\n');
@@ -385,12 +390,20 @@ function validateQuestions(parsed) {
     counts[category] = (counts[category] || 0) + 1;
   }
 
-  // Require a meaningful set: at least half the target in each of the 4 buckets.
-  const enough = VALID_CATEGORIES.every((c) => (counts[c] || 0) >= Math.ceil(QUESTION_TARGETS[c] / 2));
+  // Fewer than 10 is fine (owner, Nov 10): a set needs only a few real
+  // questions, including at least one technical one. Never more than 10.
   const total = VALID_CATEGORIES.reduce((n, c) => n + QUESTION_TARGETS[c], 0);
-  if (clean.length < Math.ceil(total * 0.7) || !enough) return { ok: false, reason: 'insufficient', counts: counts };
+  const kept = [];
+  const used = {};
+  for (const q of clean) {
+    if (kept.length >= total) break;
+    if ((used[q.category] || 0) >= QUESTION_TARGETS[q.category] + 2) continue;
+    used[q.category] = (used[q.category] || 0) + 1;
+    kept.push(q);
+  }
+  if (kept.length < MIN_QUESTIONS || !(used.technical > 0)) return { ok: false, reason: 'insufficient', counts: counts };
 
-  return { ok: true, questions: clean, counts: counts };
+  return { ok: true, questions: kept, counts: used };
 }
 
 module.exports = {
