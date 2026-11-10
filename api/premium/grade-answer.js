@@ -32,7 +32,7 @@ const { SYSTEM_PROMPT, buildUserMessage, validateGrade } = require('../_lib/grad
 const DEFAULT_MODEL = 'gpt-4o-mini';
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 const REQUEST_TIMEOUT_MS = 30000;
-const MAX_OUTPUT_TOKENS = 1200;
+const MAX_OUTPUT_TOKENS = 1400; // room for the concept block (ANS-1)
 const FEATURE = 'ai_grading';
 
 function safeParseJson(str) {
