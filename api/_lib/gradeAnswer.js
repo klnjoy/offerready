@@ -24,6 +24,7 @@
 'use strict';
 
 const { RUBRIC_VERSION, selectRubric, getRubric } = require('./rubrics');
+const { PROMPT_RULES: CONCEPT_RULES, conceptOf } = require('./concept');
 
 /** Score contribution of each rating (0 absent … 3 staff). All 2s ≈ 75. */
 const RATING_POINTS = [0, 0.35, 0.75, 1];
@@ -51,6 +52,7 @@ const SYSTEM_PROMPT = [
   '- "staff_upgrade": 1-2 sentences on what a staff-level answer to THIS question would add.',
   '- "followup": ONE sharp question a real interviewer would ask next, aimed at the',
   '  weakest part of the answer.',
+  CONCEPT_RULES,
   '- Output JSON ONLY, matching the schema exactly. Use the criterion ids given.',
   '',
   'SCHEMA:',
@@ -58,7 +60,8 @@ const SYSTEM_PROMPT = [
   '  "criteria": [ { "id": string, "rating": 0|1|2|3, "evidence": string, "note": string } ],',
   '  "verdict": string,        // one blunt sentence: would this hold up in the interview?',
   '  "staff_upgrade": string,',
-  '  "followup": string',
+  '  "followup": string,',
+  '  "concept": { "name": string, "what": string, "why": string, "rule": string } | null',
   '}',
 ].join('\n');
 
@@ -248,6 +251,7 @@ function validateGrade(parsed, ctx) {
       level: levelFor(score, criteria),
       criteria,
       staff_upgrade: staffUpgrade,
+      concept: conceptOf(parsed.concept),
       rubric: { id: rubric.id, label: rubric.label, version: RUBRIC_VERSION },
       caps: injected ? caps.concat('ignored_instructions') : caps,
       downgraded,
