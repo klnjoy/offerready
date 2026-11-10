@@ -86,7 +86,7 @@ const SYSTEM_PROMPT = [
   '- "expert": how a strong, senior candidate answers THIS question, from general',
   '  expert knowledge, NOT limited to the resume: "summary" (2-3 sentences that',
   '  get the substance right: the mechanism, the design, the trade-off) and',
-  '  "points" (3-6 short bullets: what to cover, the numbers or checks that matter,',
+  '  "points" (3-6 short bullets, or one per item when a checklist is given: what to cover, the numbers or checks that matter,',
   '  the common mistake to avoid). Say the substance itself: name the real',
   '  components, services and steps. NEVER describe what an answer "should"',
   '  cover ("A strong answer explains…", "Discuss…", "Highlight…").',
@@ -167,6 +167,36 @@ const KNOWN_SUBJECTS = [
   ['MCP', /\b(mcp|model context protocol)\b/i], ['Snowflake Cortex', /\bcortex\b/i], ['Amazon Bedrock', /\bbedrock\b/i],
   ['Amazon SageMaker', /\bsagemaker\b/i], ['Delta Lake', /\bdelta lake\b/i], ['Apache Iceberg', /\biceberg\b/i],
 ];
+// What a strong answer about a subject must cover (owner, Nov 10). Used as
+// the checklist for that subject; each item is covered in the answer, the
+// expert points and the flow diagram, with the subject's real parts.
+const SUBJECT_CHECKLIST = {
+  RAG: [
+    'the RAG pipeline end to end (ingest, retrieve, generate)',
+    'preprocessing and chunking',
+    'chunk size and overlap, and why',
+    'the vector database',
+    'namespaces and collections',
+    'similarity search (embeddings, top-k)',
+    'metadata filtering',
+    're-ranking',
+    'hallucination control',
+    'citations and grounding',
+    'RAG as an architecture (how the parts fit, where it fails, how it is evaluated)',
+  ],
+  'Informatica IICS': [
+    'Secure Agent and runtime environments',
+    'connections and connectors',
+    'mappings, transformations and mapping tasks',
+    'taskflows (orchestration, dependencies, scheduling)',
+    'parameters and parameter files',
+    'pushdown optimization',
+    'error handling, monitoring and restart',
+    'the flow from source through the Secure Agent to the target',
+  ],
+};
+function subjectChecklist(subject) { return SUBJECT_CHECKLIST[subject] || []; }
+
 function subjectOf(question) {
   const q = String(question || '');
   const known = KNOWN_SUBJECTS.find(([, re]) => re.test(q));
@@ -187,6 +217,7 @@ function buildUserMessage(input) {
     thread ? 'EARLIER IN THIS THREAD the candidate asked: ' + clip(thread.question, 400) + '\nand practised this answer: ' + strip(clip(thread.answer, 1200)) + '\nTreat the new QUESTION as a follow-up to it.' : '',
     'QUESTION: ' + clip(i.question, 800),
     subjectOf(i.question) ? 'SUBJECT OF THE QUESTION: ' + subjectOf(i.question) + ' (apply SUBJECT FIRST: lead with its real components and an architecture flow diagram; use the resume only where it names this subject).' : '',
+    subjectChecklist(subjectOf(i.question)).length ? 'A STRONG ' + subjectOf(i.question) + ' ANSWER COVERS (one short "expert.points" bullet per item; "improved_answer" may run to 320 words to touch each; the flow diagram shows the pipeline): ' + subjectChecklist(subjectOf(i.question)).join('; ') + '.' : '',
     i.jobTitle ? 'TARGET ROLE: ' + clip(i.jobTitle, 200) : '',
     Array.isArray(i.requirements) && i.requirements.length ? 'ROLE REQUIREMENTS: ' + i.requirements.slice(0, 15).map((r) => clip(r, 80)).join('; ') : '',
     Array.isArray(i.gaps) && i.gaps.length ? 'KNOWN GAPS: ' + i.gaps.slice(0, 10).map((r) => clip(r, 80)).join('; ') : '',
@@ -231,7 +262,7 @@ function expertOf(e) {
   if (!e || typeof e !== 'object') return null;
   const summary = clip(e.summary, 700).replace(/\s+/g, ' ').trim();
   const points = (Array.isArray(e.points) ? e.points : []).filter((x) => typeof x === 'string' && x.trim())
-    .map((x) => clip(x.replace(/\s+/g, ' ').replace(/^[-*•\d.)\s]+/, '').trim(), 200)).filter(Boolean).slice(0, 6);
+    .map((x) => clip(x.replace(/\s+/g, ' ').replace(/^[-*•\d.)\s]+/, '').trim(), 200)).filter(Boolean).slice(0, 11);
   return summary || points.length ? { summary, points } : null;
 }
 
@@ -310,4 +341,4 @@ function validateCopilot(parsed, input) {
 }
 
 module.exports = {
-  subjectOf, SYSTEM_PROMPT, MODES, REFINES, buildUserMessage, validateCopilot, unverifiedNumbers, expertOf };
+  subjectOf, subjectChecklist, SYSTEM_PROMPT, MODES, REFINES, buildUserMessage, validateCopilot, unverifiedNumbers, expertOf };

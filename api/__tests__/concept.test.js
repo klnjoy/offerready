@@ -43,3 +43,10 @@ test('SUBJECT FIRST: a question that names a technology carries its subject to t
   assert.match(COPILOT.SYSTEM_PROMPT, /SUBJECT FIRST/);
   assert.match(COPILOT.SYSTEM_PROMPT, /never fill an X answer with resume items about\n?\s*'?\s*\+?\s*'?OTHER tools|OTHER tools/);
 });
+
+test('a RAG question carries the RAG checklist (pipeline, chunking, overlap, vector DB, namespaces, similarity, metadata, re-ranking, hallucination, citations, architecture)', () => {
+  const msg = COPILOT.buildUserMessage({ question: 'Walk me through the RAG project on your resume.', resume: 'Built a RAG assistant' });
+  assert.match(msg, /SUBJECT OF THE QUESTION: RAG/);
+  for (const w of ['preprocessing and chunking', 'chunk size and overlap', 'vector database', 'namespaces and collections', 'similarity search', 'metadata filtering', 're-ranking', 'hallucination control', 'citations and grounding', 'RAG as an architecture']) assert.ok(msg.includes(w), w);
+  assert.strictEqual(COPILOT.subjectChecklist('Snowflake').length, 0);
+});
