@@ -11,6 +11,13 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **Tailor your resume in one tap.** After *Tailor my bullets*, *Use all and
+  save* takes every rewrite that needs nothing from you and saves this job's
+  tailored copy. A rewrite that needs a real number keeps your original
+  wording; nothing is removed, and your main resume doesn't change. You can
+  still review bullets one by one.
+- **Job steps go in order.** With nothing started, step 2 (resume tailor)
+  is where you are. Once you start prep, it shows as skipped and optional.
 - **New open jobs on the front page.** Under the top of the front page, a
   slowly moving strip shows the newest roles from the roles board, with a
   *Prepare* link into each one. It pauses when you point at it, and stays
