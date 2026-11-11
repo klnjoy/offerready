@@ -129,6 +129,14 @@ async function passFor(userId) {
   catch (err) { logOnce('pass-lookup-failed (is migration 0014 applied?)', err && err.message); return undefined; }
 }
 
+/** True when the signed-in user's email is in ADMIN_EMAILS (comma-separated). */
+function isAdminUser(userId) {
+  const admins = String(process.env.ADMIN_EMAILS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+  if (!admins.length) return false;
+  const email = require('./supabaseAuth').emailOf(userId);
+  return !!email && admins.includes(email.trim().toLowerCase());
+}
+
 /**
  * Resolve the plan, distinguishing "known free" from "lookup failed".
  * A user holding a live pass is 'pro' with that pass's allowance (`pass`);
@@ -140,6 +148,12 @@ async function resolvePlan(userId) {
   if (!userId) return { plan: 'free', known: true, pass: null };
   const hit = planCache.get(userId);
   if (hit && Date.now() - hit.at < PLAN_TTL_MS) return { plan: hit.plan, known: true, pass: hit.pass, trial: hit.trial ? trialWindow(hit.trial.starts) : null };
+  // Admin accounts (ADMIN_EMAILS) always have Pro: the owner and team test
+  // the full product without buying a pass. No Stripe row is written.
+  if (isAdminUser(userId)) {
+    planCache.set(userId, { plan: 'pro', pass: null, at: Date.now() });
+    return { plan: 'pro', known: true, pass: null, admin: true };
+  }
   if (!configured()) { logOnce('supabase-not-configured'); return { plan: 'free', known: false, pass: null }; }
 
   const pass = await passFor(userId);
@@ -433,5 +447,5 @@ function _reset() { planCache.clear(); logged.clear(); signupCache.clear(); }
 module.exports = {
   LIMITS, TRIAL_LIMITS, TRIAL_DAYS, inTrial, trialWindow, getPlan, checkQuota, recordUse,
   quotaError, quotaMessage, getUsageSummary, periodStart, periodEnd, METERED,
-  _internal: { _reset, planCache, resolvePlan, allowanceQuota },
+  _internal: { _reset, planCache, resolvePlan, allowanceQuota, isAdminUser },
 };
