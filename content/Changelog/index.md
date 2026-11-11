@@ -11,6 +11,14 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **Fix several gaps at once.** From your fit list, *Fix my resume for this
+  job* lists every missing requirement. Tick the ones you've really done, say
+  what you did in a few words, and one tap writes all the bullets from your
+  own words. Add them all to this job's resume and check your fit once.
+  Anything you don't tick stays a gap.
+- **Remove what doesn't help, in the same tap.** *Use all and save* can also
+  take out the bullets that don't help this job (listed first). Only this
+  job's copy changes; your main resume keeps them.
 - **Tailor your resume in one tap.** After *Tailor my bullets*, *Use all and
   save* takes every rewrite that needs nothing from you and saves this job's
   tailored copy. A rewrite that needs a real number keeps your original
