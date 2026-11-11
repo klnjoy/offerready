@@ -11,6 +11,17 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **What top companies look for.** On the front page, the three companies
+  with the most open AI roles on the roles board today, with the titles they
+  are hiring for and the skills their postings mention most. It comes from
+  the live job feed and links to their roles. No logos; OfferReady isn't
+  affiliated with them.
+- **Draft all for me.** In *Add what's missing, all at once*, one tap drafts
+  a bullet for every gap from your resume. Anything your resume doesn't show
+  is left as a [placeholder]. Tick only the ones that are true, then add them
+  together.
+- **Made in North Carolina,** with a Blue Ridge skyline, at the foot of the
+  site and the app.
 - **Fix several gaps at once.** From your fit list, *Fix my resume for this
   job* lists every missing requirement. Tick the ones you've really done, say
   what you did in a few words, and one tap writes all the bullets from your
