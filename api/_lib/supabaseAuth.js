@@ -39,6 +39,11 @@ function bearerToken(req) {
 const signups = new Map();
 function rememberSignup(id, at) { if (signups.size > 5000) signups.clear(); signups.set(id, at); }
 function signedUpAt(id) { return signups.get(id) || null; }
+// Each user's email (from their verified token), so plans.js can tell an
+// admin account (ADMIN_EMAILS) without another lookup. Per instance.
+const emails = new Map();
+function rememberEmail(id, email) { if (emails.size > 5000) emails.clear(); if (email) emails.set(id, String(email)); }
+function emailOf(id) { return emails.get(id) || null; }
 
 async function getUser(req) {
   const url = process.env.SUPABASE_URL;
@@ -62,6 +67,7 @@ async function getUser(req) {
     const u = await resp.json();
     if (!u || !u.id) return null;
     if (u.created_at) rememberSignup(u.id, u.created_at);
+    if (u.email) rememberEmail(u.id, u.email);
     return { id: u.id, email: u.email || null, raw: u };
   } catch (_err) {
     // Network error / abort / bad JSON — deny.
@@ -86,4 +92,4 @@ async function requireUser(req, res, send) {
   return user;
 }
 
-module.exports = { getUser, requireUser, bearerToken, signedUpAt, rememberSignup };
+module.exports = { getUser, requireUser, bearerToken, signedUpAt, rememberSignup, emailOf, rememberEmail };
