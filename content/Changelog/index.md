@@ -11,6 +11,15 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **Add a project to your resume, no job needed.** More → Your resume →
+  Add a project. Say what you built in your own words; it writes a resume
+  bullet from only what you said and adds it under Projects in your main
+  resume, so every job you add later starts with it.
+- **The app's first screen matches the website.** Signed out, the installed
+  app now opens on the same front page, with a Sign in link at the top.
+- **A shorter footer.** Three short columns (Product, Help, Company)
+  instead of five.
+- **A friendlier help button.** *Ask OfferReady* now has a small robot.
 - **A cleaner front page.** The website's front page is shorter and
   simpler, in this order:
   - the promise and *Analyze my job*;
