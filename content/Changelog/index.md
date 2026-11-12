@@ -11,6 +11,16 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **A cleaner front page.** The website's front page is shorter and
+  simpler, in this order:
+  - the promise and *Analyze my job*;
+  - a slim strip of the five role tracks with the live open-role count;
+  - prepare, apply and practice next to a sample 14-day plan;
+  - how it works;
+  - today's free question;
+  - free things to explore;
+  - the five roles with their pay where we have it;
+  - privacy.
 - **Easier to see in dark mode.** The main button on a job's Home (*Do this
   next*) is now bright blue in dark mode instead of navy on navy.
 - **One next step after your resume match.** The Resume match page now
