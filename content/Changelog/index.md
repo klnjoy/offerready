@@ -11,6 +11,8 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **Easier to see in dark mode.** The main button on a job's Home (*Do this
+  next*) is now bright blue in dark mode instead of navy on navy.
 - **One next step after your resume match.** The Resume match page now
   shows your score, the essential gaps left, and one button: *Fix gaps*
   while essentials are missing, then *Next: practice this job's questions*.
