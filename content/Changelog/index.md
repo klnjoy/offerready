@@ -11,6 +11,17 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **One next step after your resume match.** The Resume match page now
+  shows your score, the essential gaps left, and one button: *Fix gaps*
+  while essentials are missing, then *Next: practice this job's questions*.
+  Everything else (your resume, the requirement list, the ATS check,
+  tailoring and the application kit) is folded into *Details*.
+- **A lighter front page.** The app's welcome drops the daily-question card
+  and the repeat tiles. *Which role fits you* shows the three AI roles in
+  short, and privacy is one line.
+- **Practice first on a job's Home.** Until you practise your first
+  question, the job's Home skips the career-profile prompt and the daily
+  card, so the next step stays on top.
 - **What top companies look for.** On the front page, the three companies
   with the most open AI roles on the roles board today, with the titles they
   are hiring for and the skills their postings mention most. It comes from
