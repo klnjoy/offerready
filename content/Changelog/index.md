@@ -11,6 +11,14 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **Four coloured stages.** The front page now shows one job as four
+  coloured steps (Analyze, Apply, Practice, Interview day), each with its
+  own drawing. Your steps on a job's Home use the same colours: finished
+  and current steps are filled in, and a bar shows where you are.
+- **Job pages line up.** Every page inside a job now uses the same full
+  width, so nothing jumps narrower as you move between them.
+- **A calmer job Home.** The daily practice card is gone from a job's
+  Home. The daily AI check is still under Practice.
 - **Add a project to your resume, no job needed.** More → Your resume →
   Add a project. Say what you built in your own words; it writes a resume
   bullet from only what you said and adds it under Projects in your main
