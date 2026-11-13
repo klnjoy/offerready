@@ -11,6 +11,12 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **AI concepts read more clearly.** Every answer shows a clear True or
+  False with the reason, "Show all answers" turns the page into study
+  notes, and each topic links to its notes.
+- **No more repeats.** On the front page the question and open-role
+  counts now open their lists, and the counts and steps each appear
+  once.
 - **The study library inside the app is cleaner.** One logo, one Ask
   button and no second footer, and the GenAI overview reads well on
   phones.
