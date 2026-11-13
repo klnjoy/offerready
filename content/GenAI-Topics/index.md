@@ -28,28 +28,45 @@ flowchart LR
     S --> G[Grow<br/>projects, interviews,<br/>economics, trends]
 ```
 
-| Stage | Topic | Read |
-|---|---|---|
-| **Learn** | How LLMs work: tokens, attention, sampling, temperature | [LLM Fundamentals](llm-fundamentals/index.md) |
-| | Prompt engineering: few-shot, chain of thought, structured output | [Prompt Engineering](prompt-engineering/index.md) |
-| | Context engineering: memory, retrieval, what goes in the window | [Context Engineering](context-engineering/index.md) |
-| | Models and model choice: open vs closed, cost, latency, quality | [LLM Fundamentals](llm-fundamentals/index.md) · [AI economics](ai-economics/index.md) |
-| **Build** | Embeddings and embedding models | [Embedding Models](embeddings/index.md) |
-| | Vector databases: indexing, chunking, similarity search | [Vector DB](vector-db/index.md) |
-| | RAG: retrieval, re-ranking, hybrid search, RAG vs fine-tuning | [RAG](rag/index.md) · [Retrieval Tuning](retrieval-tuning/index.md) |
-| | Knowledge graphs and GraphRAG | [Graph DB](graph-db/index.md) |
-| | Agents: tool calling, planning, reflection, memory, multi-agent | [Agent architecture](agent-architecture/index.md) · [Agent Engineering](agent-engineering/index.md) · [Building Agents](agent-principles/index.md) · [7 diagrams](agent-diagrams/index.md) |
-| | Frameworks and platforms | [LangChain](langchain/index.md) · [LangGraph](langgraph/index.md) · [Bedrock](bedrock/index.md) · [AgentCore](agentcore/index.md) |
-| **Ship** | MCP and agent-to-agent protocols | [MCP](mcp/index.md) · [A2A](a2a/index.md) |
-| | Safety: prompt injection, guardrails, output validation, access | [AI Security](../AI-Security/index.md) · [Guardrails](agent-diagrams/index.md#5-guardrails-and-permissions) |
-| | Evals and observability: tracing, regression tests, LLM judges | [Observability & Eval](observability/index.md) |
-| | How AI work differs from normal software: SDLC vs the AI lifecycle | [SDLC vs AI lifecycle](ai-lifecycle/index.md) |
-| | Production: rate limits, caching, queues, scaling, incidents | [LLMOps](llmops/index.md) · [Reliability](reliability/index.md) · [Kubernetes](kubernetes/index.md) · [DevOps for AI](devops-ai/index.md) |
-| | Cost control | [Cost Optimization](cost-optimization/index.md) |
-| **Grow** | Portfolio projects | [7 AI projects](../Projects/portfolio/index.md) |
-| | Courses, if you need the basics first | [Free courses, in order](free-courses/index.md) |
-| | The business side | [AI economics](ai-economics/index.md) · [Trends & market](trends/index.md) |
-| | Interview preparation | [OfferReady app](https://getofferready.app/analyze): plan, practice and mock interviews for your job |
+**Learn**
+
+| Topic | Read |
+|---|---|
+| How LLMs work: tokens, attention, sampling, temperature | [LLM Fundamentals](llm-fundamentals/index.md) |
+| Prompt engineering: few-shot, chain of thought, structured output | [Prompt Engineering](prompt-engineering/index.md) |
+| Context engineering: memory, retrieval, what goes in the window | [Context Engineering](context-engineering/index.md) |
+| Models and model choice: open vs closed, cost, latency, quality | [LLM Fundamentals](llm-fundamentals/index.md) · [AI economics](ai-economics/index.md) |
+
+**Build**
+
+| Topic | Read |
+|---|---|
+| Embeddings and embedding models | [Embedding Models](embeddings/index.md) |
+| Vector databases: indexing, chunking, similarity search | [Vector DB](vector-db/index.md) |
+| RAG: retrieval, re-ranking, hybrid search, RAG vs fine-tuning | [RAG](rag/index.md) · [Retrieval Tuning](retrieval-tuning/index.md) |
+| Knowledge graphs and GraphRAG | [Graph DB](graph-db/index.md) |
+| Agents: tool calling, planning, reflection, memory, multi-agent | [Agent architecture](agent-architecture/index.md) · [Agent Engineering](agent-engineering/index.md) · [Building Agents](agent-principles/index.md) · [7 diagrams](agent-diagrams/index.md) |
+| Frameworks and platforms | [LangChain](langchain/index.md) · [LangGraph](langgraph/index.md) · [Bedrock](bedrock/index.md) · [AgentCore](agentcore/index.md) |
+
+**Ship**
+
+| Topic | Read |
+|---|---|
+| MCP and agent-to-agent protocols | [MCP](mcp/index.md) · [A2A](a2a/index.md) |
+| Safety: prompt injection, guardrails, output validation, access | [AI Security](../AI-Security/index.md) · [Guardrails](agent-diagrams/index.md#5-guardrails-and-permissions) |
+| Evals and observability: tracing, regression tests, LLM judges | [Observability & Eval](observability/index.md) |
+| How AI work differs from normal software: SDLC vs the AI lifecycle | [SDLC vs AI lifecycle](ai-lifecycle/index.md) |
+| Production: rate limits, caching, queues, scaling, incidents | [LLMOps](llmops/index.md) · [Reliability](reliability/index.md) · [Kubernetes](kubernetes/index.md) · [DevOps for AI](devops-ai/index.md) |
+| Cost control | [Cost Optimization](cost-optimization/index.md) |
+
+**Grow**
+
+| Topic | Read |
+|---|---|
+| Portfolio projects | [7 AI projects](../Projects/portfolio/index.md) |
+| Courses, if you need the basics first | [Free courses, in order](free-courses/index.md) |
+| The business side | [AI economics](ai-economics/index.md) · [Trends & market](trends/index.md) |
+| Interview preparation | [OfferReady app](https://getofferready.app/analyze): plan, practice and mock interviews for your job |
 
 Not covered here yet: multimodal AI (vision, speech, image and video
 generation) and AI coding tools. Their official docs are the best place to

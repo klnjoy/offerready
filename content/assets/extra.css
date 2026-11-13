@@ -1704,3 +1704,9 @@ a.ig-feature.ig-link .ig-d {
 [data-md-color-scheme="default"] .md-typeset .or-hero .home-cta .md-button:hover { background: #f2f4f8 !important; border-color: #16305c !important; color: #16305c !important; }
 [data-md-color-scheme="default"] .md-typeset .or-hero .home-cta .md-button--primary { background: #16305c !important; border-color: #16305c !important; color: #fff !important; }
 [data-md-color-scheme="default"] .md-typeset .or-hero .home-cta .md-button--primary:hover { background: #0f2547 !important; border-color: #0f2547 !important; color: #fff !important; }
+
+/* In the OfferReady app's reader: no second logo, no "App" button and no
+   second Ask OfferReady button (the app shows its own). */
+.or-embedded .md-header .md-logo,
+.or-embedded .or-header-cta,
+.or-embedded #orh-root { display: none !important; }
