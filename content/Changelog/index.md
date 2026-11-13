@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **A quick check after each AI topic.** The study notes on RAG, agents,
+  embeddings, evals and more now end with three true or false
+  statements. Tap an answer to see why, with new ones each day.
 - **AI concepts read more clearly.** Every answer shows a clear True or
   False with the reason, "Show all answers" turns the page into study
   notes, and each topic links to its notes.
