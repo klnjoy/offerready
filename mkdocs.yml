@@ -83,7 +83,7 @@ plugins:
 extra_css:
   # ?v=N cache-buster — bump when extra.css changes so browsers don't serve a
   # stale cached stylesheet after a deploy.
-  - assets/extra.css?v=52
+  - assets/extra.css?v=53
   # Help assistant styles (after extra.css so they win over the old #kb rules).
   - assets/chatbot.css?v=2
 
@@ -104,6 +104,7 @@ extra_javascript:
   - assets/mermaid-init.js?v=4
   - assets/chatbot.js?v=6
   - assets/why.js?v=3
+  - assets/topic-check.js?v=1
 
 markdown_extensions:
   - admonition
