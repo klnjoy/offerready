@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **A bolder logo.** The "or" mark is thicker, in solid blue, and the
+  OfferReady name is heavier. Installed apps may keep the old icon until
+  they're added to the home screen again.
 - **Interview day kit.** A checklist for the day before and the day
   itself, questions to ask them, and a thank-you note with the role and
   company filled in, which you copy and send yourself. Find it under a
