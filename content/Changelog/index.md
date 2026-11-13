@@ -11,6 +11,11 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **The study library inside the app is cleaner.** One logo, one Ask
+  button and no second footer, and the GenAI overview reads well on
+  phones.
+- **Every page uses the full width on a computer.** The last few pages
+  that sat in a narrow column now line up with the rest.
 - **A bolder logo.** The "or" mark is thicker, in solid blue, and the
   OfferReady name is heavier. Installed apps may keep the old icon until
   they're added to the home screen again.
