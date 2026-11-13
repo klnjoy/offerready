@@ -11,6 +11,13 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **Interview day kit.** A checklist for the day before and the day
+  itself, questions to ask them, and a thank-you note with the role and
+  company filled in, which you copy and send yourself. Find it under a
+  job's Interviews, or on its own with no account.
+- **Free tools.** One list of everything you can use free, most with no
+  account: free questions, the daily AI check, the interview day kit,
+  open roles, the roadmap and more. In the footer and the Resources menu.
 - **Four coloured stages.** The front page now shows one job as four
   coloured steps (Analyze, Apply, Practice, Interview day), each with its
   own drawing. Your steps on a job's Home use the same colours: finished
