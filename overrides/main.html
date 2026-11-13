@@ -10,6 +10,14 @@
     catch (e) { document.documentElement.classList.add("or-embedded"); }
   })();
 </script>
+<style>
+  /* Inline (not in extra.css) so a cached stylesheet can never bring the
+     doubled logo, App button, Ask button or site footer back in the app. */
+  .or-embedded .md-header .md-logo,
+  .or-embedded .or-header-cta,
+  .or-embedded #orh-root,
+  .or-embedded .or-site-footer { display: none !important; }
+</style>
 <script>
   /* The study library lives at getofferready.app/library/. Old github.io
      links forward there (same page, same anchor). Runs only on github.io, so
