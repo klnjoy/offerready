@@ -1710,3 +1710,24 @@ a.ig-feature.ig-link .ig-d {
 .or-embedded .md-header .md-logo,
 .or-embedded .or-header-cta,
 .or-embedded #orh-root { display: none !important; }
+
+/* Quick check at the end of a topic page (assets/topic-check.js) */
+.md-typeset .tq { margin: 2.4rem 0 1rem; padding: 1.1rem 1.2rem 1rem; border: 1px solid var(--md-default-fg-color--lightest); border-radius: 14px; background: var(--md-code-bg-color); }
+.md-typeset .tq-head h2 { margin: 0; font-size: 1.15rem; border: 0; }
+.md-typeset .tq-sub { margin: .2rem 0 .8rem; color: var(--md-default-fg-color--light); font-size: .8rem; }
+.md-typeset .tq-list { list-style: none; margin: 0 !important; padding: 0 !important; counter-reset: tq; }
+.md-typeset .tq-list > li.tq-item { counter-increment: tq; margin: 0 0 .7rem !important; padding: .7rem .8rem; border-radius: 10px; background: var(--md-default-bg-color); border: 1px solid var(--md-default-fg-color--lightest); }
+.md-typeset .tq-s { margin: 0 0 .5rem; font-weight: 600; }
+.md-typeset .tq-s::before { content: counter(tq) ". "; color: var(--md-default-fg-color--light); }
+.md-typeset .tq-btns { display: flex; gap: .5rem; }
+.md-typeset .tq-btn { min-height: 36px; min-width: 76px; padding: 0 .9rem; border-radius: 999px; border: 1px solid var(--md-default-fg-color--lighter); background: transparent; color: var(--md-default-fg-color); font: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; }
+.md-typeset .tq-btn:hover:not(:disabled) { border-color: var(--md-accent-fg-color); color: var(--md-accent-fg-color); }
+.md-typeset .tq-btn:disabled { cursor: default; opacity: .55; }
+.md-typeset .tq-btn.is-right { opacity: 1; border-color: #2f7bff; background: rgba(47, 123, 255, .12); }
+.md-typeset .tq-btn.is-wrong { opacity: 1; border-color: #d92d20; background: rgba(217, 45, 32, .1); }
+.md-typeset .tq-result { margin-top: .55rem; padding: .5rem .7rem; border-left: 3px solid; border-radius: 0 8px 8px 0; font-size: .78rem; line-height: 1.55; }
+.md-typeset .tq-result.is-right { border-color: #2f7bff; background: rgba(47, 123, 255, .08); }
+.md-typeset .tq-result.is-wrong { border-color: #d92d20; background: rgba(217, 45, 32, .07); }
+.md-typeset .tq-score { margin: .3rem 0 .4rem; font-weight: 700; font-size: .8rem; }
+.md-typeset .tq-score:empty { display: none; }
+.md-typeset .tq-more { font-weight: 600; font-size: .8rem; }
