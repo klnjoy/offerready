@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **Failure Lab (sample).** Practise the production-failure question
+  interviewers love: a chatbot keeps quoting an old refund policy after
+  the docs changed. See it break, diagnose it, fix it, then explain it
+  with AI Coach feedback. In Practice, next to the trade-off scenarios.
 - **Hints, one at a time.** Stuck on a practice question? "Get a hint"
   gives one nudge per tap: how to start, the shape of a good answer,
   each point to cover, then a tip. You still do the thinking.
