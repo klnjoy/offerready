@@ -42,6 +42,18 @@ See the [Engineering Manager role guide](Path_Engineering_Manager.md) for the in
 
     **Follow-up they'll ask:** How did you keep the rest of the team from carrying the extra load meanwhile?
 
+??? question "Tell me about a time you gave difficult feedback."
+    **Short answer:** Pick a real case: what you observed, how you prepared, what you said in private, how the person responded, and what changed afterwards.
+
+    **In depth:**
+
+    - Give it soon, in private, about specific behaviour and its impact, not about the person.
+    - Listen to their side; you may be missing context.
+    - Agree what good looks like next time and follow up.
+    - Say honestly what you would do differently.
+
+    **Follow-up they'll ask:** What if they disagreed with your feedback?
+
 ??? question "How do you grow senior engineers on your team?"
     **Short answer:** Give them problems slightly bigger than their current scope, with real ownership and visible credit, and coach rather than direct.
 
@@ -87,7 +99,7 @@ See the [Engineering Manager role guide](Path_Engineering_Manager.md) for the in
 ??? question "How do you measure your team's effectiveness?"
     **Short answer:** Use a small set of outcome and flow measures together, read them as a team, and never turn them into individual targets.
 
-    **In depth:** Delivery measures such as the DORA four (deployment frequency, lead time for changes, change failure rate and time to restore service) show flow and stability. Pair them with outcomes the business cares about and with how the team feels. Look at trends, not single numbers, and discuss them openly.
+    **In depth:** Delivery measures such as the DORA four (deployment frequency, lead time for changes, change failure rate and time to restore service, which newer DORA reports call failed deployment recovery time) show flow and stability. Pair them with outcomes the business cares about and with how the team feels. Look at trends, not single numbers, and discuss them openly.
 
     **Follow-up they'll ask:** What goes wrong when you set a target on one of these?
 
@@ -118,6 +130,13 @@ See the [Engineering Manager role guide](Path_Engineering_Manager.md) for the in
     - Debrief on evidence, not impressions, and watch for "not a culture fit" without specifics.
 
     **Follow-up they'll ask:** Tell me about a hire that did not work out and what you changed.
+
+??? question "Tell me about a hire that did not work out."
+    **Short answer:** Own the decision, explain what you missed in the process, how you handled it fairly with the person, and what you changed in how you hire.
+
+    **In depth:** Common causes are an unclear role, a signal the loop never tested, or overlooking a concern because the team was under pressure to hire. Show you acted with care and in time, and name the specific change, such as a new interview area or a clearer bar.
+
+    **Follow-up they'll ask:** How long did you wait before acting, and why?
 
 ??? question "How do you build a diverse and inclusive team?"
     **Short answer:** Widen where candidates come from, make the process structured and consistent, and make sure everyone on the team has a voice in how work is done.

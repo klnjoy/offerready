@@ -139,7 +139,7 @@ steering committees, change control, migrations and regulated environments.
 ### Technical depth and AI programs
 
 17. Walk me through the architecture of a system from one of your programs. →
-    [System Design Q&A](System_Design_Interview_QA.md)
+    [TPM Q&A](TPM_Interview_QA.md) · [System Design Q&A](System_Design_Interview_QA.md)
 18. Run a program to launch an AI assistant to customers. →
     [TPM Q&A](TPM_Interview_QA.md) · [RAG & LLMOps Q&A](RAG_LLMOps_Interview_QA.md)
 19. How is running an AI program different from a regular software program? →

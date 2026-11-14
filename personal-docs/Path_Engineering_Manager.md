@@ -108,7 +108,7 @@ leading teams across locations.
 5. How do you handle conflict between two engineers? →
    [Engineering Manager Q&A](Engineering_Manager_Interview_QA.md)
 6. Tell me about a time you gave difficult feedback. →
-   [Behavioral / STAR](Behavioral_STAR_Interview_QA.md)
+   [Engineering Manager Q&A](Engineering_Manager_Interview_QA.md)
 
 ### Delivery and execution
 
@@ -152,8 +152,7 @@ leading teams across locations.
 19. How do you work with your product manager? →
     [Engineering Manager Q&A](Engineering_Manager_Interview_QA.md)
 20. What would you do in your first 90 days? →
-    [Engineering Manager Q&A](Engineering_Manager_Interview_QA.md) ·
-    [Leadership & Delivery Q&A](Leadership_Delivery_Interview_QA.md)
+    [Engineering Manager Q&A](Engineering_Manager_Interview_QA.md)
 
 ---
 

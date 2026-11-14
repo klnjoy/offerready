@@ -138,6 +138,7 @@ you do in your first month?" Presentation skills and handling resistance matter.
 ### About you
 
 19. Tell me about your biggest success as a coach. →
+    [Agile Coach & Scrum Master Q&A](Agile_Coach_Scrum_Master_Interview_QA.md) ·
     [Behavioral / STAR](Behavioral_STAR_Interview_QA.md)
 20. What would you do in your first month with a new team? →
     [Agile Coach & Scrum Master Q&A](Agile_Coach_Scrum_Master_Interview_QA.md)

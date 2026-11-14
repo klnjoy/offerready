@@ -143,6 +143,7 @@ accounts.
 18. What is our product's biggest risk from AI? →
     [AI & Technical PM Q&A](AI_Product_Manager_Interview_QA.md)
 19. Tell me about a product you shipped that failed. →
+    [AI & Technical PM Q&A](AI_Product_Manager_Interview_QA.md) ·
     [Behavioral / STAR](Behavioral_STAR_Interview_QA.md)
 20. What would you do in your first 90 days? →
     [AI & Technical PM Q&A](AI_Product_Manager_Interview_QA.md)

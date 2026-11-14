@@ -1068,12 +1068,21 @@ def write_nav(md_catalog, modules) -> None:
                 ("Path_AI_Engineer.md", "AI Engineer"),
                 ("Path_FDE.md", "AI FDE (Forward Deployed Engineer)"),
                 ("Path_AI_Platform_Engineer.md", "AIOps · LLMOps · MLOps"),
+                # People who lead teams, programs and products.
+                ("Path_Engineering_Manager.md", "Engineering Manager (AI & Data)"),
+                ("Path_Technical_Program_Manager.md", "Technical Program Manager"),
+                ("Path_Agile_Coach_Scrum_Master.md", "Agile Coach & Scrum Master"),
+                ("Path_AI_Product_Manager.md", "AI & Technical Product Manager"),
             ]),
             ("By Level & Role", [
                 ("Interview_Level_Comparison.md", "Senior / Staff / Principal / FDE"),
                 ("AI_Engineer_Interview_QA.md", "AI Engineer"),
                 ("Forward_Deployed_Engineer_Interview_QA.md", "Forward Deployed Engineer (FDE)"),
                 ("Interview_Prep_Google_Cloud_Delivery_Lead.md", "Cloud Delivery Lead"),
+                ("Engineering_Manager_Interview_QA.md", "Engineering Manager"),
+                ("TPM_Interview_QA.md", "Technical Program Manager"),
+                ("Agile_Coach_Scrum_Master_Interview_QA.md", "Agile Coach & Scrum Master"),
+                ("AI_Product_Manager_Interview_QA.md", "AI & Technical Product Manager"),
             ]),
             ("Technical Deep Dive", [
                 ("GenAI_Interview_QA.md", "GenAI"),
@@ -1121,7 +1130,9 @@ def write_nav(md_catalog, modules) -> None:
         # interview catalog keywords, so register them explicitly (only if the
         # synced file is actually present).
         for _pb in ("Path_AI_Engineer.md", "Path_FDE.md",
-                    "Path_AI_Platform_Engineer.md"):
+                    "Path_AI_Platform_Engineer.md", "Path_Engineering_Manager.md",
+                    "Path_Technical_Program_Manager.md", "Path_Agile_Coach_Scrum_Master.md",
+                    "Path_AI_Product_Manager.md"):
             if (DOCS_DIR / P / _pb).exists():
                 available[_pb] = f"{P}{_pb}"
         index_base = "Interview_Guide_Overview.md"

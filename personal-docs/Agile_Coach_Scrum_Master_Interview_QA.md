@@ -138,7 +138,7 @@ Terms follow the 2020 Scrum Guide. See the [Agile Coach & Scrum Master role guid
 ??? question "How do you apply Scrum to an AI or ML team where results are uncertain?"
     **Short answer:** Frame Sprint Goals as learning outcomes when needed, time-box experiments, and include evaluation in the Definition of Done.
 
-    **In depth:** A Sprint Goal like "know whether the new retrieval approach beats the current one on our evaluation set" is valid. Make experiment results visible in the Sprint Review. Keep a balance between exploration and delivering usable Increments.
+    **In depth:** A Sprint Goal like "know whether the new retrieval approach beats the current one on our evaluation set" can work, but Scrum still expects a usable Increment every Sprint, so pair learning goals with something usable, or consider Kanban for mostly exploratory work. Make experiment results visible in the Sprint Review. Keep a balance between exploration and delivering usable Increments.
 
     **Follow-up they'll ask:** What does Done mean for a model change?
 

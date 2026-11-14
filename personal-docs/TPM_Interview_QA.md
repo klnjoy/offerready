@@ -30,6 +30,13 @@ See the [Technical Program Manager role guide](Path_Technical_Program_Manager.md
 
     **Follow-up they'll ask:** Tell me about a team that would not prioritise your program.
 
+??? question "Tell me about a team that would not prioritise your program."
+    **Short answer:** Understand their priorities and constraints first, find where the program helps their goals, offer options that reduce their cost, and escalate with facts only if the trade-off needs a higher decision.
+
+    **In depth:** Often the team is not refusing; it has conflicting commitments. Make the conflict visible to the people who set both priorities, with the impact of each choice, so the decision is made deliberately rather than by default.
+
+    **Follow-up they'll ask:** How did you keep the relationship good afterwards?
+
 ## Planning
 
 ??? question "How do you plan a large cross-team program?"
@@ -65,6 +72,13 @@ See the [Technical Program Manager role guide](Path_Technical_Program_Manager.md
     **In depth:** New requests are not banned; they are traded. For each one, show the impact on date, risk and other scope, and get the right owner to decide. Keep a log of decisions so nobody is surprised later.
 
     **Follow-up they'll ask:** A VP adds a "small" requirement late. What do you do?
+
+??? question "A senior leader adds a requirement late. What do you do?"
+    **Short answer:** Take it seriously, assess its impact on date, scope and risk with the teams, and bring the leader clear options rather than a yes or a no.
+
+    **In depth:** Options include adding it and moving the date, swapping out other scope, or delivering it in a later phase. Confirm the decision in writing and update the plan and stakeholders.
+
+    **Follow-up they'll ask:** What if they insist on everything by the same date?
 
 ## Dependencies and risk
 
