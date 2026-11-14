@@ -473,6 +473,21 @@ async function adminBreakdown(since, teamIds) {
   };
 }
 
+/** The admin period: ?since=<ISO time> (a start the admin picked, e.g. local
+ * midnight of Nov 1) or ?days=N. A since in the future, unparseable, or older
+ * than maxDays falls back to days. Returns { days, since }, where days is the
+ * whole days the period spans (at least 1), for summaries that take a count. */
+function periodParam(query, maxDays, defDays) {
+  const now = Date.now();
+  const raw = query && typeof query.since === 'string' ? query.since : '';
+  const t = raw && /^\d{4}-\d{2}-\d{2}T[\d:.]+(Z|[+-]\d{2}:?\d{2})$/.test(raw) ? Date.parse(raw) : NaN;
+  if (Number.isFinite(t) && t <= now && now - t <= maxDays * 86400000) {
+    return { days: Math.max(1, Math.ceil((now - t) / 86400000)), since: new Date(t).toISOString() };
+  }
+  const days = Math.max(1, Math.min(maxDays, Math.round(Number(query && query.days) || defDays)));
+  return { days, since: new Date(now - days * 86400000).toISOString() };
+}
+
 /** Service-role read of one person's own review (migration 0030). */
 async function ownReview(userId) {
   const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
@@ -753,8 +768,7 @@ module.exports = async function handler(req, res) {
   if (op === 'people') {
     res.setHeader('Cache-Control', 'private, no-store');
     if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see people.' }); return; }
-    const days = Math.max(1, Math.min(365, Math.round(Number(req.query.days) || 30)));
-    const since = new Date(Date.now() - days * 86400000).toISOString();
+    const { days, since } = periodParam(req.query, 365, 30);
     try { send(res, 200, { days, since, people: await adminPeople(since) }); }
     catch (err) { console.error('[me/plan people]', err && err.message); send(res, 503, { error: 'The people list isn’t set up yet. Run migration 0021_admin_people.sql in Supabase.', setup: true }); }
     return;
@@ -763,8 +777,7 @@ module.exports = async function handler(req, res) {
   if (op === 'breakdown') {
     res.setHeader('Cache-Control', 'private, no-store');
     if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see this.' }); return; }
-    const days = Math.max(1, Math.min(365, Math.round(Number(req.query.days) || 30)));
-    const since = new Date(Date.now() - days * 86400000).toISOString();
+    const { days, since } = periodParam(req.query, 365, 30);
     try { send(res, 200, Object.assign({ days, since }, await adminBreakdown(since, await teamUserIds().catch(() => [])))); }
     catch (err) { console.error('[me/plan breakdown]', err && err.message); send(res, 503, { error: 'Couldn’t read this right now.' }); }
     return;
@@ -773,8 +786,7 @@ module.exports = async function handler(req, res) {
   if (op === 'visits') {
     res.setHeader('Cache-Control', 'private, no-store');
     if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see visits.' }); return; }
-    const days = Math.max(1, Math.min(365, Math.round(Number(req.query.days) || 30)));
-    const since = new Date(Date.now() - days * 86400000).toISOString();
+    const { days, since } = periodParam(req.query, 365, 30);
     try { send(res, 200, Object.assign({ days, since }, await adminVisits(since))); }
     catch (err) { console.error('[me/plan visits]', err && err.message); send(res, 503, { error: 'Couldn’t read visits right now.' }); }
     return;
@@ -808,8 +820,7 @@ module.exports = async function handler(req, res) {
   if (op === 'metrics') {
     res.setHeader('Cache-Control', 'private, no-store');
     if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can see metrics.' }); return; }
-    const days = Math.max(1, Math.min(365, Math.round(Number(req.query.days) || 30)));
-    const since = new Date(Date.now() - days * 86400000).toISOString();
+    const { days, since } = periodParam(req.query, 365, 30);
     const [m, costs, extra, funnel] = await Promise.all([
       adminMetrics(since).catch((err) => { console.error('[me/plan metrics]', err && err.message); return null; }),
       aiCost.summary(days).catch(() => null),
@@ -838,3 +849,4 @@ module.exports._teamEmails = teamEmails;
 module.exports._monthsParam = monthsParam;
 module.exports._groupErrors = groupErrors;
 module.exports._sourceBucket = sourceBucket;
+module.exports._periodParam = periodParam;
