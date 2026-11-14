@@ -17,7 +17,8 @@ New features and improvements, newest first.
 - **Write a review.** Tell others how OfferReady helped, in your own
   words, from More. Reviews appear on our website only with your
   permission and after we read them, and you can edit or remove yours
-  any time.
+  any time. Read what others say on the new Reviews page, linked at the
+  bottom of every page.
 - **A quick check after each AI topic.** The study notes on RAG, agents,
   embeddings, evals and more now end with three true or false
   statements. Tap an answer to see why, with new ones each day.
