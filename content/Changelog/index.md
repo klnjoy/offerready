@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **Add what's missing, in one go.** Tick the requirements you've really
+  done and tap Write: the Coach drafts all the bullets from your resume,
+  with no typing needed. Anything your resume doesn't show is left for you
+  to fill in, so nothing is made up. Then add them and check your fit.
 - **Failure Lab (sample).** Practise the production-failure question
   interviewers love: a chatbot keeps quoting an old refund policy after
   the docs changed. See it break, diagnose it, fix it, then explain it
