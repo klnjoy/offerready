@@ -645,6 +645,31 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  // Reviews (migration 0030): admins see every review and approve or hide it.
+  // Only approved ones reach the website (public_reviews()).
+  if (op === 'reviews') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    if (req.method !== 'GET' && req.method !== 'POST') { send(res, 405, { error: 'Method not allowed.' }); return; }
+    const user = await getUser(req);
+    if (!user) { send(res, 401, { error: 'Sign in first.' }); return; }
+    if (!aiCost.isAdmin(user.email)) { send(res, 403, { error: 'Only admins can manage reviews.' }); return; }
+    try {
+      if (req.method === 'POST') {
+        const body = req.body && typeof req.body === 'object' ? req.body : {};
+        const id = Math.round(Number(body.id));
+        const status = String(body.status || '');
+        if (!(id > 0) || !['pending', 'approved', 'hidden'].includes(status)) { send(res, 400, { error: 'Pick a review and a status.' }); return; }
+        await adminRpcBody('admin_review_set', { p_id: id, p_status: status });
+      }
+      const rows = await adminRpcBody('admin_reviews', {});
+      send(res, 200, { reviews: Array.isArray(rows) ? rows : [] });
+    } catch (err) {
+      console.error('[me/plan reviews]', err && err.message);
+      send(res, 503, { error: 'Reviews aren’t set up yet. Run migration 0030_reviews.sql in the Supabase SQL editor.', setup: true });
+    }
+    return;
+  }
+
   if (req.method !== 'GET') { send(res, 405, { error: 'Method not allowed.' }); return; }
 
   const user = await getUser(req);
