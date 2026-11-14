@@ -261,14 +261,18 @@ nav:
           - Master Cheat Sheets: Personal-SourceCode/Interview_Cheat_Sheets.md
           - 30-Day Prep Plan: Personal-SourceCode/Interview_30_Day_Plan.md
       - More Q&A:
+          - "Agile Coach & Scrum Master Interview Q&A": Personal-SourceCode/Agile_Coach_Scrum_Master_Interview_QA.md
+          - "AI & Technical Product Manager Interview Q&A": Personal-SourceCode/AI_Product_Manager_Interview_QA.md
           - "AI Security Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/AI_Security_Interview_QA.md
           - "Architecture Interview Q&A — Staff & Principal Scenario-Based": Personal-SourceCode/Architecture_Interview_QA.md
+          - "Engineering Manager Interview Q&A (AI & Data Teams)": Personal-SourceCode/Engineering_Manager_Interview_QA.md
           - "FastAPI Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/FastAPI_Interview_QA.md
           - "FDE Customer Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/FDE_Customer_Interview_QA.md
           - "Leadership & Delivery Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/Leadership_Delivery_Interview_QA.md
           - "ML / AI Platform Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/ML_AI_Platform_Interview_QA.md
           - "RAG & LLMOps Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/RAG_LLMOps_Interview_QA.md
           - "System Design Interview Q&A — Senior & Staff, AI and Data": Personal-SourceCode/System_Design_Interview_QA.md
+          - "Technical Program Manager Interview Q&A": Personal-SourceCode/TPM_Interview_QA.md
   - Study Guide:
       - Personal-SourceCode/OfferReady-Complete-Study-Guide.md
   - Help:
