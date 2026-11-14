@@ -52,6 +52,7 @@
  *   POST ?op=welcome-email (signed in): the welcome right after sign-in, same rules.
  *   GET|POST ?op=unsubscribe&u=&t= (signed link, no sign-in): the unsubscribe page / action.
  *   GET ?op=email-status, GET ?op=email-preview&kind=, POST ?op=email-test { kind } (admins only).
+ *   POST ?op=review-notify (signed in): emails ADMIN_EMAILS when your review was just saved and is waiting.
  * Lives here (not its own file) to stay within the Vercel Hobby function limit.
  *
  * Never fails because usage storage is missing: the plan still comes back with
@@ -472,6 +473,24 @@ async function adminBreakdown(since, teamIds) {
   };
 }
 
+/** Service-role read of one person's own review (migration 0030). */
+async function ownReview(userId) {
+  const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error('Supabase not configured');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 9000);
+  try {
+    const q = '/rest/v1/reviews?select=rating,quote,display_name,display_role,status,updated_at&user_id=eq.' + encodeURIComponent(userId) + '&limit=1';
+    const resp = await fetch(url + q, { signal: controller.signal, headers: { apikey: key, Authorization: 'Bearer ' + key, Accept: 'application/json' } });
+    if (!resp.ok) throw new Error('reviews ' + resp.status);
+    const rows = await resp.json();
+    return Array.isArray(rows) && rows[0] ? rows[0] : null;
+  } finally { clearTimeout(timer); }
+}
+const REVIEW_NOTICE_GAP = 10 * 60 * 1000;
+const reviewNoticeSent = new Map();
+
 /** Service-role REST call on admin_hidden_visitors (migration 0024). */
 async function hiddenRest(method, query, body) {
   const url = String(process.env.SUPABASE_URL || '').replace(/\/+$/, '');
@@ -641,6 +660,34 @@ module.exports = async function handler(req, res) {
     } catch (err) {
       console.error('[me/plan hide-visitor]', err && err.message);
       send(res, 503, { error: 'Hiding visitors isn’t set up yet. Run migration 0024_admin_hidden_visitors.sql in Supabase.', setup: true });
+    }
+    return;
+  }
+
+  // After someone saves a review, the app asks us to tell the team. We read
+  // their review ourselves (never trusting the request body) and email
+  // ADMIN_EMAILS only when it is waiting and was saved in the last 10 minutes.
+  // At most one notice per person per 10 minutes per server instance.
+  if (op === 'review-notify' && req.method === 'POST') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    const u = await getUser(req);
+    if (!u) { send(res, 401, { error: 'Sign in first.' }); return; }
+    const admins = String(process.env.ADMIN_EMAILS || '').split(',').map((x) => x.trim()).filter((x) => /.+@.+\..+/.test(x));
+    if (!process.env.RESEND_API_KEY || !admins.length) { send(res, 200, { ok: true, sent: false }); return; }
+    const last = reviewNoticeSent.get(u.id) || 0;
+    if (Date.now() - last < REVIEW_NOTICE_GAP) { send(res, 200, { ok: true, sent: false }); return; }
+    try {
+      const r = await ownReview(u.id);
+      const fresh = r && r.status === 'pending' && Date.now() - Date.parse(r.updated_at) < REVIEW_NOTICE_GAP;
+      if (!fresh) { send(res, 200, { ok: true, sent: false }); return; }
+      reviewNoticeSent.set(u.id, Date.now());
+      const msg = emails.reviewNotice(r);
+      let sent = 0;
+      for (const to of admins.slice(0, 5)) { const out = await emails.sendNotice(to, msg); if (out.ok) sent++; else console.warn('[review-notify] send failed', out.status); }
+      send(res, 200, { ok: true, sent: sent > 0 });
+    } catch (err) {
+      console.error('[review-notify]', err && err.message);
+      send(res, 200, { ok: true, sent: false });
     }
     return;
   }
