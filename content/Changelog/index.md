@@ -11,6 +11,13 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **Hints, one at a time.** Stuck on a practice question? "Get a hint"
+  gives one nudge per tap: how to start, the shape of a good answer,
+  each point to cover, then a tip. You still do the thinking.
+- **Write a review.** Tell others how OfferReady helped, in your own
+  words, from More. Reviews appear on our website only with your
+  permission and after we read them, and you can edit or remove yours
+  any time.
 - **A quick check after each AI topic.** The study notes on RAG, agents,
   embeddings, evals and more now end with three true or false
   statements. Tap an answer to see why, with new ones each day.
