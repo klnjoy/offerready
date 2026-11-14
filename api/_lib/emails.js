@@ -256,20 +256,28 @@ function build(kind, person, update) {
 
 /** Sends one email with Resend. Returns { ok, id } or { ok: false, status }. */
 async function sendEmail(to, msg, userId) {
+  const unsub = unsubUrl(userId);
+  return resendSend(to, msg, { 'List-Unsubscribe': '<' + unsub + '>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' });
+}
+
+/** A notice to the team (e.g. a new review to approve): no unsubscribe link,
+ * since it goes only to ADMIN_EMAILS. */
+async function sendNotice(to, msg) { return resendSend(to, msg, null); }
+
+async function resendSend(to, msg, headers) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return { ok: false, status: 0 };
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000);
   try {
-    const unsub = unsubUrl(userId);
     const body = {
       from: process.env.EMAIL_FROM || 'OfferReady <hello@getofferready.app>',
       to: [to],
       subject: msg.subject,
       html: msg.html,
       text: msg.text,
-      headers: { 'List-Unsubscribe': '<' + unsub + '>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
     };
+    if (headers) body.headers = headers;
     if (process.env.EMAIL_REPLY_TO) body.reply_to = process.env.EMAIL_REPLY_TO;
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST', signal: controller.signal,
@@ -282,6 +290,27 @@ async function sendEmail(to, msg, userId) {
   } catch (_e) {
     return { ok: false, status: 0 };
   } finally { clearTimeout(timer); }
+}
+
+/** "A new review is waiting": to the team, with the words exactly as written. */
+function reviewNotice(r) {
+  const n = Math.max(1, Math.min(5, Math.round(Number(r.rating) || 0)));
+  const stars = '★'.repeat(n) + '☆'.repeat(5 - n);
+  const who = clip(r.display_name, 40) + (r.display_role ? ' · ' + clip(r.display_role, 80) : '');
+  const to = link('/admin/reviews');
+  const subject = 'New review to approve: ' + n + ' of 5 from ' + clip(r.display_name, 40);
+  const html = '<!doctype html><html><body style="margin:0;background:' + C.soft + ';font-family:Inter,Arial,sans-serif;color:' + C.text + '">'
+    + '<div style="max-width:520px;margin:0 auto;padding:24px 20px">'
+    + '<p style="margin:0 0 12px;font-size:15px">A new review is waiting for approval. It isn’t on the website until you approve it.</p>'
+    + '<div style="background:#fff;border:1px solid ' + C.border + ';border-radius:12px;padding:16px 18px">'
+    + '<div style="color:#f2b705;font-size:18px;letter-spacing:2px" aria-label="' + n + ' out of 5">' + stars + '</div>'
+    + '<p style="margin:8px 0;font-size:15px;line-height:1.55">' + esc(clip(r.quote, 400)) + '</p>'
+    + '<p style="margin:0;font-weight:700;font-size:14px">' + esc(who) + '</p></div>'
+    + '<p style="margin:16px 0 0"><a href="' + to + '" style="display:inline-block;background:' + C.ink + ';color:#fff;text-decoration:none;padding:10px 16px;border-radius:10px;font-weight:600">Approve or hide ›</a></p>'
+    + '<p style="margin:16px 0 0;font-size:12px;color:' + C.text3 + '">Sent to OfferReady admins only.</p>'
+    + '</div></body></html>';
+  const text = 'A new review is waiting for approval.\n\n' + stars + '\n' + clip(r.quote, 400) + '\n— ' + who + '\n\nApprove or hide: ' + to + '\n';
+  return { subject, html, text };
 }
 
 /** The small page the unsubscribe link opens. */
@@ -304,6 +333,7 @@ function unsubPage(state, userId, token) {
 }
 
 module.exports = {
+  sendNotice, reviewNotice,
   KINDS, pickEmail, build, sendEmail, daysSince, monthKey, missingSettings, dailyCap,
   unsubToken, checkUnsubToken, unsubUrl, unsubPage, postalAddress,
 };
