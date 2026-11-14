@@ -78,6 +78,8 @@
 
   const ICON = {
     chat: '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4A2.5 2.5 0 0 1 4 13.5z"/><path d="M8.5 9.5h7M8.5 12.5h4"/></svg>',
+    // Same robot as the app's Ask OfferReady button (BotAvatar), so both look alike.
+    bot: '<svg class="orh-botav" width="34" height="34" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><circle cx="24" cy="24" r="22.5" fill="#0c1c38" stroke="currentColor" stroke-width="3"/><line x1="24" y1="9.5" x2="24" y2="14" stroke="#dbe4f5" stroke-width="1.8" stroke-linecap="round"/><circle cx="24" cy="8.6" r="2.1" fill="currentColor"/><rect x="10.2" y="20" width="3" height="7" rx="1.5" fill="#dbe4f5"/><rect x="34.8" y="20" width="3" height="7" rx="1.5" fill="#dbe4f5"/><rect x="12.5" y="14" width="23" height="19" rx="7" fill="#ffffff"/><rect x="15.5" y="17.5" width="17" height="10" rx="5" fill="#0c1c38"/><ellipse class="orh-botav-eye" cx="20.3" cy="22.5" rx="2" ry="2.4" fill="#5aa2ff"/><ellipse class="orh-botav-eye" cx="27.7" cy="22.5" rx="2" ry="2.4" fill="#5aa2ff"/><path d="M21.5 30.2q2.5 1.6 5 0" stroke="#2f7bff" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="M17 35.5q7-3 14 0v3.2q-7 3.2-14 0Z" fill="#eaf2ff"/><circle cx="24" cy="36.6" r="1.2" fill="#2f7bff"/></svg>',
     close: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     expand: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>',
     collapse: '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10h-6V4M4 14h6v6M14 10l7-7M10 14l-7 7"/></svg>',
@@ -353,7 +355,7 @@
       '<p class="orh-foot">Enter to send · Shift+Enter for a new line</p>' +
     "</section>" +
     '<button type="button" class="orh-fab" aria-expanded="false" aria-haspopup="dialog" aria-controls="orh-panel">' +
-      '<span class="orh-fab-icon">' + ICON.chat + '</span><span class="orh-fab-label">Ask OfferReady</span></button>';
+      '<span class="orh-fab-icon">' + ICON.bot + '</span><span class="orh-fab-label">Ask OfferReady</span></button>';
 
   const $ = (sel) => root.querySelector(sel);
   const panel = $(".orh-panel");
@@ -666,7 +668,7 @@
     root.classList.toggle("orh-is-open", open);
     fab.setAttribute("aria-expanded", open ? "true" : "false");
     fab.querySelector(".orh-fab-label").textContent = open ? "Close" : "Ask OfferReady";
-    fab.querySelector(".orh-fab-icon").innerHTML = open ? ICON.close : ICON.chat;
+    fab.querySelector(".orh-fab-icon").innerHTML = open ? ICON.close : ICON.bot;
     if (open) {
       renderLog();
       updateInput(); // measure the textarea now that it is visible
