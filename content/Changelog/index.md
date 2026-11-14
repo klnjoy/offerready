@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 9 November
+- **A calmer front page on phones.** One Sign in at the top, and the big
+  "Analyze my job" button is the one way to start. The scrolling list of
+  roles now fades softly at the edges.
 - **Add what's missing, in one go.** Tick the requirements you've really
   done and tap Write: the Coach drafts all the bullets from your resume,
   with no typing needed. Anything your resume doesn't show is left for you
