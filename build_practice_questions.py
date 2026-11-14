@@ -47,7 +47,7 @@ TOPICS: dict[str, tuple[str, list[str]]] = {
     "Leadership_Delivery_Interview_QA": ("Leadership & Delivery", ["lead", "architect", "em", "tpm"]),
     "Architecture_Interview_QA": ("Architecture", ["architect", "lead"]),
     "Engineering_Manager_Interview_QA": ("Engineering Manager", ["em", "lead"]),
-    "TPM_Interview_QA": ("Program Management", ["tpm"]),
+    "TPM_Interview_QA": ("Program & Project Management", ["tpm"]),
     "Agile_Coach_Scrum_Master_Interview_QA": ("Agile & Scrum", ["agile"]),
     "AI_Product_Manager_Interview_QA": ("Product Management", ["pm"]),
 }

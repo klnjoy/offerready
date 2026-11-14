@@ -2,13 +2,15 @@
 icon: material/lightbulb-on-outline
 ---
 
-# AI & Technical Product Manager Role Guide
+# Product Manager Role Guide (incl. AI & Technical)
 
 *Last reviewed: November 2026*
 
-A role guide for **AI Product Manager** and **Technical Product Manager**
-interviews. You decide what to build and why, for products where AI or deep
-technology is central: AI features, developer platforms, data products. This
+A role guide for **Product Manager** interviews, with extra depth for **AI** and
+**Technical Product Manager** roles. You decide what to build and why. The core
+(product sense, metrics, prioritisation, working with others) applies to every
+PM role; the AI sections matter when AI or deep technology is central to the
+product: AI features, developer platforms, data products. This
 page covers the role, the usual loop, the rubric, the likely questions, and a
 14-day plan.
 
@@ -20,7 +22,7 @@ page covers the role, the usual loop, the rubric, the likely questions, and a
     wrong, and what it costs.
 
     Owning delivery across teams rather than the product decisions? See the
-    [Technical Program Manager guide](Path_Technical_Program_Manager.md).
+    [Program & Project Manager guide](Path_Technical_Program_Manager.md).
 
 ---
 
@@ -42,10 +44,10 @@ ask directly:
 | **Owns** | What to build and why, for AI or technical products | What to build and why | Delivery across teams |
 | **Users** | End users, or developers for platform products | End users | Internal teams |
 | **Judged on** | Product outcomes, quality, cost | Product outcomes | Program delivered, risk managed |
-| **Guide** | This page | — | [TPM guide](Path_Technical_Program_Manager.md) |
+| **Guide** | This page | This page (skip the AI-specific sections) | [TPM guide](Path_Technical_Program_Manager.md) |
 
-For a non-technical product role, add the job in OfferReady: the plan is built
-from that job description.
+For a core product role without AI, focus on product sense, metrics,
+prioritisation and working with others; the AI-specific questions are optional.
 
 ---
 
@@ -218,7 +220,7 @@ accounts.
 
 !!! note "Related role guides"
     [Engineering Manager](Path_Engineering_Manager.md) ·
-    [Technical Program Manager](Path_Technical_Program_Manager.md) ·
+    [Program & Project Manager](Path_Technical_Program_Manager.md) ·
     [Agile Coach & Scrum Master](Path_Agile_Coach_Scrum_Master.md) ·
     [AI Engineer](Path_AI_Engineer.md) ·
     [Interview Guide overview](Interview_Guide_Overview.md)

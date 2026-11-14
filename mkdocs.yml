@@ -215,6 +215,7 @@ nav:
           - Data Migration (Oracle to Snowflake): Projects/data-migration/index.md
           - "GenAI POC (LangChain & LangGraph)": Projects/genai-poc/index.md
           - GenAI Procurement Audit Bot — Architecture: Personal-SourceCode/genai-procurement-architecture.md
+          - "Program & Project Manager Role Guide": Personal-SourceCode/Path_Technical_Program_Manager.md
       - Case Studies:
           - Case-Studies/index.md
       - Hands-on Labs:
@@ -230,18 +231,18 @@ nav:
           - AI FDE (Forward Deployed Engineer): Personal-SourceCode/Path_FDE.md
           - AIOps · LLMOps · MLOps: Personal-SourceCode/Path_AI_Platform_Engineer.md
           - "Engineering Manager (AI & Data)": Personal-SourceCode/Path_Engineering_Manager.md
-          - Technical Program Manager: Personal-SourceCode/Path_Technical_Program_Manager.md
+          - "Program & Project Manager": Personal-SourceCode/Path_Technical_Program_Manager.md
           - "Agile Coach & Scrum Master": Personal-SourceCode/Path_Agile_Coach_Scrum_Master.md
-          - "AI & Technical Product Manager": Personal-SourceCode/Path_AI_Product_Manager.md
+          - "Product Manager (incl. AI & Technical)": Personal-SourceCode/Path_AI_Product_Manager.md
       - By Level & Role:
           - Senior / Staff / Principal / FDE: Personal-SourceCode/Interview_Level_Comparison.md
           - AI Engineer: Personal-SourceCode/AI_Engineer_Interview_QA.md
           - Forward Deployed Engineer (FDE): Personal-SourceCode/Forward_Deployed_Engineer_Interview_QA.md
           - Cloud Delivery Lead: Personal-SourceCode/Interview_Prep_Google_Cloud_Delivery_Lead.md
           - Engineering Manager: Personal-SourceCode/Engineering_Manager_Interview_QA.md
-          - Technical Program Manager: Personal-SourceCode/TPM_Interview_QA.md
+          - "Program & Project Manager": Personal-SourceCode/TPM_Interview_QA.md
           - "Agile Coach & Scrum Master": Personal-SourceCode/Agile_Coach_Scrum_Master_Interview_QA.md
-          - "AI & Technical Product Manager": Personal-SourceCode/AI_Product_Manager_Interview_QA.md
+          - Product Manager: Personal-SourceCode/AI_Product_Manager_Interview_QA.md
       - Technical Deep Dive:
           - GenAI: Personal-SourceCode/GenAI_Interview_QA.md
           - Agentic AI / Agents: Personal-SourceCode/Agents_Interview_QA.md

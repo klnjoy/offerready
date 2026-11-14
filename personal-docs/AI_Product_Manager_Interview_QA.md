@@ -2,13 +2,13 @@
 icon: material/lightbulb-on-outline
 ---
 
-# AI & Technical Product Manager Interview Q&A
+# Product Manager Interview Q&A (incl. AI & Technical)
 
 *Last reviewed: November 2026*
 
-Questions for product managers building AI features and technical products: product sense, metrics, prioritisation, working with engineering, and the parts specific to AI such as evaluation, cost, safety and uncertainty. Behavioural answers follow STAR (Situation, Task, Action, Result), then what you learned. Use your own real products.
+Questions for product managers, from core product roles to AI features and technical products: product sense, metrics, prioritisation, working with engineering, and the parts specific to AI such as evaluation, cost, safety and uncertainty. Behavioural answers follow STAR (Situation, Task, Action, Result), then what you learned. Use your own real products.
 
-See the [AI & Technical Product Manager role guide](Path_AI_Product_Manager.md) for the interview loop, rubric and a 14-day plan.
+See the [Product Manager role guide](Path_AI_Product_Manager.md) for the interview loop, rubric and a 14-day plan.
 
 ## Product sense
 
@@ -44,6 +44,27 @@ See the [AI & Technical Product Manager role guide](Path_AI_Product_Manager.md) 
     **In depth:** Ask about what people did, not what they would do. Look for patterns across interviews. Use prototypes or concierge tests before building. Track assumptions and what you learned about each.
 
     **Follow-up they'll ask:** How many users is enough?
+
+??? question "What is a product you love, and how would you improve it?"
+    **Short answer:** Pick a product you actually use, explain who it serves and why it works for them, then propose one focused improvement for a specific user problem, with how you would measure it.
+
+    **In depth:** Interviewers look for user empathy and structure, not a long wish list. Name the user segment, the pain, two or three options, the one you would choose and why, and the metric that would tell you it worked.
+
+    **Follow-up they'll ask:** What would you not change, and why?
+
+??? question "How do you write a good product requirements document?"
+    **Short answer:** Start with the problem, the users and the goal, define success measures, state scope and non-goals, and leave the solution detail to the team where possible.
+
+    **In depth:** A good document is short, linked to evidence, and updated as you learn. Include open questions and risks. Review it with engineering and design early so it reflects their input, not just yours.
+
+    **Follow-up they'll ask:** How do you keep it from going stale?
+
+??? question "How do you work with sales, marketing and support?"
+    **Short answer:** Share the roadmap and the reasoning early, learn from what they hear from customers, and give them what they need to launch and support the product well.
+
+    **In depth:** Customer-facing teams are a strong source of evidence, but one loud customer is not a trend. Set up a regular way to collect and weigh their input. Involve them in launch planning, messaging and training.
+
+    **Follow-up they'll ask:** Sales promised a feature that is not on the roadmap. What now?
 
 ## Metrics
 
@@ -175,9 +196,9 @@ See the [AI & Technical Product Manager role guide](Path_AI_Product_Manager.md) 
 
     **Follow-up they'll ask:** What would you not change early on?
 
-??? question "Why do you want to be a product manager for AI products?"
-    **Short answer:** Give a genuine reason linked to your experience and to what makes AI products interesting and hard, such as designing for uncertainty or new kinds of user value.
+??? question "Why do you want to be a product manager here?"
+    **Short answer:** Give a genuine reason linked to your experience, the company's users and its product. For AI products, add what makes them interesting and hard, such as designing for uncertainty.
 
-    **In depth:** Show you understand the work is not only about the model: it is about the user problem, quality, trust and economics. Mention one AI product you admire and why.
+    **In depth:** Show you have used the product and understand its users and business. For AI roles, show the work is not only about the model: it is about the user problem, quality, trust and economics.
 
     **Follow-up they'll ask:** What is one AI product you think is badly designed, and why?

@@ -20,7 +20,7 @@ links to the question pages rather than repeating them.
     uncertainty, evaluation as part of done, and cost.
 
     Running a cross-team program without direct reports? See the
-    [Technical Program Manager guide](Path_Technical_Program_Manager.md).
+    [Program & Project Manager guide](Path_Technical_Program_Manager.md).
 
 ---
 
@@ -228,8 +228,8 @@ leading teams across locations.
 - **Practice** gives you scored questions for this role, one at a time.
 
 !!! note "Related role guides"
-    [Technical Program Manager](Path_Technical_Program_Manager.md) ·
+    [Program & Project Manager](Path_Technical_Program_Manager.md) ·
     [Agile Coach & Scrum Master](Path_Agile_Coach_Scrum_Master.md) ·
-    [AI & Technical Product Manager](Path_AI_Product_Manager.md) ·
+    [Product Manager](Path_AI_Product_Manager.md) ·
     [Staff / Principal AI Architect](Path_Staff_Principal_Architect.md) ·
     [Interview Guide overview](Interview_Guide_Overview.md)

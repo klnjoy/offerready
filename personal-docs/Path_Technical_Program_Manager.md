@@ -2,12 +2,13 @@
 icon: material/timeline-check
 ---
 
-# Technical Program Manager Role Guide
+# Program & Project Manager Role Guide
 
 *Last reviewed: November 2026*
 
 A role guide for **Technical Program Manager (TPM)** interviews, including TPMs
-who run AI and data platform programs. You own delivery of work that spans many
+who run AI and data platform programs, and for **project and delivery manager**
+interviews, which test the same planning, risk and communication skills. You own delivery of work that spans many
 teams: the plan, dependencies, risks and communication, with enough technical
 depth to be trusted by engineers. This page covers the role, the usual loop, the
 rubric, the likely questions, and a 14-day plan.
@@ -45,7 +46,7 @@ production code.
 | **Owns** | Delivery of a cross-team program | Schedule and scope of a project | A team's people and delivery | What to build and why |
 | **Technical depth** | High | Varies | High | Varies |
 | **Judged on** | Program delivered, risks managed, clear communication | On time, on budget | Team outcomes and growth | Product outcomes |
-| **Guide** | This page | — | [EM guide](Path_Engineering_Manager.md) | [PM guide](Path_AI_Product_Manager.md) |
+| **Guide** | This page | This page (see [project and delivery questions](TPM_Interview_QA.md#project-and-delivery-management)) | [EM guide](Path_Engineering_Manager.md) | [PM guide](Path_AI_Product_Manager.md) |
 
 ---
 
@@ -149,6 +150,14 @@ steering committees, change control, migrations and regulated environments.
 
 ---
 
+!!! tip "Project or delivery manager?"
+    The same loop applies with less technical depth and more on budget,
+    approach (plan-driven or agile) and changing requirements. See
+    [Project and delivery management](TPM_Interview_QA.md#project-and-delivery-management)
+    in the Q&A.
+
+---
+
 ## Common failure modes
 
 - **Status reporter, not owner.** Describing meetings you ran instead of
@@ -219,5 +228,5 @@ steering committees, change control, migrations and regulated environments.
 !!! note "Related role guides"
     [Engineering Manager](Path_Engineering_Manager.md) ·
     [Agile Coach & Scrum Master](Path_Agile_Coach_Scrum_Master.md) ·
-    [AI & Technical Product Manager](Path_AI_Product_Manager.md) ·
+    [Product Manager](Path_AI_Product_Manager.md) ·
     [Interview Guide overview](Interview_Guide_Overview.md)

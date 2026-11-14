@@ -1070,9 +1070,9 @@ def write_nav(md_catalog, modules) -> None:
                 ("Path_AI_Platform_Engineer.md", "AIOps · LLMOps · MLOps"),
                 # People who lead teams, programs and products.
                 ("Path_Engineering_Manager.md", "Engineering Manager (AI & Data)"),
-                ("Path_Technical_Program_Manager.md", "Technical Program Manager"),
+                ("Path_Technical_Program_Manager.md", "Program & Project Manager"),
                 ("Path_Agile_Coach_Scrum_Master.md", "Agile Coach & Scrum Master"),
-                ("Path_AI_Product_Manager.md", "AI & Technical Product Manager"),
+                ("Path_AI_Product_Manager.md", "Product Manager (incl. AI & Technical)"),
             ]),
             ("By Level & Role", [
                 ("Interview_Level_Comparison.md", "Senior / Staff / Principal / FDE"),
@@ -1080,9 +1080,9 @@ def write_nav(md_catalog, modules) -> None:
                 ("Forward_Deployed_Engineer_Interview_QA.md", "Forward Deployed Engineer (FDE)"),
                 ("Interview_Prep_Google_Cloud_Delivery_Lead.md", "Cloud Delivery Lead"),
                 ("Engineering_Manager_Interview_QA.md", "Engineering Manager"),
-                ("TPM_Interview_QA.md", "Technical Program Manager"),
+                ("TPM_Interview_QA.md", "Program & Project Manager"),
                 ("Agile_Coach_Scrum_Master_Interview_QA.md", "Agile Coach & Scrum Master"),
-                ("AI_Product_Manager_Interview_QA.md", "AI & Technical Product Manager"),
+                ("AI_Product_Manager_Interview_QA.md", "Product Manager"),
             ]),
             ("Technical Deep Dive", [
                 ("GenAI_Interview_QA.md", "GenAI"),

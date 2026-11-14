@@ -2,13 +2,13 @@
 icon: material/timeline-check
 ---
 
-# Technical Program Manager Interview Q&A
+# Program & Project Manager Interview Q&A
 
 *Last reviewed: November 2026*
 
-Questions for technical program managers (TPMs) who run cross-team programs, including AI and data platform launches: planning, dependencies, risk, execution, communication and enough technical depth to be trusted by engineers. Behavioural answers follow STAR (Situation, Task, Action, Result), then what you learned. Use your own real programs.
+Questions for technical program managers (TPMs) who run cross-team programs, including AI and data platform launches, and for project and delivery managers: planning, dependencies, risk, execution, communication and enough technical depth to be trusted by engineers. Behavioural answers follow STAR (Situation, Task, Action, Result), then what you learned. Use your own real programs.
 
-See the [Technical Program Manager role guide](Path_Technical_Program_Manager.md) for the interview loop, rubric and a 14-day plan.
+See the [Program & Project Manager role guide](Path_Technical_Program_Manager.md) for the interview loop, rubric and a 14-day plan.
 
 ## The role
 
@@ -154,6 +154,36 @@ See the [Technical Program Manager role guide](Path_Technical_Program_Manager.md
 
     **Follow-up they'll ask:** What if the decision owner will not decide?
 
+## Project and delivery management
+
+??? question "What is the difference between a project, a program and a portfolio?"
+    **Short answer:** A project delivers a defined outcome with a start and an end; a program is a group of related projects managed together for a shared benefit; a portfolio is the set of programs and projects an organisation chooses to invest in.
+
+    **In depth:** Project managers focus on scope, schedule, cost and quality for one piece of work. Program managers focus on how projects depend on each other and whether the combined benefit arrives. Portfolio decisions are about which work to fund at all.
+
+    **Follow-up they'll ask:** Which of these have you owned, and at what size?
+
+??? question "When would you use a plan-driven (waterfall) approach versus an agile one?"
+    **Short answer:** Plan-driven fits work with stable, well-understood requirements and costly change, such as hardware, regulated or contract-fixed work; agile fits work where learning changes the plan, such as most software products. Many projects mix the two.
+
+    **In depth:** Ask what is known, what is likely to change, and what it costs to change course later. A hybrid is common: fixed milestones and budget at the top, iterative delivery inside. Choose for the work, not for a preference.
+
+    **Follow-up they'll ask:** Tell me about a project where you changed approach midway.
+
+??? question "How do you manage a project's budget?"
+    **Short answer:** Build the budget from the plan with explicit assumptions and a contingency, track actual spend and forecast against it regularly, and raise variances early with options.
+
+    **In depth:** Separate committed, spent and forecast costs. Tie budget changes to scope or schedule changes through the change process. Report the forecast at completion, not just spend to date, so problems show early.
+
+    **Follow-up they'll ask:** You are forecasting an overspend. What do you do?
+
+??? question "A stakeholder keeps changing requirements. How do you handle it?"
+    **Short answer:** Understand why the requirements are changing, agree a simple change process, and show the impact of each change on time, cost and scope so the right person decides.
+
+    **In depth:** Frequent change is often a sign the goal or the users are not clear yet. Spend time to clarify the outcome, and consider delivering in smaller pieces so feedback comes earlier and changes cost less.
+
+    **Follow-up they'll ask:** What if the stakeholder is the sponsor?
+
 ## Technical depth and AI programs
 
 ??? question "How technical does a TPM need to be?"
@@ -197,7 +227,7 @@ See the [Technical Program Manager role guide](Path_Technical_Program_Manager.md
 
     **Follow-up they'll ask:** The program launched on time but nobody uses it. Was it a success?
 
-??? question "Why do you want to be a TPM here?"
+??? question "Why do you want to be a TPM or project manager here?"
     **Short answer:** Connect your experience running cross-team technical work to this company's products and programs, with one or two specific reasons.
 
     **In depth:** Show you understand what the TPMs here work on, such as platform, AI or infrastructure programs, and what you would bring. Avoid generic answers.

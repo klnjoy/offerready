@@ -20,7 +20,7 @@ questions, and a 14-day plan. Scrum terms follow the 2020 Scrum Guide.
     certificates.
 
     Running cross-team delivery with dates and dependencies? See the
-    [Technical Program Manager guide](Path_Technical_Program_Manager.md).
+    [Program & Project Manager guide](Path_Technical_Program_Manager.md).
 
 ---
 
@@ -214,6 +214,6 @@ you do in your first month?" Presentation skills and handling resistance matter.
 
 !!! note "Related role guides"
     [Engineering Manager](Path_Engineering_Manager.md) ·
-    [Technical Program Manager](Path_Technical_Program_Manager.md) ·
-    [AI & Technical Product Manager](Path_AI_Product_Manager.md) ·
+    [Program & Project Manager](Path_Technical_Program_Manager.md) ·
+    [Product Manager](Path_AI_Product_Manager.md) ·
     [Interview Guide overview](Interview_Guide_Overview.md)
