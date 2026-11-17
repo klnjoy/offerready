@@ -135,6 +135,13 @@
 .orh .orh-msg pre code { border: 0; padding: 0; background: none; }
 .orh .orh-h { font-size: 14.5px; font-weight: 700; margin-top: 2px; }
 .orh .orh-table { overflow-x: auto; border: 1px solid var(--orh-border); border-radius: 10px; }
+/* Asked-for code or a query: dark block in both themes, scrolls inside itself. */
+.orh .orh-code { margin: 8px 0; border-radius: 10px; overflow: hidden; background: #0c1c38; border: 1px solid #22375f; }
+.orh .orh-code-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 6px 4px 12px; background: #16284a; color: #c9d3e1; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; }
+.orh .orh-code-copy { font: inherit; font-size: 0.78rem; letter-spacing: 0; color: #e8eef8; background: transparent; border: 1px solid #34507f; border-radius: 6px; padding: 3px 10px; min-height: 28px; cursor: pointer; }
+.orh .orh-code-copy:hover { background: #22375f; }
+.orh .orh-code pre { margin: 0; padding: 10px 12px; overflow-x: auto; max-width: 100%; background: none; border: 0; border-radius: 0; box-shadow: none; }
+.orh .orh-code code { display: block; background: none; color: #e8eef8; padding: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.82rem; line-height: 1.5; white-space: pre; }
 .orh .orh-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .orh .orh-table th, .orh .orh-table td { padding: 5px 8px; text-align: left; border-bottom: 1px solid var(--orh-border); }
 .orh .orh-table th { background: var(--orh-surface-2); font-weight: 650; color: var(--orh-text-2); }
