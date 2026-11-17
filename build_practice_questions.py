@@ -37,15 +37,19 @@ TOPICS: dict[str, tuple[str, list[str]]] = {
     "LangChain_LangGraph_Interview_QA": ("LangChain/LangGraph", ["ai"]),
     "MCP_Interview_QA": ("MCP", ["ai"]),
     "GenAI_Interview_QA": ("GenAI", ["ai"]),
-    "Behavioral_STAR_Interview_QA": ("Behavioral", ["data", "ai", "fde", "lead"]),
+    "Behavioral_STAR_Interview_QA": ("Behavioral", ["data", "ai", "fde", "lead", "em", "tpm", "agile", "pm"]),
     "FastAPI_Interview_QA": ("FastAPI", ["ai", "fde", "platform"]),
     "System_Design_Interview_QA": ("System Design", ["data", "ai", "fde", "platform", "architect"]),
     "RAG_LLMOps_Interview_QA": ("RAG & LLMOps", ["ai", "platform"]),
     "AI_Security_Interview_QA": ("AI Security", ["ai", "platform", "architect"]),
     "ML_AI_Platform_Interview_QA": ("ML / AI Platform", ["platform", "ai"]),
     "FDE_Customer_Interview_QA": ("FDE / Customer", ["fde"]),
-    "Leadership_Delivery_Interview_QA": ("Leadership & Delivery", ["lead", "architect"]),
+    "Leadership_Delivery_Interview_QA": ("Leadership & Delivery", ["lead", "architect", "em", "tpm"]),
     "Architecture_Interview_QA": ("Architecture", ["architect", "lead"]),
+    "Engineering_Manager_Interview_QA": ("Engineering Manager", ["em", "lead"]),
+    "TPM_Interview_QA": ("Program & Project Management", ["tpm"]),
+    "Agile_Coach_Scrum_Master_Interview_QA": ("Agile & Scrum", ["agile"]),
+    "AI_Product_Manager_Interview_QA": ("Product Management", ["pm"]),
 }
 
 Q_RE = re.compile(r'^\?\?\?\s+question\s+"(.+?)"\s*$')
