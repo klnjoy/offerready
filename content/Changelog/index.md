@@ -27,6 +27,12 @@ New features and improvements, newest first.
 - **More RAG and agent questions.** Six new interview questions,
   including choosing top-k, handling PDFs with tables and charts,
   picking an agent framework and walking through your agent's design.
+- **A calmer front page.** Fewer competing colours: one style for every
+  Sample tag, one easy-to-read blue for small labels and links, and
+  quieter app buttons in the header.
+- **New question: what is an AI control plane?** How a registry and a
+  gateway split the work across models, MCP servers, skills and agents,
+  in System Design.
 
 ### Week of 9 November
 - **A calmer front page on phones.** One Sign in at the top, and the big
