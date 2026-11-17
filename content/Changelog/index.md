@@ -10,6 +10,24 @@ New features and improvements, newest first.
 
 ## November 2026
 
+### Week of 16 November
+- **Guides for managers, program and product roles.** New role guides
+  and practice questions for Engineering Manager, Program & Project
+  Manager, Agile Coach / Scrum Master and Product Manager. When you add
+  a job with one of these titles, the job page links the right guide and
+  Practice starts on that track. Open roles has a filter for each, and
+  any other manager job now links the behavioral and leadership guide.
+- **Ask for SQL or code, get it.** When you ask the help assistant, in
+  the app or the study library, for a query or code, it now shows the
+  full code in a block with a Copy button, then explains it.
+- **Bottom bars stay at the bottom on phones.** After typing, the tab
+  bar and the front page's sticky button no longer float mid-screen.
+- **Easier to read in dark mode.** The Sample tag on Failure Lab and a
+  few small labels now have enough contrast.
+- **More RAG and agent questions.** Six new interview questions,
+  including choosing top-k, handling PDFs with tables and charts,
+  picking an agent framework and walking through your agent's design.
+
 ### Week of 9 November
 - **A calmer front page on phones.** One Sign in at the top, and the big
   "Analyze my job" button is the one way to start. The scrolling list of
