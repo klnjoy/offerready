@@ -295,3 +295,14 @@ test('citations: up to 2 distinct pages, first is the legacy lookup', () => {
   const d = pickCitations('hello there', 'You can leverage this.', null);
   assert.ok(!d.some((x) => x.url === 'GenAI-Topics/rag/index.html'));
 });
+
+test('prompt: asked-for diagrams and charts come as ONE mermaid block, with no invented numbers', () => {
+  const p = buildSystemPrompt(null, 'all');
+  assert.match(p, /```mermaid block/);
+  for (const t of ['flowchart TD', 'erDiagram', 'sequenceDiagram', 'xychart-beta', 'pie']) assert.ok(p.includes(t), t);
+  assert.match(p, /no styling, classDef or click/);
+  assert.match(p, /Charts use only numbers the user gave/);
+  assert.match(p, /Example numbers/);
+  // Code requests keep their own rule.
+  assert.match(p, /```sql/);
+});

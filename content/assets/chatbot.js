@@ -122,7 +122,19 @@
         const body = [];
         i++;
         while (i < lines.length && !/^\s*```\s*$/.test(lines[i])) body.push(lines[i++]);
+        const closed = i < lines.length;
         i++;
+        const src = body.join("\n").replace(/\s+$/, "");
+        // A ```mermaid block (an asked-for diagram or chart): drawn once its
+        // closing fence has arrived; its source stays in a hidden <code> for
+        // Copy, and is shown if it can't be drawn.
+        if (fence[1].toLowerCase() === "mermaid") {
+          html.push('<div class="orh-code orh-diagram"' + (closed ? ' data-draw="1"' : "") + '><div class="orh-code-head"><span>Diagram</span>' +
+            '<button type="button" class="orh-code-copy" data-label="Copy source">Copy source</button></div>' +
+            '<div class="orh-diagram-svg" role="img" aria-label="Diagram"><p class="orh-diagram-wait">Drawing the diagram…</p></div>' +
+            '<pre hidden><code>' + escapeHtml(src) + "</code></pre></div>");
+          continue;
+        }
         const lang = fence[1] ? fence[1].toUpperCase() : "Code";
         html.push('<div class="orh-code"><div class="orh-code-head"><span>' + escapeHtml(lang) +
           '</span><button type="button" class="orh-code-copy">Copy</button></div><pre><code>' +
@@ -171,6 +183,82 @@
       else { html.push("<p>" + inline(escapeHtml(raw)) + "</p>"); i++; }
     }
     return html.join("");
+  }
+
+  // ---- diagrams --------------------------------------------------------------
+  // Mermaid loads only when an answer has a diagram (the page's own copy if
+  // Material already loaded one). securityLevel "strict": Mermaid sanitises the
+  // SVG, with no scripts or click handlers. Drawn SVGs are cached by source, so
+  // re-rendering while the rest of the answer streams doesn't redraw them.
+  const MERMAID_SRC = "https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.4.1/mermaid.min.js";
+  const drawn = new Map();
+  let mermaidLoading = null;
+  let mermaidTheme = "";
+  let diagramSeq = 0;
+  function loadMermaid() {
+    if (window.mermaid && window.mermaid.render) return Promise.resolve(window.mermaid);
+    if (mermaidLoading) return mermaidLoading;
+    mermaidLoading = new Promise((resolve, reject) => {
+      const sc = document.createElement("script");
+      sc.src = MERMAID_SRC;
+      sc.async = true;
+      sc.crossOrigin = "anonymous";
+      sc.onload = () => (window.mermaid ? resolve(window.mermaid) : reject(new Error("mermaid missing")));
+      sc.onerror = () => { mermaidLoading = null; sc.remove(); reject(new Error("mermaid failed to load")); };
+      document.head.appendChild(sc);
+    });
+    return mermaidLoading;
+  }
+  function darkPage() {
+    const sch = document.body && document.body.getAttribute("data-md-color-scheme");
+    return sch === "slate";
+  }
+  async function renderDiagram(src) {
+    const mm = await loadMermaid();
+    const mode = darkPage() ? "dark" : "light";
+    if (mermaidTheme !== mode) {
+      mm.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: "base",
+        themeVariables: mode === "dark" ? {
+          darkMode: true, background: "#0f1a2e", primaryColor: "#16284a", primaryBorderColor: "#4da3ff", primaryTextColor: "#e8eef8",
+          lineColor: "#8ab8ff", secondaryColor: "#221d45", tertiaryColor: "#0f1a2e", textColor: "#e8eef8",
+          fontFamily: "Inter, system-ui, sans-serif",
+        } : {
+          primaryColor: "#eef3fd", primaryBorderColor: "#0c1c38", primaryTextColor: "#0c1c38",
+          lineColor: "#2f7bff", secondaryColor: "#f2effd", tertiaryColor: "#ffffff",
+          fontFamily: "Inter, system-ui, sans-serif",
+        },
+        flowchart: { curve: "basis", htmlLabels: false },
+      });
+      mermaidTheme = mode;
+    }
+    const out = await mm.render("orh-diagram-" + (++diagramSeq), src);
+    return out.svg;
+  }
+  function drawDiagrams(root) {
+    root.querySelectorAll('.orh-diagram[data-draw="1"]').forEach((box) => {
+      const code = box.querySelector("code");
+      const src = code ? code.textContent : "";
+      const target = box.querySelector(".orh-diagram-svg");
+      const failed = () => {
+        target.innerHTML = '<p class="orh-diagram-wait">Couldn’t draw this diagram here. The source is below; paste it into any Mermaid viewer.</p>';
+        const pre = box.querySelector("pre"); if (pre) pre.hidden = false;
+      };
+      const key = (darkPage() ? "d:" : "l:") + src;
+      const hit = drawn.get(key);
+      if (hit === false) { failed(); return; }
+      if (hit) { target.innerHTML = hit; return; }
+      renderDiagram(src).then((svg) => {
+        drawn.set(key, svg);
+        // The answer may have re-rendered meanwhile: fill every box with this source.
+        document.querySelectorAll('.orh-diagram[data-draw="1"]').forEach((b) => {
+          const c = b.querySelector("code");
+          if (c && c.textContent === src) b.querySelector(".orh-diagram-svg").innerHTML = svg;
+        });
+      }).catch(() => { drawn.set(key, false); failed(); });
+    });
   }
 
   const CARET = '<span class="orh-caret" aria-hidden="true"></span>';
@@ -562,6 +650,7 @@
     } else {
       const html = renderMarkdown(m.content);
       body.innerHTML = m.streaming ? withCaret(html) : html;
+      drawDiagrams(body);
     }
     d.appendChild(body);
     if (m.stopped) d.appendChild(el("p", "orh-note", "Stopped."));
@@ -735,7 +824,8 @@
     const btn = e.target && e.target.closest ? e.target.closest(".orh-code-copy") : null;
     if (!btn) return;
     const code = btn.closest(".orh-code").querySelector("code");
-    const done = () => { btn.textContent = "Copied"; setTimeout(() => { btn.textContent = "Copy"; }, 1500); };
+    const label = btn.getAttribute("data-label") || "Copy";
+    const done = () => { btn.textContent = "Copied"; setTimeout(() => { btn.textContent = label; }, 1500); };
     try { navigator.clipboard.writeText(code ? code.textContent : "").then(done, () => {}); } catch (err) { /* clipboard unavailable */ }
   });
   form.addEventListener("submit", (e) => { e.preventDefault(); ask(input.value); });
