@@ -106,6 +106,15 @@ These questions cover system design rounds for senior and staff roles where AI a
 
     **Follow-up they'll ask:** How do you handle provider outages? Health-check providers, open circuit breakers, and fail over to an equivalent model validated by evals.
 
+??? question "What is an AI control plane, and how do a registry and a gateway split the work?"
+    **Short answer:** The registry decides: it lists every model, MCP server, skill and agent, who owns it, which version is approved and who may use it. The gateway enforces: it sits on the call path and applies that policy to every request. Either one alone leaves a gap, so you build both.
+
+    **In depth:** Each registry entry records the owner, version, data classification, approved environments and an access policy saying which teams, apps or agents may discover and call it. Discovery reads from the registry, so an agent only ever sees the tools it is allowed to use. The gateway then checks the caller's identity against that policy inline on every model and tool call, including calls one agent makes for another: pass the original user's identity down the chain so an agent can never act with more access than the person behind it. If the policy check can't be reached, deny the call rather than allow it. The gateway is also where guardrails live: prompt-injection and PII checks on inputs, checks on tool results, and a human approval step for risky actions. It meters tokens and spend per team, app and agent, and stops a runaway agent at its limit instead of the overspend showing up on the monthly bill. Finally, it emits one trace that follows a run across model calls, tool calls and agent hops, which is what you need for debugging and audit.
+
+    **Trade-off:** every inline check adds latency. Cache policy decisions briefly, keep cheap checks inline and move heavy ones to async or sampled review. Real-time voice may need a lighter path with pre-approved tools and review after the fact.
+
+    **Follow-up they'll ask:** A team wants to add a new MCP server. What happens? It enters the registry as unapproved, goes through a security review and an eval, then is published to a named set of callers. Until then the gateway blocks any call to it.
+
 ??? question "Design a feature store that serves both model training and low-latency online inference."
     **Short answer:** Use an offline store for historical features and point-in-time correct training sets, an online key-value store for low-latency serving, and one feature definition that feeds both.
 
