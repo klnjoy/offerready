@@ -140,6 +140,12 @@
 .orh .orh-code-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 6px 4px 12px; background: #16284a; color: #c9d3e1; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; }
 .orh .orh-code-copy { font: inherit; font-size: 0.78rem; letter-spacing: 0; color: #e8eef8; background: transparent; border: 1px solid #34507f; border-radius: 6px; padding: 3px 10px; min-height: 28px; cursor: pointer; }
 .orh .orh-code-copy:hover { background: #22375f; }
+.orh .orh-diagram { background: #fff; border-color: #dbe4f5; }
+.orh .orh-diagram-svg { padding: 10px; overflow-x: auto; }
+.orh .orh-diagram-svg svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.orh .orh-diagram-wait { margin: 0; padding: 4px 2px; color: #5b6b85; font-size: 0.85rem; }
+[data-md-color-scheme="slate"] .orh .orh-diagram { background: #0f1a2e; border-color: #22375f; }
+[data-md-color-scheme="slate"] .orh .orh-diagram-wait { color: #9fb0c8; }
 .orh .orh-code pre { margin: 0; padding: 10px 12px; overflow-x: auto; max-width: 100%; background: none; border: 0; border-radius: 0; box-shadow: none; }
 .orh .orh-code code { display: block; background: none; color: #e8eef8; padding: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.82rem; line-height: 1.5; white-space: pre; }
 .orh .orh-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
