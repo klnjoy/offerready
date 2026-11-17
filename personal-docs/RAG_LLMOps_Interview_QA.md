@@ -24,6 +24,20 @@ These questions cover retrieval-augmented generation and the operational discipl
 
     **Follow-up they'll ask:** Can you fine-tune embeddings? Yes, with query and positive passage pairs, which often helps narrow domains noticeably.
 
+??? question "How do you choose top-k for retrieval, and what happens if you raise or lower it?"
+    **Short answer:** Pick k from measurements, not a habit: find where recall on your evaluation set stops improving, then check that the generator still answers well with that many chunks.
+
+    **In depth:** A small k is cheaper and keeps the context focused, but the chunk that holds the answer may not be in it, so recall drops and the model guesses. A large k raises recall but adds noise, cost and latency, and models can miss facts buried in the middle of a long context. A common pattern is to retrieve generously (a wider candidate set) and then rerank down to a few chunks for the prompt, so recall and precision are tuned separately. Make k depend on the question type when needed: a lookup needs few chunks, a summary across many documents needs more. Measure recall at several values of k and answer quality on the same set before choosing.
+
+    **Follow-up they'll ask:** Recall is fine at k=20 but answers are worse than at k=5. Why? Extra chunks add distractors; add a reranker or tighten the prompt to cite only relevant sources.
+
+??? question "How would you make complex PDFs with tables, charts and multi-page sections searchable through RAG?"
+    **Short answer:** Parse layout first, not just text: extract tables as structured rows, describe charts in words, keep sections whole across pages, and store page and section metadata so answers can cite them.
+
+    **In depth:** Plain text extraction scrambles tables and loses headings. Use a layout-aware parser (or OCR for scanned pages) that returns blocks with their type. Tables: keep them as markdown or rows with their header repeated, and index a short summary of each table alongside it. Charts and figures: store the caption plus a generated description, flagged as derived, and link back to the page. Multi-page sections: chunk by the document's structure rather than by page, so a table or argument that crosses a page break stays together. Keep metadata (document, page, section, table id) for citations and filters. Check quality with questions whose answers sit in tables and figures, because those fail first.
+
+    **Follow-up they'll ask:** How do you answer a numeric question over a large table? Retrieve the table, then compute with a tool or query rather than asking the model to do the arithmetic in text.
+
 ??? question "What is hybrid search and why does it usually beat pure vector search?"
     **Short answer:** Hybrid search combines lexical retrieval such as BM25 with dense vector retrieval and fuses the results, capturing both exact terms and semantic similarity.
 
@@ -87,6 +101,20 @@ These questions cover retrieval-augmented generation and the operational discipl
     **In depth:** Use change events, webhooks or change data capture from source systems, and store a content hash per document so only changed documents are re-chunked and re-embedded. Deletes and permission changes must propagate quickly, which is often the most neglected path; tombstone and purge chunks by document id. Keep stable chunk ids so updates replace rather than duplicate. For large model or chunking changes, build a new index in parallel and swap with an alias. Expose freshness lag per source and alert when it exceeds the SLA. Add document dates to metadata so retrieval can prefer recent versions.
 
     **Follow-up they'll ask:** What if the source system has no change feed? Poll with modified timestamps and run periodic reconciliation to catch deletes.
+
+??? question "Answer quality dropped right after you added a batch of new documents. How do you trace it?"
+    **Short answer:** Walk the pipeline in order, ingestion, retrieval, reranking and generation, comparing failing questions before and after the change, so you find the first stage that went wrong.
+
+    **In depth:**
+
+    - **Ingestion:** did the new documents parse cleanly, with the same chunking and the same embedding model version? Look for empty or garbled chunks and duplicates.
+    - **Retrieval:** for questions that got worse, are the right chunks still in the top results, or are new near-duplicate or lower-quality chunks crowding them out? Compare recall at k before and after.
+    - **Reranking:** does the reranker now prefer the new chunks for the wrong reasons, such as length or keyword overlap?
+    - **Generation:** if the right chunks are in the prompt, is the answer wrong because sources now conflict (an old and a new version of a policy)?
+
+    Fixes follow the stage: clean or exclude bad documents, deduplicate, add metadata filters or recency, tune the reranker, or tell the model how to resolve conflicts and cite. Add the failing questions to the evaluation set so the next batch is checked before release.
+
+    **Follow-up they'll ask:** How do you stop this happening again? Run the evaluation set automatically on every index update and block the swap if quality drops.
 
 ??? question "Your RAG endpoint's p95 latency is eight seconds — how do you bring it down?"
     **Short answer:** Break latency down by stage with tracing, then attack the biggest stages: usually generation length, context size, sequential calls and cold retrieval.

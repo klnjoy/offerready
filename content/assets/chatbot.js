@@ -107,7 +107,7 @@
   }
 
   function renderMarkdown(md) {
-    md = String(md || "").replace(/```[\s\S]*?(```|$)/g, "");
+    md = String(md || "");
     const lines = md.split("\n");
     const html = [];
     let i = 0;
@@ -115,6 +115,20 @@
     while (i < lines.length) {
       const raw = lines[i].trim();
       if (raw === "") { i++; continue; }
+      // A fenced block (``` or ```sql): asked-for code or a query, shown as is
+      // with a Copy button. While streaming, an unclosed fence runs to the end.
+      const fence = raw.match(/^```\s*([\w+#.-]*)/);
+      if (fence) {
+        const body = [];
+        i++;
+        while (i < lines.length && !/^\s*```\s*$/.test(lines[i])) body.push(lines[i++]);
+        i++;
+        const lang = fence[1] ? fence[1].toUpperCase() : "Code";
+        html.push('<div class="orh-code"><div class="orh-code-head"><span>' + escapeHtml(lang) +
+          '</span><button type="button" class="orh-code-copy">Copy</button></div><pre><code>' +
+          escapeHtml(body.join("\n").replace(/\s+$/, "")) + "</code></pre></div>");
+        continue;
+      }
       const m = raw.match(/^(#{1,6})\s+(.*)$/);
       if (m || /^\*\*[^*]+\*\*$/.test(raw)) {
         html.push('<h4 class="orh-h">' + inline(escapeHtml(m ? m[2] : raw)) + "</h4>");
@@ -149,7 +163,7 @@
       }
       const para = [];
       while (i < lines.length && lines[i].trim() !== "" &&
-             !/^(#{1,6}\s|[-*]\s|\d+\.\s)/.test(lines[i].trim()) &&
+             !/^(#{1,6}\s|[-*]\s|\d+\.\s|```)/.test(lines[i].trim()) &&
              !lines[i].includes("|")) {
         para.push(lines[i++].trim());
       }
@@ -715,6 +729,14 @@
       e.preventDefault();
       ask(input.value);
     }
+  });
+  // Copy on a code block (delegated: blocks are re-rendered while streaming).
+  log.addEventListener("click", (e) => {
+    const btn = e.target && e.target.closest ? e.target.closest(".orh-code-copy") : null;
+    if (!btn) return;
+    const code = btn.closest(".orh-code").querySelector("code");
+    const done = () => { btn.textContent = "Copied"; setTimeout(() => { btn.textContent = "Copy"; }, 1500); };
+    try { navigator.clipboard.writeText(code ? code.textContent : "").then(done, () => {}); } catch (err) { /* clipboard unavailable */ }
   });
   form.addEventListener("submit", (e) => { e.preventDefault(); ask(input.value); });
   sendBtn.addEventListener("click", (e) => {

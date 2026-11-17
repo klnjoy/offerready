@@ -103,6 +103,17 @@ Can you explain each without notes?
     finishing — worth it for high-stakes output, at extra cost. Real systems often
     combine them (plan, act with ReAct-style steps, reflect at the end).
 
+??? question "Beyond ReAct: what are tree-of-thoughts and routing, and when are they worth it?"
+    **Tree-of-thoughts** explores several candidate reasoning paths, scores them,
+    and keeps the best. It can help on puzzles and planning problems with clear
+    ways to judge a partial answer, but it multiplies model calls, so it is rarely
+    worth it for everyday business tasks. **Routing** sends each request to the
+    right model, prompt or specialist agent (a cheap model for simple questions,
+    a stronger one or a specialist for hard ones). It is one of the most useful
+    patterns in production because it cuts cost and latency. Judge both the same
+    way: run them on your evaluation set and keep them only if quality gains
+    justify the extra cost.
+
 ??? question "How do you decide single-agent vs multi-agent?"
     Default to **single-agent** — fewer moving parts, easier to test and trace. Go
     **multi-agent (supervisor + specialists)** only when domains are genuinely
@@ -110,6 +121,32 @@ Can you explain each without notes?
     improves reliability and each agent's prompt/tool set stays focused. Multi-agent
     adds routing errors, coordination latency, and more failure surface — justify it
     with real separation of concerns, not because it sounds sophisticated.
+
+??? question "How do you choose an agent framework?"
+    Start from the task and your constraints, not popularity. Many tasks need
+    **no framework**: a model API, a few tools and a short loop are easier to test
+    and debug. Reach for a framework when you need what it gives you, such as
+    durable state and checkpoints, pause and resume for human approval, streaming,
+    tracing or multi-agent coordination. Options differ in style: graph-based
+    orchestration with explicit state (LangGraph), role-based agent teams
+    (CrewAI), lightweight SDKs from model providers, document-heavy toolkits
+    (LlamaIndex), cloud-native kits tied to one platform, and type-safe Python
+    libraries. Check that it works with the models you need, supports MCP and
+    your tools, has tracing and evaluation hooks, and is actively maintained.
+    Whatever you pick, understand the plain agent loop first so you can debug
+    what the framework does for you.
+
+??? question "Walk me through your agent project's architecture. Why that design and framework?"
+    Interviewers want your reasoning, not a tour of features. Cover, in order:
+    the **problem and users**; the **flow** from request to answer (input checks,
+    planning, tools, memory, output checks); the **tools** and their permissions
+    (read vs write, approvals); **state and memory**; how you **evaluated** it
+    (task success, trajectory checks, cost per task); and how it runs in
+    **production** (tracing, limits, fallbacks). Then the **alternatives** you
+    considered and why you rejected them (a simple workflow, a single agent, a
+    different framework), and **one thing you would change** now. Use your own
+    real project; if it was a prototype, say so and explain what production
+    would need.
 
 ??? question "Why model agent orchestration as a graph/state machine (e.g. LangGraph)?"
     A raw while-loop hides state and makes branching, retries, human-in-the-loop
