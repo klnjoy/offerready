@@ -37,7 +37,14 @@ New features and improvements, newest first.
   ready score is now a ring and a bar showing how far it is to the ready
   target, with a "See a sample plan" link from the top of the page. Role
   cards without pay data say "Pay varies by company & level", and six
-  short interview tips sit under "Show up prepared".
+  short interview tips sit under "Before you walk in".
+- **Find roles by any skill.** Open roles has one panel of filters (role,
+  skill, type, work mode and posted date), the skill list covers about 55
+  skills, and searching a skill like "Power BI" finds roles that ask for it.
+  Apply now sits next to Prepare on every role and opens the employer's page.
+- **Ask for a diagram, get one.** Ask the help assistant, in the app or the
+  study library, for an architecture flow, an entity diagram, a sequence or a
+  chart, and it draws it, with a button to copy the source.
 
 ### Week of 9 November
 - **A calmer front page on phones.** One Sign in at the top, and the big
