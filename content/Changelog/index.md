@@ -33,6 +33,11 @@ New features and improvements, newest first.
 - **New question: what is an AI control plane?** How a registry and a
   gateway split the work across models, MCP servers, skills and agents,
   in System Design.
+- **Sample plan you can read at a glance.** The front page's sample
+  ready score is now a ring and a bar showing how far it is to the ready
+  target, with a "See a sample plan" link from the top of the page. Role
+  cards without pay data say "Pay varies by company & level", and six
+  short interview tips sit under "Show up prepared".
 
 ### Week of 9 November
 - **A calmer front page on phones.** One Sign in at the top, and the big
