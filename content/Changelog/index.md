@@ -76,6 +76,14 @@ New features and improvements, newest first.
   glance, and the readiness label fits inside its ring.
 - **How it works, at a glance.** The front page shows the four stages: job
   analysis, resume gaps, preparation plan and mock interview.
+- **Quick 5 for busy days.** Short on time? Answer one question for your
+  job in about five minutes. It counts toward your streak, and your streak
+  now shows on Home on phones.
+- **Come back tomorrow.** After a session you see what's planned next, and
+  can turn on a daily reminder that opens your session, or add a daily
+  practice time to your calendar.
+- **Type instead of speaking.** One tap takes you to the answer box when you
+  can't talk out loud.
 
 ### Week of 9 November
 - **A calmer front page on phones.** One Sign in at the top, and the big
