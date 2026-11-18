@@ -11,6 +11,15 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Add a job tells you what's next.** A bar at the bottom keeps the
+  Add this job button in view and says what's missing, then what your
+  resume and interview date would add. It never stops you adding the job.
+- **Sign in is always in reach on phones.** Every page's header now shows
+  Sign in; the light/dark switch moved into the menu to make room.
+- **Sample questions come first.** On a phone, the Try a sample question
+  page opens on the questions; the sample resume folds into one line.
+- **A shorter front page on phones.** Role cards and free tools are rows
+  you swipe through, and the interview tips show three at a time.
 - **Feedback you can read at a glance.** After each answer, three tiles
   show the verdict, your strongest part and what to fix first. Every
   point is tagged Fix, Polish or Good, "What held up" lists what already
