@@ -61,6 +61,10 @@ New features and improvements, newest first.
 - **Account menu.** On desktop, the avatar menu goes straight to Profile &
   sign-in, Plan & billing and Your data, and has Sign out. My account shows
   how you sign in and lets you sign out on all your devices.
+- **Search everything.** One search box finds your jobs, interview
+  questions (with the answer and a Practice button), study notes and app
+  pages. Use the search button or press / on a computer; on a phone it's at
+  the top of More.
 
 ### Week of 9 November
 - **A calmer front page on phones.** One Sign in at the top, and the big
