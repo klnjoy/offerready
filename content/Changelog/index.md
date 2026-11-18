@@ -45,6 +45,16 @@ New features and improvements, newest first.
 - **Ask for a diagram, get one.** Ask the help assistant, in the app or the
   study library, for an architecture flow, an entity diagram, a sequence or a
   chart, and it draws it, with a button to copy the source.
+- **Best matches for your resume.** Open roles can sort by how well each
+  role fits your resume, and you can pick up to five roles and prepare them
+  together in the background. Some employers limit how many of their roles
+  you can apply to in a month, so pick your strongest fits.
+- **Practice follows your interview.** When an interview date is set, the
+  job page and Practice show how many days are left with a "Practice for
+  it" button, so you practise one job at a time.
+- **Softer step colours.** The "One job, one plan" steps on the front page
+  and the job steps in the app use lighter tints, with only the current
+  step in full colour.
 
 ### Week of 9 November
 - **A calmer front page on phones.** One Sign in at the top, and the big
