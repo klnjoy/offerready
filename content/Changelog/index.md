@@ -84,6 +84,9 @@ New features and improvements, newest first.
   practice time to your calendar.
 - **Type instead of speaking.** One tap takes you to the answer box when you
   can't talk out loud.
+- **One place to start today.** Practice now opens with the same Today's
+  session as Home, with free practice underneath. Your jobs come first on
+  the Jobs page, and news no longer sits above your Home.
 
 ### Week of 9 November
 - **A calmer front page on phones.** One Sign in at the top, and the big
