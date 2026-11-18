@@ -55,6 +55,12 @@ New features and improvements, newest first.
 - **Softer step colours.** The "One job, one plan" steps on the front page
   and the job steps in the app use lighter tints, with only the current
   step in full colour.
+- **Sign in with a code, no password.** Choose "Email me a sign-in code",
+  enter the code from your email, and you're in. New here? It creates your
+  account too.
+- **Account menu.** On desktop, the avatar menu goes straight to Profile &
+  sign-in, Plan & billing and Your data, and has Sign out. My account shows
+  how you sign in and lets you sign out on all your devices.
 
 ### Week of 9 November
 - **A calmer front page on phones.** One Sign in at the top, and the big
