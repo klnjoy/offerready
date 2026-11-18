@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **What your readiness score means.** Progress now explains, in one
+  folded note, what the score is built from and that it's a study guide,
+  not a prediction of whether you'll be hired. Today's session also counts
+  exactly what it lists.
 - **Add a job tells you what's next.** A bar at the bottom keeps the
   Add this job button in view and says what's missing, then what your
   resume and interview date would add. It never stops you adding the job.
