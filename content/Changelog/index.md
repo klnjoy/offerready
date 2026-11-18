@@ -11,6 +11,16 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Feedback you can read at a glance.** After each answer, three tiles
+  show the verdict, your strongest part and what to fix first. Every
+  point is tagged Fix, Polish or Good, "What held up" lists what already
+  works, and "How we score this" explains the scoring.
+- **Mock interview results, summed up.** The end of a mock now shows
+  overall, how many you answered, your strongest area and what to
+  practise next. If every area scored about the same, it says so.
+- **"Stuck? Show me the answer" works mid-question.** Tapping it while
+  the interviewer is still reading the question now shows the model
+  answer instead of going back to the answer box.
 - **Guides for managers, program and product roles.** New role guides
   and practice questions for Engineering Manager, Program & Project
   Manager, Agile Coach / Scrum Master and Product Manager. When you add
