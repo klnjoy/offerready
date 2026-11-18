@@ -87,6 +87,12 @@ New features and improvements, newest first.
 - **One place to start today.** Practice now opens with the same Today's
   session as Home, with free practice underneath. Your jobs come first on
   the Jobs page, and news no longer sits above your Home.
+- **A clearer AI Coach.** Pick what you want to do (answer a question,
+  prepare a story from your resume, or understand the job). Your pick goes
+  in the box to edit before you ask.
+- **Practice history with a next step.** See what needs another go, what you
+  practiced this week and what's strong, and what to do next with each
+  answer.
 
 ### Week of 9 November
 - **A calmer front page on phones.** One Sign in at the top, and the big
