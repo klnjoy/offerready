@@ -65,6 +65,17 @@ New features and improvements, newest first.
   questions (with the answer and a Practice button), study notes and app
   pages. Use the search button or press / on a computer; on a phone it's at
   the top of More.
+- **Today's session first on phones.** Home opens with what to do today,
+  and the session lists the actual questions and topics it will cover.
+  Search is one tap away on Home and Jobs.
+- **Your readiness score, explained.** See the three parts behind the score
+  (resume match, answer quality, practice done), what isn't measured yet,
+  and job requirements and mock interviews tracked beside it. Without an
+  interview date we show your progress instead of guessing a ready date.
+- **Clearer steps.** Done, current and not-started steps look different at a
+  glance, and the readiness label fits inside its ring.
+- **How it works, at a glance.** The front page shows the four stages: job
+  analysis, resume gaps, preparation plan and mock interview.
 
 ### Week of 9 November
 - **A calmer front page on phones.** One Sign in at the top, and the big
