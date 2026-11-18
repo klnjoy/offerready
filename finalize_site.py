@@ -15,6 +15,9 @@ Run order:
 
 from __future__ import annotations
 
+import html
+import json
+import re
 import shutil
 from pathlib import Path
 
@@ -75,9 +78,51 @@ def inject_social_meta() -> int:
     return updated
 
 
+# A small titles-only index (pages and their sections) for the app's search.
+# The full mkdocs search index is ~2 MB, too heavy to fetch on a phone.
+_SKIP_TITLES = re.compile(r"^(index\.html|404\.html|(Privacy|Terms|Disclaimer|Changelog|Contact|Security|Compare)/)")
+
+
+def _clean(text: str) -> str:
+    return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", "", text or ""))).strip()
+
+
+def write_search_titles() -> int:
+    src = SITE / "search" / "search_index.json"
+    if not src.exists():
+        print(f"No search index (missing {src}); search titles not written.")
+        return 0
+    docs = json.loads(src.read_text(encoding="utf-8")).get("docs", [])
+    page_title: dict[str, str] = {}
+    for d in docs:
+        loc = d.get("location", "")
+        if "#" not in loc:
+            page_title[loc] = _clean(d.get("title", ""))
+    items, seen = [], set()
+    for d in docs:
+        loc = d.get("location", "")
+        if not loc or _SKIP_TITLES.match(loc):
+            continue
+        title = _clean(d.get("title", ""))
+        page, _, anchor = loc.partition("#")
+        parent = page_title.get(page, "")
+        if not title or (anchor and title == parent):
+            continue
+        key = (title.lower(), page)
+        if key in seen:
+            continue
+        seen.add(key)
+        items.append([title, loc, parent] if anchor else [title, loc])
+    out = SITE / "assets" / "search_titles.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps({"v": 1, "items": items}, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    return len(items)
+
+
 def main() -> None:
     meta_updated = inject_social_meta()
     print(f"Social meta injected into {meta_updated} pages.")
+    print(f"Search titles written: {write_search_titles()} entries.")
     if not SRC.exists():
         print(f"No module files to copy (missing {SRC}).")
         return
