@@ -11,6 +11,16 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Open roles shows your best matches first.** With your resume saved,
+  Open roles starts sorted by best match: the roles whose skills your
+  resume names come first. "Newest first" is still one tap away.
+- **Prepare does every step for you.** Prepare a role, or several at
+  once, and OfferReady reads the posting, saves the job, matches your
+  resume and writes the likely questions while you keep browsing. The
+  status at the bottom says which step it's on.
+- **Your questions are ready when you add a job.** After you add a job,
+  its likely interview questions are written by themselves, so your next
+  step goes straight to today's session.
 - **Branded sign-in emails.** Sign-in codes, account confirmations and
   password resets now come from OfferReady with our logo and colours.
 - **Buttons answer the first tap after typing.** On phones, the bottom bar
