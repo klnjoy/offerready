@@ -29,6 +29,9 @@ const C = { ink: '#16305c', text: '#0c1c38', text2: '#475467', text3: '#667085',
 function appUrl() { return String(process.env.APP_URL || 'https://getofferready.app').replace(/\/+$/, ''); }
 function apiUrl() { return String(process.env.API_PUBLIC_URL || 'https://offerready-beta.vercel.app').replace(/\/+$/, ''); }
 function postalAddress() { return String(process.env.EMAIL_POSTAL_ADDRESS || '').trim(); }
+/** "What a pass adds" promotes passes, so it's off while pricing isn't
+ * advertised (owner, Nov 3 / Nov 18). EMAIL_PLANS=on brings it back. */
+function plansOn() { return String(process.env.EMAIL_PLANS || '').toLowerCase() === 'on'; }
 function dailyCap() { const n = Math.round(Number(process.env.EMAIL_DAILY_CAP)); return n > 0 ? Math.min(n, 2000) : 90; }
 
 /** What's missing before emails can really send ([] = ready). */
@@ -85,7 +88,7 @@ function pickEmail(person, now, update) {
   if (!has('welcome') && d <= 1) return 'welcome';
   if (!person.job_id && !has('nudge_job') && d >= 2 && d <= 6) return 'nudge_job';
   if (person.job_id && !has('practice') && d >= 5 && d <= 11) return 'practice';
-  if (!person.paid && !has('plans') && d >= 9 && d <= 15) return 'plans';
+  if (plansOn() && !person.paid && !has('plans') && d >= 9 && d <= 15) return 'plans';
   if (update && update.ready && update.month === monthKey(now) && d >= 7) {
     const k = 'monthly:' + update.month;
     if (!has(k)) return k;
@@ -334,6 +337,6 @@ function unsubPage(state, userId, token) {
 
 module.exports = {
   sendNotice, reviewNotice,
-  KINDS, pickEmail, build, sendEmail, daysSince, monthKey, missingSettings, dailyCap,
+  KINDS, pickEmail, build, sendEmail, daysSince, monthKey, missingSettings, dailyCap, plansOn,
   unsubToken, checkUnsubToken, unsubUrl, unsubPage, postalAddress,
 };

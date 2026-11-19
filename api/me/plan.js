@@ -746,7 +746,7 @@ module.exports = async function handler(req, res) {
       send(res, 200, Object.assign({ kind }, emails.build(kind, await sampleEmailPerson(user), monthlyUpdate)));
       return;
     }
-    const base = { missing: emails.missingSettings(), daily_cap: emails.dailyCap(), monthly: { month: monthlyUpdate.month, ready: !!monthlyUpdate.ready, subject: monthlyUpdate.subject } };
+    const base = { missing: emails.missingSettings(), daily_cap: emails.dailyCap(), plans_paused: !emails.plansOn(), monthly: { month: monthlyUpdate.month, ready: !!monthlyUpdate.ready, subject: monthlyUpdate.subject } };
     try {
       const planned = await plannedEmails(Date.now());
       send(res, 200, Object.assign(base, { ready: true, would_send: countKinds(planned), next: planned.slice(0, 50).map((x) => ({ email: x.person.email, kind: x.kind })) }));

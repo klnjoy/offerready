@@ -14,6 +14,7 @@ function person(daysAgo, extra) {
 const UPDATE = { month: '2026-11', ready: true, subject: 'News', intro: 'Intro', items: [{ title: 'A', text: 'B', path: '/analyze', cta: 'Go' }], tip: 'Tip' };
 
 test('pickEmail follows the schedule and never repeats', () => {
+  process.env.EMAIL_PLANS = 'on';
   assert.strictEqual(emails.pickEmail(person(0), NOW), 'welcome');
   assert.strictEqual(emails.pickEmail(person(1), NOW), 'welcome');
   assert.strictEqual(emails.pickEmail(person(0, { sent: ['welcome'] }), NOW), null);
@@ -31,6 +32,7 @@ test('pickEmail follows the schedule and never repeats', () => {
 });
 
 test('monthly update: only when ready, this month, confirmed a week ago, once', () => {
+  process.env.EMAIL_PLANS = 'on';
   assert.strictEqual(emails.pickEmail(person(30), NOW, UPDATE), 'monthly:2026-11');
   assert.strictEqual(emails.pickEmail(person(30, { paid: true }), NOW, UPDATE), 'monthly:2026-11');
   assert.strictEqual(emails.pickEmail(person(30, { sent: ['monthly:2026-11'] }), NOW, UPDATE), null);
@@ -40,6 +42,17 @@ test('monthly update: only when ready, this month, confirmed a week ago, once', 
   assert.strictEqual(emails.pickEmail(person(4, { job_id: 'j' }), NOW, UPDATE), null);
   // Onboarding comes first; the monthly waits for a later run.
   assert.strictEqual(emails.pickEmail(person(9, { sent: ['welcome'] }), NOW, UPDATE), 'plans');
+});
+
+test('"What a pass adds" is paused unless EMAIL_PLANS=on', () => {
+  delete process.env.EMAIL_PLANS;
+  assert.strictEqual(emails.plansOn(), false);
+  assert.strictEqual(emails.pickEmail(person(9, { job_id: 'j', sent: ['welcome', 'practice'] }), NOW), null);
+  // The monthly update still goes out when it's ready.
+  assert.strictEqual(emails.pickEmail(person(9, { sent: ['welcome'] }), NOW, UPDATE), 'monthly:2026-11');
+  process.env.EMAIL_PLANS = 'on';
+  assert.strictEqual(emails.pickEmail(person(9, { job_id: 'j', sent: ['welcome', 'practice'] }), NOW), 'plans');
+  delete process.env.EMAIL_PLANS;
 });
 
 test('every email has an unsubscribe link, escapes names and has no prices', () => {
