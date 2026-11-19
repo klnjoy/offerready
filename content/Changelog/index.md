@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Story drafts never make up numbers.** When the AI drafts a story from
+  your resume or notes, any number your resume or notes don't contain is
+  replaced with [number?] for you to fill in or remove.
 - **Best match shows your strongest matches.** In Open roles, Best match
   now lists the roles where your resume names every skill they ask for.
   "Show close matches" brings in the rest.
