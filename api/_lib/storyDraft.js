@@ -97,4 +97,37 @@ function parseBatch(raw) {
   return out.length ? out : null;
 }
 
-module.exports = { buildDraftMessages, parseDraft, buildBatchMessages, parseBatch, NOTES_MAX, RESUME_MAX, TAGS };
+// ---- fact check: the model is told never to invent numbers; this makes sure.
+// Every number in a draft (counts, percentages, money, years) must appear in
+// the text it was drafted from (the notes, or the resume). One that doesn't
+// is replaced with a [number?] for the person to fill in or delete.
+
+// A number, with a short unit glued on ("6h", "40m", "10x", "5k", "2bn").
+const NUM_RE = /(?<![\w[.])\$?\d[\d,]*(?:\.\d+)?(?:bn|[kmxh])?(?![\w\]])/gi;
+const normNum = (t) => t.toLowerCase().replace(/[$,]/g, '').replace(/\.0+(?=\D*$)/, '');
+
+function sourceNumbers(text) {
+  const set = new Set();
+  for (const m of String(text || '').matchAll(NUM_RE)) set.add(normNum(m[0]));
+  return set;
+}
+
+/** The draft with every number the source doesn't contain replaced by "[number?]".
+ * Returns { draft, replaced } (replaced = how many were taken out). */
+function checkNumbers(draft, source) {
+  if (!draft) return { draft, replaced: 0 };
+  const known = sourceNumbers(source);
+  let replaced = 0;
+  const out = { ...draft };
+  for (const k of Object.keys(FIELD_MAX)) {
+    if (typeof out[k] !== 'string' || !out[k]) continue;
+    out[k] = out[k].replace(NUM_RE, (m) => {
+      if (known.has(normNum(m))) return m;
+      replaced++;
+      return '[number?]';
+    });
+  }
+  return { draft: out, replaced };
+}
+
+module.exports = { buildDraftMessages, parseDraft, buildBatchMessages, parseBatch, checkNumbers, NOTES_MAX, RESUME_MAX, TAGS };

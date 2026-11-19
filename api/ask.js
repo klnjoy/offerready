@@ -49,7 +49,7 @@ const { checkQuota, recordUse, quotaError } = require('./_lib/plans');
 
 const STORY_COACH = 'story_coach';
 const STORY_DRAFT = 'story_draft';
-const { buildDraftMessages, parseDraft, buildBatchMessages, parseBatch, NOTES_MAX, RESUME_MAX } = require('./_lib/storyDraft');
+const { buildDraftMessages, parseDraft, buildBatchMessages, parseBatch, checkNumbers, NOTES_MAX, RESUME_MAX } = require('./_lib/storyDraft');
 const STORY_BATCH = 'story_batch';
 const DEBRIEF_FILL = 'debrief_fill';
 const { buildFillMessages, buildTranscriptMessages, parseFill, RECAP_MAX, TRANSCRIPT_MAX } = require('./_lib/debriefFill');
@@ -600,7 +600,8 @@ async function storyDraft(req, res, body) {
       return;
     }
     await recordUse(user.id, 'story_ai');
-    send(res, 200, { draft });
+    // Numbers the notes don't contain become [number?] (never invented).
+    send(res, 200, { draft: checkNumbers(draft, notes).draft });
   } catch (e) {
     send(res, e && e.name === 'AbortError' ? 504 : 502, { error: 'Couldn’t draft the story. Please try again.' });
   } finally {
@@ -716,7 +717,8 @@ async function storyBatch(req, res, body) {
     const stories = parseBatch(raw);
     if (!stories) { send(res, 422, { error: 'Your resume didn’t give enough to draft stories from. Try Draft it for me on one story instead.' }); return; }
     await recordUse(user.id, 'story_ai');
-    send(res, 200, { stories });
+    // Numbers the resume doesn't contain become [number?] (never invented).
+    send(res, 200, { stories: stories.map((st) => checkNumbers(st, resume).draft) });
   } catch (e) {
     send(res, e && e.name === 'AbortError' ? 504 : 502, { error: 'Couldn’t draft stories. Please try again.' });
   } finally {
