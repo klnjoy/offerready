@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Fewer upgrade nudges.** Free accounts no longer see a "Get Pro" chip
+  in the phone header, and the FAQ and library footer no longer link to
+  pricing. When you reach a limit, the feature still tells you how to get
+  more.
 - **What your readiness score means.** Progress now explains, in one
   folded note, what the score is built from and that it's a study guide,
   not a prediction of whether you'll be hired. Today's session also counts
