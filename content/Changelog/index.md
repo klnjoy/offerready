@@ -11,6 +11,17 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Best match shows your strongest matches.** In Open roles, Best match
+  now lists the roles where your resume names every skill they ask for.
+  "Show close matches" brings in the rest.
+- **Easier to add your resume in Open roles.** An "Add your resume"
+  button opens the box, and choosing Best match without a resume opens
+  it too. Your resume stays on the device where you add it; resume sync
+  in Account carries it to your other devices.
+- **Your steps start in the right place.** A newly added job starts at
+  Resume tailor again, instead of skipping ahead to Prep.
+- **Tidier Add a job screen on phones.** The form no longer shows
+  through between the Next bar and the tabs.
 - **Open roles shows your best matches first.** With your resume saved,
   Open roles starts sorted by best match: the roles whose skills your
   resume names come first. "Newest first" is still one tap away.
