@@ -11,6 +11,12 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Branded sign-in emails.** Sign-in codes, account confirmations and
+  password resets now come from OfferReady with our logo and colours.
+- **Buttons answer the first tap after typing.** On phones, the bottom bar
+  could pop back up under your finger just after you finished typing and
+  catch the tap meant for a button, such as "Show the model answer". It
+  now waits until you lift your finger.
 - **Today's session shows each question in full.** On phones, the
   questions on Home were cut short; now each one shows whole, however
   long.
