@@ -12,7 +12,8 @@ New features and improvements, newest first.
 
 ### Week of 16 November
 - **Today's session shows each question in full.** On phones, the
-  questions on Home were cut to one line; they now show up to three.
+  questions on Home were cut short; now each one shows whole, however
+  long.
 - **No upgrade email for now.** The "What a pass adds" email is paused
   while pricing isn't advertised. Welcome, first-job and practice emails
   and the monthly update carry on as before.
