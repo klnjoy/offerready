@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Practice follows your weakest topic.** Today's session starts with
+  questions from the topics you've scored lowest in. After an answer that
+  needs work, "One more on <topic>" gives you another question on the same
+  topic straight away. It's optional.
 - **Story drafts never make up numbers.** When the AI drafts a story from
   your resume or notes, any number your resume or notes don't contain is
   replaced with [number?] for you to fill in or remove.
