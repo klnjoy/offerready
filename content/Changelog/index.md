@@ -11,6 +11,11 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Today's session shows each question in full.** On phones, the
+  questions on Home were cut to one line; they now show up to three.
+- **No upgrade email for now.** The "What a pass adds" email is paused
+  while pricing isn't advertised. Welcome, first-job and practice emails
+  and the monthly update carry on as before.
 - **Open roles dropdowns in A to Z order.** Country, role and skill lists
   start with "All", then run A to Z, and the country picker has the same
   arrow as the other filters.
