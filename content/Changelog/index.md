@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Open roles dropdowns in A to Z order.** Country, role and skill lists
+  start with "All", then run A to Z, and the country picker has the same
+  arrow as the other filters.
 - **Fewer upgrade nudges.** Free accounts no longer see a "Get Pro" chip
   in the phone header, and the FAQ and library footer no longer link to
   pricing. When you reach a limit, the feature still tells you how to get
