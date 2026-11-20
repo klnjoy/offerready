@@ -7,6 +7,8 @@
  *   practice   day 5–11   has a job: practise for that job
  *   plans      day 9–15   hasn't paid: what a pass includes (no prices, no deadlines)
  *   monthly    once a month, confirmed 7+ days ago (content: monthlyUpdate.js)
+ *   roles:DAY  opt-in only, EMAIL_ROLES=on: new roles whose every listed skill
+ *              the synced resume names, at most one a day (migration 0032)
  *   daily:DAY  opt-in only (Account), EMAIL_DAILY=on: "your next step" each
  *              morning, skipped on days they've practised, paused after 3
  *              unanswered (migration 0031)
@@ -174,6 +176,27 @@ function content(kind, p, update) {
         { button: { label: 'Analyze a job', path: '/analyze' } },
         { p: 'Not applying anywhere yet? The study library and practice questions are free to use anytime.' },
         { more: { label: 'Browse practice questions', path: '/practice' } },
+      ],
+    };
+  }
+  if (/^roles:/.test(kind)) {
+    const roles = Array.isArray(p.roles) ? p.roles : [];
+    if (!roles.length) return null;
+    const total = Math.max(p.roles_total || roles.length, roles.length);
+    const { rolePath } = require('./roleEmails');
+    return {
+      subject: total === 1 ? 'A new role that matches your resume' : total + ' new roles that match your resume',
+      preheader: 'Your resume names every skill ' + (total === 1 ? 'this role lists' : 'these roles list') + '.',
+      blocks: [
+        { p: hi },
+        { p: (total === 1 ? 'A new role was' : total + ' new roles were') + ' posted where your resume names every skill the role lists.' },
+        ...roles.map((r) => ({ item: {
+          title: clip(r.title, 90) + ' · ' + clip(r.company, 60),
+          text: [r.location, (r.tags || []).slice(0, 6).join(', ')].filter(Boolean).join(' · '),
+          path: rolePath(r), cta: 'Prepare for this role',
+        } })),
+        { button: { label: total > roles.length ? 'See all ' + total + ' in Open roles' : 'Open roles', path: '/roles' } },
+        { p: 'You asked for these emails. At most one a day, only when there’s a new match. Turn it off any time in Account.' },
       ],
     };
   }
