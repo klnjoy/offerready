@@ -11,6 +11,15 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Tailor your resume before you practise, when it matters.** If your
+  fit check shows something the job asks for that your resume doesn't
+  state yet (it shows as "not verified"), or a low match, step 2 (Resume)
+  now comes first. Questions, Scenarios, Coding, Stories and Mock ask once
+  to tailor first, using only what is already true. "Practise anyway"
+  skips it, so practice is never blocked.
+- **Clearer title saving on Tailor.** When a title is already saved in
+  your tailored copy, the Save button now says so instead of looking
+  broken.
 - **See which gaps repeat across your roles.** On the Readiness overview,
   skills that show up as missing in two or more of your saved roles are
   listed with a count, such as "Airflow shows up in 5 of your 7 roles".
