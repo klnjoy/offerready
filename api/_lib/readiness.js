@@ -513,8 +513,31 @@ async function readinessByJob(userId, nowMs) {
   return out;
 }
 
+/**
+ * { [jobId]: string[] } — the skills each of the user's jobs said were missing
+ * (newest gap analysis per job). Read-only, bounded to 2000 rows; {} on errors.
+ * The app joins this with the saved-jobs list, so a deleted job just drops out.
+ */
+async function gapsByJob(userId) {
+  if (!userId) return {};
+  const out = {};
+  try {
+    const r = await restFetch(`/gap_analysis?user_id=eq.${enc(userId)}&select=job_id,result,created_at&order=created_at.desc&limit=2000`,
+      { method: 'GET', headers: serviceHeaders() });
+    const rows = r.ok ? await r.json() : [];
+    for (const g of Array.isArray(rows) ? rows : []) {
+      if (!g || !g.job_id || out[g.job_id]) continue;
+      const list = g.result && Array.isArray(g.result.missingSkills) ? g.result.missingSkills : [];
+      out[g.job_id] = list.filter((x) => typeof x === 'string' && x.trim()).map((x) => x.trim().slice(0, 80)).slice(0, 12);
+    }
+  } catch (_e) {
+    return {};
+  }
+  return out;
+}
+
 module.exports = {
-  readinessByJob,
+  readinessByJob, gapsByJob,
   ownsJob, practiceSchemaReady,
   saveGapAnalysis, getGapAnalysis,
   saveQuestions, getQuestions, getOtherJobPrompts,

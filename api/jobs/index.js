@@ -2,6 +2,7 @@
  * /api/jobs  (Vercel serverless function)
  * ---------------------------------------------------------------------------
  * GET  → list the signed-in user's saved jobs (summary fields).
+ * GET ?view=gaps → { gaps: { [jobId]: string[] } } (missing skills per job)
  * GET ?view=readiness → { scores: { [jobId]: { score, match, practiced, at, week_ago } } }
  * POST → save a new analyzed job for the signed-in user.
  *
@@ -21,7 +22,7 @@ const { setCors, send } = require('../_lib/http');
 const { getUser } = require('../_lib/supabaseAuth');
 const { listJobs, insertJob, deriveJobTitle } = require('../_lib/jobs');
 const { checkQuota, quotaError } = require('../_lib/plans');
-const { readinessByJob } = require('../_lib/readiness');
+const { readinessByJob, gapsByJob } = require('../_lib/readiness');
 
 function str(v, max) {
   if (v == null) return null;
@@ -70,7 +71,13 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'GET') {
     // ?view=readiness → readiness for every job, for the Readiness overview.
-    const view = (req.query && req.query.view) || (/[?&]view=readiness(&|$)/.test(String(req.url || '')) ? 'readiness' : '');
+    const view = (req.query && req.query.view) || (/[?&]view=(readiness|gaps)(&|$)/.exec(String(req.url || '')) || [])[1] || '';
+    if (view === 'gaps') {
+      const gaps = await gapsByJob(user.id);
+      res.setHeader('Cache-Control', 'private, no-store');
+      send(res, 200, { ok: true, gaps });
+      return;
+    }
     if (view === 'readiness') {
       const scores = await readinessByJob(user.id);
       res.setHeader('Cache-Control', 'private, no-store');
