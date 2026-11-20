@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Your interview steers your practice.** When you log an interview and
+  mark a question as "went badly", today's session starts with this job's
+  questions on that topic, marked "came up in your interview".
 - **Practice follows your weakest topic.** Today's session starts with
   questions from the topics you've scored lowest in. After an answer that
   needs work, "One more on <topic>" gives you another question on the same
