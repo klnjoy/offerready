@@ -7,6 +7,9 @@
  *   practice   day 5–11   has a job: practise for that job
  *   plans      day 9–15   hasn't paid: what a pass includes (no prices, no deadlines)
  *   monthly    once a month, confirmed 7+ days ago (content: monthlyUpdate.js)
+ *   daily:DAY  opt-in only (Account), EMAIL_DAILY=on: "your next step" each
+ *              morning, skipped on days they've practised, paused after 3
+ *              unanswered (migration 0031)
  * At most one email per person per daily run, each kind at most once ever
  * (email_sends, migration 0027), never to anyone who unsubscribed, and never
  * to team accounts. Supabase's own sign-in emails are separate and unchanged.
@@ -32,6 +35,8 @@ function postalAddress() { return String(process.env.EMAIL_POSTAL_ADDRESS || '')
 /** "What a pass adds" promotes passes, so it's off while pricing isn't
  * advertised (owner, Nov 3 / Nov 18). EMAIL_PLANS=on brings it back. */
 function plansOn() { return String(process.env.EMAIL_PLANS || '').toLowerCase() === 'on'; }
+/** The opt-in daily "next step" email: off until the owner sets EMAIL_DAILY=on. */
+function dailyOn() { return String(process.env.EMAIL_DAILY || '').toLowerCase() === 'on'; }
 function dailyCap() { const n = Math.round(Number(process.env.EMAIL_DAILY_CAP)); return n > 0 ? Math.min(n, 2000) : 90; }
 
 /** What's missing before emails can really send ([] = ready). */
@@ -96,6 +101,33 @@ function pickEmail(person, now, update) {
   return null;
 }
 
+/** UTC day "YYYY-MM-DD". */
+function utcDay(now) { return new Date(now).toISOString().slice(0, 10); }
+
+/** After this many daily emails with no practice in between, they pause until the person practises again. */
+const DAILY_UNANSWERED = 3;
+
+/**
+ * Today's daily next-step email for someone who opted in, or null:
+ *   - only with a saved job (the email is about that job);
+ *   - not if they've already been active in the last 20 hours;
+ *   - at most one a day;
+ *   - paused after 3 sent with no activity since, until they practise again.
+ * person: a row from daily_step_people() (sent = 'daily:…' kinds, last 30 days).
+ */
+function pickDaily(person, now) {
+  if (!person || !person.job_id) return null;
+  const kind = 'daily:' + utcDay(now);
+  const sent = person.sent || [];
+  if (sent.includes(kind)) return null;
+  const last = person.last_active ? new Date(person.last_active).getTime() : 0;
+  if (last && now - last < 20 * 3600000) return null;
+  const since = last ? utcDay(last) : '';
+  const unanswered = sent.filter((k) => k.slice(6) > since).length;
+  if (unanswered >= DAILY_UNANSWERED) return null;
+  return kind;
+}
+
 // ---- the emails -----------------------------------------------------------
 
 function esc(s) {
@@ -142,6 +174,19 @@ function content(kind, p, update) {
         { button: { label: 'Analyze a job', path: '/analyze' } },
         { p: 'Not applying anywhere yet? The study library and practice questions are free to use anytime.' },
         { more: { label: 'Browse practice questions', path: '/practice' } },
+      ],
+    };
+  }
+  if (/^daily:/.test(kind)) {
+    const name = jobName(p);
+    return {
+      subject: 'Your next step for ' + clip(name, 70),
+      preheader: 'Today’s session is ready: a few questions, about 15 minutes.',
+      blocks: [
+        { p: hi },
+        { p: 'Your next step for ' + name + ' is today’s session: a few of its questions, starting with the topics that need the most work.' },
+        { button: { label: 'Start today’s session', path: '/session?job=' + encodeURIComponent(p.job_id) } },
+        { p: 'You asked for this email each morning. It skips days you’ve already practised, and pauses after three days without practice. Turn it off any time in Account.' },
       ],
     };
   }
@@ -337,6 +382,6 @@ function unsubPage(state, userId, token) {
 
 module.exports = {
   sendNotice, reviewNotice,
-  KINDS, pickEmail, build, sendEmail, daysSince, monthKey, missingSettings, dailyCap, plansOn,
+  KINDS, pickEmail, pickDaily, dailyOn, utcDay, DAILY_UNANSWERED, build, sendEmail, daysSince, monthKey, missingSettings, dailyCap, plansOn,
   unsubToken, checkUnsubToken, unsubUrl, unsubPage, postalAddress,
 };

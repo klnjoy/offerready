@@ -196,3 +196,43 @@ test('welcome-email and email-test need sign-in', async () => {
   assert.strictEqual((await call({ method: 'POST', query: { op: 'welcome-email' } })).status, 401);
   assert.strictEqual((await call({ method: 'POST', query: { op: 'email-test' }, body: { kind: 'welcome' } })).status, 401);
 });
+
+// ---- daily next step (opt-in, migration 0031) -----------------------------
+function daily(extra) {
+  return Object.assign({ user_id: UID, email: 'ann@example.com', first_name: 'Ann', job_id: 'j1', job_title: 'Data Engineer', job_company: 'Acme',
+    last_active: new Date(NOW - 2 * DAY).toISOString(), optin_at: new Date(NOW - 10 * DAY).toISOString(), sent: [] }, extra || {});
+}
+
+test('pickDaily: once a day, only with a job, not after practising today', () => {
+  assert.strictEqual(emails.pickDaily(daily(), NOW), 'daily:2026-11-10');
+  assert.strictEqual(emails.pickDaily(daily({ sent: ['daily:2026-11-10'] }), NOW), null);
+  assert.strictEqual(emails.pickDaily(daily({ job_id: null }), NOW), null);
+  // Active in the last 20 hours: nothing today.
+  assert.strictEqual(emails.pickDaily(daily({ last_active: new Date(NOW - 3 * 3600000).toISOString() }), NOW), null);
+  // Never practised: still gets it (it's what they opted in for).
+  assert.strictEqual(emails.pickDaily(daily({ last_active: null }), NOW), 'daily:2026-11-10');
+});
+
+test('pickDaily: pauses after 3 unanswered, resumes after practice', () => {
+  const three = ['daily:2026-11-07', 'daily:2026-11-08', 'daily:2026-11-09'];
+  assert.strictEqual(emails.pickDaily(daily({ last_active: '2026-11-06T12:00:00Z', sent: three }), NOW), null);
+  assert.strictEqual(emails.pickDaily(daily({ last_active: '2026-11-06T12:00:00Z', sent: three.slice(1) }), NOW), 'daily:2026-11-10');
+  // Practised on the 8th: only the 9th is unanswered since.
+  assert.strictEqual(emails.pickDaily(daily({ last_active: '2026-11-08T12:00:00Z', sent: three }), NOW), 'daily:2026-11-10');
+  assert.strictEqual(emails.pickDaily(daily({ last_active: null, sent: three }), NOW), null);
+});
+
+test('the daily email names the job and links to its session', () => {
+  const msg = emails.build('daily:2026-11-10', daily(), null);
+  assert.strictEqual(msg.subject, 'Your next step for Data Engineer at Acme');
+  assert.match(msg.html, /\/session\?job=j1/);
+  assert.match(msg.text, /Turn it off any time in Account/);
+});
+
+test('dailyOn only with EMAIL_DAILY=on', () => {
+  delete process.env.EMAIL_DAILY;
+  assert.strictEqual(emails.dailyOn(), false);
+  process.env.EMAIL_DAILY = 'on';
+  assert.strictEqual(emails.dailyOn(), true);
+  delete process.env.EMAIL_DAILY;
+});
