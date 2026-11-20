@@ -11,6 +11,13 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **See how your resume fits a role, before you add it.** Each role's
+  page now shows which of the skills the posting lists your resume
+  already names, and which it doesn't. The check runs on your device. The
+  page also links to free practice questions for that kind of role.
+- **Open roles on the home page.** The home page now shows how Open roles
+  works: find a role, prepare for it in one tap, and apply on the
+  company's own site. The role list shown there is a sample.
 - **Get your next step by email.** Turn on one short email each morning
   with today's session for your latest job, in Account. It skips days
   you've already practised.
