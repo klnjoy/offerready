@@ -52,6 +52,7 @@
  *   POST ?op=welcome-email (signed in): the welcome right after sign-in, same rules.
  *   GET|POST ?op=unsubscribe&u=&t= (signed link, no sign-in): the unsubscribe page / action.
  *   GET ?op=email-status, GET ?op=email-preview&kind=, POST ?op=email-test { kind } (admins only).
+ *   GET|POST ?op=daily-email { on } (signed in): the opt-in daily next-step email (migration 0031).
  *   POST ?op=review-notify (signed in): emails ADMIN_EMAILS when your review was just saved and is waiting.
  * Lives here (not its own file) to stay within the Vercel Hobby function limit.
  *
@@ -200,14 +201,57 @@ async function deliverEmail(person, kind) {
   return out.ok;
 }
 
+/** People who opted in to the daily next-step email (migration 0031). */
+async function dailyPeople(userId, includeTeam) {
+  const url = restUrl('/rpc/daily_step_people');
+  if (!url) throw new Error('Supabase not configured');
+  const r = await fetch(url, { method: 'POST', headers: svc(), body: JSON.stringify({ p_exclude: includeTeam ? [] : teamEmails(), p_user: userId || null }) });
+  if (!r.ok) throw new Error('daily_step_people ' + r.status);
+  const rows = await r.json();
+  return Array.isArray(rows) ? rows : [];
+}
+
 /** Who would get which email on a run now: [{ person, kind }]. */
 async function plannedEmails(now) {
   const people = await emailPeople(null, false);
   const out = [];
   for (const p of people) { const kind = emails.pickEmail(p, now, monthlyUpdate); if (kind) out.push({ person: p, kind }); }
-  // Onboarding emails first, the monthly update after, within the daily cap.
-  out.sort((a, b) => (/^monthly:/.test(a.kind) ? 1 : 0) - (/^monthly:/.test(b.kind) ? 1 : 0));
+  // The opt-in daily next step (EMAIL_DAILY=on): never on a day the person
+  // already gets another email. Without migration 0031 it's simply skipped.
+  if (emails.dailyOn()) {
+    const busy = new Set(out.map((x) => x.person.user_id));
+    let daily = [];
+    try { daily = await dailyPeople(null, false); } catch (err) { console.warn('[emails daily]', err && err.message); }
+    for (const p of daily) { if (busy.has(p.user_id)) continue; const kind = emails.pickDaily(p, now); if (kind) out.push({ person: p, kind }); }
+  }
+  // Onboarding emails first, then the daily next step, the monthly update last, within the daily cap.
+  const order = (k) => (/^monthly:/.test(k) ? 2 : /^daily:/.test(k) ? 1 : 0);
+  out.sort((a, b) => order(a.kind) - order(b.kind));
   return out;
+}
+
+/** Signed-in person's daily-email choice: GET → { on, available }, POST { on } → saves it. */
+async function dailyChoice(req, res, user) {
+  const where = restUrl('/email_daily_optin?user_id=eq.' + encodeURIComponent(user.id));
+  if (!where) { send(res, 503, { error: 'Storage isn’t configured.' }); return; }
+  try {
+    if (req.method === 'POST') {
+      const on = !!(req.body && req.body.on);
+      const r = on
+        ? await fetch(restUrl('/email_daily_optin?on_conflict=user_id'), { method: 'POST', headers: svc({ Prefer: 'resolution=ignore-duplicates' }), body: JSON.stringify({ user_id: user.id }) })
+        : await fetch(where, { method: 'DELETE', headers: svc() });
+      if (!r.ok) throw new Error('email_daily_optin ' + r.status);
+      send(res, 200, { ok: true, on, available: emails.dailyOn() });
+      return;
+    }
+    const r = await fetch(where + '&select=user_id', { headers: svc() });
+    if (!r.ok) throw new Error('email_daily_optin ' + r.status);
+    const rows = await r.json();
+    send(res, 200, { on: Array.isArray(rows) && rows.length > 0, available: emails.dailyOn() });
+  } catch (err) {
+    console.error('[daily email]', err && err.message);
+    send(res, 503, { error: 'Daily emails need migration 0031_daily_step_emails.sql.', setup: true });
+  }
 }
 
 function countKinds(list) {
@@ -280,6 +324,7 @@ function previewKind(k) {
   const kind = String(k || '');
   if (emails.KINDS.includes(kind)) return kind;
   if (kind === 'monthly') return 'monthly:' + monthlyUpdate.month;
+  if (kind === 'daily') return 'daily:' + emails.utcDay(Date.now());
   return null;
 }
 
@@ -639,6 +684,13 @@ module.exports = async function handler(req, res) {
     send(res, 200, { ok: true, to: u.email, kind });
     return;
   }
+  if (op === 'daily-email' && (req.method === 'GET' || req.method === 'POST')) {
+    res.setHeader('Cache-Control', 'private, no-store');
+    const u = await getUser(req);
+    if (!u) { send(res, 401, { error: 'Sign in first.' }); return; }
+    await dailyChoice(req, res, u);
+    return;
+  }
   if (op === 'push-key' && req.method === 'GET') {
     if (!push.configured()) { send(res, 503, { error: 'Daily notifications aren’t set up on this deployment yet.', setup: true }); return; }
     send(res, 200, { publicKey: process.env.VAPID_PUBLIC_KEY }); return;
@@ -746,7 +798,7 @@ module.exports = async function handler(req, res) {
       send(res, 200, Object.assign({ kind }, emails.build(kind, await sampleEmailPerson(user), monthlyUpdate)));
       return;
     }
-    const base = { missing: emails.missingSettings(), daily_cap: emails.dailyCap(), plans_paused: !emails.plansOn(), monthly: { month: monthlyUpdate.month, ready: !!monthlyUpdate.ready, subject: monthlyUpdate.subject } };
+    const base = { missing: emails.missingSettings(), daily_cap: emails.dailyCap(), plans_paused: !emails.plansOn(), daily_paused: !emails.dailyOn(), monthly: { month: monthlyUpdate.month, ready: !!monthlyUpdate.ready, subject: monthlyUpdate.subject } };
     try {
       const planned = await plannedEmails(Date.now());
       send(res, 200, Object.assign(base, { ready: true, would_send: countKinds(planned), next: planned.slice(0, 50).map((x) => ({ email: x.person.email, kind: x.kind })) }));
