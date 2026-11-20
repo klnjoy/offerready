@@ -53,6 +53,7 @@
  *   GET|POST ?op=unsubscribe&u=&t= (signed link, no sign-in): the unsubscribe page / action.
  *   GET ?op=email-status, GET ?op=email-preview&kind=, POST ?op=email-test { kind } (admins only).
  *   GET|POST ?op=daily-email { on } (signed in): the opt-in daily next-step email (migration 0031).
+ *   GET|POST ?op=role-email { on, cc } (signed in): opt-in new-role match emails (migration 0032).
  *   POST ?op=review-notify (signed in): emails ADMIN_EMAILS when your review was just saved and is waiting.
  * Lives here (not its own file) to stay within the Vercel Hobby function limit.
  *
@@ -70,6 +71,7 @@ const aiCost = require('../_lib/aiCost');
 const push = require('../_lib/push');
 const emails = require('../_lib/emails');
 const monthlyUpdate = require('../_lib/monthlyUpdate');
+const roleEmails = require('../_lib/roleEmails');
 
 /** The billing block; never throws (storage errors just hide the portal). */
 async function billingBlock(userId) {
@@ -211,6 +213,17 @@ async function dailyPeople(userId, includeTeam) {
   return Array.isArray(rows) ? rows : [];
 }
 
+/** People who opted in to new-role match emails (migration 0032). */
+async function rolePeople(userId) {
+  const url = restUrl('/rpc/role_match_people');
+  if (!url) throw new Error('Supabase not configured');
+  // Asked for in Account / Open roles, so the team gets it too.
+  const r = await fetch(url, { method: 'POST', headers: svc(), body: JSON.stringify({ p_exclude: [], p_user: userId || null }) });
+  if (!r.ok) throw new Error('role_match_people ' + r.status);
+  const rows = await r.json();
+  return Array.isArray(rows) ? rows : [];
+}
+
 /** Who would get which email on a run now: [{ person, kind }]. */
 async function plannedEmails(now) {
   const people = await emailPeople(null, false);
@@ -226,10 +239,55 @@ async function plannedEmails(now) {
     try { daily = await dailyPeople(null, true); } catch (err) { console.warn('[emails daily]', err && err.message); }
     for (const p of daily) { if (busy.has(p.user_id)) continue; const kind = emails.pickDaily(p, now); if (kind) out.push({ person: p, kind }); }
   }
-  // Onboarding emails first, then the daily next step, the monthly update last, within the daily cap.
-  const order = (k) => (/^monthly:/.test(k) ? 2 : /^daily:/.test(k) ? 1 : 0);
+  // New-role matches (EMAIL_ROLES=on): one digest a day when there's a new
+  // strongest match for the synced resume. Skipped without migration 0032.
+  if (roleEmails.rolesOn()) {
+    let people = [];
+    try { people = await rolePeople(null); } catch (err) { console.warn('[emails roles]', err && err.message); }
+    if (people.length) {
+      const feed = await roleEmails.fetchRoles();
+      for (const p of people) {
+        const pick = roleEmails.pickRoles(p, feed, now);
+        if (pick) out.push({ person: Object.assign({}, p, { roles: pick.roles, roles_total: pick.total }), kind: pick.kind });
+      }
+    }
+  }
+  // Onboarding emails first, then the daily next step and role matches, the monthly update last, within the daily cap.
+  const order = (k) => (/^monthly:/.test(k) ? 2 : /^(daily|roles):/.test(k) ? 1 : 0);
   out.sort((a, b) => order(a.kind) - order(b.kind));
   return out;
+}
+
+/** Signed-in person's new-role email choice: GET → { on, cc, available, has_resume }, POST { on, cc } → saves it. */
+async function roleChoice(req, res, user) {
+  const where = restUrl('/email_roles_optin?user_id=eq.' + encodeURIComponent(user.id));
+  if (!where) { send(res, 503, { error: 'Storage isn’t configured.' }); return; }
+  const hasResume = async () => {
+    const r = await fetch(restUrl('/user_state?user_id=eq.' + encodeURIComponent(user.id) + '&key=eq.offerready.resume.v1&select=key'), { headers: svc() });
+    const rows = r.ok ? await r.json() : [];
+    return Array.isArray(rows) && rows.length > 0;
+  };
+  try {
+    if (req.method === 'POST') {
+      const body = req.body && typeof req.body === 'object' ? req.body : {};
+      const on = !!body.on;
+      const cc = /^[A-Za-z]{2}$/.test(String(body.cc || '')) ? String(body.cc).toUpperCase() : '';
+      const r = on
+        ? await fetch(restUrl('/email_roles_optin?on_conflict=user_id'), { method: 'POST', headers: svc({ Prefer: 'resolution=merge-duplicates' }), body: JSON.stringify({ user_id: user.id, cc }) })
+        : await fetch(where, { method: 'DELETE', headers: svc() });
+      if (!r.ok) throw new Error('email_roles_optin ' + r.status);
+      send(res, 200, { ok: true, on, cc, available: roleEmails.rolesOn(), has_resume: await hasResume() });
+      return;
+    }
+    const r = await fetch(where + '&select=cc', { headers: svc() });
+    if (!r.ok) throw new Error('email_roles_optin ' + r.status);
+    const rows = await r.json();
+    const row = Array.isArray(rows) && rows[0];
+    send(res, 200, { on: !!row, cc: row ? row.cc : '', available: roleEmails.rolesOn(), has_resume: await hasResume() });
+  } catch (err) {
+    console.error('[role email]', err && err.message);
+    send(res, 503, { error: 'Role emails need migration 0032_role_match_emails.sql.', setup: true });
+  }
 }
 
 /** Signed-in person's daily-email choice: GET → { on, available }, POST { on } → saves it. */
@@ -319,7 +377,14 @@ async function sampleEmailPerson(user) {
   return Object.assign({
     user_id: user.id, email: user.email, first_name: null, confirmed_at: new Date().toISOString(),
     job_id: null, job_title: null, job_company: null, practised: false, paid: false, sent: [],
-  }, row || {}, row && row.job_id ? {} : { job_id: '00000000-0000-0000-0000-000000000000', job_title: 'Machine Learning Engineer', job_company: 'Example Co' });
+  }, row || {}, row && row.job_id ? {} : { job_id: '00000000-0000-0000-0000-000000000000', job_title: 'Machine Learning Engineer', job_company: 'Example Co' }, {
+    // For previewing the new-role email: sample roles, labelled as such.
+    roles: [
+      { title: 'Data Engineer (Sample)', company: 'Example Co', location: 'Remote, US', tags: ['Python', 'SQL', 'Airflow'] },
+      { title: 'Analytics Engineer (Sample)', company: 'Sample Labs', location: 'Austin, TX', tags: ['SQL', 'dbt'] },
+    ],
+    roles_total: 2,
+  });
 }
 
 function previewKind(k) {
@@ -327,6 +392,7 @@ function previewKind(k) {
   if (emails.KINDS.includes(kind)) return kind;
   if (kind === 'monthly') return 'monthly:' + monthlyUpdate.month;
   if (kind === 'daily') return 'daily:' + emails.utcDay(Date.now());
+  if (kind === 'roles') return 'roles:' + emails.utcDay(Date.now());
   return null;
 }
 
@@ -686,6 +752,13 @@ module.exports = async function handler(req, res) {
     send(res, 200, { ok: true, to: u.email, kind });
     return;
   }
+  if (op === 'role-email' && (req.method === 'GET' || req.method === 'POST')) {
+    res.setHeader('Cache-Control', 'private, no-store');
+    const u = await getUser(req);
+    if (!u) { send(res, 401, { error: 'Sign in first.' }); return; }
+    await roleChoice(req, res, u);
+    return;
+  }
   if (op === 'daily-email' && (req.method === 'GET' || req.method === 'POST')) {
     res.setHeader('Cache-Control', 'private, no-store');
     const u = await getUser(req);
@@ -800,7 +873,7 @@ module.exports = async function handler(req, res) {
       send(res, 200, Object.assign({ kind }, emails.build(kind, await sampleEmailPerson(user), monthlyUpdate)));
       return;
     }
-    const base = { missing: emails.missingSettings(), daily_cap: emails.dailyCap(), plans_paused: !emails.plansOn(), daily_paused: !emails.dailyOn(), monthly: { month: monthlyUpdate.month, ready: !!monthlyUpdate.ready, subject: monthlyUpdate.subject } };
+    const base = { missing: emails.missingSettings(), daily_cap: emails.dailyCap(), plans_paused: !emails.plansOn(), daily_paused: !emails.dailyOn(), roles_paused: !roleEmails.rolesOn(), monthly: { month: monthlyUpdate.month, ready: !!monthlyUpdate.ready, subject: monthlyUpdate.subject } };
     try {
       const planned = await plannedEmails(Date.now());
       send(res, 200, Object.assign(base, { ready: true, would_send: countKinds(planned), next: planned.slice(0, 50).map((x) => ({ email: x.person.email, kind: x.kind })) }));
