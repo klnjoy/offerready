@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Get your next step by email.** Turn on one short email each morning
+  with today's session for your latest job, in Account. It skips days
+  you've already practised.
 - **Your interview steers your practice.** When you log an interview and
   mark a question as "went badly", today's session starts with this job's
   questions on that topic, marked "came up in your interview".
