@@ -221,7 +221,9 @@ async function plannedEmails(now) {
   if (emails.dailyOn()) {
     const busy = new Set(out.map((x) => x.person.user_id));
     let daily = [];
-    try { daily = await dailyPeople(null, false); } catch (err) { console.warn('[emails daily]', err && err.message); }
+    // Team accounts are left out of the onboarding emails, but this one is
+    // asked for in Account, so anyone who ticked it gets it, the team too.
+    try { daily = await dailyPeople(null, true); } catch (err) { console.warn('[emails daily]', err && err.message); }
     for (const p of daily) { if (busy.has(p.user_id)) continue; const kind = emails.pickDaily(p, now); if (kind) out.push({ person: p, kind }); }
   }
   // Onboarding emails first, then the daily next step, the monthly update last, within the daily cap.
