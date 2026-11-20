@@ -11,6 +11,11 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **See which gaps repeat across your roles.** On the Readiness overview,
+  skills that show up as missing in two or more of your saved roles are
+  listed with a count, such as "Airflow shows up in 5 of your 7 roles".
+  Each one links to practice, and a skill your saved resume already
+  names is left out.
 - **See how your resume fits a role, before you add it.** Each role's
   page now shows which of the skills the posting lists your resume
   already names, and which it doesn't. The check runs on your device. The
