@@ -69,3 +69,31 @@ test('GET /api/jobs?view=readiness returns scores; storage error -> empty map', 
     assert.deepEqual(res.json().scores, {});
   } finally { s.restore(); }
 });
+
+test('gapsByJob: newest missing skills per job, strings only, capped', async () => {
+  const { gapsByJob } = require('../_lib/readiness');
+  const s = stub({ gaps: [
+    { job_id: 'a', result: { missingSkills: ['Airflow ', 'dbt', 7, ''] }, created_at: '2026-10-02' },
+    { job_id: 'a', result: { missingSkills: ['Old'] }, created_at: '2026-10-01' },
+    { job_id: 'b', result: {}, created_at: '2026-10-02' },
+  ] });
+  try {
+    const out = await gapsByJob(USER);
+    assert.deepStrictEqual(out, { a: ['Airflow', 'dbt'], b: [] });
+    assert.deepStrictEqual(await gapsByJob(''), {});
+  } finally { s.restore(); }
+});
+
+test('GET /api/jobs?view=gaps returns gaps for the signed-in user only', async () => {
+  const s = stub({ gaps: [{ job_id: 'a', result: { missingSkills: ['Airflow'] }, created_at: '2026-10-02' }] });
+  try {
+    const handler = require('../jobs/index');
+    const res = fakeRes();
+    await handler({ method: 'GET', query: { view: 'gaps' }, url: '/api/jobs?view=gaps', headers: { authorization: 'Bearer good' } }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.deepStrictEqual(res.json().gaps, { a: ['Airflow'] });
+    const bad = fakeRes();
+    await handler({ method: 'GET', query: { view: 'gaps' }, url: '/api/jobs?view=gaps', headers: {} }, bad);
+    assert.strictEqual(bad.statusCode, 401);
+  } finally { s.restore(); }
+});
