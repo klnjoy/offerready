@@ -11,6 +11,12 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **One set of steps on a job.** The Prep page no longer has its own
+  1-2-3 steps next to your job's six. Its sections are Topics and
+  Practice, and the mock interview is shown as step 4.
+- **Final now does what it says.** On a job's steps, Final opens the date
+  picker right there when you haven't added an interview date yet, and
+  opens that job's Interview day kit once you have.
 - **"Did you apply?" when you come back.** After you tap Apply on a role
   and return to OfferReady, a small bar asks whether you applied. Yes
   marks it applied and offers Prepare, adding the role to your jobs first
