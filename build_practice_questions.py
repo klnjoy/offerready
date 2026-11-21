@@ -43,6 +43,8 @@ TOPICS: dict[str, tuple[str, list[str]]] = {
     "RAG_LLMOps_Interview_QA": ("RAG & LLMOps", ["ai", "platform"]),
     "AI_Security_Interview_QA": ("AI Security", ["ai", "platform", "architect"]),
     "ML_AI_Platform_Interview_QA": ("ML / AI Platform", ["platform", "ai"]),
+    "Fine_Tuning_Model_Internals_Interview_QA": ("Fine-tuning & LLM Internals", ["ai", "platform"]),
+    "ML_Fundamentals_Interview_QA": ("ML Fundamentals", ["ai", "data", "platform"]),
     "FDE_Customer_Interview_QA": ("FDE / Customer", ["fde"]),
     "Leadership_Delivery_Interview_QA": ("Leadership & Delivery", ["lead", "architect", "em", "tpm"]),
     "Architecture_Interview_QA": ("Architecture", ["architect", "lead"]),
