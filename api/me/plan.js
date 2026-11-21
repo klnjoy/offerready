@@ -54,6 +54,10 @@
  *   GET ?op=email-status, GET ?op=email-preview&kind=, POST ?op=email-test { kind } (admins only).
  *   GET|POST ?op=daily-email { on } (signed in): the opt-in daily next-step email (migration 0031).
  *   GET|POST ?op=role-email { on, cc } (signed in): opt-in new-role match emails (migration 0032).
+ *   GET|POST ?op=lead-signup { email, family, cc } (no sign-in): optional weekly new-roles email for
+ *     visitors without an account; double opt-in (migration 0033, api/_lib/leadEmails.js, EMAIL_LEADS=on).
+ *     GET ?op=lead-signup -> { available }. Always answers { ok: true } so it can't be used to probe addresses.
+ *   GET|POST ?op=lead-confirm&i=&t= / ?op=lead-unsub&i=&t= (signed links): confirm page + button, one-click unsubscribe.
  *   POST ?op=review-notify (signed in): emails ADMIN_EMAILS when your review was just saved and is waiting.
  * Lives here (not its own file) to stay within the Vercel Hobby function limit.
  *
@@ -72,6 +76,8 @@ const push = require('../_lib/push');
 const emails = require('../_lib/emails');
 const monthlyUpdate = require('../_lib/monthlyUpdate');
 const roleEmails = require('../_lib/roleEmails');
+const leads = require('../_lib/leadEmails');
+const rateLimit = require('../_lib/rateLimit');
 
 /** The billing block; never throws (storage errors just hide the portal). */
 async function billingBlock(userId) {
@@ -314,6 +320,139 @@ async function dailyChoice(req, res, user) {
   }
 }
 
+// ---- optional email sign-up for visitors (migration 0033) -------------------
+
+const LEAD_COLS = 'id,email,family,cc,status,created_at,confirm_sent_at,confirmed_at,last_sent_at';
+function leadsReady() { return leads.leadsOn() && emails.missingSettings().length === 0; }
+async function leadByEmail(email) {
+  const r = await fetch(restUrl('/email_leads?email=eq.' + encodeURIComponent(email) + '&select=' + LEAD_COLS), { headers: svc() });
+  if (!r.ok) throw new Error('email_leads ' + r.status);
+  const rows = await r.json();
+  return Array.isArray(rows) && rows[0] ? rows[0] : null;
+}
+async function leadById(id) {
+  const r = await fetch(restUrl('/email_leads?id=eq.' + encodeURIComponent(id) + '&select=' + LEAD_COLS), { headers: svc() });
+  if (!r.ok) throw new Error('email_leads ' + r.status);
+  const rows = await r.json();
+  return Array.isArray(rows) && rows[0] ? rows[0] : null;
+}
+async function patchLead(id, fields, extraQuery) {
+  const r = await fetch(restUrl('/email_leads?id=eq.' + encodeURIComponent(id) + (extraQuery || '')), { method: 'PATCH', headers: svc({ Prefer: 'return=representation' }), body: JSON.stringify(fields) });
+  if (!r.ok) throw new Error('email_leads ' + r.status);
+  const rows = await r.json().catch(() => []);
+  return Array.isArray(rows) ? rows : [];
+}
+
+/** Emails the confirmation link, at most once a day per address. Frees the claim if the send fails. */
+async function sendLeadConfirm(lead) {
+  const now = new Date();
+  const dayAgo = new Date(now.getTime() - 86400000).toISOString();
+  const claimed = await patchLead(lead.id, { confirm_sent_at: now.toISOString() }, '&or=(confirm_sent_at.is.null,confirm_sent_at.lt.' + dayAgo + ')');
+  if (!claimed.length) return false;
+  const out = await emails.sendEmail(lead.email, leads.confirmMessage(lead), lead.id, leads.unsubUrl(lead.id));
+  if (!out.ok) { await patchLead(lead.id, { confirm_sent_at: lead.confirm_sent_at || null }).catch(() => {}); console.warn('[leads] confirm send failed', out.status); }
+  return out.ok;
+}
+
+/** POST ?op=lead-signup { email, family, cc, website }. GET -> { available }. */
+async function leadSignup(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  if (req.method === 'GET') { send(res, 200, { available: leadsReady() }); return; }
+  if (req.method !== 'POST') { send(res, 405, { error: 'Use POST.' }); return; }
+  if (!rateLimit.enforce(req, res, { scope: 'lead-signup', perIp: 6 })) return;
+  const body = req.body && typeof req.body === 'object' ? req.body : {};
+  if (body.website) { send(res, 200, { ok: true }); return; } // hidden field: only bots fill it
+  if (!leadsReady()) { send(res, 200, { ok: false, available: false }); return; }
+  const email = leads.cleanEmail(body.email);
+  if (!email) { send(res, 400, { error: 'That email doesn’t look right. Check it and try again.' }); return; }
+  const family = leads.cleanFamily(body.family);
+  const cc = leads.cleanCc(body.cc);
+  try {
+    let lead = await leadByEmail(email);
+    if (!lead) {
+      const r = await fetch(restUrl('/email_leads?on_conflict=email'), { method: 'POST', headers: svc({ Prefer: 'resolution=ignore-duplicates,return=representation' }), body: JSON.stringify({ email, family, cc }) });
+      if (!r.ok) throw new Error('email_leads ' + r.status);
+      const rows = await r.json().catch(() => []);
+      lead = Array.isArray(rows) && rows[0] ? rows[0] : await leadByEmail(email);
+    } else if (lead.status === 'confirmed') {
+      send(res, 200, { ok: true }); return; // already on the list; nothing changes without a new confirmation
+    } else {
+      // pending or unsubscribed: a new request starts over, and needs a fresh confirmation
+      const rows = await patchLead(lead.id, { family, cc, status: 'pending', unsubscribed_at: null });
+      lead = rows[0] || Object.assign(lead, { family, cc, status: 'pending' });
+    }
+    if (lead) await sendLeadConfirm(lead);
+    send(res, 200, { ok: true });
+  } catch (err) {
+    console.error('[leads signup]', err && err.message);
+    send(res, 503, { error: 'We couldn’t sign you up just now. Please try again in a minute.' });
+  }
+}
+
+/** GET|POST ?op=lead-confirm|lead-unsub&i=&t= (signed link, no sign-in). GET shows a page; POST does it. */
+async function leadLink(req, res, op) {
+  const q = req.query || {};
+  const id = String(q.i || '');
+  const t = String(q.t || '');
+  const purpose = op === 'lead-confirm' ? 'confirm' : 'unsub';
+  const html = (status, state) => {
+    res.status(status).setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.end(leads.page(state, leads[purpose === 'confirm' ? 'confirmUrl' : 'unsubUrl'](id)));
+  };
+  if (!/^[0-9a-f-]{36}$/i.test(id) || !leads.checkToken(purpose, id, t)) { html(400, 'bad'); return; }
+  try {
+    const lead = await leadById(id);
+    if (!lead) { html(purpose === 'unsub' ? 200 : 400, purpose === 'unsub' ? 'unsubbed' : 'bad'); return; }
+    if (purpose === 'confirm') {
+      if (lead.status === 'unsubscribed') { html(400, 'bad'); return; }
+      if (req.method === 'GET') { html(200, lead.status === 'confirmed' ? 'confirmed' : 'confirm'); return; }
+      if (req.method !== 'POST') { html(405, 'bad'); return; }
+      if (lead.status === 'pending') await patchLead(id, { status: 'confirmed', confirmed_at: new Date().toISOString() }, '&status=eq.pending');
+      html(200, 'confirmed'); return;
+    }
+    if (req.method === 'GET') { html(200, lead.status === 'unsubscribed' ? 'unsubbed' : 'unsub'); return; }
+    if (req.method !== 'POST') { html(405, 'bad'); return; }
+    if (lead.status !== 'unsubscribed') await patchLead(id, { status: 'unsubscribed', unsubscribed_at: new Date().toISOString() });
+    html(200, 'unsubbed');
+  } catch (err) {
+    console.error('[leads link]', err && err.message);
+    html(503, 'later');
+  }
+}
+
+/** Confirmed leads who are due a digest on a run now: [{ lead, pick }]. [] when the table isn't there yet. */
+async function plannedLeadDigests(now) {
+  if (!leads.leadsOn()) return [];
+  let rows = [];
+  try {
+    const r = await fetch(restUrl('/email_leads?status=eq.confirmed&select=' + LEAD_COLS + '&limit=5000'), { headers: svc() });
+    if (!r.ok) throw new Error('email_leads ' + r.status);
+    rows = await r.json();
+  } catch (err) { console.warn('[leads run]', err && err.message); return []; }
+  if (!Array.isArray(rows) || !rows.length) return [];
+  const feed = await roleEmails.fetchRoles();
+  const out = [];
+  for (const lead of rows) { const pick = leads.pickDigest(lead, feed, now); if (pick) out.push({ lead, pick }); }
+  return out;
+}
+
+/** Claims (last_sent_at), sends and settles one digest. True when it went out. */
+async function deliverLeadDigest(lead, pick, now) {
+  const weekAgo = new Date(now - (leads.EVERY_DAYS * 86400000 - 3600000)).toISOString();
+  const claimed = await patchLead(lead.id, { last_sent_at: new Date(now).toISOString() }, '&status=eq.confirmed&or=(last_sent_at.is.null,last_sent_at.lt.' + weekAgo + ')');
+  if (!claimed.length) return false;
+  const out = await emails.sendEmail(lead.email, leads.digestMessage(lead, pick), lead.id, leads.unsubUrl(lead.id));
+  if (!out.ok) { await patchLead(lead.id, { last_sent_at: lead.last_sent_at || null }).catch(() => {}); console.warn('[leads] digest send failed', out.status); }
+  return out.ok;
+}
+
+/** Deletes sign-ups nobody confirmed within PENDING_DAYS. */
+async function dropStaleLeads(now) {
+  const cutoff = new Date(now - leads.PENDING_DAYS * 86400000).toISOString();
+  try { await fetch(restUrl('/email_leads?status=eq.pending&created_at=lt.' + encodeURIComponent(cutoff)), { method: 'DELETE', headers: svc() }); } catch (_e) { /* best-effort */ }
+}
+
 function countKinds(list) {
   const c = {};
   for (const x of list) c[x.kind] = (c[x.kind] || 0) + 1;
@@ -328,8 +467,9 @@ async function emailRun(req, res) {
   let planned;
   try { planned = await plannedEmails(Date.now()); }
   catch (err) { console.error('[emails run]', err && err.message); send(res, 503, { error: 'Emails need migration 0027_lifecycle_emails.sql.', setup: true }); return; }
+  const leadPlan = await plannedLeadDigests(Date.now());
   const missing = emails.missingSettings();
-  if (missing.length) { send(res, 200, { ok: true, dry_run: true, missing, would_send: countKinds(planned) }); return; }
+  if (missing.length) { send(res, 200, { ok: true, dry_run: true, missing, would_send: countKinds(planned), leads_would_send: leadPlan.length }); return; }
   const batch = planned.slice(0, emails.dailyCap());
   let sent = 0, skipped = 0, failed = 0;
   for (let i = 0; i < batch.length; i += 5) {
@@ -338,7 +478,18 @@ async function emailRun(req, res) {
       catch (err) { failed++; console.error('[emails run]', err && err.message); }
     }));
   }
-  send(res, 200, { ok: true, dry_run: false, sent, skipped, failed, left_for_tomorrow: planned.length - batch.length, kinds: countKinds(batch) });
+  // Weekly digests for confirmed sign-ups without an account (EMAIL_LEADS=on), same daily cap.
+  let leadsSent = 0, leadsFailed = 0;
+  const leadBatch = leadPlan.slice(0, emails.dailyCap());
+  const now = Date.now();
+  for (let i = 0; i < leadBatch.length; i += 5) {
+    await Promise.all(leadBatch.slice(i, i + 5).map(async (x) => {
+      try { (await deliverLeadDigest(x.lead, x.pick, now)) && leadsSent++; }
+      catch (err) { leadsFailed++; console.error('[leads run]', err && err.message); }
+    }));
+  }
+  if (leads.leadsOn()) await dropStaleLeads(now);
+  send(res, 200, { ok: true, dry_run: false, sent, skipped, failed, left_for_tomorrow: planned.length - batch.length, kinds: countKinds(batch), leads_sent: leadsSent, leads_failed: leadsFailed });
 }
 
 /** GET|POST /api/me/plan?op=unsubscribe&u=&t= (no sign-in; signed link). */
@@ -716,6 +867,8 @@ module.exports = async function handler(req, res) {
   // Welcome, follow-up and monthly update emails (migration 0027).
   if (op === 'lifecycle-emails') { await emailRun(req, res); return; }
   if (op === 'unsubscribe') { await unsubscribe(req, res); return; }
+  if (op === 'lead-signup') { await leadSignup(req, res); return; }
+  if (op === 'lead-confirm' || op === 'lead-unsub') { await leadLink(req, res, op); return; }
   if (op === 'welcome-email' && req.method === 'POST') {
     // The app calls this once after sign-in so the welcome arrives right away;
     // the daily run sends it otherwise. Same rules: confirmed, not team, not

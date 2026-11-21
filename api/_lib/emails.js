@@ -12,6 +12,10 @@
  *   daily:DAY  opt-in only (Account), EMAIL_DAILY=on: "your next step" each
  *              morning, skipped on days they've practised, paused after 3
  *              unanswered (migration 0031)
+ *   leads      people WITHOUT an account who signed up on Open roles (double opt-in,
+ *              EMAIL_LEADS=on, migration 0033, leadEmails.js): one confirmation
+ *              email, then at most one digest a week of new roles for the role
+ *              type and country they picked.
  * At most one email per person per daily run, each kind at most once ever
  * (email_sends, migration 0027), never to anyone who unsubscribed, and never
  * to team accounts. Supabase's own sign-in emails are separate and unchanged.
@@ -273,7 +277,7 @@ function renderHtml(c, p) {
       out.push('<ul style="margin:0 0 20px;padding-left:20px;color:' + C.text + ';font-size:15px;line-height:1.6">' + b.list.map((s) => '<li style="margin:0 0 4px">' + esc(s) + '</li>').join('') + '</ul>');
     } else if (b.button) {
       out.push('<table role="presentation" cellpadding="0" cellspacing="0" style="margin:4px 0 24px"><tr><td style="border-radius:10px;background:' + C.ink + '">'
-        + '<a href="' + esc(link(b.button.path)) + '" style="display:inline-block;padding:12px 22px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:10px">' + esc(b.button.label) + '</a></td></tr></table>');
+        + '<a href="' + esc(b.button.url || link(b.button.path)) + '" style="display:inline-block;padding:12px 22px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:10px">' + esc(b.button.label) + '</a></td></tr></table>');
     } else if (b.more) {
       out.push('<p style="margin:0 0 16px;font-size:15px"><a href="' + esc(link(b.more.path)) + '" style="color:' + C.link + ';font-weight:600;text-decoration:none">' + esc(b.more.label) + ' →</a></p>');
     } else if (b.item) {
@@ -287,8 +291,8 @@ function renderHtml(c, p) {
     }
   }
   const addr = postalAddress();
-  const foot = 'You’re getting this because you created an OfferReady account with ' + esc(p.email) + '. '
-    + '<a href="' + esc(unsubUrl(p.user_id)) + '" style="color:' + C.text3 + ';text-decoration:underline">Unsubscribe</a> from these emails.'
+  const foot = esc(p.why || 'You’re getting this because you created an OfferReady account with ' + p.email + '.') + ' '
+    + '<a href="' + esc(p.unsub_url || unsubUrl(p.user_id)) + '" style="color:' + C.text3 + ';text-decoration:underline">Unsubscribe</a> from these emails.'
     + (addr ? '<br>' + esc(addr) : '');
   return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>' + esc(c.subject) + '</title></head>'
     + '<body style="margin:0;padding:0;background:' + C.soft + ';font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Inter,Roboto,Helvetica,Arial,sans-serif">'
@@ -308,13 +312,13 @@ function renderText(c, p) {
     if (b.p) out.push(b.p);
     else if (b.steps) out.push(b.steps.map((s, i) => (i + 1) + '. ' + s).join('\n'));
     else if (b.list) out.push(b.list.map((s) => '- ' + s).join('\n'));
-    else if (b.button) out.push(b.button.label + ': ' + link(b.button.path));
+    else if (b.button) out.push(b.button.label + ': ' + (b.button.url || link(b.button.path)));
     else if (b.more) out.push(b.more.label + ': ' + link(b.more.path));
     else if (b.item) out.push(b.item.title + '\n' + b.item.text + (b.item.path ? '\n' + (b.item.cta || 'Open') + ': ' + link(b.item.path) : ''));
     else if (b.note) out.push(b.note);
   }
   const addr = postalAddress();
-  out.push('--\nYou’re getting this because you created an OfferReady account with ' + p.email + '.\nUnsubscribe: ' + unsubUrl(p.user_id) + (addr ? '\n' + addr : ''));
+  out.push('--\n' + (p.why || 'You’re getting this because you created an OfferReady account with ' + p.email + '.') + '\nUnsubscribe: ' + (p.unsub_url || unsubUrl(p.user_id)) + (addr ? '\n' + addr : ''));
   return out.join('\n\n');
 }
 
@@ -325,9 +329,14 @@ function build(kind, person, update) {
   return { subject: c.subject, html: renderHtml(c, person), text: renderText(c, person) };
 }
 
+/** { subject, html, text } from ready-made content ({ subject, preheader, blocks }); person may carry unsub_url and why. */
+function buildFrom(c, person) {
+  return { subject: c.subject, html: renderHtml(c, person), text: renderText(c, person) };
+}
+
 /** Sends one email with Resend. Returns { ok, id } or { ok: false, status }. */
-async function sendEmail(to, msg, userId) {
-  const unsub = unsubUrl(userId);
+async function sendEmail(to, msg, userId, unsubOverride) {
+  const unsub = unsubOverride || unsubUrl(userId);
   return resendSend(to, msg, { 'List-Unsubscribe': '<' + unsub + '>', 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' });
 }
 
@@ -407,4 +416,5 @@ module.exports = {
   sendNotice, reviewNotice,
   KINDS, pickEmail, pickDaily, dailyOn, utcDay, DAILY_UNANSWERED, build, sendEmail, daysSince, monthKey, missingSettings, dailyCap, plansOn,
   unsubToken, checkUnsubToken, unsubUrl, unsubPage, postalAddress,
+  buildFrom, esc, clip, C, apiUrl, appUrl, unsubSecret,
 };
