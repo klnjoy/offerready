@@ -80,6 +80,27 @@ These questions cover retrieval-augmented generation and the operational discipl
 
     **Follow-up they'll ask:** Who can edit prompts? Owners via reviewed changes; non-engineers can propose edits in a registry with eval gates.
 
+??? question "Cosine similarity, dot product or Euclidean distance: which do you use for embeddings, and does it matter?"
+    **Short answer:** Use the metric the embedding model was trained for, usually cosine or dot product on normalized vectors; if vectors are normalized the three give the same ranking.
+
+    **In depth:** Cosine compares direction and ignores length. Dot product also rewards length, which some models use as a signal. Euclidean distance on unit-length vectors is a monotonic function of cosine, so the ranking does not change. The mistakes that hurt are mixing metrics: indexing with one and querying with another, or comparing vectors from two different models, which live in different spaces and cannot be compared at all. Check the model card, normalize at write time if the index expects it, and keep the metric in the index config under version control.
+
+    **Follow-up they'll ask:** What happens if some vectors are normalized and some are not? Rankings become unreliable, because long vectors win on dot product for reasons unrelated to relevance.
+
+??? question "Approximate nearest-neighbour search is not exact. How do you know it is finding the right chunks?"
+    **Short answer:** Measure ANN recall against exact search on a sample of real queries, then tune the index until recall is high enough at a latency you can afford.
+
+    **In depth:** Indexes such as HNSW and IVF trade accuracy for speed through parameters like the number of neighbours searched or probes. Take a few hundred real queries, run brute-force search to get the true top-k, and compare it with the index result: the overlap is the ANN recall. Raise the search effort until recall stops improving or latency becomes too high. Do this again when the corpus grows a lot or the index type changes. Poor answers can come from retrieval quality (the embedding or chunking) or from index recall, and this test separates the two.
+
+    **Follow-up they'll ask:** Why not always use exact search? It is fine for small corpora, but cost and latency grow linearly with the number of vectors.
+
+??? question "Embedding storage and search cost are growing. What can you do without retraining the model?"
+    **Short answer:** Reduce vector size with lower precision or truncated dimensions, filter before searching, and only embed what users will search; then re-check retrieval quality.
+
+    **In depth:** Storing vectors at 8-bit instead of 32-bit float cuts memory by about four times, with a small quality loss on most models. Some models are trained so that the first dimensions carry most of the meaning, which lets you keep a shorter prefix. Metadata filters and per-tenant partitions shrink what each query searches. Drop duplicate and boilerplate chunks before embedding. Each change should be tested on a fixed set of queries with recall and answer quality, not accepted because the bill went down.
+
+    **Follow-up they'll ask:** What would you try first? Deduplication and filtering, because they cost nothing in quality.
+
 ## Scenarios
 
 ??? question "Users say the RAG assistant gives confident wrong answers — how do you diagnose it?"

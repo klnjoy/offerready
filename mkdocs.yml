@@ -276,6 +276,8 @@ nav:
           - "FDE Customer Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/FDE_Customer_Interview_QA.md
           - "Leadership & Delivery Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/Leadership_Delivery_Interview_QA.md
           - "ML / AI Platform Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/ML_AI_Platform_Interview_QA.md
+          - "Fine-tuning & How LLMs Work — Interview Q&A": Personal-SourceCode/Fine_Tuning_Model_Internals_Interview_QA.md
+          - "ML Fundamentals — Interview Q&A": Personal-SourceCode/ML_Fundamentals_Interview_QA.md
           - "RAG & LLMOps Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/RAG_LLMOps_Interview_QA.md
           - "System Design Interview Q&A — Senior & Staff, AI and Data": Personal-SourceCode/System_Design_Interview_QA.md
   - Study Guide:
