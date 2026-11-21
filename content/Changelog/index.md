@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Today's question, right on the front page.** The Question of the day
+  card now shows the question itself, the same one that opens when you
+  tap Answer it, instead of only a button.
 - **One place for trade-off drills.** The Prep page no longer repeats the
   Trade-off drill card; the drills are in the Scenarios tab of the
   practice bar.
