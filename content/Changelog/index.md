@@ -11,6 +11,10 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **A heads-up on older roles.** On Open roles and on a company's role
+  page, a posting that is three or more months old now says how old it is
+  and to check it's still open before you apply. Nothing is hidden or
+  reordered.
 - **One set of steps on a job.** The Prep page no longer has its own
   1-2-3 steps next to your job's six. Its sections are Topics and
   Practice, and the mock interview is shown as step 4.
