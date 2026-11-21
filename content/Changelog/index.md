@@ -11,6 +11,17 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **Emails about new roles that match your resume.** Turn it on from Open
+  roles or Account, and we write when a new role names every skill your
+  resume does. At most one a day, off by default, and you can turn it off
+  any time. It needs resume sync, so we can read your resume.
+- **Best match puts the newest first.** Roles that fully match your resume
+  now come newest first, so an older posting no longer sits above a new one.
+- **Open roles never goes blank.** If the list can't load you get a clear
+  message and a way to add a job yourself, and a bad refresh no longer
+  replaces the list with an empty one.
+- **A calmer Progress page.** The score ring is blue, there is one gauge,
+  and your three score parts show as bars.
 - **19 new practice questions on AI basics.** Two new topics, Fine-tuning &
   LLM Internals and ML Fundamentals, plus three new embeddings questions
   under RAG & LLMOps. The free bank is now 457 questions in 28 topics.
