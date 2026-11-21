@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **One place for trade-off drills.** The Prep page no longer repeats the
+  Trade-off drill card; the drills are in the Scenarios tab of the
+  practice bar.
 - **A heads-up on older roles.** On Open roles and on a company's role
   page, a posting that is three or more months old now says how old it is
   and to check it's still open before you apply. Nothing is hidden or
