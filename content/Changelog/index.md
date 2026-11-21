@@ -11,6 +11,9 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **19 new practice questions on AI basics.** Two new topics, Fine-tuning &
+  LLM Internals and ML Fundamentals, plus three new embeddings questions
+  under RAG & LLMOps. The free bank is now 457 questions in 28 topics.
 - **Today's question, right on the front page.** The Question of the day
   card now shows the question itself, the same one that opens when you
   tap Answer it, instead of only a button.
