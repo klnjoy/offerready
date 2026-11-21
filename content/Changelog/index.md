@@ -11,6 +11,11 @@ New features and improvements, newest first.
 ## November 2026
 
 ### Week of 16 November
+- **"Did you apply?" when you come back.** After you tap Apply on a role
+  and return to OfferReady, a small bar asks whether you applied. Yes
+  marks it applied and offers Prepare, adding the role to your jobs first
+  if needed. Not yet closes it. Nothing is applied for you, and the tap
+  stays in that browser tab only.
 - **Tailor your resume before you practise, when it matters.** If your
   fit check shows something the job asks for that your resume doesn't
   state yet (it shows as "not verified"), or a low match, step 2 (Resume)
