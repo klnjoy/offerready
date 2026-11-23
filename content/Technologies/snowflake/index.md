@@ -175,6 +175,28 @@ without moving data out of the governance boundary** — RBAC, masking policies,
 and tags still apply, which is exactly the security/compliance story enterprises
 need.
 
+### CoCo vs CoWork — two different agents, one governed foundation
+
+Snowflake split its AI agents by user: **CoCo builds, CoWork analyzes**.
+CoCo is the new name for Cortex Code — same product, renamed at Summit 2026.
+Both run on governed Snowflake data, under the same RBAC and policies.
+
+| | **Snowflake CoCo** | **Snowflake CoWork** |
+|---|---|---|
+| **What it is** | AI coding agent for development and operational work in Snowflake | Personal work agent — a natural-language experience for asking complex questions, analyzing governed enterprise data, and completing business-oriented work |
+| **Best for** | Data engineers, analysts, developers, and admins building or operating on Snowflake | Business users and knowledge workers who need insights, analysis, reports, and action without building the underlying code |
+| **Where it works** | Snowsight / Workspaces, Desktop, CLI | Snowflake CoWork UI, Cortex Agents API |
+| **In practice** | Authors SQL, explores data assets, builds pipelines and apps, works with project files, handles admin and operational tasks, uses diff / code-aware workflows | Asks business questions, analyzes structured and unstructured data, generates charts and reports, explores dashboards, uses role-aware agents and profiles |
+| **Automation & context** | Plans and executes multi-step work, uses Snowflake context and tools, supports repeatable automations | Supports recurring analysis through automations, role-aware routing through profiles, and context that personalizes work |
+| **Typical use cases** | Build or refactor SQL; create data pipelines; develop Streamlit / apps; data migration and modernization; troubleshoot Snowflake workloads | Sales performance analysis; finance and operations reporting; document-aware research; recurring management reports; decision support |
+| **Common misconception** | Not just a SQL assistant — built for builder workflows and multi-step execution | Not a coding IDE — optimized for governed business analysis, recommendations, and knowledge-worker workflows |
+
+**Shared foundations:** governed Snowflake data, RBAC & policies, Cortex Agents
+ecosystem, semantic context, Skills / MCP connectors, auditability.
+
+**In short: CoCo helps teams build and operate; CoWork helps teams analyze,
+decide, and act.**
+
 ## Performance & cost tuning
 
 - **Right-size warehouses**: scale **up** for heavy single queries, **out**
