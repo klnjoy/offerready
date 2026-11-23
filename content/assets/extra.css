@@ -1292,6 +1292,23 @@ a.ig-feature.ig-link .ig-d {
 .or-header-cta:hover .or-header-cta__icon { transform: translateX(2px); }
 .or-header-cta__short { display: none; }
 
+/* ---- "Ask the Coach about this page" (main.html, end of article) ---- */
+.or-coach-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.15rem 0.6rem;
+  margin: 2rem 0 0.4rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--or-border);
+  border-left: 3px solid var(--or-signal);
+  border-radius: 0.45rem;
+  background: var(--or-surface);
+  font-size: 0.8rem;
+}
+.or-coach-note__link { font-weight: 600; white-space: nowrap; }
+.or-coach-note__text { color: var(--or-text-secondary); }
+
 /* ---- Section tabs (desktop) ---- */
 .md-tabs {
   background: var(--or-ink);

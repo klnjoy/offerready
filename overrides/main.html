@@ -29,3 +29,24 @@
   })();
 </script>
 {% endblock %}
+
+{% block content %}
+{{ super() }}
+{#- OfferReady: "Ask the Coach about this page" (F4). Every study-notes page
+    links to the app's AI Interview Coach with this page as context. The
+    Coach already prefills and auto-asks from ?q= / ?ask=1 (same pattern as
+    Learn.tsx coach() in klnjoy/offerready-app), so no app change is needed:
+    the question names the page title, and the Coach answers it from the
+    reader's resume, stories and job. Skipped on the home page, which has no
+    page topic. This is not the floating OfferReady Help assistant
+    (#orh-root, a different assistant): it opens the Coach. target=_top
+    breaks out of the app's /read iframe onto the real Coach page;
+    standalone it behaves like a normal link. -#}
+{% if page and not page.is_homepage %}
+{% set coach_title = page.meta.title if page.meta and page.meta.title else page.title %}
+<aside class="or-coach-note">
+  <a class="or-coach-note__link" target="_top" href="https://getofferready.app/coach?ask=1&amp;q={{ ('Explain ' ~ coach_title ~ ' so I can answer interview questions about it.') | urlencode }}">Ask the Coach about this page</a>
+  <span class="or-coach-note__text">The AI Interview Coach answers from your resume, stories and job — about “{{ coach_title | e }}”.</span>
+</aside>
+{% endif %}
+{% endblock %}

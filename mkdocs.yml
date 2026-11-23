@@ -83,7 +83,7 @@ plugins:
 extra_css:
   # ?v=N cache-buster — bump when extra.css changes so browsers don't serve a
   # stale cached stylesheet after a deploy.
-  - assets/extra.css?v=53
+  - assets/extra.css?v=54
   # Help assistant styles (after extra.css so they win over the old #kb rules).
   - assets/chatbot.css?v=5
 
@@ -274,9 +274,9 @@ nav:
           - "Architecture Interview Q&A — Staff & Principal Scenario-Based": Personal-SourceCode/Architecture_Interview_QA.md
           - "FastAPI Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/FastAPI_Interview_QA.md
           - "FDE Customer Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/FDE_Customer_Interview_QA.md
+          - "Fine-tuning & How LLMs Work — Interview Q&A": Personal-SourceCode/Fine_Tuning_Model_Internals_Interview_QA.md
           - "Leadership & Delivery Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/Leadership_Delivery_Interview_QA.md
           - "ML / AI Platform Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/ML_AI_Platform_Interview_QA.md
-          - "Fine-tuning & How LLMs Work — Interview Q&A": Personal-SourceCode/Fine_Tuning_Model_Internals_Interview_QA.md
           - "ML Fundamentals — Interview Q&A": Personal-SourceCode/ML_Fundamentals_Interview_QA.md
           - "RAG & LLMOps Interview Q&A — Senior & Scenario-Based": Personal-SourceCode/RAG_LLMOps_Interview_QA.md
           - "System Design Interview Q&A — Senior & Staff, AI and Data": Personal-SourceCode/System_Design_Interview_QA.md
