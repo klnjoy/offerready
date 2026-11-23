@@ -927,3 +927,19 @@ What we'd gain by adding it:
 - Auto-detect when a bot starts giving lower-quality answers (drift)
 
 It's on the roadmap. The honest gap is: we monitor the application, but not yet the individual LLM reasoning steps.
+
+??? question "1M context window in an LLM — what does it really give you, and what are the catches?"
+
+    **Short answer:** A 1-million-token window lets you fit roughly a large codebase or hundreds of pages in one prompt — but fitting is not the same as using well: recall, cost and freshness are still real constraints.
+
+    **In depth:** What it gives you is simpler architectures for one-off, whole-document tasks — analyse this contract set, reason across this codebase, compare these reports — with no chunking pipeline needed. Attention and recall degrade: models are typically weakest on information in the middle of very long contexts ("lost in the middle"), and needle-in-a-haystack tests show recall drops as length and distractors grow, even when the headline window is huge. Cost and latency scale with input: every call pays for and processes every token you send, and the key-value (KV) cache for that context is very large, so a 1M-token prompt on every turn is slow and expensive. It does not stay fresh: a window holds what you sent this call — it is not a database, so new or changed documents still need to be fetched, selected and sent. RAG still wins for large, changing corpora, many users, permission-filtered content, and any workload where you send far more than the answer actually needs, because retrieval sends the relevant 5 pages, not the whole 5,000. Example: use the long window to review one acquisition's full document pack once; use RAG for a support bot answering from a help centre that changes daily and serves thousands of users.
+
+    **Follow-up they'll ask:** If the window is that big, why keep RAG at all? Freshness, permissions, cost per call, and recall — the window is a bigger bucket, not a database.
+
+??? question "Context in LLMs — how does context work and what breaks when it grows?"
+
+    **Short answer:** Context is everything in the prompt for this call — system instructions, history, retrieved documents, tool results — the model's only working memory, since it remembers nothing between calls except what you send again.
+
+    **In depth:** What goes in, in order: system prompt, then conversation history, retrieved content and tool results, then the current request — and order matters, because models weight the start and end more strongly than the middle. How it is used: the model attends over all of it to predict each next token, storing key-value (KV) state as it goes, so more context means more computation per token and cost and latency rise with length. What breaks as it grows: relevant facts get buried ("lost in the middle"), contradictory or stale history misleads the model, costs climb, time to first token climbs, and eventually you hit the window limit and must truncate — often silently dropping something important. How you manage it: select, do not dump — retrieve only relevant chunks; summarise long history into a compact state; put the most important instructions first and the current task last; structure with clear headings so the model can find sections. Example: a long support chat starts giving answers that contradict the customer's current plan because the history still contains the old plan from 40 messages ago — summarising history into "current plan: X, open issue: Y" fixes it and makes every call cheaper.
+
+    **Follow-up they'll ask:** What is the first thing you cut when context gets too long? The lowest-value history and the least-relevant retrieved chunks — never the current task or the core instructions.

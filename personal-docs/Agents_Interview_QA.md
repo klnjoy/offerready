@@ -450,3 +450,27 @@ Can you explain each without notes?
     [A2A Communication](../GenAI-Topics/a2a/index.md) ·
     Related: [AI Engineer Interview Q&A](AI_Engineer_Interview_QA.md) ·
     [MCP Interview Q&A](MCP_Interview_QA.md)
+
+??? question "LLMs vs agents — when do you use each?"
+
+    **Short answer:** A plain LLM call answers in one step; an agent loops — plans, calls tools, checks results and decides what to do next. Use the simplest architecture that fits, because the loop costs latency, money and predictability.
+
+    **In depth:** Use a single LLM call when the task is one transformation: classify, summarise, extract, draft, translate — deterministic, fast, easy to evaluate. Use a fixed workflow (LLM calls in a set sequence) when the steps are known in advance, such as retrieve, then draft, then check — you keep control and the model does not choose the path. Use an agent when the number and order of steps cannot be known upfront, the task needs tools or external actions, and the result of one step decides the next — research, multi-system tasks, troubleshooting. Avoid an agent when errors compound, actions are irreversible, or you cannot evaluate the outcome — more autonomy on an unreliable task just fails more creatively. Example: "Summarise this ticket" is one LLM call; "Resolve this billing dispute across the CRM, billing system and email" is an agent, with human approval before any refund is issued.
+
+    **Follow-up they'll ask:** What does the agent loop actually cost you? Extra model calls, context re-sent every step, and nondeterministic behaviour that is harder to test.
+
+??? question "Why is the agent so slow?"
+
+    **Short answer:** An agent is many LLM calls in a loop, so a chatbot's latency problems multiply — count the calls, then the cost per call, then the wasted loops.
+
+    **In depth:** Too many steps: each plan, tool choice, observation and reflection is another model call, and ten steps at 2 seconds each is 20 seconds before any tool time — cap steps, combine decisions, and use a fixed workflow where the path is known. Context re-sent every step: the full history, tool results and reasoning are reprocessed on each call, so later steps are slower than early ones — summarise history, prune tool outputs, and prompt-cache the stable prefix. Sequential tools: independent tool calls run one after another — call independent tools in parallel, cache tool results, and add timeouts so one slow API does not stall the run. Retries and loops: the agent re-tries a failing tool or loops without progress detection — set retry limits, loop detection, and a clear stopping condition. Wrong model for the job: a frontier model for every routing decision is slow and expensive — use a small, fast model for planning and routing steps and the strong model only for the hard reasoning. Example: a research agent taking 90 seconds was making 14 model calls and re-sending 30,000 tokens each time — summarising after each source and parallelising source fetches cut it to under 30 seconds with the same model.
+
+    **Follow-up they'll ask:** How do you know the agent is looping rather than working? Track steps taken, repeated tool calls with the same arguments, and time per step — and stop on a limit, not on hope.
+
+??? question "Choose RAG or agents — how do you decide?"
+
+    **Short answer:** RAG answers "what do the documents say?" and an agent answers "work through these steps and do something" — decide by knowledge vs action, fixed vs unknown steps, and read-only vs side effects.
+
+    **In depth:** Choose RAG when the user needs accurate answers grounded in a specific, changing knowledge base, with citations — policy Q&A, support, document search; read-only, predictable, easier to evaluate. Choose an agent when the task needs multiple steps, tools or systems, decisions along the way, or real actions — booking, updating records, running an investigation. Choose a workflow in the middle when steps are known but each step needs language understanding — the most common production answer, and the one interviewers want to hear you consider. Use both when the agent needs knowledge: retrieval becomes one of the agent's tools, so "agent with RAG" is normal, not a contradiction. Decide on risk: side effects, irreversibility and evaluation difficulty all rise as you move from RAG to workflow to agent, so earn autonomy with evals and approvals. Example: "Answer questions from our manuals" is RAG; "Diagnose why this order is late and rebook the delivery" is an agent, using RAG over the delivery policy as one step, with approval before rebooking.
+
+    **Follow-up they'll ask:** What if the task needs both knowledge and action? Retrieval as a tool inside the agent, with the agent's steps and approvals around it.
