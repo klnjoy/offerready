@@ -8,6 +8,120 @@ icon: material/api
 
 These questions target senior engineers who serve APIs and models with FastAPI in production. Expect interviewers to probe how the event loop really behaves, how you keep latency predictable under load, and how you debug the failures that only show up at scale.
 
+## Beginner basics
+
+The questions below are for someone meeting FastAPI for the first time. The senior and scenario questions live in the sections after this one.
+
+??? question "What is FastAPI, and why is it fast?"
+    **Short answer:** FastAPI is a modern Python API framework built on Starlette and Pydantic; it is fast to run because of async support and Pydantic v2's Rust core, and fast to write because type hints generate validation and docs automatically.
+
+    **In depth:**
+    - 1. What it is. A Python framework for APIs, built on Starlette (ASGI) and Pydantic (data validation). You declare endpoints with decorators and type hints; FastAPI handles parsing, validation and JSON.
+    - 2. Why it runs fast. Async support means one worker can juggle many requests waiting on I/O instead of blocking; Pydantic v2 validates in Rust, so the validation step that used to cost real time is now cheap.
+    - 3. Why it is fast to write. Type hints do triple duty: they validate input, shape output, and generate the OpenAPI docs. No separate schema files, no hand-written validators for the common cases.
+    - 4. What it is not. Not a full-stack framework with templates and an ORM built in, and not magic: a slow database query or a blocking call inside an async endpoint is still slow — the framework cannot fix your code.
+
+    **Follow-up they'll ask:** When would you not choose FastAPI? For a mostly static site or a template-heavy app, a full-stack framework fits better; for CPU-heavy work, the framework choice matters less than moving the work out of the request.
+
+??? question "What is a path operation, and how do you write your first endpoint?"
+    **Short answer:** A path operation is one path plus one HTTP method, written as a decorator like @app.get("/items") on a function; FastAPI calls the function for matching requests and turns its return value into JSON.
+
+    **In depth:**
+    - 1. Path + method. The path is the URL ("/items"); the method is the verb (GET reads, POST creates, PUT/PATCH updates, DELETE removes). Together they name one operation.
+    - 2. Decorator. @app.get("/items") registers the function that follows as the handler for that operation. @app.post, @app.put and @app.delete work the same way.
+    - 3. Function. An ordinary Python function; its parameters become path parameters, query parameters or the request body. Keep handlers thin — call into service functions for real logic.
+    - 4. Return value. Return a dict, a list or a Pydantic model and FastAPI serializes it to JSON with a 200 status by default; return a Response or set status_code when you need something else.
+
+    **Follow-up they'll ask:** How do you return a 201 for a creation? Set status_code=201 on the decorator or return a Response with that code.
+
+??? question "How do path parameters and query parameters work?"
+    **Short answer:** Path parameters live in the URL (/items/{item_id}) and query parameters after the ? (/items?skip=10); both are declared as typed function arguments, and FastAPI validates them from the type hints.
+
+    **In depth:**
+    - 1. Path parameters. Put {item_id} in the path and item_id: int in the signature. FastAPI pulls the value from the URL and converts it; a value that does not convert fails validation with a 422.
+    - 2. Query parameters. Any function argument not in the path becomes a query parameter. /items?skip=10 sets skip to 10. Use Query() when you want limits, descriptions or aliases.
+    - 3. Types do the validation. int, float, bool, str and enums all work; a bool query param accepts true/false (and 1/0). Wrong types are rejected before your code runs.
+    - 4. Defaults make things optional. skip: int = 0 and q: str | None = None mean the caller may omit them; a parameter with no default is required and missing it is a 422.
+
+    **Follow-up they'll ask:** How do you validate that limit is between 1 and 100? Use Query(ge=1, le=100) so invalid values are rejected with a 422.
+
+??? question "How do request and response models work with Pydantic?"
+    **Short answer:** Request models are Pydantic classes that describe the JSON body; FastAPI parses and validates incoming data against them, and response_model filters what leaves the service so internal fields never leak.
+
+    **In depth:**
+    - 1. Model. A class inheriting from BaseModel with typed fields: name: str, price: float, in_stock: bool = True. Field() adds descriptions, defaults and constraints.
+    - 2. Validate. Declare the model as a parameter and FastAPI parses the JSON body into it before your function runs; missing fields, wrong types and failed constraints are rejected.
+    - 3. 422. Invalid input returns a 422 Unprocessable Entity with a structured error listing each bad field — your handler never sees bad data.
+    - 4. Filter the response. response_model=ItemOut shapes what leaves the service, hiding internal fields. Keep separate models for create, update and read rather than one model with many optional fields.
+
+    **Follow-up they'll ask:** How do you accept a list of items in one request? Type the parameter as list[Item] and FastAPI validates every element.
+
+??? question "What does async mean in FastAPI, and when does a beginner actually need it?"
+    **Short answer:** Async lets the server handle other requests while one waits on I/O; beginners should start with plain def (FastAPI runs those in a threadpool) and use async def only when the code inside awaits something.
+
+    **In depth:**
+    - 1. What async buys. While one request waits on I/O, the event loop serves others — one worker handles many concurrent requests instead of one at a time.
+    - 2. Start with def. A plain def endpoint is correct, simple and safe; FastAPI runs it in a threadpool so it cannot stall the loop. Most CRUD endpoints start this way.
+    - 3. The one rule. Never put blocking work (requests.get, time.sleep, a sync database call) inside async def — it freezes the single event loop and every request on that worker waits.
+    - 4. When to switch. Make an endpoint async when everything inside it awaits non-blocking I/O: an async HTTP client, an async database driver, an async model client. If nothing awaits, async buys nothing.
+
+    **Follow-up they'll ask:** What happens if every endpoint is async def but nothing awaits? You pay the async overhead for no benefit — and a blocking call anywhere hurts more, because it now stalls the loop.
+
+??? question "What is Depends for, in plain terms?"
+    **Short answer:** Depends runs a shared function before your route and injects its result — so a database session or the logged-in user is written once and reused by every route that needs it.
+
+    **In depth:**
+    - 1. Problem. Every route needs the same setup: open a DB session, check a token, read a setting. Copying that code into each handler is how bugs spread.
+    - 2. Declare. Write a small function for the shared piece and declare it with Depends in the route signature. FastAPI runs it first and injects the result.
+    - 3. Reuse. The same dependency can be used by many routes, and dependencies can depend on each other — get_current_user can depend on a token parser.
+    - 4. Yield for cleanup. A dependency written with yield can set something up, hand it over, then clean up after the response — closing the DB session, for example.
+
+    **Follow-up they'll ask:** How do you test a route that depends on a real database? Override the dependency in the test with app.dependency_overrides so the route gets a fake instead.
+
+??? question "How does FastAPI give you API docs for free?"
+    **Short answer:** FastAPI builds an OpenAPI schema from your routes and type hints and serves interactive docs at /docs (Swagger UI) and /redoc — no extra code, and every new route appears automatically.
+
+    **In depth:**
+    - 1. Types in. Routes, parameters and Pydantic models already carry all the information — names, types, required or optional, defaults.
+    - 2. Schema out. FastAPI turns that into an OpenAPI (formerly Swagger) JSON document, available at /openapi.json, which other tools can consume.
+    - 3. Two UIs. /docs is Swagger UI, interactive; /redoc is ReDoc, a cleaner read-only reference. Both are served by the app itself.
+    - 4. Try it out. In Swagger UI, “Try it out” sends a real request to the running app, so the docs double as a smoke test for every endpoint.
+
+    **Follow-up they'll ask:** How do you hide an endpoint from the docs? Set include_in_schema=False on the decorator.
+
+??? question "How do you test a FastAPI app with TestClient?"
+    **Short answer:** TestClient calls your app in-process with no server running: client = TestClient(app), then client.get or client.post and assert on the status code and the JSON body.
+
+    **In depth:**
+    - 1. Client. from fastapi.testclient import TestClient, then client = TestClient(app). No server, no port, no network.
+    - 2. Call. client.get("/items") returns a response object, just like the requests library. Query parameters go in params={...}.
+    - 3. Assert. Check response.status_code first, then response.json() for the body. Assert on the shape you promised, not on incidental fields.
+    - 4. POST the same way. client.post("/items", json={...}) sends a JSON body; assert 201 and that the returned item contains what you sent, including the server-assigned id.
+
+    **Follow-up they'll ask:** How do you test an endpoint that needs a logged-in user? Override its auth dependency with app.dependency_overrides so the test runs as a fake user.
+
+??? question "How do you run a FastAPI app with uvicorn?"
+    **Short answer:** Run it with uvicorn main:app --reload — main is the file, app is the FastAPI instance, --reload restarts on code changes and is for development only.
+
+    **In depth:**
+    - 1. Command. uvicorn main:app --reload. Uvicorn is installed with FastAPI's standard extras (fastapi[standard]).
+    - 2. What main:app means. main is the module (main.py), app is the FastAPI() instance in it. A different filename or variable name changes the command to match.
+    - 3. Dev flags. --reload restarts on code changes; never use it in production. The default binds to 127.0.0.1:8000, reachable only from your own machine.
+    - 4. Production. Drop --reload, bind --host 0.0.0.0 --port 8000, and run workers with Gunicorn (gunicorn -k uvicorn.workers.UvicornWorker) or one process per container.
+
+    **Follow-up they'll ask:** How do you run it in production? Drop --reload and use Gunicorn with Uvicorn workers, or one uvicorn process per container behind a load balancer.
+
+??? question "Walk me through a tiny items API, end to end."
+    **Short answer:** A minimal items API is one Pydantic model, an in-memory dict as the store, POST /items returning 201, GET /items and GET /items/{item_id} returning 404 for a missing id — all testable with TestClient and no server.
+
+    **In depth:**
+    - 1. Model. class Item(BaseModel): name: str, price: float, in_stock: bool = True. One model describes both the request body and the response.
+    - 2. Store. A plain dict, items = {}, with a counter for ids. It is not a real database — it resets when the server restarts — and saying so is part of the answer.
+    - 3. Create. @app.post("/items", status_code=201): take item: Item, assign the next id, store it, return the item with its id.
+    - 4. Read. @app.get("/items") returns the list; @app.get("/items/{item_id}") looks the id up and raises HTTPException(status_code=404) when it is missing.
+    - 5. Test. With TestClient, post an item, assert 201 and the returned id, then get it back and assert the name — and assert a missing id gives 404.
+
+    **Follow-up they'll ask:** What would you change first to make this production-ready? Replace the dict with a real database and move the storage logic out of the route handlers.
 ## Core concepts
 
 ??? question "When should a FastAPI endpoint be 'async def' versus plain 'def', and what goes wrong if you choose badly?"
