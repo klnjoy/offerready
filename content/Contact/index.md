@@ -10,7 +10,7 @@ Questions, feedback, bug reports or partnership ideas are all welcome.
   email for anything personal: billing questions, refunds, deleting your
   account, or a data request.
 - **Bugs, content errors and ideas:** open an issue in the project's GitHub
-  repository (public).
+  repository (public — anyone on the internet can read it).
 
 <div class="grid cards" markdown>
 
@@ -19,6 +19,7 @@ Questions, feedback, bug reports or partnership ideas are all welcome.
     ---
 
     A broken link, a command that no longer runs, or an answer that looks wrong.
+    GitHub issues are public, so anyone can read them — keep personal details out.
 
     [:octicons-arrow-right-24: Open an issue](https://github.com/klnjoy/offerready/issues)
 
