@@ -85,7 +85,8 @@ function fakeWorld() {
   const realFetch = global.fetch;
   global.fetch = async (url, opts) => {
     url = String(url); opts = opts || {};
-    const json = (b, status) => ({ ok: (status || 200) < 400, status: status || 200, json: async () => b });
+    const json = (b, status) => ({ ok: (status || 200) < 400, status: status || 200, json: async () => JSON.parse(JSON.stringify(b)) });
+    if (url.startsWith('https://api.resend.com') && global.__mailDown) return { ok: false, status: 403, json: async () => ({}) };
     if (url.startsWith('https://api.resend.com')) { const b = JSON.parse(opts.body); sent.push({ to: b.to[0], subject: b.subject, text: b.text, headers: b.headers }); return json({ id: 'r' + sent.length }); }
     const u = new URL(url); const m = opts.method || 'GET';
     if (u.pathname.endsWith('/email_leads')) {
@@ -143,6 +144,21 @@ test('sign-up → confirmation email only, nothing else until confirmed; answers
     assert.deepStrictEqual((await signup({ email: 'ann@example.com', family: 'data', cc: 'US' })).body, { ok: true });
     assert.strictEqual(w.sent.length, 1);
   } finally { w.restore(); unenv(); }
+});
+
+test('if the mail service refuses the confirmation, the person is told and can retry at once', async () => {
+  env(); rateLimit._internal._reset(); const w = fakeWorld();
+  try {
+    global.__mailDown = true;
+    const r = await signup({ email: 'ann@example.com', family: 'data', cc: 'US' });
+    assert.strictEqual(r.status, 502);
+    assert.match(r.body.error, /couldn’t send the confirmation email/);
+    assert.strictEqual(w.sent.length, 0);
+    assert.strictEqual(w.rows[0].confirm_sent_at, null, 'the once-a-day claim is released');
+    global.__mailDown = false;
+    assert.deepStrictEqual((await signup({ email: 'ann@example.com', family: 'data', cc: 'US' })).body, { ok: true });
+    assert.strictEqual(w.sent.length, 1);
+  } finally { global.__mailDown = false; w.restore(); unenv(); }
 });
 
 test('confirm needs the signed link and a button press (a GET alone confirms nothing)', async () => {
