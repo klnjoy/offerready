@@ -343,15 +343,16 @@ async function patchLead(id, fields, extraQuery) {
   return Array.isArray(rows) ? rows : [];
 }
 
-/** Emails the confirmation link, at most once a day per address. Frees the claim if the send fails. */
+/** Emails the confirmation link, at most once a day per address. Frees the claim if the send fails.
+ * Returns 'sent', 'skipped' (already sent within a day) or 'failed' (the mail service refused it). */
 async function sendLeadConfirm(lead) {
   const now = new Date();
   const dayAgo = new Date(now.getTime() - 86400000).toISOString();
   const claimed = await patchLead(lead.id, { confirm_sent_at: now.toISOString() }, '&or=(confirm_sent_at.is.null,confirm_sent_at.lt.' + dayAgo + ')');
-  if (!claimed.length) return false;
+  if (!claimed.length) return 'skipped';
   const out = await emails.sendEmail(lead.email, leads.confirmMessage(lead), lead.id, leads.unsubUrl(lead.id));
-  if (!out.ok) { await patchLead(lead.id, { confirm_sent_at: lead.confirm_sent_at || null }).catch(() => {}); console.warn('[leads] confirm send failed', out.status); }
-  return out.ok;
+  if (!out.ok) { await patchLead(lead.id, { confirm_sent_at: lead.confirm_sent_at || null }).catch(() => {}); console.error('[leads] confirmation email NOT sent, Resend status', out.status, '(0 = no answer; 401/403 = key or sending domain not verified; 422 = From address)'); return 'failed'; }
+  return 'sent';
 }
 
 /** POST ?op=lead-signup { email, family, cc, website }. GET -> { available }. */
@@ -381,7 +382,11 @@ async function leadSignup(req, res) {
       const rows = await patchLead(lead.id, { family, cc, status: 'pending', unsubscribed_at: null });
       lead = rows[0] || Object.assign(lead, { family, cc, status: 'pending' });
     }
-    if (lead) await sendLeadConfirm(lead);
+    if (lead && (await sendLeadConfirm(lead)) === 'failed') {
+      // The mail service refused it: say so (this doesn't depend on whether the address was known), and the retry is allowed.
+      send(res, 502, { error: 'We couldn’t send the confirmation email just now. Please try again in a few minutes.' });
+      return;
+    }
     send(res, 200, { ok: true });
   } catch (err) {
     console.error('[leads signup]', err && err.message);
