@@ -319,6 +319,18 @@ Can you explain each without notes?
     quality (distraction, lost-in-the-middle). Good context engineering retrieves
     only what's needed, compresses history, and orders content for the model.
 
+??? question "How do you forecast and budget the cost of an LLM product before it launches?"
+    Start from usage, not the price list: users times calls per user times tokens
+    per call, split into input and output, priced at the provider's rates. Measure
+    tokens per call on real traffic or a prototype — do not guess, because prompts
+    grow once retrieval and history are added. Add the multipliers people forget:
+    retries, fallbacks to a stronger model, evals traffic, and power users who make
+    ten times the median calls. Set the budget in tokens, not money, so a price
+    change does not silently break it — and re-forecast after the first week of real
+    traffic. Keep a cheaper path for the common case (small model, cached prompts)
+    and reserve the expensive model for the calls that need it.
+
+
 ---
 
 ## Rapid-fire
