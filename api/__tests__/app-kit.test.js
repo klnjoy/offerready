@@ -138,6 +138,16 @@ test('validateOutput: an answer keeps its grounded sentences and blanks only the
   assert.deepEqual(r.value.unbacked_skills, ['Kubernetes']);
 });
 
+test('validateOutput: a skill in both the job skills and gaps is flagged once', () => {
+  const job = { title: 'Backend Engineer', company: 'Acme', skills: ['Go', 'Rust'], gaps: ['Rust', 'Elixir'], description: 'Acme builds APIs.' };
+  const v = parseBody(body({ job })).value;
+  const r = validateOutput({
+    cover_letter: ['I write reliable backend services in Go and Rust.'],
+    answers: [],
+  }, v);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.value.unbacked_skills, ['Go', 'Rust']);
+});
 test('validateOutput: fails closed on nothing usable', () => {
   const v = parseBody(body()).value;
   assert.equal(validateOutput({ cover_letter: [], answers: [] }, v).ok, false);

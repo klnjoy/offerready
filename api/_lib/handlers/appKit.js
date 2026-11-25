@@ -220,7 +220,10 @@ function validateOutput(parsed, v) {
   if (!paras.length && !answers.length) return { ok: false, reason: 'empty' };
 
   const all = [...paras, ...answers.map((a) => a.answer)].join('\n');
-  const jobSkills = [...(v.job.skills || []), ...(v.job.gaps || [])];
+  // R5: the same skill can sit in both the job's skills and its gaps (e.g.
+  // "Measurable business outcomes"). Dedupe case-insensitively first, or the
+  // "Check before sending" banner lists it twice.
+  const jobSkills = [...new Map([...(v.job.skills || []), ...(v.job.gaps || [])].map((k) => [String(k).toLowerCase(), k])).values()];
   const unbacked = jobSkills.filter((k) => mentions(all, k) && !mentions(candidateText, k)).slice(0, 10);
   // R4: a flagged skill is a claim the candidate cannot back. Do not ship the
   // sentence that makes it: replace it with a blank the candidate fills in
