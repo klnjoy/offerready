@@ -195,7 +195,10 @@ function validateOutput(parsed, v) {
 
   const all = [...paras, ...answers.map((a) => a.answer)].join('\n');
   const placeholders = [...new Set((all.match(/\[[^\]\n]{1,80}\]/g) || []))].slice(0, 12);
-  const jobSkills = [...(v.job.skills || []), ...(v.job.gaps || [])];
+  // R5: the same skill can sit in both the job's skills and its gaps (e.g.
+  // "Measurable business outcomes"). Dedupe case-insensitively first, or the
+  // "Check before sending" banner lists it twice.
+  const jobSkills = [...new Map([...(v.job.skills || []), ...(v.job.gaps || [])].map((k) => [String(k).toLowerCase(), k])).values()];
   const unbacked = jobSkills.filter((k) => mentions(all, k) && !mentions(candidateText, k)).slice(0, 10);
   return {
     ok: true,
