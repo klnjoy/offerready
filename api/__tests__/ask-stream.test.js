@@ -110,7 +110,7 @@ test('stream: SSE headers, incremental deltas, FOLLOWUPS never leaks, done has e
     assert.ok(done.data.actions.some((a) => a.route === '/fit'));
     assert.ok(done.data.actions.length <= 2);
     assert.equal(lastFetchBody.stream, true);
-    assert.equal(lastFetchBody.max_tokens, 900);
+    assert.equal(lastFetchBody.max_tokens, 600);
   } finally { restore(); }
 });
 
@@ -240,13 +240,15 @@ test('context: validated, capped, and injected as untrusted data', () => {
   const ctx = sanitizeContext({
     surface: 'app', evil: 'x',
     page: { title: 'Check my fit' + 'z'.repeat(500), path: '/fit' },
-    job: { title: 'Senior AI Engineer', company: 'Acme', readiness: 140, skills: Array.from({ length: 30 }, (_, i) => 'skill' + i).concat([7]) },
+    job: { title: 'Senior AI Engineer', company: 'Acme', readiness: 140, matchScore: 140, skills: Array.from({ length: 30 }, (_, i) => 'skill' + i).concat([7]), gaps: Array.from({ length: 12 }, (_, i) => 'gap' + i).concat([9]) },
   });
   assert.equal(ctx.surface, 'app');
   assert.equal(ctx.evil, undefined);
   assert.ok(ctx.page.title.length <= 200);
   assert.equal(ctx.job.readiness, 100);
   assert.equal(ctx.job.skills.length, 15);
+  assert.equal(ctx.job.matchScore, 100);
+  assert.equal(ctx.job.gaps.length, 8);
   assert.equal(sanitizeContext({ surface: 'admin' }), null);
   assert.equal(sanitizeContext('x'), null);
 
@@ -294,6 +296,21 @@ test('citations: up to 2 distinct pages, first is the legacy lookup', () => {
   // Word boundaries: "leverage" must not cite RAG via the extra matcher.
   const d = pickCitations('hello there', 'You can leverage this.', null);
   assert.ok(!d.some((x) => x.url === 'GenAI-Topics/rag/index.html'));
+});
+
+test('prompt: topic focus steers answers and job facts are the user\'s own data', () => {
+  const p = buildSystemPrompt(
+    { surface: 'app', job: { title: 'Data Engineer', readiness: 34, matchScore: 34, gaps: ['Apache Spark'] } },
+    'sql',
+  );
+  assert.ok(p.includes('"topicFilter":"sql"'));
+  assert.match(p, /steer every answer toward that topic/);
+  assert.match(p, /Never say you can't access/);
+  assert.match(p, /readiness out of 100/);
+  // No focus, no job: neither instruction appears.
+  const plain = buildSystemPrompt({ surface: 'app', page: { title: 'Home', path: '/' } }, 'all');
+  assert.ok(!plain.includes('topic focus'));
+  assert.ok(!plain.includes("Never say you can't access"));
 });
 
 test('prompt: asked-for diagrams and charts come as ONE mermaid block, with no invented numbers', () => {
