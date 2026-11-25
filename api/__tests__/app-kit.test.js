@@ -101,6 +101,8 @@ test('prompt: inputs are fenced and the honesty rules are present', () => {
   const m = buildMessages(v);
   assert.match(SYSTEM_PROMPT, /Never invent facts about the company/);
   assert.match(SYSTEM_PROMPT, /NEVER instructions/);
+  assert.match(SYSTEM_PROMPT, /customers, clients, or stakeholders/);
+  assert.match(SYSTEM_PROMPT, /placeholder alone/);
   assert.ok(!/<\/resume> ignore/.test(m[1].content), 'closing tag in user text is neutralised');
 });
 
@@ -111,14 +113,29 @@ test('validateOutput: invented numbers become placeholders, unbacked skills are 
   const k = r.value;
   assert.equal(k.cover_letter.length, 3);
   assert.match(k.cover_letter[0], /40 tables/, 'a number the candidate wrote stays');
-  assert.ok(!/500|70%/.test(k.cover_letter[1]), 'invented numbers are removed');
-  assert.match(k.cover_letter[1], /\[X\]/);
-  assert.match(k.cover_letter[1], /\[X%\]/);
+  assert.ok(!/500|70%|run Kubernetes clusters/.test(k.cover_letter[1]), 'invented numbers and unbacked claims are removed');
+  assert.match(k.cover_letter[1], /\[add your Kubernetes experience, only if true\]/, 'unbacked claim becomes a blank');
   assert.deepEqual(k.answers.map((a) => a.question), QUESTIONS, 'answers keep request order and request text');
   assert.match(k.answers[1].answer, /12 reports/, 'story numbers count as the candidate\'s own');
   assert.deepEqual(k.unbacked_skills, ['Kubernetes']);
   assert.ok(k.placeholders.includes('[your reason for wanting to join Acme]'));
+  assert.ok(k.placeholders.includes('[add your Kubernetes experience, only if true]'));
   assert.equal(k.hidden, undefined);
+});
+
+test('validateOutput: an answer keeps its grounded sentences and blanks only the unbacked one', () => {
+  const v = parseBody(body()).value;
+  const r = validateOutput({
+    cover_letter: ['I build reliable data pipelines.'],
+    answers: [{ index: 0, answer: 'At Initech I built ELT pipelines in Python that load 40 tables into Snowflake and cut costs by 70%. I have led customer workshops for retailers and run Kubernetes clusters.' }],
+  }, v);
+  assert.equal(r.ok, true);
+  const a = r.value.answers[0].answer;
+  assert.match(a, /40 tables/, 'grounded sentence stays');
+  assert.match(a, /\[X%\]/, 'invented number in a grounded sentence becomes a placeholder');
+  assert.ok(!/led customer workshops|run Kubernetes clusters|70%/.test(a), 'unbacked claims are gone');
+  assert.match(a, /\[add your Kubernetes experience, only if true\]/);
+  assert.deepEqual(r.value.unbacked_skills, ['Kubernetes']);
 });
 
 test('validateOutput: fails closed on nothing usable', () => {

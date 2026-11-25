@@ -26,9 +26,11 @@
  * Safety: all inputs are untrusted data in fenced blocks with a "not
  * instructions" rule. The model JSON is validated: only known fields pass,
  * questions always come from the request, numbers the candidate never wrote
- * become [X] placeholders, and job skills the output mentions that the
- * resume and stories never name are returned as unbacked_skills so the UI
- * can warn before anything is sent.
+ * become [X] placeholders, job skills the output mentions that the resume
+ * and stories never name are returned as unbacked_skills so the UI can warn
+ * before anything is sent, and any sentence asserting such a skill is
+ * replaced by a [blank] instead of shipping the claim as the candidate's
+ * own words.
  */
 
 'use strict';
@@ -73,6 +75,13 @@ const SYSTEM_PROMPT = [
   '  the candidate should add, e.g. [your reason for wanting to join Acme].',
   '- For a job skill the candidate does not show, never claim it. You may say',
   '  they are learning it only if RESUME or STORIES say so; otherwise leave it out.',
+  '- Never assert experience working with customers, clients, or stakeholders,',
+  '  or experience in a domain or industry, unless RESUME or STORIES show it.',
+  '  If the job asks for it and the candidate does not show it, leave that',
+  '  point out entirely — do not write around it with a plausible claim.',
+  '- Never answer a question with a placeholder alone. Write the one or two',
+  '  sentences the resume does support first, then add the [bracketed',
+  '  placeholder] for the personal part only.',
   '- Each answer answers its question directly, in first person, 60-180 words.',
   '- Cover letter: 3-4 short paragraphs, 180-280 words in total, first person,',
   '  no greeting line and no sign-off (the candidate adds those).',
@@ -167,6 +176,23 @@ function mentions(text, keyword) {
 
 const clean = (s, max) => clip(block(s, max * 2).replace(/[*_`#]+/g, '').replace(/^\s*[-•]\s*/gm, ''), max);
 
+/**
+ * R4: replace every sentence that asserts a job skill the candidate never
+ * shows with a blank. The model is told not to invent such claims, but when
+ * it does, the claim must not reach the candidate as their own words — a
+ * bracketed blank is the honest fallback, and the skill stays flagged in
+ * unbacked_skills so the UI warns before anything is sent.
+ */
+function scrubUnbackedSentences(text, unbacked) {
+  if (!unbacked.length) return text;
+  const parts = String(text || '').match(/[^.!?]+[.!?]+["')\]]*\s*|[^.!?]+$/g) || [text];
+  return parts.map((s) => {
+    const hit = unbacked.find((k) => mentions(s, k));
+    if (!hit) return s;
+    return `[add your ${String(hit).slice(0, 40)} experience, only if true] `;
+  }).join('').trim();
+}
+
 /** Validate + clamp the model JSON. Fails closed when nothing usable came back. */
 function validateOutput(parsed, v) {
   if (!parsed || typeof parsed !== 'object') return { ok: false, reason: 'not-object' };
@@ -194,12 +220,21 @@ function validateOutput(parsed, v) {
   if (!paras.length && !answers.length) return { ok: false, reason: 'empty' };
 
   const all = [...paras, ...answers.map((a) => a.answer)].join('\n');
-  const placeholders = [...new Set((all.match(/\[[^\]\n]{1,80}\]/g) || []))].slice(0, 12);
   const jobSkills = [...(v.job.skills || []), ...(v.job.gaps || [])];
   const unbacked = jobSkills.filter((k) => mentions(all, k) && !mentions(candidateText, k)).slice(0, 10);
+  // R4: a flagged skill is a claim the candidate cannot back. Do not ship the
+  // sentence that makes it: replace it with a blank the candidate fills in
+  // only if it is true. The skill stays in unbacked_skills so the UI warns.
+  const cover = paras.map((p) => scrubUnbackedSentences(p, unbacked)).filter((p) => p.length > 20).slice(0, MAX_PARAS);
+  const fixedAnswers = answers
+    .map((a) => ({ question: a.question, answer: scrubUnbackedSentences(a.answer, unbacked) }))
+    .filter((a) => a.answer.length >= 20);
+  if (!cover.length && !fixedAnswers.length) return { ok: false, reason: 'empty' };
+  const fixedAll = [...cover, ...fixedAnswers.map((a) => a.answer)].join('\n');
+  const placeholders = [...new Set((fixedAll.match(/\[[^\]\n]{1,80}\]/g) || []))].slice(0, 12);
   return {
     ok: true,
-    value: { cover_letter: paras, answers: answers.map(({ question, answer }) => ({ question, answer })), placeholders, unbacked_skills: unbacked },
+    value: { cover_letter: cover, answers: fixedAnswers, placeholders, unbacked_skills: unbacked },
   };
 }
 
