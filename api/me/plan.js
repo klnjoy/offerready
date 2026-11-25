@@ -54,6 +54,8 @@
  *   GET ?op=email-status, GET ?op=email-preview&kind=, POST ?op=email-test { kind } (admins only).
  *   GET|POST ?op=daily-email { on } (signed in): the opt-in daily next-step email (migration 0031).
  *   GET|POST ?op=role-email { on, cc } (signed in): opt-in new-role match emails (migration 0032).
+ *   GET /api/me/plan?op=referral (signed in): your invite code, how many friends joined with it, and how many mock credits it earned (migration 0035, api/_lib/referrals.js).
+ *   POST /api/me/plan?op=referral-redeem { code } (signed in): redeem a friend's invite code — +1 mock credit for you and for them, once per account, never for your own code.
  *   GET|POST ?op=lead-signup { email, family, cc } (no sign-in): optional weekly new-roles email for
  *     visitors without an account; double opt-in (migration 0033, api/_lib/leadEmails.js, EMAIL_LEADS=on).
  *     GET ?op=lead-signup -> { available }. Always answers { ok: true } so it can't be used to probe addresses.
@@ -78,6 +80,7 @@ const monthlyUpdate = require('../_lib/monthlyUpdate');
 const roleEmails = require('../_lib/roleEmails');
 const leads = require('../_lib/leadEmails');
 const rateLimit = require('../_lib/rateLimit');
+const referrals = require('../_lib/referrals');
 
 /** The billing block; never throws (storage errors just hide the portal). */
 async function billingBlock(userId) {
@@ -932,6 +935,40 @@ module.exports = async function handler(req, res) {
     const u = await getUser(req);
     if (!u) { send(res, 401, { error: 'Sign in to turn on daily notifications.' }); return; }
     await savePush(req, res, u); return;
+  }
+
+  // Invite friends (migration 0035): your personal code, and +1 mock credit
+  // for you and for each friend who signs up with it (api/_lib/referrals.js).
+  if (op === 'referral' && req.method === 'GET') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    const u = await getUser(req);
+    if (!u) { send(res, 401, { error: 'Sign in first.' }); return; }
+    if (!referrals.configured()) { send(res, 503, { error: 'Invites aren’t set up on this deployment yet.', setup: true }); return; }
+    try {
+      const code = await referrals.getOrCreateCode(u.id);
+      const stats = await referrals.referralStats(u.id);
+      send(res, 200, { code, invited: stats.invited, credits_earned: stats.credits_earned, mock_credits: referrals.REFERRAL_MOCK_CREDITS });
+    } catch (err) {
+      console.error('[me/plan referral]', err && err.message);
+      send(res, 503, { error: 'Invites aren’t set up yet. Run migration 0035_referrals.sql in Supabase.', setup: true });
+    }
+    return;
+  }
+  if (op === 'referral-redeem' && req.method === 'POST') {
+    res.setHeader('Cache-Control', 'private, no-store');
+    const u = await getUser(req);
+    if (!u) { send(res, 401, { error: 'Sign in first.' }); return; }
+    if (!rateLimit.enforce(req, res, { scope: 'referral-redeem', userId: u.id, perUser: 6 })) return;
+    if (!referrals.configured()) { send(res, 503, { error: 'Invites aren’t set up on this deployment yet.', setup: true }); return; }
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    try {
+      const out = await referrals.redeemCode(u.id, body.code);
+      send(res, 200, out);
+    } catch (err) {
+      console.error('[me/plan referral-redeem]', err && err.message);
+      send(res, 503, { error: 'Invites aren’t set up yet. Run migration 0035_referrals.sql in Supabase.', setup: true });
+    }
+    return;
   }
 
   // Coarse location for first-party analytics: country and region from the
