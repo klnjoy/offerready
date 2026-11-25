@@ -167,3 +167,51 @@ Senior questions for engineers who build the platform other teams train, serve a
     **In depth:** Start with an inventory: frameworks, latency needs, traffic, cost and on-call burden of each stack. Usually the shared needs are model loading, autoscaling, observability, auth and rollouts, while differences are in runtimes. Offer a standard serving layer that supports several runtimes, such as a vLLM-based path for LLMs and a general model server for classical models, behind one deployment interface. Migrate one team end to end and publish the before and after: reduced on-call load, cost and time to deploy. Set a deprecation timeline for unsupported stacks with leadership backing, but fund migration help rather than issuing a mandate alone.
 
     **Follow-up they'll ask:** What if one team has truly unique needs? Allow an exception with clear ownership, and revisit when the platform can absorb it.
+
+??? question "How do you plan GPU capacity for an inference service — how many GPUs, and which kind?"
+
+    **Short answer:** Start from the traffic you must serve — requests per second, tokens per request, latency target — then work backwards to GPUs, and keep headroom for the spike you have not seen yet.
+
+    **In depth:** The maths is throughput per GPU times the number of GPUs, against peak requests per second — not the average. Measure tokens per second per GPU for your model and batch size on real hardware, because published benchmarks rarely match your prompt mix. Size for the peak plus 20 to 30 percent headroom, and plan what happens when it is exceeded: queueing, a smaller fallback model, or shedding low-priority traffic. Choose the GPU by the bottleneck: memory bandwidth and KV-cache size usually matter more than raw compute for serving, which is why a smaller inference GPU can beat a training GPU on cost per token. Revisit the plan when the model changes — a new model version can halve or double the tokens per request overnight.
+
+    **Follow-up they'll ask:** What if you cannot get the GPUs you planned for? Design for the GPU you can actually buy, and make the model swappable so a shortage does not block the launch.
+
+??? question "Where do you run inference — how do you choose regions, and what do data-center power and networking change?"
+
+    **Short answer:** Put inference close to the users for latency, close to the data for compliance, and where the power and network can actually support the GPUs — the cheapest region is not always the one that works.
+
+    **In depth:** Latency is distance: every network hop adds milliseconds, so serve from the region nearest your users, not the region where your team sits. Data residency rules may decide for you — some data cannot leave a country or a cloud region, which fixes where the model runs. Power is a real constraint: GPUs draw far more power per rack than normal servers, and some data centers cannot supply or cool the density you need, so check power and cooling before you commit. Networking matters inside the data center too: fast links between GPUs decide whether multi-GPU serving works, and slow storage decides whether model loading stalls. Price differs by region, but a region without the GPU type you need, or without capacity, is not cheaper — it is unavailable.
+
+    **Follow-up they'll ask:** What if your users are everywhere? Serve from two or three regions with routing to the nearest, and accept that the model and its configuration must stay identical across them.
+
+??? question "H100, A100, T4, TPU — how do you pick the right GPU for serving an LLM?"
+
+    **Short answer:** Match the GPU to the job: memory size and bandwidth decide what fits and how fast it serves; raw compute matters less than people expect.
+
+    **In depth:** The model must fit in GPU memory with room for the KV cache — a 70-billion-parameter model needs roughly 140 GB in half precision before it serves a single token, so memory size decides which models a card can run at all. Memory bandwidth decides speed: serving is mostly moving weights and KV cache, so a card with faster memory serves more tokens per second even with less compute. Training cards such as the H100 and A100 are built for that bandwidth; inference cards such as the T4 and L4 are cheaper and fine for small models and low traffic. TPUs are a different stack — fast for the models they support, but you are tied to one vendor's software. Start from the model and the traffic, pick the cheapest card that fits both, and measure tokens per second per dollar before committing.
+
+    **Follow-up they'll ask:** When would you serve on CPU instead? For tiny models or very low traffic, where a GPU would sit idle most of the time.
+
+??? question "When would you run inference on spot or preemptible GPUs, and what breaks?"
+
+    **Short answer:** Spot GPUs are cheap because they can be taken away at any time — use them where an interruption is harmless, never where a user is waiting.
+
+    **In depth:** Spot or preemptible capacity can cost a fraction of on-demand, but the provider can reclaim it with minutes of notice, and reclamation comes in waves — when one goes, several often go together. It fits batch work: offline evals, embedding jobs, distillation runs, and anything with a queue that can wait. It does not fit live serving unless you have on-demand capacity to fall back to instantly. Design for interruption: checkpoint progress, make work idempotent so a retried job does not double-charge or duplicate output, and keep model weights on fast shared storage so a replacement node starts in minutes, not half an hour. Set a price cap and an alert: when spot prices spike, the saving disappears and the job should pause rather than burn budget.
+
+    **Follow-up they'll ask:** How do you mix spot and on-demand? On-demand for the base load you must always serve, spot for the peaks and the batch work on top.
+
+??? question "When do you use a shadow deployment for a new model or prompt, and what do you measure before promoting it?"
+
+    **Short answer:** A shadow deployment runs the new version on real traffic without showing its answers — use it when you need evidence the new version is safe, not just a guess from offline tests.
+
+    **In depth:** Mirror live requests to the new model or prompt while users still get the old version's answers, and compare: output differences, error rate, latency, tokens per request and cost. Shadow catches what offline evals miss — real prompt variety, weird inputs, and distribution shifts. Run it long enough to see the tail: a day of traffic at least, longer for low-volume services. Decide the promotion criteria before you start — for example, fewer than 1 percent of outputs meaningfully different, no latency regression, no new error class — so the decision is made by the numbers, not by feeling. Shadow is not free: it doubles the model calls for that traffic, so sample a percentage when full mirroring is too expensive.
+
+    **Follow-up they'll ask:** When is shadow not enough? When the question is business impact — then you need a canary or an A/B test, where real users see the change.
+
+??? question "How do you serve an LLM across multiple regions, and what breaks when you do?"
+
+    **Short answer:** The hard parts are not the model — they are keeping prompts, configuration and data identical across regions, and deciding what happens when one region fails.
+
+    **In depth:** Each region needs the same model version, prompt, guardrails and retrieval index, or users get different answers depending on where they land — version and deploy all regions together, and test them together. Route users to the nearest healthy region, with health checks that actually exercise the model, not just the load balancer. Decide the failure mode in advance: fail over to another region (which doubles its load in seconds — keep headroom), or degrade to a smaller model locally. Data is the constraint: if retrieval data or user history cannot cross borders, each region serves from its own copy, and the copies must stay in sync. Log per region, because an incident in one region looks like a global problem if you only watch the total.
+
+    **Follow-up they'll ask:** When is one region enough? When your users are in one place and your recovery plan is a fast rebuild, not a live standby.

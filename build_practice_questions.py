@@ -6,7 +6,8 @@ Parses the interview Q&A markdown in personal-docs/ and extracts:
     the model answer (code fences and admonition markers stripped).
 
 Each question is tagged with a topic (from the filename) and a track, so the
-Practice page can offer role-based sessions. Output is a static JSON the
+Practice page can offer role-based sessions, plus cross-topic themes (see
+THEMES) for the question-bank filter chips. Output is a static JSON the
 browser loads — no backend needed.
 
 Run:  python build_practice_questions.py
@@ -53,6 +54,69 @@ TOPICS: dict[str, tuple[str, list[str]]] = {
     "Agile_Coach_Scrum_Master_Interview_QA": ("Agile & Scrum", ["agile"]),
     "AI_Product_Manager_Interview_QA": ("Product Management", ["pm"]),
 }
+
+# question prompt -> [theme slugs] (cross-topic groupings for the
+# /question-bank filter chips: token cost, guardrails, GPU & data centers).
+# Keyed by exact prompt so the mapping survives reordering; a prompt
+# not listed here gets an empty themes list.
+THEMES: dict[str, list[str]] = {
+    "A guardrail blocks a legitimate request. What should the user see, and what happens next?": ["guardrails"],
+    "Design a RAG assistant for 50,000 employees over internal documents with access control.": ["guardrails"],
+    "Explain attention in plain terms. Why does a long context cost more?": ["token-cost"],
+    "Finance says LLM spend tripled this quarter. How do you get it under control without hurting quality?": ["token-cost"],
+    "Guardrails add latency and cost to every call. How do you keep them fast and cheap?": ["guardrails"],
+    "H100, A100, T4, TPU — how do you pick the right GPU for serving an LLM?": ["gpu-data-centers"],
+    "How do you apply least privilege to agents and their tools?": ["guardrails"],
+    "How do you build cost control into an AI-heavy system from day one?": ["token-cost"],
+    "How do you cache semantically similar prompts?": ["token-cost"],
+    "How do you charge token spend back to the teams or products that caused it?": ["token-cost"],
+    "How do you compare LLM providers on price? What does per-million-token pricing hide?": ["token-cost"],
+    "How do you control and attribute Cortex AI spend?": ["token-cost"],
+    "How do you control cost and latency in an agent?": ["token-cost"],
+    "How do you define RPO and RTO and design disaster recovery to meet them?": ["gpu-data-centers"],
+    "How do you design autoscaling for GPU inference services?": ["gpu-data-centers"],
+    "How do you enforce access control in retrieval so users only see what they are allowed to?": ["guardrails"],
+    "How do you evaluate guardrails? How do you know if they are too strict or too loose?": ["guardrails"],
+    "How do you filter what goes into and comes out of an LLM?": ["guardrails"],
+    "How do you forecast and budget the cost of an LLM product before it launches?": ["token-cost"],
+    "How do you guardrail an LLM that takes images as well as text?": ["guardrails"],
+    "How do you handle PII and data residency when using third-party model providers?": ["guardrails"],
+    "How do you manage the cost of model APIs or GPUs for your team?": ["token-cost"],
+    "How do you plan GPU capacity for an inference service — how many GPUs, and which kind?": ["gpu-data-centers"],
+    "How do you schedule GPU workloads on Kubernetes without wasting expensive capacity?": ["gpu-data-centers"],
+    "How do you serve an LLM across multiple regions, and what breaks when you do?": ["gpu-data-centers"],
+    "How do you stop an agent from looping forever or burning budget?": ["token-cost"],
+    "How do you think about the cost of an AI feature?": ["token-cost"],
+    "How do you think about the latency versus throughput trade-off when serving models?": ["gpu-data-centers"],
+    "How do you use Terraform and infrastructure as code for an ML platform?": ["gpu-data-centers"],
+    "How would you implement model routing across several LLMs?": ["token-cost"],
+    "How would you introduce prompt caching in your system?": ["token-cost"],
+    "Implement column-level PII protection across hundreds of tables without editing each.": ["guardrails"],
+    "LLM costs tripled after launch — how do you reduce them without hurting quality?": ["token-cost"],
+    "Reasoning models vs standard models — when do you pay for thinking?": ["token-cost"],
+    "What are the trade-offs of semantic caching?": ["token-cost"],
+    "What are the unit economics of an LLM feature — and how do you know if it makes money?": ["token-cost"],
+    "What does Unity Catalog give you over workspace-local access control?": ["guardrails"],
+    "What guardrails do you put around a production RAG or LLM application?": ["guardrails"],
+    "What guardrails go around a production LLM?": ["guardrails"],
+    "What is LoRA, and why is it cheaper than full fine-tuning?": ["token-cost"],
+    "What is continuous batching in LLM serving and why does it matter?": ["gpu-data-centers"],
+    "What is distillation, and when would you use it to cut cost?": ["token-cost"],
+    "What is quantization, and when is it the right way to cut serving cost?": ["token-cost"],
+    "What is the KV cache and why does it matter when serving an LLM?": ["gpu-data-centers"],
+    "What is the difference between prompt caching and semantic caching?": ["token-cost"],
+    "When do you use a shadow deployment for a new model or prompt, and what do you measure before promoting it?": ["gpu-data-centers"],
+    "When would you run inference on spot or preemptible GPUs, and what breaks?": ["gpu-data-centers"],
+    "Where do you run inference — how do you choose regions, and what do data-center power and networking change?": ["gpu-data-centers"],
+    "Why do token counts surprise people, and why do they affect cost and quality?": ["token-cost"],
+    "Why is insecure handling of model output a vulnerability, and how do you prevent it?": ["guardrails"],
+    "You're productionizing an agent that sometimes takes destructive actions incorrectly. Design the safeguards.": ["guardrails"],
+    "Your GPU bill has doubled in a quarter. How do you bring it under control?": ["gpu-data-centers"],
+    "Your LLM feature is too slow and too expensive. Levers?": ["token-cost"],
+    "Your RAG system indexes a shared drive and a user retrieves salary data they should not see — how do you respond?": ["guardrails"],
+    "Your model-serving endpoint is slow and the GPU sits at 20 percent utilisation — how do you improve throughput?": ["gpu-data-centers"],
+}
+
 
 Q_RE = re.compile(r'^\?\?\?\s+question\s+"(.+?)"\s*$')
 
@@ -150,6 +214,7 @@ def main() -> None:
         for it in items:
             it["topic"] = topic
             it["tracks"] = tracks
+            it["themes"] = THEMES.get(it["q"], [])
             it["source"] = stem
             questions.append(it)
         per_topic[topic] = len(items)

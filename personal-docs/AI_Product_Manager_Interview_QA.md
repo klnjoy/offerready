@@ -202,3 +202,11 @@ See the [Product Manager role guide](Path_AI_Product_Manager.md) for the intervi
     **In depth:** Show you have used the product and understand its users and business. For AI roles, show the work is not only about the model: it is about the user problem, quality, trust and economics.
 
     **Follow-up they'll ask:** What is one AI product you think is badly designed, and why?
+
+??? question "What are the unit economics of an LLM feature — and how do you know if it makes money?"
+
+    **Short answer:** Unit economics is cost per request, per user and per conversation, against the revenue or value each one brings. If you cannot state the cost of one conversation, you cannot price the feature.
+
+    **In depth:** The unit is the thing you sell or serve: one request, one user per month, one conversation. Cost per unit is tokens in and out, plus retrieval, tool calls and retries, priced at provider rates. Compare it with revenue per unit — subscription share, price per conversation, or the cost it replaces, for example a support ticket a human would have handled. Watch the ratio as usage grows: power users and long conversations drag the average up, so report the median and the 90th percentile, not just the mean. If cost per unit is higher than value per unit, the levers are a smaller model, caching, shorter prompts, fewer retries, or charging differently — not hoping usage stays low.
+
+    **Follow-up they'll ask:** When is losing money per conversation acceptable? When it is a deliberate acquisition cost with a cap, not an accident you discover at the end of the quarter.

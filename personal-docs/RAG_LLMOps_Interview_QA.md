@@ -249,3 +249,43 @@ These questions cover retrieval-augmented generation and the operational discipl
     **In depth:** Time to first token is driven by prompt size: a huge system prompt, full chat history and many retrieved chunks must all be processed before the first token — fix with prompt caching, trimmed history, and fewer, better chunks. Generation time is output length times model speed: a large, slow model writing a long answer feels slow even with good time to first token — right-size the model, cap unnecessary length, use a faster model for simple turns. If you wait for the full answer before showing anything, perceived latency is the total time — streaming the first tokens early is often the single biggest felt improvement. Work before the model also adds up: slow retrieval, embedding calls, sequential API or tool calls, cold starts and network hops — parallelise independent calls, cache, and set timeouts. Log time to first token, tokens in and out, retrieval time and tool time per turn, and optimise the largest slice first. Example: a bot taking 9 seconds — 3 seconds retrieving from two sources in sequence, 4 seconds processing a 12,000-token prompt with no caching, 2 seconds generating — parallel retrieval plus prompt caching plus streaming makes it feel near-instant with no model change.
 
     **Follow-up they'll ask:** Users say it feels slow but your p50 looks fine — what do you check? The tail: p95/p99, the slowest turns, and whether the slow slice is retrieval, tools, or generation.
+
+??? question "How do you compare LLM providers on price? What does per-million-token pricing hide?"
+
+    **Short answer:** Compare on the tokens you actually use — input versus output rates, and what counts as a token — not on the headline number. Two providers with the same per-million price can cost very differently for the same workload.
+
+    **In depth:** Input tokens are usually cheaper than output tokens, and reasoning models bill thinking tokens as output, so a provider that looks cheap on input can be expensive if your prompts are long or the model writes long answers. Cached input is often billed at a discount, but only if the cache hits — measure your hit rate before counting the saving. Tokenisers differ, so the same text is a different number of tokens on different models; compare on cost per successful task, not cost per million tokens, by running the same real requests through each provider and dividing total spend by completed tasks. Watch what is not in the per-token price: rate limits that force retries, minimum charges, and storage or egress for hosted models. Re-check quarterly — provider prices move, and the cheapest model for your workload changes with them.
+
+    **Follow-up they'll ask:** When would you pay more per token on purpose? When the cheaper model fails more often and the retries, fallbacks and support cost erase the saving.
+
+??? question "How do you charge token spend back to the teams or products that caused it?"
+
+    **Short answer:** Tag every model call with who it was for, measure tokens per tag, and report the bill in those terms — otherwise token spend lands in one shared bucket nobody owns.
+
+    **In depth:** Pass a tag — team, product, feature, tenant — with every call, in the request metadata or a header, and log input tokens, output tokens and cache hits per tag. Publish a simple monthly report: tokens and spend by team and by feature, with the top drivers named. Chargeback means the team's budget actually pays it; showback means they only see the number — start with showback, because it changes behaviour without a billing fight. Set a budget per team with an alert at 80 percent, not a hard cutoff that breaks their product. Review the top three drivers every month: usually one prompt that is too long, one feature calling the model in a loop, or one team that never enabled caching.
+
+    **Follow-up they'll ask:** What if a team says the shared platform should pay? Shared infrastructure costs are shared; the tokens a team's feature consumes are theirs — the tag makes that visible.
+
+??? question "How do you evaluate guardrails? How do you know if they are too strict or too loose?"
+
+    **Short answer:** Build a test set with cases that should be blocked and cases that should pass, then measure false positives and false negatives separately — one average score hides both failures.
+
+    **In depth:** Two sets: harmful cases that must be blocked — disallowed content, PII, injection attempts — and benign cases that must pass, including edge cases that look risky but are legitimate, like medical questions or security discussions. Measure the block rate on each: false negatives are harmful content getting through; false positives are real users being refused. Track both, because tightening the filter fixes one and causes the other. Re-run the set on every guardrail change like a regression test, and add every real miss — a blocked legitimate user or a harmful answer that slipped through — back into the set. Use human review on a sample, because automated judges share the guardrail's blind spots.
+
+    **Follow-up they'll ask:** What is an acceptable false-positive rate? It depends on the stakes: near zero for a customer-facing helper, higher for an internal tool where a refusal is a minor annoyance.
+
+??? question "A guardrail blocks a legitimate request. What should the user see, and what happens next?"
+
+    **Short answer:** A short, honest refusal that says what happened and what to do next — never a silent failure, a fake answer, or a technical error dump.
+
+    **In depth:** Tell the user plainly that the request could not be completed as asked, in one sentence, without quoting the blocked content back or explaining the rule in a way that teaches evasion. Offer the next step: rephrase the request, ask a narrower question, or contact a human. Log the block with the request, the rule that fired and the context, so you can tell a real block from a false positive. Give users a way to appeal — a feedback button or a support path — and review appeals weekly, because each one is a test case for the guardrail. If the same legitimate request keeps getting blocked, fix the rule or the filter, not the user.
+
+    **Follow-up they'll ask:** Should you ever show the user which rule fired? No — it tells attackers exactly what to work around.
+
+??? question "Guardrails add latency and cost to every call. How do you keep them fast and cheap?"
+
+    **Short answer:** Put the cheap check first, the expensive check only where it is needed, and cache decisions that repeat — most calls need a small classifier, not a second LLM.
+
+    **In depth:** Layer the checks: a fast rule or small classifier screens every request, and only ambiguous cases go to a larger model for judgement. That keeps the common path to a few milliseconds. Cache guardrail decisions for repeated inputs — the same prompt, the same retrieved chunk — so you do not pay twice. Run checks in parallel with retrieval where possible, so the guardrail does not add a serial step before the model. Measure the cost: guardrail tokens and time per request, as a share of the total — if the guardrail costs more than the answer, the design is wrong. Accept the trade-off openly: a lighter guardrail is faster and cheaper but misses more; document where you set the line.
+
+    **Follow-up they'll ask:** When is a second LLM as a guardrail worth it? When the cost of a miss — a harmful answer reaching a customer — is far higher than the extra call.

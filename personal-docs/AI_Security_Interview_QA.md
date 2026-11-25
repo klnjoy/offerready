@@ -149,3 +149,19 @@ These questions cover securing LLM applications and agents in production. Interv
     - Prevent: permission tests with negative cases and alerts on sensitive labels appearing in results.
 
     **Follow-up they'll ask:** Why default-deny? A document with missing or unparsed permissions should be invisible until its access is known.
+
+??? question "How do you filter what goes into and comes out of an LLM?"
+
+    **Short answer:** Filter both directions: check the input for toxicity, PII and injection before the model sees it, and check the output for the same before the user does.
+
+    **In depth:** Input filters catch what the user typed — disallowed content, personal data that should not be sent to a third-party model, and injected instructions hidden in pasted text. Output filters catch what the model produced — toxicity, leaked PII, secrets from the prompt, or content the policy forbids. Use a small dedicated classifier for the common cases — it is fast and cheap — and reserve a larger model check for ambiguous ones. Decide where filtering runs: in your code, where you control it, rather than relying only on the provider's filter, which you cannot tune or audit. Log what was filtered and why, without storing the harmful content itself.
+
+    **Follow-up they'll ask:** What if the provider already filters? Use your own layer as well — providers change their filters, and you need one you can test and explain.
+
+??? question "How do you guardrail an LLM that takes images as well as text?"
+
+    **Short answer:** The same rules, applied to every input the model sees — an image can carry instructions, personal data and disallowed content just like text can.
+
+    **In depth:** Text hidden in an image — a screenshot, a photo of a note, a meme — is still an instruction if the model can read it, so run text extraction or a vision check on images before they reach the model. Screen images for disallowed content and for personal data such as faces, documents and number plates, and strip metadata that can leak location or device details. Apply the same output checks: the model can describe an image in ways that reveal private information or produce disallowed content. Test with adversarial images, not just clean ones, because attacks arrive as images precisely when text filters are strong.
+
+    **Follow-up they'll ask:** What is the hardest part? Images that are legitimate and risky at once — a photo of a document a user genuinely needs help with.
