@@ -147,3 +147,85 @@ AI engineer interviews often start with the basics of machine learning before mo
     **In depth:** Say the three steps in everyday words: guess, measure how far off the guess was, adjust. Use one concrete example, such as learning to tell cats from dogs in photos, and avoid the words gradient and derivative until the listener asks. Then be honest about the limits: it learns patterns in the examples it was shown, so unusual cases it has never seen can fool it.
 
     **Follow-up they'll ask:** Is it really learning like a person? It improves at a task from examples, but it does not understand in the human sense, and it can be confidently wrong.
+
+## Deep learning next steps
+
+??? question "What does a convolutional layer do, and why is it good for images?"
+
+    **Short answer:** A convolutional layer slides a small set of weights, called a filter, across the image and records how strongly each patch matches it. The same filter is reused everywhere, so the layer finds a pattern wherever it appears.
+
+    **In depth:** Early filters tend to pick up simple things such as edges and corners, and later layers combine them into shapes and then whole objects. Reusing one small filter across the image means far fewer weights than a layer wired to every pixel, and it builds in a sensible assumption: a cat is a cat whether it is in the left or the right of the picture.
+
+    **Follow-up they'll ask:** Why not a plain fully connected layer? It would need a weight for every pixel pair, which is huge, and it would have to learn the same pattern again at every position.
+
+??? question "What are pooling and stride, and what do they buy you?"
+
+    **Short answer:** Both shrink the picture as it moves through the network. Stride is how many pixels a filter jumps each step; pooling replaces each small window with one number, often the biggest, so later layers see a smaller, summarised version.
+
+    **In depth:** Shrinking the image cuts the compute and memory needed, and it makes the result less sensitive to exactly where a feature sat, since a small shift often leaves the pooled value the same. The cost is lost detail, which is why tasks that need precise positions, such as outlining objects, keep more resolution or add the detail back later.
+
+    **Follow-up they'll ask:** Is pooling still used? Many modern designs shrink with strided convolutions instead, and finish with a global average, but the idea of summarising is the same.
+
+??? question "Why did transfer learning change how people build image models?"
+
+    **Short answer:** A network trained on a large, general image set has already learned useful building blocks, such as edges and textures. Starting from it and adjusting for your task needs far less data and time than training from scratch.
+
+    **In depth:** The usual recipe is to keep the early layers, replace the last layer with one for your classes, and train that first, then optionally unfreeze more layers with a small learning rate. It works best when your images are reasonably like the original set. If they are very different, such as medical scans, fewer of the old layers help and more of them need retraining.
+
+    **Follow-up they'll ask:** What can go wrong? A large learning rate can wipe out what the old layers knew, so the fine-tuning rate is kept small.
+
+??? question "What problem do recurrent networks solve, and what goes wrong with a plain one?"
+
+    **Short answer:** Recurrent networks read a sequence one step at a time and carry a hidden state forward, so each step can use what came before. A plain one forgets long-range information because the signal fades over many steps.
+
+    **In depth:** Text, audio and sensor readings all have order, and a normal feed-forward network treats every input as unrelated. A recurrent network reuses the same weights at each step and passes its summary of the past along. Training sends the error back through every step, which is where the vanishing-gradient problem returns: after a long stretch the early words have almost no influence.
+
+    **Follow-up they'll ask:** How long a gap can a plain one handle? Only a few steps in practice, which is why gated versions were invented.
+
+??? question "How does an LSTM keep information for longer, and why did transformers largely replace it?"
+
+    **Short answer:** An LSTM adds a separate memory lane controlled by gates that decide what to write, keep and read, so useful information can travel many steps without fading. Transformers took over because they look at the whole sequence at once and train much faster in parallel.
+
+    **In depth:** The gates are small learned switches. Because the memory lane changes only a little at each step, the error signal can flow back along it. Even so, an LSTM still reads word by word, so training cannot be spread across the sequence, and very long dependencies stay hard. Attention lets any position look directly at any other, which is the main reason it won out for language. LSTMs and similar models are still used where data arrives as a stream or compute is tight.
+
+    **Follow-up they'll ask:** When might you still pick one? Small devices, streaming data and small datasets.
+
+??? question "SGD versus Adam: how do they differ, and which would you choose?"
+
+    **Short answer:** SGD moves every weight by the same learning rate times its gradient, often with momentum. Adam keeps a running average of each weight's gradients and their size, and scales each step per weight, so it usually trains faster with less tuning.
+
+    **In depth:** Adam is a sensible default for transformers and for quick experiments. Well-tuned SGD with momentum is still common for image models and sometimes generalises a little better, but it is more sensitive to the learning rate and its schedule. Whatever the optimizer, the learning rate matters most, and many setups warm it up at the start and lower it later.
+
+    **Follow-up they'll ask:** What is momentum? A running average of past gradients that smooths the path, like a ball rolling downhill rather than stopping at each bump.
+
+??? question "What does batch normalization do, and when is it a poor fit?"
+
+    **Short answer:** It rescales the numbers inside a layer, using the mean and spread of the current mini-batch, so each layer receives inputs on a steady scale. That lets you train deeper networks faster and with a larger learning rate.
+
+    **In depth:** At test time there is no batch to measure, so the layer uses averages collected during training. It behaves poorly with very small batches, where the statistics are noisy, and with sequences of varying length. Layer normalization, which works on each example alone, is the usual choice in transformers for that reason.
+
+    **Follow-up they'll ask:** Is it a regularizer? It has a mild one as a side effect, because the batch noise changes what each example sees.
+
+??? question "How do you read a machine-learning paper efficiently when you are short on time?"
+
+    **Short answer:** Read the abstract, the figures and the conclusion first to get the claim, then the method and the results tables to judge it, and leave the proofs and appendix for last or skip them.
+
+    **In depth:** Ask four things as you go: what problem is it solving, what is new compared with the closest earlier work, what evidence supports it, and what the authors admit it does not do. Check what it was compared against and on which data. Write two or three sentences in your own words afterwards; if you cannot, you have not understood it yet.
+
+    **Follow-up they'll ask:** How do you judge whether to trust it? Look for ablations, more than one dataset, shared code, and gains larger than the run-to-run noise.
+
+??? question "How would you try to reproduce a result from a paper, and what do you do when you cannot?"
+
+    **Short answer:** Start from the authors' code if it exists, run it unchanged on their data to match their number, and only then change things. If you cannot match it, hunt for the difference one setting at a time.
+
+    **In depth:** Common culprits are a different data split, preprocessing, random seed, library version or an unreported setting such as the learning-rate schedule. Run it several times so you know how much the number moves by chance. If it still does not match, say so plainly: report what you ran, what you got and what you tried, rather than quietly adjusting until it looks right.
+
+    **Follow-up they'll ask:** What if there is no code? Rebuild from the description, start with a small version, and note every guess you had to make.
+
+??? question "How would you explain a trained model's behaviour to a non-expert, honestly?"
+
+    **Short answer:** Describe what it was trained to do, what data it learned from, how well it does on cases it has not seen, and where it tends to fail, using examples rather than formulas.
+
+    **In depth:** Tools such as feature importance or example-based explanations can show what a prediction leaned on, but they describe the model's behaviour, not a reason in the human sense, so say that. Show a few correct cases and a few mistakes, give one honest accuracy figure with what it was measured on, and name the situations where a person should double-check the output.
+
+    **Follow-up they'll ask:** Should you share the uncertainty? Yes, a range or a confidence level is more honest than a single confident-looking number.
