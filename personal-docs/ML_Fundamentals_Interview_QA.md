@@ -81,3 +81,69 @@ AI engineer interviews often start with the basics of machine learning before mo
     **In depth:** The loop is agent, action, environment, reward, update the policy, repeated millions of times; the policy is what the agent learns and the reward is the only feedback about what "good" means. The core tension is exploration versus exploitation: try new actions that might be better, or stick with what already works — good RL balances the two, for example by decaying exploration over time. In LLMs, RL shows up mainly as RLHF, reinforcement learning from human feedback: humans rank model answers, a reward model learns what humans prefer, and the LLM is optimized against that reward model, classically with PPO and increasingly with simpler methods such as DPO or reinforcement fine-tuning with verifiable rewards, like whether the code passes the tests. The base model provides capability; RLHF shapes behaviour. Example: a model trained with RLHF learns to give helpful, harmless answers because human rankings rewarded those — but the same mechanism can go wrong: if the reward model prefers long answers, the LLM learns to pad everything, optimizing the reward rather than the real goal. That failure is called reward hacking, and mitigation includes better reward design, verifiable rewards where possible, KL penalties that keep the model close to its starting point, and human evals that check the real goal rather than the proxy.
 
     **Follow-up they'll ask:** Your RLHF model has become sycophantic — agreeing with the user even when wrong — what happened? The reward model learned that agreement scores well, so the policy optimized for approval; fix the reward signal and check against human evals of correctness, not just preference.
+
+## Neural network basics
+
+??? question "What is a neural network, in plain words?"
+
+    **Short answer:** A function built from layers of small units, where each unit takes numbers in, weighs them and passes one number on. Training adjusts the weights until the output is useful.
+
+    **In depth:** The input is numbers: pixels, word vectors, a row of a table. Each layer turns the previous layer's numbers into new ones, and the last layer gives the answer, such as a class or a price. Nothing in the structure says what the answer should be. The weights start random, and training nudges them, thousands of times, so the answers on known examples get closer to the right ones.
+
+    **Follow-up they'll ask:** Why "deep"? More layers let it build simple features first and combine them into richer ones, for example edges, then shapes, then objects.
+
+??? question "What does a single neuron compute, and why do we need an activation function?"
+
+    **Short answer:** It multiplies each input by a weight, adds them up with a bias, and passes the total through an activation function. Without the activation, a stack of layers would collapse into one linear function.
+
+    **In depth:** The weighted sum is a straight-line relationship. Two straight lines combined are still one straight line, so ten layers without activations could not learn anything a single layer could not. A non-linear activation, such as ReLU (zero for negatives, the number itself for positives), is what lets layers bend the relationship and learn curves, interactions and thresholds.
+
+    **Follow-up they'll ask:** Why is ReLU so common? It is cheap to compute and, for positive inputs, it does not squash the signal the way older S-shaped activations did.
+
+??? question "What is a loss function, and how is it different from the metric you report?"
+
+    **Short answer:** The loss is the number training tries to push down; the metric is the number people care about. They are often different because the loss has to be smooth enough to optimize.
+
+    **In depth:** Training needs to know which way to move each weight, so the loss must change smoothly. Accuracy jumps from right to wrong and gives no direction, so classifiers train on cross-entropy loss and are judged on accuracy, precision or recall. A model can lower its loss while the metric stays flat, which is a signal that the loss and the goal have drifted apart.
+
+    **Follow-up they'll ask:** What would you check first if the loss falls but the metric does not move? Whether the loss matches the real goal, whether the classes are imbalanced, and whether the validation set looks like production data.
+
+??? question "Explain gradient descent. What does the learning rate do?"
+
+    **Short answer:** Gradient descent repeats one step: work out which direction makes the loss smaller, and move the weights a little that way. The learning rate is how big that step is.
+
+    **In depth:** Picture standing on a foggy hill and feeling which way is downhill under your feet. The gradient is that slope, and each step goes against it. Too large a learning rate overshoots the bottom and the loss bounces or blows up; too small a rate makes progress slow enough to look stuck. Many teams start with a recommended default, then lower the rate as training goes on.
+
+    **Follow-up they'll ask:** Does it find the best possible weights? Not guaranteed: it finds a place where the loss stops falling, and in large networks that is usually good enough.
+
+??? question "What does backpropagation do, and what does it not do?"
+
+    **Short answer:** Backpropagation computes how much each weight contributed to the error, by working backwards through the layers with the chain rule. It does not change the weights itself: the optimizer does that with the numbers it produces.
+
+    **In depth:** A training step has three parts. The forward pass runs the input through the network and gives a prediction; the loss compares it with the right answer; backpropagation then passes the error backwards and gives every weight its own gradient. The optimizer, plain gradient descent or something smarter, takes those gradients and updates the weights. Mixing up backpropagation with the learning algorithm is a common slip.
+
+    **Follow-up they'll ask:** Why is it efficient? It reuses the values from the forward pass instead of recomputing, so the cost is about the same as one more forward pass.
+
+??? question "Epoch, batch and iteration: what is the difference, and why use mini-batches?"
+
+    **Short answer:** An epoch is one pass over the whole training set, a batch is the group of examples used for one weight update, and an iteration is one such update. Mini-batches give a good gradient estimate without waiting for all the data.
+
+    **In depth:** With 100,000 examples and a batch of 100, one epoch is 1,000 iterations. A single example gives a noisy gradient; the full data set gives a precise one but is slow and may not fit in memory. A mini-batch is the compromise, and a bit of noise even helps the weights escape poor spots. Batch size also affects memory, speed and how high the learning rate can go.
+
+    **Follow-up they'll ask:** What happens if the batch is very large? Each step is steadier but you take fewer of them per epoch, and you usually need to retune the learning rate.
+
+??? question "What are vanishing gradients, and how do modern networks avoid them?"
+
+    **Short answer:** In a deep network the error signal can shrink as it travels back through the layers, so the early layers barely learn. Better activations, residual connections, normalization and careful initialization keep the signal alive.
+
+    **In depth:** Backpropagation multiplies many small numbers together, and a product of many numbers below one tends towards zero. Using ReLU-style activations, adding skip connections that let the signal bypass a layer, normalizing the numbers between layers and starting the weights at a sensible scale all keep the gradient usable. The opposite problem, exploding gradients, is handled by clipping the gradient to a maximum size.
+
+    **Follow-up they'll ask:** How would you notice it? Loss that barely moves, and early layers whose weights stay almost unchanged.
+
+??? question "How would you explain how a neural network learns to someone with no maths background?"
+
+    **Short answer:** It is like a student marking practice papers: it guesses, sees how wrong it was, adjusts what it pays attention to, and repeats with thousands of examples until the guesses are mostly right.
+
+    **In depth:** Say the three steps in everyday words: guess, measure how far off the guess was, adjust. Use one concrete example, such as learning to tell cats from dogs in photos, and avoid the words gradient and derivative until the listener asks. Then be honest about the limits: it learns patterns in the examples it was shown, so unusual cases it has never seen can fool it.
+
+    **Follow-up they'll ask:** Is it really learning like a person? It improves at a task from examples, but it does not understand in the human sense, and it can be confidently wrong.
