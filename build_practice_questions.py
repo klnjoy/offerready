@@ -29,6 +29,7 @@ TOPICS: dict[str, tuple[str, list[str]]] = {
     "DataEngineering_Interview_QA": ("Data Engineering", ["data"]),
     "Snowflake_Interview_QA": ("Snowflake", ["data"]),
     "Databricks_Interview_QA": ("Databricks", ["data"]),
+    "Microsoft_Fabric_Interview_QA": ("Microsoft Fabric", ["data"]),
     "dbt_Interview_QA": ("dbt", ["data"]),
     "Python_Interview_QA": ("Python", ["data", "ai", "fde"]),
     "AWS_Interview_QA": ("AWS", ["data", "ai"]),
