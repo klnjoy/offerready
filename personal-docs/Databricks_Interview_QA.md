@@ -241,6 +241,73 @@ Can you explain each without notes?
 
 ---
 
+## SQL warehouses, serverless & orchestration
+
+??? question "What is Databricks SQL, and when do you use a SQL warehouse instead of a cluster?"
+    Databricks SQL is the SQL analytics surface. A **SQL warehouse** is
+    serverless, auto-scaling compute optimized for BI queries — it runs
+    **Photon**, Databricks' vectorized engine — while a cluster (all-purpose or
+    job) is for notebooks, ML, and ETL code. Use a warehouse for dashboards and
+    concurrent SQL (governed through Unity Catalog); use a cluster when the work
+    is code, not just SQL. The trade-off is concurrency and simplicity for SQL
+    vs flexibility for everything else.
+
+??? question "What is Photon, and when does it matter?"
+    **Photon** is Databricks' native vectorized query engine (C++), replacing
+    parts of Spark's JVM execution for SQL and DataFrame workloads. It matters
+    most for scan-, filter-, join-, and aggregation-heavy queries — big speedups
+    on BI and ETL SQL. It runs on Databricks SQL warehouses and can be enabled on
+    clusters. It doesn't change your code (same APIs), it changes the
+    cost/performance trade-off: faster queries can mean shorter-lived compute.
+    It helps least on UDF-heavy or ML code that doesn't vectorize, and on tiny
+    workloads where startup dominates.
+
+??? question "What is serverless compute on Databricks, and what are the trade-offs?"
+    **Serverless compute** removes cluster management: Databricks provisions,
+    scales, and shuts down compute for notebooks, jobs, and SQL warehouses
+    automatically, and you pay for usage rather than idle cluster time. Benefits:
+    no sizing, fast start from a warm pool, automatic scaling, and unified
+    governance through Unity Catalog. Trade-offs: less control than classic
+    clusters (instance types, networking, custom setup), and cold starts can bite
+    latency-sensitive jobs. Default to serverless for scheduled and BI work;
+    keep classic clusters only when you need that control.
+
+??? question "How do you orchestrate multi-step work with Lakeflow Jobs?"
+    **Lakeflow Jobs** (formerly Workflows) orchestrate tasks as a DAG: notebooks,
+    SQL, Spark jobs, dbt, and declarative pipelines, with dependencies, retries,
+    and scheduling (cron or trigger-based, including file-arrival triggers). Use
+    **job compute** (ephemeral, auto-terminates) over all-purpose clusters for
+    scheduled work — it's cheaper and can't be left running. Design: one task per
+    logical step, pass parameters between tasks, set retries and alerts on
+    failure, and use "repair and rerun" to re-run only failed tasks. For
+    streaming + batch in one pipeline, pair Jobs with Lakeflow Declarative
+    Pipelines instead of hand-rolling orchestration.
+
+---
+
+## ML & cost
+
+??? question "How do you manage ML models with MLflow and Model Serving?"
+    **MLflow** tracks experiments and versions models, and in MLflow 3 models are
+    registered in **Unity Catalog** as first-class objects, linked to their data
+    and evals. **Model Serving** deploys them as REST endpoints with autoscaling,
+    GPU support, A/B traffic splitting, and provisioned throughput for latency
+    guarantees. Pattern: train → log to MLflow → register → evaluate (MLflow
+    evals, LLM judges for GenAI) → deploy to serving → monitor with inference
+    tables. Endpoints autoscale with traffic; provisioned throughput buys latency
+    guarantees at a fixed cost.
+
+??? question "How do you control Databricks cost — what do system tables tell you?"
+    Unity Catalog **system tables** — billing usage, audit logs, lineage — record
+    every DBU, who used it, and on what. That's the source of truth for
+    chargeback: join billing usage to workspace and user tags and show the top
+    cost drivers before proposing cuts. Levers: auto-terminate idle clusters, use
+    job compute (not all-purpose) for scheduled work, serverless where it fits,
+    cluster policies to cap instance types, and budgets/alerts on the billing
+    tables. For SQL, serverless warehouses autoscale and shut down idle capacity.
+
+---
+
 ## Governance
 
 ??? question "What does Unity Catalog give you over workspace-local access control?"
