@@ -272,6 +272,58 @@ Can you explain each without notes?
 
 ---
 
+## FastMCP in practice
+
+??? question "When would you use FastMCP instead of writing against the raw MCP SDK?"
+
+    **Short answer:** When you want to ship a working server fast and keep the code small: with FastMCP a normal Python function plus a decorator becomes a tool, and the schema is built from the function for you.
+
+    **In depth:** FastMCP is a Python framework on top of the protocol. You create a server, put the tool decorator on a function, and FastMCP reads the name, the docstring and the typed arguments to produce the tool definition the client lists. Resources and prompts work the same way with their own decorators, and a resource can take parts of its URI as arguments. The raw SDK is the better pick when you need to control the protocol messages themselves, which is rare.
+
+    **Follow-up they'll ask:** What do you lose? Some control over the exact wire behaviour, and you depend on the framework's version: names and options have changed between major versions, so pin it.
+
+??? question "A model keeps calling the wrong tool on your FastMCP server. Where do you look first?"
+
+    **Short answer:** At what the model reads: the tool names, the docstrings and the argument types, and then at how many tools you expose.
+
+    **In depth:** The model never sees your code, only the definition built from it. Two tools with similar names and one-word docstrings are a coin flip. Rewrite each docstring to say what the tool does, when to use it and when not to, and give arguments real types instead of free-form strings where you can. Then count: a long flat list makes every pick harder, so remove tools the agent does not need or split them across servers.
+
+    **Follow-up they'll ask:** How do you know it worked? Keep a small set of tasks with the expected tool and run them after each wording change, the same way you would evaluate a prompt.
+
+??? question "How would you test a FastMCP server without starting a process or opening a port?"
+
+    **Short answer:** Pass the server object straight to the FastMCP client: it calls the tools in the same process, so there is no subprocess and no socket.
+
+    **In depth:** Build the server in a test fixture, open the client on it inside the test, call the tool by name with arguments and assert on the returned value. Check the failure paths too: a tool that raises a tool error should surface as an error the test can match, not a crash. If the behaviour you care about is HTTP itself, such as headers or auth, use the in-process web-app test helper instead of binding a real port. Mock the outside services the tool calls at their boundary, not the tool you are testing.
+
+    **Follow-up they'll ask:** What would still need a real process? Anything about stdio startup or process isolation, which belongs in a few slower tests, not in the main suite.
+
+??? question "Two teams' servers both expose a tool called lookup. How do you combine them?"
+
+    **Short answer:** Mount each server on a gateway with its own namespace, so the client sees billing_lookup and support_lookup instead of two clashing names.
+
+    **In depth:** Mounting links a child server into a parent, and the link is live: tools added to the child later appear through the parent. A namespace prefixes the tool and prompt names and changes resource URIs, so nothing collides. Without a namespace, the first mounted server wins on an identical name, which silently hides the other one. A remote server can be mounted too, by wrapping it in a proxy, but the gateway's tool list then depends on every child, so a slow remote server slows the whole list.
+
+    **Follow-up they'll ask:** Where do you put access control? On the gateway for who may see which namespace, and still inside each tool for what it may do: the gateway does not make an unsafe tool safe.
+
+??? question "You have an OpenAPI file for a 200-endpoint API. Do you generate the MCP server from it?"
+
+    **Short answer:** To prototype, yes; to ship, no. FastMCP can turn every endpoint into a tool, but a model chooses much better from a short curated list, and the FastMCP docs say as much.
+
+    **In depth:** The generator maps every endpoint to a tool by default, so you get a working server quickly. Route rules let you exclude what the agent never needs and map the rest, so the next step is to cut the list to the handful of tasks users actually have, and rename and describe those in the model's terms. Anything that writes (refund, delete) deserves a deliberate decision and an approval or limit, not an automatic tool.
+
+    **Follow-up they'll ask:** Where do the permissions live? In the API: the server forwards a request on someone's behalf, so the API still decides what that caller may do.
+
+??? question "How do you run the same FastMCP server on a laptop and as a shared company service?"
+
+    **Short answer:** Keep the tools identical and change only the transport: stdio for a local client that starts your server as a subprocess, Streamable HTTP for a remote one shared by many clients.
+
+    **In depth:** With stdio the client launches the process and talks over pipes, so there is no network and no login, which suits a developer tool. A shared service needs a web transport: Streamable HTTP is the one FastMCP's docs recommend for production, with SSE kept for older clients. Once it is on the network you also need what stdio never did: authentication on the endpoint, per-user permissions inside tools, rate limits and logging.
+
+    **Follow-up they'll ask:** What changes in the code? Ideally nothing in the tools, only how the server is started and how it is configured.
+
+---
+
 ## Rapid-fire
 
 | Q | A |
