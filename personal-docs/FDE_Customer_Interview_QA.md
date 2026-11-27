@@ -159,3 +159,75 @@ Senior questions for Forward Deployed Engineers and solutions engineers who work
     - Close with what you learned, such as framing a no as a safer path to the same goal.
 
     **Follow-up they'll ask:** What if they insist? Escalate with your leadership and document the risk; some deals are not worth a dangerous deployment.
+
+??? question "A customer wants an AI agent. How do you pick the first workflow it should take on?"
+    **Short answer:** Pick a workflow that is frequent, well understood, low in risk, and easy to measure, so the first result is a clear win and not a long argument about what "good" means.
+
+    **In depth:**
+
+    - List candidate workflows with the people who do them today, and ask how often, how long, and what goes wrong.
+    - Score each on volume, how clear the right answer is, the cost of a mistake, and how easy the data is to reach.
+    - Start where a wrong answer is cheap and a human can check it, such as drafting, triage or summarising, before anything that moves money or changes records.
+    - Agree the success number before you build: time saved, errors caught, or tickets closed without rework.
+
+    **Follow-up they'll ask:** What if the sponsor wants the most visible workflow first? Show them the risk and the measurement gap, and propose a small visible win now with the big one as phase two.
+
+??? question "How do you capture what the customer's own experts know so the agent can use it?"
+    **Short answer:** Sit with the people who do the work, write down the rules they follow and the exceptions they handle, and turn those into examples, checks and instructions the agent can be tested against.
+
+    **In depth:**
+
+    - Watch real cases end to end and ask "why did you do that?" at each decision, not only "what do you do?".
+    - Collect a set of real past cases with the expert's correct answer. This becomes both guidance and your test set.
+    - Record the exceptions, because the rare cases are where an agent fails and an expert earns their salary.
+    - Have an expert review the agent's outputs weekly, and fold their corrections back in.
+
+    **Follow-up they'll ask:** What if the expert cannot explain what they do? Use their past decisions as examples and let them react to the agent's drafts, which is easier than describing the rule from scratch.
+
+??? question "How do you decide what an agent may do on its own and what needs a person to approve?"
+    **Short answer:** Split actions by how reversible and how costly they are. Let the agent read and draft freely, ask for approval before actions that are hard to undo, and keep the customer in control of permissions.
+
+    **In depth:**
+
+    - Give the agent the least access it needs, using its own credentials, never a person's.
+    - Mark each action as read, reversible write, or irreversible or high-value, and set the approval rule for each.
+    - Log every action with the inputs and the result, so any decision can be reviewed later.
+    - Loosen a rule only after measured accuracy shows it is safe, and let the customer sign off on that change.
+
+    **Follow-up they'll ask:** Who decides what counts as sensitive? The customer, with your help. They know the business risk, and you know what the agent can touch.
+
+??? question "The underlying model is updated and your agent's answers change. How do you stay in control?"
+    **Short answer:** Keep a fixed set of test cases with known good outcomes, rerun it whenever the model, prompt or tools change, and compare results before the change reaches users.
+
+    **In depth:**
+
+    - Pin the model version where you can, and treat an upgrade as a change that needs a test run.
+    - Build the test set from real cases, including the awkward ones, and keep adding to it when something fails in production.
+    - Compare scores, not impressions: accuracy on the set, cost per task, and time per task, side by side with the old version.
+    - Roll out to a small share of traffic first, with an easy way to go back.
+
+    **Follow-up they'll ask:** What if the new model is better overall but worse on one important case? Decide by the cost of that case, and fix or guard it before you switch.
+
+??? question "The pilot ends. Who should own the agent afterwards: the vendor, the IT team, or the business team?"
+    **Short answer:** Agree it before the pilot ends. Usually the business team owns the outcome and the rules, IT owns access, security and uptime, and the vendor supports changes for a set period.
+
+    **In depth:**
+
+    - Name one accountable owner on the customer side, someone who sits with the work every day.
+    - Write down who handles what: wrong answers, outages, access changes, model updates, new requests.
+    - Give the owner a dashboard and a short list of numbers to watch, with a threshold that triggers action.
+    - Plan a review at thirty and ninety days, because agents drift as data and processes change.
+
+    **Follow-up they'll ask:** What if nobody wants to own it? That is a warning sign. Either the value is not clear enough, or the support burden was not discussed early enough.
+
+??? question "How do you explain why the agent is not ready to run on its own, without sounding like you are blocking progress?"
+    **Short answer:** Show the measured results and the cost of the mistakes in the customer's terms, then offer a path with clear steps to more automation.
+
+    **In depth:**
+
+    - Use their own numbers: how many cases it handles correctly today, and what an error costs them.
+    - Separate what is ready, such as drafting and routing, from what is not, such as actions that are hard to undo.
+    - Offer a plan: human review now, spot checks once accuracy holds for an agreed period, then wider automation.
+    - Keep the tone practical. You are protecting their business and their trust in the project.
+
+    **Follow-up they'll ask:** What if a competitor's demo looks like it does more? Demos use clean data. Offer to run the same cases on their real data and compare.
