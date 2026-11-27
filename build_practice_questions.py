@@ -37,7 +37,7 @@ TOPICS: dict[str, tuple[str, list[str]]] = {
     "AI_Engineer_Interview_QA": ("AI Engineer", ["ai"]),
     "Agents_Interview_QA": ("Agents", ["ai"]),
     "LangChain_LangGraph_Interview_QA": ("LangChain/LangGraph", ["ai"]),
-    "MCP_Interview_QA": ("MCP", ["ai"]),
+    "MCP_Interview_QA": ("MCP & FastMCP", ["ai"]),
     "GenAI_Interview_QA": ("GenAI", ["ai"]),
     "Behavioral_STAR_Interview_QA": ("Behavioral", ["data", "ai", "fde", "lead", "em", "tpm", "agile", "pm"]),
     "FastAPI_Interview_QA": ("FastAPI", ["ai", "fde", "platform"]),
