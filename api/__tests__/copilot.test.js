@@ -94,3 +94,24 @@ test('copilot: flow and code are optional, clamped, and default to [] / null', (
   assert.equal(r.result.code.language, 'python');
   assert.equal(r.result.code.snippet.split('\n').length, 15);
 });
+
+test('system questions (a shipped LLM system, a quality/latency/cost balance) are detected and asked for the full solution', () => {
+  const { systemStoryOf, buildUserMessage, SYSTEM_PROMPT } = require('../_lib/copilot');
+  assert.equal(systemStoryOf('Tell me about an LLM system you shipped to production.'), 'story');
+  assert.equal(systemStoryOf('How do you balance quality, latency, and cost in an LLM application?'), 'tradeoff');
+  assert.equal(systemStoryOf('Tell me about a time you disagreed with your manager.'), '');
+  assert.equal(systemStoryOf('Explain RAG.'), '');
+  assert.match(buildUserMessage({ question: 'Tell me about an LLM system you shipped.' }), /SYSTEM QUESTION \(story\)[^\n]*"flow"/);
+  assert.match(buildUserMessage({ question: 'Balance quality, latency and cost for an LLM app' }), /SYSTEM QUESTION \(tradeoff\)[^\n]*"tradeoff"/);
+  assert.doesNotMatch(buildUserMessage({ question: 'Tell me about a time you led a team.' }), /SYSTEM QUESTION/);
+  assert.match(SYSTEM_PROMPT, /SYSTEM QUESTIONS/);
+  assert.match(SYSTEM_PROMPT, /NOT what the candidate built/);
+});
+
+test('a technical system answer keeps its reference diagram; a behavioral one still does not', () => {
+  const { validateCopilot } = require('../_lib/copilot');
+  const base = { headline: 'Gateway, retrieval, model, evaluation', outline: [{ point: 'p', source: 'general', quote: '' }], improved_answer: 'I would route requests through a gateway, retrieve context, call the model, then evaluate and monitor results.', short_answer: 'Gateway, retrieval, model, evaluation.', key_points: ['a', 'b', 'c'], expert: { summary: 'A gateway fronts retrieval and the model call.', points: ['Gateway', 'Retrieval', 'Model call', 'Evaluation'] } };
+  const diagram = { type: 'flow', caption: 'Reference architecture: an LLM system', nodes: [{ label: 'Gateway', key: false }, { label: 'Retrieval', key: false }, { label: 'Model call', key: true }, { label: 'Evaluation', key: false }], branches: [] };
+  assert.ok(validateCopilot({ ...base, question_type: 'technical', diagram }, {}).result.diagram);
+  assert.equal(validateCopilot({ ...base, question_type: 'behavioral', diagram }, {}).result.diagram, null);
+});
