@@ -52,7 +52,7 @@ const REFERRAL_MOCK_CREDITS = 1;
 const CODE_LENGTH = 8;
 // No 0/O, 1/I/L: codes are typed from a phone screen.
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const CODE_RE = /^[A-Z2-9]{8}$/;
+const CODE_RE = /^[A-HJKMNP-Z2-9]{8}$/; // exactly the characters generateCode can produce (no I, L, O, 0, 1)
 
 const TIMEOUT_MS = 8000;
 
