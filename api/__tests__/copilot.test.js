@@ -149,3 +149,10 @@ test('"describe a time you set the technical direction for a complex system" is 
   assert.equal(systemStoryOf('Describe a time you disagreed with your manager.'), '');
   assert.match(SYSTEM_PROMPT, /EXCEPTION: when the question asks for a PAST experience/);
 });
+
+test('the Coach prompt bans filler words and asks for named tools and STAR steps', () => {
+  const { SYSTEM_PROMPT } = require('../_lib/copilot');
+  assert.match(SYSTEM_PROMPT, /PLAIN, SPECIFIC LANGUAGE/);
+  assert.match(SYSTEM_PROMPT, /"seamless\(ly\)", "robust", "meticulous"/);
+  assert.match(SYSTEM_PROMPT, /NAMED tools and steps/);
+});
