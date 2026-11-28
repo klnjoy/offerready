@@ -134,3 +134,11 @@ test('a number that is not in the candidate material never reaches the answer as
   assert.match(kept.short_answer, /30%/);
   assert.match(SYSTEM_PROMPT, /NO INVENTED EXPERIENCE/);
 });
+
+test('the Coach prompt makes the answer a complete solution that stands without the resume', () => {
+  const { SYSTEM_PROMPT } = require('../_lib/copilot');
+  assert.match(SYSTEM_PROMPT, /COMPLETE SOLUTION and must stand on their own/);
+  assert.match(SYSTEM_PROMPT, /do NOT mention the candidate/i);
+  assert.match(SYSTEM_PROMPT, /ANSWER FIRST/);
+  assert.match(SYSTEM_PROMPT, /NO INVENTED EXPERIENCE/);
+});
