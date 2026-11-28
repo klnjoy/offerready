@@ -263,6 +263,18 @@ function subjectOf(question) {
   return m ? m[1].trim() : '';
 }
 
+// Filler the Coach must not write (PLAIN, SPECIFIC LANGUAGE). Checked in code because the model
+// does not always follow the prompt: a hit makes api/ai.js ask for one rewrite.
+const FILLER = /\b(seamless(?:ly)?|robust|meticulous(?:ly)?|cutting[- ]edge|state[- ]of[- ]the[- ]art|game[- ]chang\w*|best practices|stakeholder trust|operational efficiency|set a new standard|high standards? of|significantly (?:improved|enhanced|reduced)|(?:improved|enhanced) \w+ (?:and \w+ )?significantly|advanced (?:cloud )?(?:technolog\w+|capabilit\w+)|leverag(?:e|ed|es|ing))\b/gi;
+
+/** Filler phrases found in the answer fields of a validated result (empty list = clean). */
+function fillerIn(result) {
+  const r = result || {};
+  const text = [r.improved_answer, r.short_answer, ...(r.key_points || []), r.expert && r.expert.summary, ...((r.expert && r.expert.points) || [])]
+    .filter((x) => typeof x === 'string').join('\n');
+  return Array.from(new Set((text.match(FILLER) || []).map((x) => x.toLowerCase()))).slice(0, 8);
+}
+
 /** Build the user message. All candidate material is fenced. */
 function buildUserMessage(input) {
   const i = input || {};
@@ -412,4 +424,4 @@ function validateCopilot(parsed, input) {
 }
 
 module.exports = {
-  subjectOf, systemStoryOf, subjectChecklist, SYSTEM_PROMPT, MODES, REFINES, buildUserMessage, validateCopilot, unverifiedNumbers, expertOf };
+  subjectOf, systemStoryOf, fillerIn, subjectChecklist, SYSTEM_PROMPT, MODES, REFINES, buildUserMessage, validateCopilot, unverifiedNumbers, expertOf };

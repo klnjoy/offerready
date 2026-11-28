@@ -457,12 +457,22 @@ async function handleCopilot(body, res, user) {
   const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 3200, 0.4, 'coach', user && user.id);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
   let v = COPILOT.validateCopilot(safeParseModelJson(out.content), input);
-  // A system question must come back with its intro and diagram: ask once more if it did not.
-  if (v.ok && !input.refine && COPILOT.systemStoryOf(input.question) && (!v.result.diagram || !v.result.concept)) {
-    const again = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input) + '\n\nYour last answer was missing the ' + [!v.result.concept && '"concept" intro', !v.result.diagram && '"diagram" (a flow of the reference architecture, or a tradeoff)'].filter(Boolean).join(' and ') + '. Return the full JSON again with them filled in, question_type "technical", and no invented experience.', 3200, 0.3, 'coach', user && user.id);
-    if (again.ok) {
-      const v2 = COPILOT.validateCopilot(safeParseModelJson(again.content), input);
-      if (v2.ok && (v2.result.diagram || v2.result.concept)) v = v2;
+  // One rewrite when the answer broke a rule we can check in code: a system question without its
+  // intro or diagram, or filler words ("seamless", "robust", "operational efficiency"...).
+  if (v.ok && !input.refine) {
+    const missing = COPILOT.systemStoryOf(input.question) ? [!v.result.concept && '"concept" intro', !v.result.diagram && '"diagram" (a flow of the reference architecture, or a tradeoff)'].filter(Boolean) : [];
+    const filler = COPILOT.fillerIn(v.result);
+    if (missing.length || filler.length) {
+      const note = '\n\nYour last answer must be fixed: ' + [
+        missing.length ? 'it was missing the ' + missing.join(' and ') + ' (question_type "technical")' : '',
+        filler.length ? 'it used filler (' + filler.join(', ') + '); say the concrete tool, step or fact instead' : '',
+      ].filter(Boolean).join('; ') + '. Return the full JSON again, with no invented experience.';
+      const again = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input) + note, 3200, 0.2, 'coach', user && user.id);
+      if (again.ok) {
+        const v2 = COPILOT.validateCopilot(safeParseModelJson(again.content), input);
+        const better = v2.ok && (COPILOT.fillerIn(v2.result).length < filler.length || (missing.length && (v2.result.diagram || v2.result.concept)));
+        if (better) v = v2;
+      }
     }
   }
   if (!v.ok) { send(res, 502, { error: 'The AI Interview Coach could not build an answer this time. Please try again.' }); return; }
