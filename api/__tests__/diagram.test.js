@@ -72,3 +72,11 @@ test('AI topic questions carry a checked diagram; story questions never do', () 
   assert.equal(v.questions[2].diagram, undefined);
   assert.match(TOPIC_Q.SYSTEM_PROMPT, /"diagram"/);
 });
+
+test('a side branch labelled with a stray word like "to" is dropped, not drawn as an empty box', () => {
+  const text = 'Define KPIs, then implement an evaluation framework, collect user feedback and analyze performance.';
+  const d = validateDiagram({ type: 'flow', caption: 'Reference architecture: quality metrics', nodes: [{ label: 'Define KPIs', key: true }, { label: 'Implement Evaluation Framework' }, { label: 'Collect User Feedback' }, { label: 'Analyze Performance' }], branches: [{ from: 0, edge: '', label: 'to' }, { from: 1, edge: '', label: 'to' }] }, { text, kind: 'technical' });
+  assert.ok(d);
+  assert.deepEqual(d.branches, []);
+  assert.equal(validateDiagram({ type: 'flow', caption: 'c', nodes: [{ label: 'Define KPIs' }, { label: 'to' }, { label: 'Analyze Performance' }], branches: [] }, { text, kind: 'technical' }), null);
+});
