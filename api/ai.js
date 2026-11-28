@@ -456,7 +456,15 @@ async function handleCopilot(body, res, user) {
   };
   const out = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input), 3200, 0.4, 'coach', user && user.id);
   if (!out.ok) { send(res, out.status, { error: out.error }); return; }
-  const v = COPILOT.validateCopilot(safeParseModelJson(out.content), input);
+  let v = COPILOT.validateCopilot(safeParseModelJson(out.content), input);
+  // A system question must come back with its intro and diagram: ask once more if it did not.
+  if (v.ok && !input.refine && COPILOT.systemStoryOf(input.question) && (!v.result.diagram || !v.result.concept)) {
+    const again = await callOpenAI(COPILOT.SYSTEM_PROMPT, COPILOT.buildUserMessage(input) + '\n\nYour last answer was missing the ' + [!v.result.concept && '"concept" intro', !v.result.diagram && '"diagram" (a flow of the reference architecture, or a tradeoff)'].filter(Boolean).join(' and ') + '. Return the full JSON again with them filled in, question_type "technical", and no invented experience.', 3200, 0.3, 'coach', user && user.id);
+    if (again.ok) {
+      const v2 = COPILOT.validateCopilot(safeParseModelJson(again.content), input);
+      if (v2.ok && (v2.result.diagram || v2.result.concept)) v = v2;
+    }
+  }
   if (!v.ok) { send(res, 502, { error: 'The AI Interview Coach could not build an answer this time. Please try again.' }); return; }
   await recordUse(user.id, 'ai_grading');
   send(res, 200, { ok: true, action: 'copilot', result: v.result });
