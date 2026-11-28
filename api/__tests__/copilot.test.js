@@ -142,3 +142,10 @@ test('the Coach prompt makes the answer a complete solution that stands without 
   assert.match(SYSTEM_PROMPT, /ANSWER FIRST/);
   assert.match(SYSTEM_PROMPT, /NO INVENTED EXPERIENCE/);
 });
+
+test('"describe a time you set the technical direction for a complex system" is a system question that still gets a story', () => {
+  const { systemStoryOf, SYSTEM_PROMPT } = require('../_lib/copilot');
+  assert.equal(systemStoryOf('Describe a time when you set the technical direction for a complex system across multiple teams. What steps did you take to ensure alignment and success?'), 'story');
+  assert.equal(systemStoryOf('Describe a time you disagreed with your manager.'), '');
+  assert.match(SYSTEM_PROMPT, /EXCEPTION: when the question asks for a PAST experience/);
+});
