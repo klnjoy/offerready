@@ -142,3 +142,17 @@ test('the Coach prompt makes the answer a complete solution that stands without 
   assert.match(SYSTEM_PROMPT, /ANSWER FIRST/);
   assert.match(SYSTEM_PROMPT, /NO INVENTED EXPERIENCE/);
 });
+
+test('"describe a time you set the technical direction for a complex system" is a system question that still gets a story', () => {
+  const { systemStoryOf, SYSTEM_PROMPT } = require('../_lib/copilot');
+  assert.equal(systemStoryOf('Describe a time when you set the technical direction for a complex system across multiple teams. What steps did you take to ensure alignment and success?'), 'story');
+  assert.equal(systemStoryOf('Describe a time you disagreed with your manager.'), '');
+  assert.match(SYSTEM_PROMPT, /EXCEPTION: when the question asks for a PAST experience/);
+});
+
+test('the Coach prompt bans filler words and asks for named tools and STAR steps', () => {
+  const { SYSTEM_PROMPT } = require('../_lib/copilot');
+  assert.match(SYSTEM_PROMPT, /PLAIN, SPECIFIC LANGUAGE/);
+  assert.match(SYSTEM_PROMPT, /"seamless\(ly\)", "robust", "meticulous"/);
+  assert.match(SYSTEM_PROMPT, /NAMED tools and steps/);
+});

@@ -143,9 +143,25 @@ const SYSTEM_PROMPT = [
   '  resume example goes ONLY in "example" and "outline" (quoted), with',
   '  "how_to_use" saying where in the answer to add it; "gaps" says to add their',
   '  real system, scale and results. Never invent a project, metric or outcome.',
+  '  EXCEPTION: when the question asks for a PAST experience ("describe a time you',
+  '  set the technical direction…", "tell me about a system you built"), the',
+  '  "improved_answer" is the candidate\'s own STAR story built ONLY from the',
+  '  resume/stories (quoted in "outline"); if the material has no such example it',
+  '  says how they WOULD do it. In both cases the concept intro, the specific',
+  '  "expert" steps and the reference-architecture "diagram" are still REQUIRED and',
+  '  carry the technical substance (name the real components, no generic advice',
+  '  like "define clear objectives" or "maintain open communication").',
   '- ANSWER FIRST (owner, Nov 27): for every "technical" and "system_design"',
   '  question the answer must solve the question completely by itself. The resume',
   '  only personalises it; it is never what makes the answer correct or complete.',
+  '- PLAIN, SPECIFIC LANGUAGE (owner, Nov 27): in EVERY answer field never use',
+  '  filler such as "seamless(ly)", "robust", "meticulous", "cutting-edge",',
+  '  "advanced (cloud) technologies", "leverage", "stakeholder trust", "operational',
+  '  efficiency", "best practices". A story answer is STAR in short sentences:',
+  '  situation, task, the actions with the NAMED tools and steps from the material',
+  '  (what you built, in what order), then the result using only the material\'s',
+  '  facts. Each sentence says something a listener could ask a follow-up on.',
+  '  "key_points" state the three decisions or facts to remember, not slogans.',
   '- NO INVENTED EXPERIENCE (hard): never write "in a past project", "at my last',
   '  company", "I improved X by N%" or any past result, number or project unless',
   '  that exact fact is in the resume, stories or draft. Without it, write what you',
@@ -233,7 +249,7 @@ function systemStoryOf(question) {
   const sys = /\b(llm|llms|rag|agents?|agentic|genai|generative|ai|ml|machine learning|models?|pipelines?|retrieval|vector|prompts?|inference|data platform|system|systems|evals?|evaluation|guardrails?)\b/i;
   if (!sys.test(q)) return '';
   if (/\b(balance|trade-?offs?|optimi[sz]e|weigh)\b/i.test(q) && /\b(latency|cost)\b/i.test(q)) return 'tradeoff';
-  if (/\b(tell me about|describe|walk me through|talk about|share)\b/i.test(q) && /\b(built|build|shipped|ship|designed|design|deployed|launched|ran|run|owned|led|put into production|in production)\b/i.test(q)) return 'story';
+  if (/\b(tell me about|describe|walk me through|talk about|share)\b/i.test(q) && /\b(built|build|shipped|ship|designed|design|deployed|launched|ran|run|owned|led|lead|put into production|in production|technical direction|architecture|architected|set the direction|across (?:multiple )?teams)\b/i.test(q)) return 'story';
   // "How would you evolve / measure / evaluate / monitor / improve ... agent quality / the system": a how-to-build-it question.
   if (/\b(how (?:would|do|did|can|should) you|approach|strategy|evolve|evolving|measure|measuring|evaluate|evaluating|monitor|monitoring|improve|improving|scale|scaling|design|designing|architect)\b/i.test(q) && /\b(metrics?|quality|evaluation|evals?|architecture|pipeline|system|agent|rag|guardrails?|observability|feedback|latency|cost)\b/i.test(q)) return 'story';
   return '';
