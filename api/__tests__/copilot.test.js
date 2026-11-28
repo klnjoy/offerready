@@ -156,3 +156,11 @@ test('the Coach prompt bans filler words and asks for named tools and STAR steps
   assert.match(SYSTEM_PROMPT, /"seamless\(ly\)", "robust", "meticulous"/);
   assert.match(SYSTEM_PROMPT, /NAMED tools and steps/);
 });
+
+test('fillerIn finds the filler the Coach must not write and passes plain, specific answers', () => {
+  const { fillerIn } = require('../_lib/copilot');
+  const bad = { improved_answer: 'I ensured a seamless migration with meticulous planning, which significantly improved operational efficiency and set a new standard.', short_answer: 'I leveraged advanced cloud technologies.', key_points: ['Zero downtime achieved'] };
+  const found = fillerIn(bad);
+  for (const w of ['seamless', 'meticulous', 'operational efficiency', 'set a new standard', 'leveraged', 'advanced cloud technologies']) assert.ok(found.includes(w), w);
+  assert.deepEqual(fillerIn({ improved_answer: 'I moved 50 tables with dbt and Airflow, running old and new side by side for a week before cutover.', short_answer: 'dbt, Airflow, side-by-side run.', key_points: ['Parallel run', 'Cutover check', 'Rollback plan'] }), []);
+});
