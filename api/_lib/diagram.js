@@ -92,13 +92,14 @@ function validateDiagram(raw, ctx) {
     const nodes = (Array.isArray(raw.nodes) ? raw.nodes : []).map((n) => (typeof n === 'string' ? { label: n } : n))
       .filter((n) => n && typeof n === 'object').map((n) => ({ label: one(n.label, 32), key: n.key === true }))
       .filter((n) => n.label).slice(0, 6);
-    if (nodes.length < 3) return null;
+    if (nodes.length < 3 || nodes.some((n) => words(n.label).length === 0)) return null;
     // At most one key box.
     let seenKey = false;
     nodes.forEach((n) => { if (n.key && !seenKey) seenKey = true; else n.key = false; });
     const branches = (Array.isArray(raw.branches) ? raw.branches : []).filter((b) => b && typeof b === 'object')
       .map((b) => ({ from: Math.round(Number(b.from)), edge: one(b.edge, 32), label: one(b.label, 32) }))
-      .filter((b) => Number.isInteger(b.from) && b.from >= 0 && b.from < nodes.length && b.label).slice(0, 2);
+      // A side path needs a real name: a stray word like "to" is dropped, not drawn as an empty box.
+      .filter((b) => Number.isInteger(b.from) && b.from >= 0 && b.from < nodes.length && words(b.label).length > 0).slice(0, 2);
     d = { type, caption, nodes, branches };
     mustAgree = [...nodes.map((n) => n.label), ...branches.map((b) => b.label)];
   } else if (type === 'sequence') {
