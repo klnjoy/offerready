@@ -34,7 +34,8 @@ const PROMPT_RULES = [
   '  { "type": "flow", "caption": string, "nodes": [{ "label": string, "key": boolean }],',
   '    "branches": [{ "from": <node index>, "edge": string, "label": string }] }',
   '    // 3-6 boxes in request/data order, labels under 4 words, one "key" box;',
-  '    // branches: 0-2 dashed side paths such as a failure path',
+  '    // branches: 0-2 dashed side paths such as a failure path; a branch box is',
+  '    // NEVER a copy of a main-path box (leave branches empty when there is none)',
   '  { "type": "sequence", "caption": string, "steps": [string] }   // 3-7 short steps',
   '  { "type": "tradeoff", "caption": string, "rows": [{ "choice": string, "gain": string, "cost": string }] }   // 2-3 rows',
   '  { "type": "compare", "caption": string, "left": string, "right": string,',
@@ -96,10 +97,13 @@ function validateDiagram(raw, ctx) {
     // At most one key box.
     let seenKey = false;
     nodes.forEach((n) => { if (n.key && !seenKey) seenKey = true; else n.key = false; });
+    // A side path is a different place (a failure path, a cache), never a second copy of a main-path box.
+    const norm = (x) => String(x).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const mainLabels = new Set(nodes.map((n) => norm(n.label)));
     const branches = (Array.isArray(raw.branches) ? raw.branches : []).filter((b) => b && typeof b === 'object')
       .map((b) => ({ from: Math.round(Number(b.from)), edge: one(b.edge, 32), label: one(b.label, 32) }))
       // A side path needs a real name: a stray word like "to" is dropped, not drawn as an empty box.
-      .filter((b) => Number.isInteger(b.from) && b.from >= 0 && b.from < nodes.length && words(b.label).length > 0).slice(0, 2);
+      .filter((b) => Number.isInteger(b.from) && b.from >= 0 && b.from < nodes.length && words(b.label).length > 0 && !mainLabels.has(norm(b.label))).slice(0, 2);
     d = { type, caption, nodes, branches };
     mustAgree = [...nodes.map((n) => n.label), ...branches.map((b) => b.label)];
   } else if (type === 'sequence') {

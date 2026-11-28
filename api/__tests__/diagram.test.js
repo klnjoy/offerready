@@ -80,3 +80,10 @@ test('a side branch labelled with a stray word like "to" is dropped, not drawn a
   assert.deepEqual(d.branches, []);
   assert.equal(validateDiagram({ type: 'flow', caption: 'c', nodes: [{ label: 'Define KPIs' }, { label: 'to' }, { label: 'Analyze Performance' }], branches: [] }, { text, kind: 'technical' }), null);
 });
+
+test('a side branch that repeats a main-path box is dropped; a real side path is kept', () => {
+  const text = 'A user request goes to model selection, then dynamic resource allocation, response generation and quality monitoring. If the model fails, the request goes to a fallback queue.';
+  const nodes = [{ label: 'User Request', key: true }, { label: 'Model Selection' }, { label: 'Dynamic Resource Allocation' }, { label: 'Response Generation' }, { label: 'Quality Monitoring' }];
+  const d = validateDiagram({ type: 'flow', caption: 'Reference architecture: model routing', nodes, branches: [{ from: 0, edge: 'routes to', label: 'Model Selection' }, { from: 1, edge: 'allocates resources to', label: 'dynamic resource  allocation' }, { from: 1, edge: 'if it fails', label: 'Fallback queue' }] }, { text, kind: 'technical' });
+  assert.deepEqual(d.branches, [{ from: 1, edge: 'if it fails', label: 'Fallback queue' }]);
+});
