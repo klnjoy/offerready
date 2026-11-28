@@ -115,3 +115,22 @@ test('a technical system answer keeps its reference diagram; a behavioral one st
   assert.ok(validateCopilot({ ...base, question_type: 'technical', diagram }, {}).result.diagram);
   assert.equal(validateCopilot({ ...base, question_type: 'behavioral', diagram }, {}).result.diagram, null);
 });
+
+test('system questions about evolving agent quality metrics are detected too', () => {
+  const { systemStoryOf } = require('../_lib/copilot');
+  assert.equal(systemStoryOf('How would you evolve agent quality metrics for an AI system as it grows?'), 'story');
+  assert.equal(systemStoryOf('How do you monitor the quality of an LLM application in production?'), 'story');
+  assert.equal(systemStoryOf('Tell me about a time you resolved a conflict with a teammate.'), '');
+});
+
+test('a number that is not in the candidate material never reaches the answer as fact', () => {
+  const { validateCopilot, SYSTEM_PROMPT } = require('../_lib/copilot');
+  const parsed = { question_type: 'technical', headline: 'Track agent quality', outline: [{ point: 'p', source: 'general', quote: '' }],
+    improved_answer: 'I improved answer relevance by 30% in a past project, and cut latency to 200 ms.', short_answer: 'I improved relevance by 30% in a past project.', key_points: ['a', 'b', 'c'] };
+  const r = validateCopilot(parsed, { resume: 'Built dashboards for a sales team.', stories: [], draft: '' }).result;
+  assert.doesNotMatch(r.improved_answer + r.short_answer, /30%|200 ms/);
+  assert.match(r.short_answer, /\[X%\]/);
+  const kept = validateCopilot(parsed, { resume: 'Raised relevance 30% and latency 200 ms.', stories: [], draft: '' }).result;
+  assert.match(kept.short_answer, /30%/);
+  assert.match(SYSTEM_PROMPT, /NO INVENTED EXPERIENCE/);
+});
